@@ -90,7 +90,7 @@ public:
 
 	bytes const& callFallbackWithValue(u256 const& _value)
 	{
-		sendMessage(bytes(), false, _value);
+		sendMessage(bytes(), bytes(), false, _value);
 		return m_output;
 	}
 
@@ -101,13 +101,13 @@ public:
 
 	bytes const& callLowLevel(bytes const& _data, u256 const& _value)
 	{
-		sendMessage(_data, false, _value);
+		sendMessage(_data, bytes(), false, _value);
 		return m_output;
 	}
 
 	bytes const& callContractFunctionWithValueNoEncoding(std::string _sig, u256 const& _value, bytes const& _arguments)
 	{
-		sendMessage(util::selectorFromSignatureH32(_sig).asBytes() + _arguments, false, _value);
+		sendMessage(util::selectorFromSignatureH32(_sig).asBytes(), _arguments, false, _value);
 		return m_output;
 	}
 
@@ -277,7 +277,7 @@ protected:
 	void selectVM(evmc_capabilities _cap = evmc_capabilities::EVMC_CAPABILITY_EVM1);
 	void reset();
 
-	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0);
+	void sendMessage(bytes const& _bytecode, bytes const& _argument, bool _isCreation, u256 const& _value = 0);
 	void sendEther(util::h160 const& _to, u256 const& _value);
 	size_t currentTimestamp();
 	size_t blockTimestamp(u256 _number);

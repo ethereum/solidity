@@ -229,6 +229,7 @@ void YulStack::optimize(Object& _object, bool _isCreation)
 
 	OptimiserSuite::run(
 		dialect,
+		m_eofVersion,
 		meter.get(),
 		_object,
 		// Defaults are the minimum necessary to avoid running into "Stack too deep" constantly.
@@ -296,11 +297,13 @@ YulStack::assembleWithDeployed(std::optional<std::string_view> _deployName)
 		creationObject.bytecode = std::make_shared<evmasm::LinkerObject>(creationAssembly->assemble());
 		yulAssert(creationObject.bytecode->immutableReferences.empty(), "Leftover immutables.");
 		creationObject.assembly = creationAssembly;
+		solAssert(creationAssembly->codeSections().size() == 1);
 		creationObject.sourceMappings = std::make_unique<std::string>(
+			// TODO: fix for EOF
 			evmasm::AssemblyItem::computeSourceMapping(
-				creationAssembly->items(),
+				creationAssembly->codeSections().front().items,
 				{{m_charStream->name(), 0}}
-			)
+				)
 		);
 
 		if (deployedAssembly)
@@ -309,9 +312,9 @@ YulStack::assembleWithDeployed(std::optional<std::string_view> _deployName)
 			deployedObject.assembly = deployedAssembly;
 			deployedObject.sourceMappings = std::make_unique<std::string>(
 				evmasm::AssemblyItem::computeSourceMapping(
-					deployedAssembly->items(),
+					deployedAssembly->codeSections().front().items,
 					{{m_charStream->name(), 0}}
-				)
+					)
 			);
 		}
 	}
@@ -331,7 +334,7 @@ YulStack::assembleEVMWithDeployed(std::optional<std::string_view> _deployName)
 	yulAssert(m_parserResult->hasCode(), "");
 	yulAssert(m_parserResult->analysisInfo, "");
 
-	evmasm::Assembly assembly(m_evmVersion, true, {});
+	evmasm::Assembly assembly(m_evmVersion, true, m_eofVersion, {});
 	EthAssemblyAdapter adapter(assembly);
 
 	// NOTE: We always need stack optimization when Yul optimizer is disabled (unless code contains

@@ -56,6 +56,8 @@ class AbstractAssembly
 public:
 	using LabelID = size_t;
 	using SubID = size_t;
+	using FunctionID = uint16_t;
+	using ContainerID = uint8_t;
 	enum class JumpType { Ordinary, IntoFunction, OutOfFunction };
 
 	virtual ~AbstractAssembly() = default;
@@ -99,7 +101,18 @@ public:
 	/// Append the assembled size as a constant.
 	virtual void appendAssemblySize() = 0;
 	/// Creates a new sub-assembly, which can be referenced using dataSize and dataOffset.
-	virtual std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly(bool _creation, std::string _name = "") = 0;
+	virtual std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly(bool _creation, std::optional<uint8_t> _eofVersion, std::string _name = "") = 0;
+
+	virtual FunctionID createFunction(uint8_t _args, uint8_t _rets) = 0;
+	virtual void beginFunction(FunctionID _functionID) = 0;
+	virtual void endFunction() = 0;
+
+	virtual void appendFunctionCall(FunctionID _functionID, int _stackDiffAfter = 0) = 0;
+	virtual void appendFunctionReturn() = 0;
+
+	virtual void appendEofCreateCall(ContainerID _containerID) = 0;
+	virtual void appendReturnContractCall(ContainerID _containerID) = 0;
+
 	/// Appends the offset of the given sub-assembly or data.
 	virtual void appendDataOffset(std::vector<SubID> const& _subPath) = 0;
 	/// Appends the size of the given sub-assembly or data.
@@ -111,6 +124,9 @@ public:
 	virtual void appendImmutable(std::string const& _identifier) = 0;
 	/// Appends an assignment to an immutable variable.
 	virtual void appendImmutableAssignment(std::string const& _identifier) = 0;
+
+	/// Appends 32 bytes data load from EOF data section in dataOffset pos
+	virtual void appendDataLoadN(size_t dataOffset) = 0;
 
 	/// Appends data to the very end of the bytecode. Repeated calls concatenate.
 	virtual void appendToAuxiliaryData(bytes const& _data) = 0;

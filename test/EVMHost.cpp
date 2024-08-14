@@ -58,6 +58,7 @@ evmc::VM& EVMHost::getVM(std::string const& _path)
 				std::cerr << ":" << std::endl << errorMsg;
 			std::cerr << std::endl;
 		}
+		vms[_path]->set_option("validate_eof", "1");
 	}
 
 	if (vms.count(_path) > 0)
@@ -332,13 +333,15 @@ evmc::Result EVMHost::call(evmc_message const& _message) noexcept
 
 		code = evmc::bytes(message.input_data, message.input_data + message.input_size);
 	}
-	else if (message.kind == EVMC_CREATE2)
+	else if (message.kind == EVMC_CREATE2 || message.kind == EVMC_EOFCREATE)
 	{
 		h160 createAddress(keccak256(
 			bytes{0xff} +
 			bytes(std::begin(message.sender.bytes), std::end(message.sender.bytes)) +
 			bytes(std::begin(message.create2_salt.bytes), std::end(message.create2_salt.bytes)) +
-			keccak256(bytes(message.input_data, message.input_data + message.input_size)).asBytes()
+			keccak256(
+				message.kind == EVMC_CREATE2 ? bytes(message.input_data, message.input_data + message.input_size) :
+				bytes(message.code, message.code + message.code_size)).asBytes()
 		), h160::AlignRight);
 
 		message.recipient = convertToEVMC(createAddress);
@@ -353,13 +356,16 @@ evmc::Result EVMHost::call(evmc_message const& _message) noexcept
 			return result;
 		}
 
-		code = evmc::bytes(message.input_data, message.input_data + message.input_size);
+		if (message.kind == EVMC_CREATE2)
+			code = evmc::bytes(message.input_data, message.input_data + message.input_size);
+		else // EOFCREATE
+			code = evmc::bytes(message.code, message.code + message.code_size);
 	}
 	else
 		code = accounts[message.code_address].code;
 
 	auto& destination = accounts[message.recipient];
-	if (message.kind == EVMC_CREATE || message.kind == EVMC_CREATE2)
+	if (message.kind == EVMC_CREATE || message.kind == EVMC_CREATE2 || message.kind == EVMC_EOFCREATE)
 		// Mark account as created if it is a CREATE or CREATE2 call
 		// TODO: Should we roll changes back on failure like we do for `accounts`?
 		m_newlyCreatedAccounts.emplace(message.recipient);
@@ -396,7 +402,7 @@ evmc::Result EVMHost::call(evmc_message const& _message) noexcept
 	}
 	evmc::Result result = m_vm.execute(*this, m_evmRevision, message, code.data(), code.size());
 
-	if (message.kind == EVMC_CREATE || message.kind == EVMC_CREATE2)
+	if (message.kind == EVMC_CREATE || message.kind == EVMC_CREATE2 || message.kind == EVMC_EOFCREATE)
 	{
 		int64_t codeDepositGas = static_cast<int64_t>(evmasm::GasCosts::createDataGas * result.output_size);
 		result.gas_left -= codeDepositGas;
@@ -409,6 +415,7 @@ evmc::Result EVMHost::call(evmc_message const& _message) noexcept
 		}
 		else
 		{
+			// TODO: Add proper codehash calculation for EOF.
 			m_totalCodeDepositGas += codeDepositGas;
 			result.create_address = message.recipient;
 			destination.code = evmc::bytes(result.output_data, result.output_data + result.output_size);

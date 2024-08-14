@@ -19,6 +19,8 @@ contract C {
         delete x;
     }
 }
+// ====
+// compileToEOF: false
 // ----
 // x() -> 0
 // y() -> 0

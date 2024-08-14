@@ -51,7 +51,15 @@ enum AssemblyItemType
 	PushDeployTimeAddress, ///< Push an address to be filled at deploy time. Should not be touched by the optimizer.
 	PushImmutable, ///< Push the currently unknown value of an immutable variable. The actual value will be filled in by the constructor.
 	AssignImmutable, ///< Assigns the current value on the stack to an immutable variable. Only valid during creation code.
-	VerbatimBytecode ///< Contains data that is inserted into the bytecode code section without modification.
+	DataLoadN, /// Loads 32 bytes from EOF data section. TODO: Why cannot it be done with builtin function?
+	VerbatimBytecode, ///< Contains data that is inserted into the bytecode code section without modification.
+	CallF,
+	JumpF,
+	RetF,
+	RelativeJump,
+	ConditionalRelativeJump,
+	EofCreate,
+	ReturnContract
 };
 
 enum class Precision { Precise , Approximate };
@@ -88,13 +96,47 @@ public:
 		m_debugData{langutil::DebugData::create()}
 	{}
 
+	static AssemblyItem functionCall(uint16_t _functionID, uint8_t _args, uint8_t _rets, langutil::DebugData::ConstPtr _debugData = langutil::DebugData::create())
+	{
+		AssemblyItem result(CallF, _functionID, _debugData);
+		result.m_functionSignature = std::make_tuple(_args, _rets);
+		return result;
+	}
+	static AssemblyItem jumpF(uint16_t _functionID, uint8_t _args, langutil::DebugData::ConstPtr _debugData = langutil::DebugData::create())
+	{
+		AssemblyItem result(JumpF, _functionID, _debugData);
+		result.m_functionSignature = std::make_tuple(_args, 0);
+		return result;
+	}
+	static AssemblyItem functionReturn(uint8_t _rets, langutil::DebugData::ConstPtr _debugData = langutil::DebugData::create())
+	{
+		return AssemblyItem(RetF, _rets, _debugData);
+	}
+
+	static AssemblyItem jumpTo(AssemblyItem _tag, langutil::DebugData::ConstPtr _debugData = langutil::DebugData::create())
+	{
+		return AssemblyItem(RelativeJump, _tag.data(), _debugData);
+	}
+	static AssemblyItem conditionalJumpTo(AssemblyItem _tag, langutil::DebugData::ConstPtr _debugData = langutil::DebugData::create())
+	{
+		return AssemblyItem(ConditionalRelativeJump, _tag.data(), _debugData);
+	}
+	static AssemblyItem eofCreate(uint16_t _containerID, langutil::DebugData::ConstPtr _debugData = langutil::DebugData::create())
+	{
+		return AssemblyItem(EofCreate, _containerID, _debugData);
+	}
+	static AssemblyItem returnContract(uint16_t _containerID, langutil::DebugData::ConstPtr _debugData = langutil::DebugData::create())
+	{
+		return AssemblyItem(ReturnContract, _containerID, _debugData);
+	}
+
 	AssemblyItem(AssemblyItem const&) = default;
 	AssemblyItem(AssemblyItem&&) = default;
 	AssemblyItem& operator=(AssemblyItem const&) = default;
 	AssemblyItem& operator=(AssemblyItem&&) = default;
 
-	AssemblyItem tag() const { assertThrow(m_type == PushTag || m_type == Tag, util::Exception, ""); return AssemblyItem(Tag, data()); }
-	AssemblyItem pushTag() const { assertThrow(m_type == PushTag || m_type == Tag, util::Exception, ""); return AssemblyItem(PushTag, data()); }
+	AssemblyItem tag() const { assertThrow(m_type == PushTag || m_type == Tag || m_type == RelativeJump || m_type == ConditionalRelativeJump, util::Exception, ""); return AssemblyItem(Tag, data()); }
+	AssemblyItem pushTag() const { assertThrow(m_type == PushTag || m_type == Tag || m_type == RelativeJump || m_type == ConditionalRelativeJump, util::Exception, ""); return AssemblyItem(PushTag, data()); }
 	/// Converts the tag to a subassembly tag. This has to be called in order to move a tag across assemblies.
 	/// @param _subId the identifier of the subassembly the tag is taken from.
 	AssemblyItem toSubAssemblyTag(size_t _subId) const;
@@ -169,6 +211,7 @@ public:
 	size_t arguments() const;
 	size_t returnValues() const;
 	size_t deposit() const { return returnValues() - arguments(); }
+	size_t maxStackHeightDelta() const;
 
 	/// @returns true if the assembly item can be used in a functional context.
 	bool canBeFunctional() const;
@@ -217,6 +260,7 @@ private:
 	AssemblyItemType m_type;
 	Instruction m_instruction; ///< Only valid if m_type == Operation
 	std::shared_ptr<u256> m_data; ///< Only valid if m_type != Operation
+	std::optional<std::tuple<uint8_t, uint8_t>> m_functionSignature;
 	/// If m_type == VerbatimBytecode, this holds number of arguments, number of
 	/// return variables and verbatim bytecode.
 	std::optional<std::tuple<size_t, size_t, bytes>> m_verbatimBytecode;

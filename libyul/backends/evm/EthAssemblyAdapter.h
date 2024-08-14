@@ -55,7 +55,14 @@ public:
 	void appendJumpTo(LabelID _labelId, int _stackDiffAfter, JumpType _jumpType) override;
 	void appendJumpToIf(LabelID _labelId, JumpType _jumpType) override;
 	void appendAssemblySize() override;
-	std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly(bool _creation, std::string _name = {}) override;
+	std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly(bool _creation, std::optional<uint8_t> _eofVersion, std::string _name = {}) override;
+	AbstractAssembly::FunctionID createFunction(uint8_t _args, uint8_t _rets) override;
+	void beginFunction(AbstractAssembly::FunctionID _functionID) override;
+	void endFunction() override;
+	void appendFunctionCall(FunctionID _functionID, int _stackDiffAfter = 0) override;
+	void appendFunctionReturn() override;
+	void appendEofCreateCall(ContainerID _containerID) override;
+	void appendReturnContractCall(ContainerID _containerID) override;
 	void appendDataOffset(std::vector<SubID> const& _subPath) override;
 	void appendDataSize(std::vector<SubID> const& _subPath) override;
 	SubID appendData(bytes const& _data) override;
@@ -64,6 +71,8 @@ public:
 
 	void appendImmutable(std::string const& _identifier) override;
 	void appendImmutableAssignment(std::string const& _identifier) override;
+
+	void appendDataLoadN(size_t dataOffset) override;
 
 	void markAsInvalid() override;
 

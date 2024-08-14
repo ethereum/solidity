@@ -18,6 +18,7 @@ contract C {
 }
 // ====
 // EVMVersion: >=byzantium
+// compileToEOF: false
 // ----
 // f(uint256): 0 -> FAILURE
 // f(uint256): 1 -> FAILURE

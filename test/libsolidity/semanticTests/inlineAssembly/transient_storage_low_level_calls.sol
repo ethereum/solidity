@@ -63,6 +63,7 @@ contract C {
 }
 // ====
 // EVMVersion: >=cancun
+// compileToEOF: false
 // ----
 // testDelegateCall() -> true
 // testCall() -> true

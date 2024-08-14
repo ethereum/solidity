@@ -56,6 +56,8 @@ contract C {
         return -x;
     }
 }
+// ====
+// compileToEOF: false
 // ----
 // testMul(int32,int32): 42, 10 -> 420
 // gas irOptimized: 102563

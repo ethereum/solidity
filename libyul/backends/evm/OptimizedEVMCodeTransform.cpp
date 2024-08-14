@@ -44,12 +44,30 @@ std::vector<StackTooDeepError> OptimizedEVMCodeTransform::run(
 	AsmAnalysisInfo& _analysisInfo,
 	Block const& _block,
 	EVMDialect const& _dialect,
+	std::optional<uint8_t> _eofVersion,
 	BuiltinContext& _builtinContext,
 	UseNamedLabels _useNamedLabelsForFunctions
 )
 {
-	std::unique_ptr<CFG> dfg = ControlFlowGraphBuilder::build(_analysisInfo, _dialect, _block);
+	std::unique_ptr<CFG> dfg = ControlFlowGraphBuilder::build(_analysisInfo, _dialect, _eofVersion, _block);
+	yulAssert(_eofVersion.has_value() == dfg->useFunctions);
 	StackLayout stackLayout = StackLayoutGenerator::run(*dfg);
+
+	if (dfg->useFunctions)
+	{
+		for (Scope::Function const* function: dfg->functions)
+		{
+			auto const& info = dfg->functionInfo.at(function);
+			yulAssert(info.parameters.size() <= 0xFF);
+			yulAssert(info.returnVariables.size() <= 0xFF);
+			auto functionID = _assembly.createFunction(
+				static_cast<uint8_t>(info.parameters.size()),
+				static_cast<uint8_t>(info.canContinue ? info.returnVariables.size() : 0x80)
+			);
+			_builtinContext.functionIDs[function] = functionID;
+		}
+	}
+
 	OptimizedEVMCodeTransform optimizedCodeTransform(
 		_assembly,
 		_builtinContext,
@@ -67,10 +85,11 @@ std::vector<StackTooDeepError> OptimizedEVMCodeTransform::run(
 
 void OptimizedEVMCodeTransform::operator()(CFG::FunctionCall const& _call)
 {
+	bool useReturnLabel = !m_dfg.useFunctions && _call.canContinue;
 	// Validate stack.
 	{
 		yulAssert(m_assembly.stackHeight() == static_cast<int>(m_stack.size()), "");
-		yulAssert(m_stack.size() >= _call.function.get().arguments.size() + (_call.canContinue ? 1 : 0), "");
+		yulAssert(m_stack.size() >= _call.function.get().arguments.size() + (useReturnLabel ? 1 : 0), "");
 		// Assert that we got the correct arguments on stack for the call.
 		for (auto&& [arg, slot]: ranges::zip_view(
 			_call.functionCall.get().arguments | ranges::views::reverse,
@@ -78,7 +97,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::FunctionCall const& _call)
 		))
 			validateSlot(slot, arg);
 		// Assert that we got the correct return label on stack.
-		if (_call.canContinue)
+		if (useReturnLabel)
 		{
 			auto const* returnLabelSlot = std::get_if<FunctionCallReturnLabelSlot>(
 				&m_stack.at(m_stack.size() - _call.functionCall.get().arguments.size() - 1)
@@ -90,23 +109,30 @@ void OptimizedEVMCodeTransform::operator()(CFG::FunctionCall const& _call)
 	// Emit code.
 	{
 		m_assembly.setSourceLocation(originLocationOf(_call));
-		m_assembly.appendJumpTo(
-			getFunctionLabel(_call.function),
-			static_cast<int>(_call.function.get().returns.size() - _call.function.get().arguments.size()) - (_call.canContinue ? 1 : 0),
-			AbstractAssembly::JumpType::IntoFunction
-		);
-		if (_call.canContinue)
+		if (m_dfg.useFunctions)
+			m_assembly.appendFunctionCall(m_builtinContext.functionIDs.at(&_call.function.get()),
+				!_call.canContinue ? static_cast<int>(_call.function.get().returns.size()) : 0);
+		else
+			m_assembly.appendJumpTo(
+				getFunctionLabel(_call.function),
+				static_cast<int>(_call.function.get().returns.size() - _call.function.get().arguments.size()) - (_call.canContinue ? 1 : 0),
+				AbstractAssembly::JumpType::IntoFunction
+			);
+		if (useReturnLabel)
 			m_assembly.appendLabel(m_returnLabels.at(&_call.functionCall.get()));
 	}
 
 	// Update stack.
 	{
 		// Remove arguments and return label from m_stack.
-		for (size_t i = 0; i < _call.function.get().arguments.size() + (_call.canContinue ? 1 : 0); ++i)
+		for (size_t i = 0; i < _call.function.get().arguments.size() + (useReturnLabel ? 1 : 0); ++i)
 			m_stack.pop_back();
 		// Push return values to m_stack.
+		yulAssert(_call.function.get().returns.size() < 0x80, "Num of function output >= 128");
+
 		for (size_t index: ranges::views::iota(0u, _call.function.get().returns.size()))
 			m_stack.emplace_back(TemporarySlot{_call.functionCall, index});
+
 		yulAssert(m_assembly.stackHeight() == static_cast<int>(m_stack.size()), "");
 	}
 }
@@ -183,7 +209,7 @@ OptimizedEVMCodeTransform::OptimizedEVMCodeTransform(
 	m_builtinContext(_builtinContext),
 	m_dfg(_dfg),
 	m_stackLayout(_stackLayout),
-	m_functionLabels([&](){
+	m_functionLabels(_dfg.useFunctions ? decltype(m_functionLabels)() : [&](){
 		std::map<CFG::FunctionInfo const*, AbstractAssembly::LabelID> functionLabels;
 		std::set<YulName> assignedFunctionNames;
 		for (Scope::Function const* function: m_dfg.functions)
@@ -216,6 +242,7 @@ void OptimizedEVMCodeTransform::assertLayoutCompatibility(Stack const& _currentS
 
 AbstractAssembly::LabelID OptimizedEVMCodeTransform::getFunctionLabel(Scope::Function const& _function)
 {
+	yulAssert(!m_dfg.useFunctions);
 	return m_functionLabels.at(&m_dfg.functionInfo.at(&_function));
 }
 
@@ -493,11 +520,15 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 			Stack exitStack = m_currentFunctionInfo->returnVariables | ranges::views::transform([](auto const& _varSlot){
 				return StackSlot{_varSlot};
 			}) | ranges::to<Stack>;
-			exitStack.emplace_back(FunctionReturnLabelSlot{_functionReturn.info->function});
+			if (!m_dfg.useFunctions)
+				exitStack.emplace_back(FunctionReturnLabelSlot{_functionReturn.info->function});
 
 			// Create the function return layout and jump.
 			createStackLayout(debugDataOf(_functionReturn), exitStack);
-			m_assembly.appendJump(0, AbstractAssembly::JumpType::OutOfFunction);
+			if (m_dfg.useFunctions)
+				m_assembly.appendFunctionReturn();
+			else
+				m_assembly.appendJump(0, AbstractAssembly::JumpType::OutOfFunction);
 		},
 		[&](CFG::BasicBlock::Terminated const&)
 		{
@@ -518,25 +549,31 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 
 void OptimizedEVMCodeTransform::operator()(CFG::FunctionInfo const& _functionInfo)
 {
+	bool useReturnLabel = !m_dfg.useFunctions && _functionInfo.canContinue;
 	yulAssert(!m_currentFunctionInfo, "");
 	ScopedSaveAndRestore currentFunctionInfoRestore(m_currentFunctionInfo, &_functionInfo);
 
 	yulAssert(m_stack.empty() && m_assembly.stackHeight() == 0, "");
 
 	// Create function entry layout in m_stack.
-	if (_functionInfo.canContinue)
+	if (useReturnLabel)
 		m_stack.emplace_back(FunctionReturnLabelSlot{_functionInfo.function});
 	for (auto const& param: _functionInfo.parameters | ranges::views::reverse)
 		m_stack.emplace_back(param);
+	if (m_dfg.useFunctions)
+		m_assembly.beginFunction(m_builtinContext.functionIDs[&_functionInfo.function]);
 	m_assembly.setStackHeight(static_cast<int>(m_stack.size()));
 
 	m_assembly.setSourceLocation(originLocationOf(_functionInfo));
-	m_assembly.appendLabel(getFunctionLabel(_functionInfo.function));
+	if (!m_dfg.useFunctions)
+		m_assembly.appendLabel(getFunctionLabel(_functionInfo.function));
 
 	// Create the entry layout of the function body block and visit.
 	createStackLayout(debugDataOf(_functionInfo), m_stackLayout.blockInfos.at(_functionInfo.entry).entryLayout);
 	(*this)(*_functionInfo.entry);
 
 	m_stack.clear();
+	if (m_dfg.useFunctions)
+		m_assembly.endFunction();
 	m_assembly.setStackHeight(0);
 }

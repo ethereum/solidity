@@ -15,7 +15,10 @@ contract C {
 		b = this.f;
 	}
 }
+// ====
+// compileToEOF: false
 // ----
 // f(uint256): 2 -> 4
 // h(uint256): 2 -> 5
 // t() -> 0xc06afe3a8444fc0004668591e8306bfb9968e79eb3de648b0000000000000000, 0xc06afe3a8444fc0004668591e8306bfb9968e79eb3de648b0000000000000000
+

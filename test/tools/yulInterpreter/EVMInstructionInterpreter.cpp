@@ -390,6 +390,14 @@ u256 EVMInstructionInterpreter::eval(
 			(arg[0] > 0) &&
 			(arg[1] == util::h160::Arith(m_state.address) || (arg[1] & 1))
 		) ? 1 : 0;
+	case Instruction::EXTCALL:
+	case Instruction::EXTSTATICCALL:
+	case Instruction::EXTDELEGATECALL:
+		accessMemory(arg[1], arg[2]);
+		logTrace(_instruction, arg);
+		return (
+				   (arg[0] == util::h160::Arith(m_state.address) || (arg[0] & 1))
+					   ) ? 1 : 0;
 	case Instruction::RETURN:
 	{
 		m_state.returndata = {};
@@ -487,6 +495,17 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::SWAP14:
 	case Instruction::SWAP15:
 	case Instruction::SWAP16:
+		// TODO: Not sure about it.
+	case Instruction::DATALOAD:
+	case Instruction::DATALOADN:
+	case Instruction::EOFCREATE:
+	case Instruction::RETURNCONTRACT:
+	case Instruction::CALLF:
+	case Instruction::RETF:
+	case Instruction::JUMPF:
+	case Instruction::RJUMP:
+	case Instruction::RJUMPI:
+	case Instruction::RJUMPV:
 	{
 		yulAssert(false, "");
 		return 0;

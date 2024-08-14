@@ -21,6 +21,8 @@ contract C {
         return d.f();
     }
 }
+// ====
+// compileToEOF: false
 // ----
 // test() -> 7
 // gas legacy: 76647

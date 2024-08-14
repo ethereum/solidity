@@ -48,10 +48,60 @@ using AssemblyPointer = std::shared_ptr<Assembly>;
 class Assembly
 {
 public:
-	Assembly(langutil::EVMVersion _evmVersion, bool _creation, std::string _name): m_evmVersion(_evmVersion), m_creation(_creation), m_name(std::move(_name)) { }
+	Assembly(langutil::EVMVersion _evmVersion, bool _creation, std::optional<uint8_t> _eofVersion, std::string _name):
+	m_evmVersion(_evmVersion),
+	m_creation(_creation),
+	m_eofVersion(_eofVersion),
+	m_name(std::move(_name))
+	{
+		// Code section number 0 has to be non-returning.
+		m_codeSections.emplace_back(CodeSection{0, 0x80, {}});
+	}
 
+	std::optional<uint8_t> eofVersion() const { return m_eofVersion; }
+	bool supportsFunctions() const { return m_eofVersion.has_value(); }
+	bool supportsRelativeJumps() const { return m_eofVersion.has_value(); }
 	AssemblyItem newTag() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(Tag, m_usedTags++); }
 	AssemblyItem newPushTag() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(PushTag, m_usedTags++); }
+	AssemblyItem newFunctionCall(uint16_t _functionID)
+	{
+		assertThrow(_functionID < m_codeSections.size(), AssemblyException, "Call to undeclared function.");
+		auto const& section = m_codeSections.at(_functionID);
+		if (section.outputs != 0x80)
+			return AssemblyItem::functionCall(_functionID, section.inputs, section.outputs);
+		else
+			return AssemblyItem::jumpF(_functionID, section.inputs);
+	}
+
+	AssemblyItem newFunctionReturn()
+	{
+		return AssemblyItem::functionReturn(m_codeSections.at(m_currentCodeSection).outputs);
+	}
+
+	uint16_t createFunction(uint8_t _args, uint8_t _rets)
+	{
+		size_t functionID = m_codeSections.size();
+		assertThrow(functionID < 1024, AssemblyException, "Too many functions.");
+		assertThrow(m_currentCodeSection == 0, AssemblyException, "Functions need to be declared from the main block.");
+		assertThrow(_rets <= 0x80, AssemblyException, "Too many function returns.");
+		m_codeSections.emplace_back(CodeSection{_args, _rets, {}});
+		return static_cast<uint16_t>(functionID);
+	}
+
+	void beginFunction(uint16_t _functionID)
+	{
+		assertThrow(m_currentCodeSection == 0, AssemblyException, "Atempted to begin a function before ending the last one.");
+		assertThrow(_functionID < m_codeSections.size(), AssemblyException, "Attempt to begin an undeclared function.");
+		auto& section = m_codeSections.at(_functionID);
+		assertThrow(section.items.empty(), AssemblyException, "Function already defined.");
+		m_currentCodeSection = _functionID;
+	}
+	void endFunction()
+	{
+		assertThrow(m_currentCodeSection != 0, AssemblyException, "End function without begin function.");
+		m_currentCodeSection = 0;
+	}
+
 	/// Returns a tag identified by the given name. Creates it if it does not yet exist.
 	AssemblyItem namedTag(std::string const& _name, size_t _params, size_t _returns, std::optional<uint64_t> _sourceID);
 	AssemblyItem newData(bytes const& _data) { util::h256 h(util::keccak256(util::asString(_data))); m_data[h] = _data; return AssemblyItem(PushData, h); }
@@ -64,6 +114,7 @@ public:
 	AssemblyItem newPushLibraryAddress(std::string const& _identifier);
 	AssemblyItem newPushImmutable(std::string const& _identifier);
 	AssemblyItem newImmutableAssignment(std::string const& _identifier);
+	AssemblyItem newDataLoadN(size_t offset);
 
 	AssemblyItem const& append(AssemblyItem _i);
 	AssemblyItem const& append(bytes const& _data) { return append(newData(_data)); }
@@ -76,10 +127,35 @@ public:
 	void appendLibraryAddress(std::string const& _identifier) { append(newPushLibraryAddress(_identifier)); }
 	void appendImmutable(std::string const& _identifier) { append(newPushImmutable(_identifier)); }
 	void appendImmutableAssignment(std::string const& _identifier) { append(newImmutableAssignment(_identifier)); }
+	void appendDataLoadN(size_t offset) { append(newDataLoadN(offset));}
 
 	void appendVerbatim(bytes _data, size_t _arguments, size_t _returnVariables)
 	{
 		append(AssemblyItem(std::move(_data), _arguments, _returnVariables));
+	}
+
+	AssemblyItem appendFunctionCall(uint16_t _functionID)
+	{
+		return append(newFunctionCall(_functionID));
+	}
+
+	AssemblyItem appendFunctionReturn()
+	{
+		return append(newFunctionReturn());
+	}
+
+	AssemblyItem appendEOFCreate(uint16_t _containerId)
+	{
+		assertThrow(_containerId < m_subs.size(), AssemblyException, "EOF Create of undefined container");
+
+		return append(AssemblyItem::eofCreate(_containerId));
+	}
+
+	AssemblyItem appendReturnContract(uint16_t _containerId)
+	{
+		assertThrow(_containerId < m_subs.size(), AssemblyException, "Return undefined container id");
+
+		return append(AssemblyItem::returnContract(_containerId));
 	}
 
 	AssemblyItem appendJump() { auto ret = append(newPushTag()); append(Instruction::JUMP); return ret; }
@@ -96,12 +172,6 @@ public:
 
 	/// Appends @a _data literally to the very end of the bytecode.
 	void appendToAuxiliaryData(bytes const& _data) { m_auxiliaryData += _data; }
-
-	/// Returns the assembly items.
-	AssemblyItems const& items() const { return m_items; }
-
-	/// Returns the mutable assembly items. Use with care!
-	AssemblyItems& items() { return m_items; }
 
 	int deposit() const { return m_deposit; }
 	void adjustDeposit(int _adjustment) { m_deposit += _adjustment; assertThrow(m_deposit >= 0, InvalidDeposit, ""); }
@@ -175,12 +245,30 @@ public:
 
 	bool isCreation() const { return m_creation; }
 
+	struct CodeSection
+	{
+		uint8_t inputs = 0;
+		uint8_t outputs = 0;
+		AssemblyItems items{};
+	};
+
+	std::vector<CodeSection>& codeSections()
+	{
+		return m_codeSections;
+	}
+
+	std::vector<CodeSection> const& codeSections() const
+	{
+		return m_codeSections;
+	}
+
 protected:
 	/// Does the same operations as @a optimise, but should only be applied to a sub and
 	/// returns the replaced tags. Also takes an argument containing the tags of this assembly
 	/// that are referenced in a super-assembly.
 	std::map<u256, u256> const& optimiseInternal(OptimiserSettings const& _settings, std::set<size_t> _tagsReferencedFromOutside);
 
+	/// For EOF and legacy it calculates approximate size of "pure" code without data.
 	unsigned codeSize(unsigned subTagSize) const;
 
 	/// Add all assembly items from given JSON array. This function imports the items by iterating through
@@ -217,11 +305,12 @@ protected:
 	};
 
 	std::map<std::string, NamedTagInfo> m_namedTags;
-	AssemblyItems m_items;
 	std::map<util::h256, bytes> m_data;
 	/// Data that is appended to the very end of the contract.
 	bytes m_auxiliaryData;
 	std::vector<std::shared_ptr<Assembly>> m_subs;
+	std::vector<CodeSection> m_codeSections;
+	uint16_t m_currentCodeSection = 0;
 	std::map<util::h256, std::string> m_strings;
 	std::map<util::h256, std::string> m_libraries; ///< Identifiers of libraries to be linked.
 	std::map<util::h256, std::string> m_immutables; ///< Identifiers of immutables.
@@ -242,6 +331,7 @@ protected:
 	int m_deposit = 0;
 	/// True, if the assembly contains contract creation code.
 	bool const m_creation = false;
+	std::optional<uint8_t> m_eofVersion;
 	/// Internal name of the assembly object, only used with the Yul backend
 	/// currently
 	std::string m_name;

@@ -86,12 +86,13 @@ evmasm::AssemblyItems compileContract(std::shared_ptr<CharStream> _sourceCode)
 		{
 			Compiler compiler(
 				solidity::test::CommonOptions::get().evmVersion(),
+				solidity::test::CommonOptions::get().eofVersion(),
 				RevertStrings::Default,
 				solidity::test::CommonOptions::get().optimize ? OptimiserSettings::standard() : OptimiserSettings::minimal()
 			);
 			compiler.compileContract(*contract, std::map<ContractDefinition const*, std::shared_ptr<Compiler const>>{}, bytes());
 
-			return compiler.runtimeAssembly().items();
+			return compiler.runtimeAssembly().codeSections().at(0).items;
 		}
 	BOOST_FAIL("No contract found in source.");
 	return AssemblyItems();

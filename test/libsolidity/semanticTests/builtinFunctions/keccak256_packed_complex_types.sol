@@ -10,5 +10,7 @@ contract C {
         hash3 = keccak256(abi.encodePacked(this.f));
     }
 }
+// ====
+// compileToEOF: false
 // ----
 // f() -> 0xba4f20407251e4607cd66b90bfea19ec6971699c03e4a4f3ea737d5818ac27ae, 0xba4f20407251e4607cd66b90bfea19ec6971699c03e4a4f3ea737d5818ac27ae, 0x0e9229fb1d2cd02cee4b6c9f25497777014a8766e3479666d1c619066d2887ec

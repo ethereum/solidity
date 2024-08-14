@@ -11,5 +11,7 @@ contract D {
     return test();
   }
 }
+// ====
+// compileToEOF: false
 // ----
 // f() -> true

@@ -33,6 +33,7 @@ contract D {
 }
 // ====
 // EVMVersion: >=cancun
+// compileToEOF: false
 // ----
 // constructor(), 2 ether ->
 // gas irOptimized: 108104

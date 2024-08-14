@@ -95,6 +95,7 @@ void IRGenerationContext::registerImmutableVariable(VariableDeclaration const& _
 	solAssert(m_reservedMemory.has_value(), "Reserved memory has already been reset.");
 	m_immutableVariables[&_variable] = CompilerUtils::generalPurposeMemoryStart + *m_reservedMemory;
 	solAssert(_variable.annotation().type->memoryHeadSize() == 32, "Memory writes might overlap.");
+	m_immutableVariablesOffsetsInDataSection[&_variable] = *m_reservedMemory;
 	*m_reservedMemory += _variable.annotation().type->memoryHeadSize();
 }
 
@@ -113,6 +114,17 @@ size_t IRGenerationContext::reservedMemory()
 	size_t reservedMemory = *m_reservedMemory;
 	m_reservedMemory = std::nullopt;
 	return reservedMemory;
+}
+
+size_t IRGenerationContext::immutablesMemorySize() const
+{
+	solAssert(m_reservedMemory.has_value(), "Reserved memory was used before.");
+	return *m_reservedMemory;
+}
+
+size_t IRGenerationContext::immutablesMemoryOffset() const
+{
+	return CompilerUtils::generalPurposeMemoryStart;
 }
 
 void IRGenerationContext::addStateVariable(
@@ -169,10 +181,10 @@ void IRGenerationContext::internalFunctionCalledThroughDispatch(YulArity const& 
 
 YulUtilFunctions IRGenerationContext::utils()
 {
-	return YulUtilFunctions(m_evmVersion, m_revertStrings, m_functions);
+	return YulUtilFunctions(m_evmVersion, m_eofVersion, m_revertStrings, m_functions);
 }
 
 ABIFunctions IRGenerationContext::abiFunctions()
 {
-	return ABIFunctions(m_evmVersion, m_revertStrings, m_functions);
+	return ABIFunctions(m_evmVersion, m_eofVersion, m_revertStrings, m_functions);
 }

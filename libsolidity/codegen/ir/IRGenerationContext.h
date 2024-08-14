@@ -58,16 +58,20 @@ public:
 
 	IRGenerationContext(
 		langutil::EVMVersion _evmVersion,
+		std::optional<uint8_t> _eofVersion,
 		ExecutionContext _executionContext,
 		RevertStrings _revertStrings,
 		std::map<std::string, unsigned> _sourceIndices,
 		langutil::DebugInfoSelection const& _debugInfoSelection,
-		langutil::CharStreamProvider const* _soliditySourceProvider
+		langutil::CharStreamProvider const* _soliditySourceProvider,
+		std::map<VariableDeclaration const*, size_t> _immutableVariablesOffsetsInDataSection
 	):
 		m_evmVersion(_evmVersion),
+		m_eofVersion(_eofVersion),
 		m_executionContext(_executionContext),
 		m_revertStrings(_revertStrings),
 		m_sourceIndices(std::move(_sourceIndices)),
+		m_immutableVariablesOffsetsInDataSection(_immutableVariablesOffsetsInDataSection),
 		m_debugInfoSelection(_debugInfoSelection),
 		m_soliditySourceProvider(_soliditySourceProvider)
 	{}
@@ -106,6 +110,8 @@ public:
 	/// Intended to be used only once for initializing the free memory pointer
 	/// to after the area used for immutables.
 	size_t reservedMemory();
+	size_t immutablesMemorySize() const;
+	size_t immutablesMemoryOffset() const;
 
 	void addStateVariable(VariableDeclaration const& _varDecl, u256 _storageOffset, unsigned _byteOffset);
 	bool isStateVariable(VariableDeclaration const& _varDecl) const { return m_stateVariables.count(&_varDecl); }
@@ -134,7 +140,16 @@ public:
 	YulUtilFunctions utils();
 
 	langutil::EVMVersion evmVersion() const { return m_evmVersion; }
+	std::optional<uint8_t> eofVersion() const { return m_eofVersion; }
 	ExecutionContext executionContext() const { return m_executionContext; }
+	size_t immutableVariableOffsetInDataSection(VariableDeclaration const& _variable) const
+	{
+		solAssert(
+			m_immutableVariablesOffsetsInDataSection.count(&_variable),
+			"Unknown immutable variable: " + _variable.name()
+		);
+		return m_immutableVariablesOffsetsInDataSection.at(&_variable);
+	}
 
 	void setArithmetic(Arithmetic _value) { m_arithmetic = _value; }
 	Arithmetic arithmetic() const { return m_arithmetic; }
@@ -157,9 +172,11 @@ public:
 
 	langutil::DebugInfoSelection debugInfoSelection() const { return m_debugInfoSelection; }
 	langutil::CharStreamProvider const* soliditySourceProvider() const { return m_soliditySourceProvider; }
+	std::map<VariableDeclaration const*, size_t> const& immutableVariablesOffsetsInDataSection() const { return m_immutableVariablesOffsetsInDataSection; }
 
 private:
 	langutil::EVMVersion m_evmVersion;
+	std::optional<uint8_t> m_eofVersion;
 	ExecutionContext m_executionContext;
 	RevertStrings m_revertStrings;
 	std::map<std::string, unsigned> m_sourceIndices;
@@ -169,6 +186,8 @@ private:
 	/// Memory offsets reserved for the values of immutable variables during contract creation.
 	/// This map is empty in the runtime context.
 	std::map<VariableDeclaration const*, size_t> m_immutableVariables;
+	/// EOF Data section offsets of values of immutable variables
+	std::map<VariableDeclaration const*, size_t> m_immutableVariablesOffsetsInDataSection;
 	/// Total amount of reserved memory. Reserved memory is used to store
 	/// immutable variables during contract creation.
 	std::optional<size_t> m_reservedMemory = {0};

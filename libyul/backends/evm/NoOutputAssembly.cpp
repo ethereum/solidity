@@ -97,10 +97,47 @@ void NoOutputAssembly::appendAssemblySize()
 	appendInstruction(evmasm::Instruction::PUSH1);
 }
 
-std::pair<std::shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> NoOutputAssembly::createSubAssembly(bool, std::string)
+std::pair<std::shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> NoOutputAssembly::createSubAssembly(bool, std::optional<uint8_t>, std::string)
 {
 	yulAssert(false, "Sub assemblies not implemented.");
 	return {};
+}
+
+AbstractAssembly::FunctionID NoOutputAssembly::createFunction(uint8_t _args, uint8_t _rets)
+{
+	yulAssert(m_context->numFunctions <= std::numeric_limits<AbstractAssembly::FunctionID>::max());
+	AbstractAssembly::FunctionID id = static_cast<AbstractAssembly::FunctionID>(m_context->numFunctions++);
+	m_context->functionSignatures[id] = std::make_pair(_args, _rets);
+	return id;
+}
+
+void NoOutputAssembly::beginFunction(FunctionID)
+{
+}
+
+void NoOutputAssembly::endFunction()
+{
+}
+
+void NoOutputAssembly::appendFunctionCall(FunctionID _functionID, int)
+{
+	auto [args, rets] = m_context->functionSignatures.at(_functionID);
+	m_stackHeight += static_cast<int>(rets) - static_cast<int>(args);
+}
+
+void NoOutputAssembly::appendFunctionReturn()
+{
+	m_stackHeight = 0;
+}
+
+void NoOutputAssembly::appendEofCreateCall(ContainerID)
+{
+	// TODO: Implement
+
+}
+void NoOutputAssembly::appendReturnContractCall(ContainerID)
+{
+	// TODO: Implement
 }
 
 void NoOutputAssembly::appendDataOffset(std::vector<AbstractAssembly::SubID> const&)
@@ -127,6 +164,11 @@ void NoOutputAssembly::appendImmutable(std::string const&)
 void NoOutputAssembly::appendImmutableAssignment(std::string const&)
 {
 	yulAssert(false, "setimmutable not implemented.");
+}
+
+void NoOutputAssembly::appendDataLoadN(size_t)
+{
+	yulAssert(false, "dataloadn not implemented.");
 }
 
 NoOutputEVMDialect::NoOutputEVMDialect(EVMDialect const& _copyFrom):

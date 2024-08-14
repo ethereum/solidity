@@ -20,6 +20,8 @@ contract C {
         return 1 + c;
     }
 }
+// ====
+// compileToEOF: false
 // ----
 // constructor(), 1 ether ->
 // gas irOptimized: 88853

@@ -12,6 +12,8 @@ contract C {
 		return this.testFunction.address;
 	}
 }
+// ====
+// compileToEOF: false
 // ----
 // testYul() -> 0xc06afe3a8444fc0004668591e8306bfb9968e79e
 // testSol() -> 0xc06afe3a8444fc0004668591e8306bfb9968e79e

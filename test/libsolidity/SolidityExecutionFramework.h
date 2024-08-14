@@ -62,7 +62,7 @@ public:
 	) override
 	{
 		bytes bytecode = multiSourceCompileContract(_sourceCode, _sourceName, _contractName, _libraryAddresses);
-		sendMessage(bytecode + _arguments, true, _value);
+		sendMessage(bytecode, _arguments, true, _value);
 		return m_output;
 	}
 

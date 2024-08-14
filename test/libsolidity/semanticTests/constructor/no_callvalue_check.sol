@@ -15,6 +15,8 @@ contract C {
 		return true;
 	}
 }
+// ====
+// compileToEOF: false
 // ----
 // f(), 2000 ether -> true
 // gas irOptimized: 117623

@@ -3,6 +3,8 @@ contract C {
         return gasleft() > 0;
     }
 }
+// ====
+// compileToEOF: false
 // ----
 // f() -> true
 // f() -> true

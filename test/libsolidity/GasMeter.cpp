@@ -76,7 +76,7 @@ public:
 		util::FixedHash<4> hash = util::selectorFromSignatureH32(_sig);
 		for (bytes const& arguments: _argumentVariants)
 		{
-			sendMessage(hash.asBytes() + arguments, false, 0);
+			sendMessage(hash.asBytes(), arguments, false, 0);
 			BOOST_CHECK(m_transactionSuccessful);
 			gasUsed = std::max(gasUsed, m_gasUsed);
 			gas = std::max(gas, gasForTransaction(hash.asBytes() + arguments, false));

@@ -56,13 +56,14 @@ class ABIFunctions
 public:
 	explicit ABIFunctions(
 		langutil::EVMVersion _evmVersion,
+		std::optional<uint8_t> _eofVersion,
 		RevertStrings _revertStrings,
 		MultiUseYulFunctionCollector& _functionCollector
 	):
 		m_evmVersion(_evmVersion),
 		m_revertStrings(_revertStrings),
 		m_functionCollector(_functionCollector),
-		m_utils(_evmVersion, m_revertStrings, m_functionCollector)
+		m_utils(_evmVersion, _eofVersion, m_revertStrings, m_functionCollector)
 	{}
 
 	/// @returns name of an assembly function to ABI-encode values of @a _givenTypes

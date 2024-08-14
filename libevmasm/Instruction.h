@@ -182,13 +182,30 @@ enum class Instruction: uint8_t
 	LOG3,                     ///< Makes a log entry; 3 topics.
 	LOG4,                     ///< Makes a log entry; 4 topics.
 
+	DATALOAD = 0xd0,          ///< load data from EOF data section
+	DATALOADN = 0xd1,         ///< load data from EOF data section
+
+	RJUMP = 0xe0,             ///< relative jump
+	RJUMPI = 0xe1,            ///< conidtional relative jump
+	RJUMPV = 0xe2,            ///< relative jump via jump table
+
+	CALLF = 0xe3,             ///< call function in a EOF code section
+	RETF = 0xe4,              ///< return to caller from the code section of EOF continer
+	JUMPF = 0xe5,             ///< jump to a code section of EOF contaner. No stack cleaning.
+
+	EOFCREATE = 0xec,         ///< create a new account with associated container code.
+	RETURNCONTRACT = 0xee,    ///< create a new account with associated container code.
+
 	CREATE = 0xf0,            ///< create a new account with associated code
 	CALL,                     ///< message-call into an account
 	CALLCODE,                 ///< message-call with another account's code only
 	RETURN,                   ///< halt execution returning output data
 	DELEGATECALL,             ///< like CALLCODE but keeps caller's value and sender
 	CREATE2 = 0xf5,           ///< create new account with associated code at address `sha3(0xff + sender + salt + init code) % 2**160`
+	EXTCALL = 0xf8,           ///< EOF message-call into an account
+	EXTDELEGATECALL = 0xf9,   ///< EOF delegate call
 	STATICCALL = 0xfa,        ///< like CALL but disallow state modifications
+	EXTSTATICCALL = 0xfb,     ///< like EXTCALL but disallow state modifications
 
 	REVERT = 0xfd,            ///< halt execution, revert state and return output data
 	INVALID = 0xfe,           ///< invalid instruction for expressing runtime errors (e.g., division-by-zero)
@@ -204,6 +221,9 @@ constexpr bool isCallInstruction(Instruction _inst) noexcept
 		case Instruction::CALLCODE:
 		case Instruction::DELEGATECALL:
 		case Instruction::STATICCALL:
+		case Instruction::EXTCALL:
+		case Instruction::EXTSTATICCALL:
+		case Instruction::EXTDELEGATECALL:
 			return true;
 		default:
 			return false;

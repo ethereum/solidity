@@ -219,7 +219,7 @@ public:
 					{
 						Object obj;
 						obj.setCode(std::make_shared<AST>(std::get<yul::Block>(ASTCopier{}(*m_astRoot))));
-						*m_astRoot = std::get<1>(StackCompressor::run(m_dialect, obj, true, 16));
+						*m_astRoot = std::get<1>(StackCompressor::run(m_dialect, std::nullopt /* TODO */, obj, true, 16));
 						break;
 					}
 					default:
@@ -248,6 +248,7 @@ private:
 	NameDispenser m_nameDispenser{m_dialect, m_reservedIdentifiers};
 	OptimiserStepContext m_context{
 		m_dialect,
+		std::nullopt, // TODO
 		m_nameDispenser,
 		m_reservedIdentifiers,
 		solidity::frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment

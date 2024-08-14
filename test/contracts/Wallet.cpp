@@ -454,7 +454,7 @@ protected:
 		});
 
 		bytes args = encodeArgs(u256(0x60), _required, _dailyLimit, u256(_owners.size()), _owners);
-		sendMessage(compiled + args, true, _value);
+		sendMessage(compiled, args, true, _value);
 		BOOST_REQUIRE(m_transactionSuccessful);
 		BOOST_REQUIRE(!m_output.empty());
 	}

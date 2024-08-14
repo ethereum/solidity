@@ -51,10 +51,12 @@ class YulUtilFunctions
 public:
 	explicit YulUtilFunctions(
 		langutil::EVMVersion _evmVersion,
+		std::optional<uint8_t> _eofVersion,
 		RevertStrings _revertStrings,
 		MultiUseYulFunctionCollector& _functionCollector
 	):
 		m_evmVersion(_evmVersion),
+		m_eofVersion(_eofVersion),
 		m_revertStrings(_revertStrings),
 		m_functionCollector(_functionCollector)
 	{}
@@ -624,6 +626,7 @@ private:
 	std::string longByteArrayStorageIndexAccessNoCheckFunction();
 
 	langutil::EVMVersion m_evmVersion;
+	std::optional<uint8_t> m_eofVersion;
 	RevertStrings m_revertStrings;
 	MultiUseYulFunctionCollector& m_functionCollector;
 };
