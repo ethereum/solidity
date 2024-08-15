@@ -268,7 +268,7 @@ StackSlot ControlFlowGraphBuilder::operator()(FunctionCall const& _call)
 void ControlFlowGraphBuilder::operator()(VariableDeclaration const& _varDecl)
 {
 	yulAssert(m_currentBlock, "");
-	auto declaredVariables = _varDecl.variables | ranges::views::transform([&](TypedName const& _var) {
+	auto declaredVariables = _varDecl.variables | ranges::views::transform([&](NameWithDebugData const& _var) {
 		return VariableSlot{lookupVariable(_var.name), _var.debugData};
 	}) | ranges::to<std::vector<VariableSlot>>;
 	Stack input;
@@ -337,7 +337,7 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 
 	auto ghostVariableId = m_graph.ghostVariables.size();
 	YulName ghostVariableName("GHOST[" + std::to_string(ghostVariableId) + "]");
-	auto& ghostVar = m_graph.ghostVariables.emplace_back(Scope::Variable{""_yulname, ghostVariableName});
+	auto& ghostVar = m_graph.ghostVariables.emplace_back(Scope::Variable{ghostVariableName});
 
 	// Artificially generate:
 	// let <ghostVariable> := <switchExpression>
@@ -548,7 +548,7 @@ Stack const& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _cal
 			// input
 			std::move(inputs),
 			// output
-			ranges::views::iota(0u, function.returns.size()) | ranges::views::transform([&](size_t _i) {
+			ranges::views::iota(0u, function.numReturns) | ranges::views::transform([&](size_t _i) {
 				return TemporarySlot{_call, _i};
 			}) | ranges::to<Stack>,
 			// operation

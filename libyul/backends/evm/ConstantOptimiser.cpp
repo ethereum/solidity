@@ -179,7 +179,7 @@ Representation const& RepresentationFinder::findRepresentation(u256 const& _valu
 Representation RepresentationFinder::represent(u256 const& _value) const
 {
 	Representation repr;
-	repr.expression = std::make_unique<Expression>(Literal{m_debugData, LiteralKind::Number, LiteralValue{_value, formatNumber(_value)}, {}});
+	repr.expression = std::make_unique<Expression>(Literal{m_debugData, LiteralKind::Number, LiteralValue{_value, formatNumber(_value)}});
 	repr.cost = m_meter.costs(*repr.expression);
 	return repr;
 }

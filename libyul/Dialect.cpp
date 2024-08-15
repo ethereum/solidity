@@ -27,5 +27,5 @@ using namespace solidity::langutil;
 
 Literal Dialect::zeroLiteral() const
 {
-	return {DebugData::create(), LiteralKind::Number, LiteralValue(0, std::nullopt), {}};
+	return {DebugData::create(), LiteralKind::Number, LiteralValue(0, std::nullopt)};
 }

@@ -35,12 +35,11 @@ FunctionDefinition unusedFunctionsCommon::createLinkingFunction(
 	NameDispenser& _nameDispenser
 )
 {
-	auto generateTypedName = [&](TypedName t)
+	auto generateTypedName = [&](NameWithDebugData t)
 	{
-		return TypedName{
+		return NameWithDebugData{
 			t.debugData,
-			_nameDispenser.newName(t.name),
-			t.type
+			_nameDispenser.newName(t.name)
 		};
 	};
 

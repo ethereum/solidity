@@ -25,22 +25,21 @@ using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
 
-bool Scope::registerVariable(YulName _name, YulType const& _type)
+bool Scope::registerVariable(YulName _name)
 {
 	if (exists(_name))
 		return false;
 	Variable variable;
-	variable.type = _type;
 	variable.name = _name;
 	identifiers[_name] = variable;
 	return true;
 }
 
-bool Scope::registerFunction(YulName _name, std::vector<YulType> _arguments, std::vector<YulType> _returns)
+bool Scope::registerFunction(YulName _name, size_t _numArguments, size_t _numReturns)
 {
 	if (exists(_name))
 		return false;
-	identifiers[_name] = Function{std::move(_arguments), std::move(_returns), _name};
+	identifiers[_name] = Function{_numArguments, _numReturns, _name};
 	return true;
 }
 

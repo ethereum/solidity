@@ -70,7 +70,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::FunctionCall const& _call)
 	// Validate stack.
 	{
 		yulAssert(m_assembly.stackHeight() == static_cast<int>(m_stack.size()), "");
-		yulAssert(m_stack.size() >= _call.function.get().arguments.size() + (_call.canContinue ? 1 : 0), "");
+		yulAssert(m_stack.size() >= _call.function.get().numArguments + (_call.canContinue ? 1 : 0), "");
 		// Assert that we got the correct arguments on stack for the call.
 		for (auto&& [arg, slot]: ranges::zip_view(
 			_call.functionCall.get().arguments | ranges::views::reverse,
@@ -92,7 +92,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::FunctionCall const& _call)
 		m_assembly.setSourceLocation(originLocationOf(_call));
 		m_assembly.appendJumpTo(
 			getFunctionLabel(_call.function),
-			static_cast<int>(_call.function.get().returns.size()) - static_cast<int>(_call.function.get().arguments.size()) - (_call.canContinue ? 1 : 0),
+			static_cast<int>(_call.function.get().numReturns) - static_cast<int>(_call.function.get().numArguments) - (_call.canContinue ? 1 : 0),
 			AbstractAssembly::JumpType::IntoFunction
 		);
 		if (_call.canContinue)
@@ -102,10 +102,10 @@ void OptimizedEVMCodeTransform::operator()(CFG::FunctionCall const& _call)
 	// Update stack.
 	{
 		// Remove arguments and return label from m_stack.
-		for (size_t i = 0; i < _call.function.get().arguments.size() + (_call.canContinue ? 1 : 0); ++i)
+		for (size_t i = 0; i < _call.function.get().numArguments + (_call.canContinue ? 1 : 0); ++i)
 			m_stack.pop_back();
 		// Push return values to m_stack.
-		for (size_t index: ranges::views::iota(0u, _call.function.get().returns.size()))
+		for (size_t index: ranges::views::iota(0u, _call.function.get().numReturns))
 			m_stack.emplace_back(TemporarySlot{_call.functionCall, index});
 		yulAssert(m_assembly.stackHeight() == static_cast<int>(m_stack.size()), "");
 	}
@@ -196,8 +196,8 @@ OptimizedEVMCodeTransform::OptimizedEVMCodeTransform(
 			functionLabels[&functionInfo] = useNamedLabel ?
 				m_assembly.namedLabel(
 					function->name.str(),
-					function->arguments.size(),
-					function->returns.size(),
+					function->numArguments,
+					function->numReturns,
 					functionInfo.debugData ? functionInfo.debugData->astID : std::nullopt
 				) :
 				m_assembly.newLabelId();

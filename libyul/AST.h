@@ -36,10 +36,8 @@
 namespace solidity::yul
 {
 
-using Type = YulName;
-
-struct TypedName { langutil::DebugData::ConstPtr debugData; YulName name; Type type; };
-using TypedNameList = std::vector<TypedName>;
+struct NameWithDebugData { langutil::DebugData::ConstPtr debugData; YulName name; };
+using NameWithDebugDataList = std::vector<NameWithDebugData>;
 
 /// Literal number or string (up to 32 bytes)
 enum class LiteralKind { Number, Boolean, String };
@@ -68,7 +66,7 @@ private:
 	std::optional<Data> m_numericValue;
 	std::shared_ptr<std::string> m_stringValue;
 };
-struct Literal { langutil::DebugData::ConstPtr debugData; LiteralKind kind; LiteralValue value; Type type; };
+struct Literal { langutil::DebugData::ConstPtr debugData; LiteralKind kind; LiteralValue value; };
 /// External / internal identifier or label reference
 struct Identifier { langutil::DebugData::ConstPtr debugData; YulName name; };
 /// Assignment ("x := mload(20:u256)", expects push-1-expression on the right hand
@@ -82,11 +80,11 @@ struct FunctionCall { langutil::DebugData::ConstPtr debugData; Identifier functi
 /// Statement that contains only a single expression
 struct ExpressionStatement { langutil::DebugData::ConstPtr debugData; Expression expression; };
 /// Block-scope variable declaration ("let x:u256 := mload(20:u256)"), non-hoisted
-struct VariableDeclaration { langutil::DebugData::ConstPtr debugData; TypedNameList variables; std::unique_ptr<Expression> value; };
+struct VariableDeclaration { langutil::DebugData::ConstPtr debugData; NameWithDebugDataList variables; std::unique_ptr<Expression> value; };
 /// Block that creates a scope (frees declared stack variables)
 struct Block { langutil::DebugData::ConstPtr debugData; std::vector<Statement> statements; };
 /// Function definition ("function f(a, b) -> (d, e) { ... }")
-struct FunctionDefinition { langutil::DebugData::ConstPtr debugData; YulName name; TypedNameList parameters; TypedNameList returnVariables; Block body; };
+struct FunctionDefinition { langutil::DebugData::ConstPtr debugData; YulName name; NameWithDebugDataList parameters; NameWithDebugDataList returnVariables; Block body; };
 /// Conditional execution without "else" part.
 struct If { langutil::DebugData::ConstPtr debugData; std::unique_ptr<Expression> condition; Block body; };
 /// Switch case or default case

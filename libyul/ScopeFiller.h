@@ -35,7 +35,7 @@ struct SourceLocation;
 namespace solidity::yul
 {
 
-struct TypedName;
+struct NameWithDebugData;
 struct Scope;
 struct AsmAnalysisInfo;
 
@@ -65,7 +65,7 @@ public:
 
 private:
 	bool registerVariable(
-		TypedName const& _name,
+		NameWithDebugData const& _name,
 		langutil::SourceLocation const& _location,
 		Scope& _scope
 	);

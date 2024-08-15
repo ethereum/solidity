@@ -145,8 +145,9 @@ protected:
 	VariableDeclaration parseVariableDeclaration();
 	FunctionDefinition parseFunctionDefinition();
 	FunctionCall parseCall(std::variant<Literal, Identifier>&& _initialOp);
-	TypedName parseTypedName();
+	NameWithDebugData parseNameWithDebugData();
 	YulName expectAsmIdentifier();
+	void expectUntyped(langutil::SourceLocation const& loc);
 
 	/// Reports an error if we are currently not inside the body part of a for loop.
 	void checkBreakContinuePosition(std::string const& _which);

@@ -92,7 +92,7 @@ void UnusedPruner::operator()(Block& _block)
 			if (std::none_of(
 				varDecl.variables.begin(),
 				varDecl.variables.end(),
-				[&](TypedName const& _typedName) { return used(_typedName.name); }
+				[&](NameWithDebugData const& _typedName) { return used(_typedName.name); }
 			))
 			{
 				if (!varDecl.value)

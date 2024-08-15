@@ -454,9 +454,9 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 				{
 					YulName originalFunctionName = m_currentFunction;
 					m_currentFunction = _function.name;
-					for (TypedName const& _argument: _function.parameters)
+					for (NameWithDebugData const& _argument: _function.parameters)
 						visitVariableName(_argument.name);
-					for (TypedName const& _argument: _function.returnVariables)
+					for (NameWithDebugData const& _argument: _function.returnVariables)
 						visitVariableName(_argument.name);
 					ASTWalker::operator()(_function);
 					m_currentFunction = originalFunctionName;

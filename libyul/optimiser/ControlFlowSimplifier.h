@@ -24,7 +24,6 @@ namespace solidity::yul
 {
 struct Dialect;
 struct OptimiserStepContext;
-class TypeInfo;
 
 /**
  * Simplifies several control-flow structures:
