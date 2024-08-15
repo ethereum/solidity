@@ -272,7 +272,7 @@ void ReferencesResolver::operator()(yul::FunctionDefinition const& _function)
 {
 	solAssert(nativeLocationOf(_function) == originLocationOf(_function), "");
 	validateYulIdentifierName(_function.name, nativeLocationOf(_function));
-	for (yul::TypedName const& varName: _function.parameters + _function.returnVariables)
+	for (yul::NameWithDebugData const& varName: _function.parameters + _function.returnVariables)
 	{
 		solAssert(nativeLocationOf(varName) == originLocationOf(varName), "");
 		validateYulIdentifierName(varName.name, nativeLocationOf(varName));

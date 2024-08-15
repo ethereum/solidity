@@ -20,260 +20,260 @@
     let $100:x
 }
 // ----
-// TypeError 5473: (200-205): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (210-215): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (220-225): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (230-235): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (240-245): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (250-255): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (260-265): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (270-275): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (280-285): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (290-295): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (300-305): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (310-315): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (320-325): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (330-335): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (340-345): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (350-355): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (364-369): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (374-379): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (384-389): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (394-399): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (404-409): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (414-419): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (424-429): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (434-439): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (444-449): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (454-459): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (464-469): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (474-479): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (484-489): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (494-499): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (504-509): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (514-519): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (528-533): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (538-543): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (548-553): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (558-563): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (568-573): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (578-583): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (588-593): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (598-603): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (608-613): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (618-623): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (628-633): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (638-643): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (648-653): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (658-663): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (668-673): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (678-683): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (692-697): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (702-707): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (712-717): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (722-727): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (732-737): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (742-747): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (752-757): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (762-767): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (772-777): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (782-787): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (792-797): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (802-807): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (812-817): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (822-827): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (832-837): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (842-847): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (856-861): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (866-871): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (876-881): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (886-891): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (896-901): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (906-911): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (916-921): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (926-931): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (936-941): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (946-951): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (956-961): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (966-971): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (976-981): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (986-991): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (996-1001): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1006-1011): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1020-1025): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1030-1035): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1040-1045): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1050-1055): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1060-1065): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1070-1075): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1080-1085): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1090-1095): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1100-1105): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1110-1115): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1120-1125): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1130-1135): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1140-1145): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1150-1155): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1160-1165): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1170-1175): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1184-1189): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1194-1199): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1204-1209): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1214-1219): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1224-1229): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1234-1239): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1244-1249): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1254-1259): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1264-1269): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1274-1279): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1284-1289): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1294-1299): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1304-1309): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1314-1319): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1324-1329): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1334-1339): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1348-1353): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1358-1363): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1368-1373): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1378-1383): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1388-1393): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1398-1403): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1408-1413): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1418-1423): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1428-1433): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1438-1443): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1448-1453): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1458-1463): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1468-1473): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1478-1483): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1488-1493): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1498-1503): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1512-1517): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1522-1527): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1532-1537): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1542-1547): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1552-1557): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1562-1567): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1572-1577): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1582-1587): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1592-1597): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1602-1607): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1612-1617): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1622-1627): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1632-1637): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1642-1647): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1652-1657): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1662-1667): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1676-1681): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1686-1691): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1696-1701): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1706-1711): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1716-1721): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1726-1731): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1736-1741): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1746-1751): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1756-1761): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1766-1771): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1776-1781): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1786-1791): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1796-1801): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1806-1811): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1816-1821): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1826-1831): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1840-1845): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1850-1855): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1860-1865): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1870-1875): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1880-1885): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1890-1895): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1900-1905): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1910-1915): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1920-1925): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1930-1935): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1940-1945): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1950-1955): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1960-1965): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1970-1975): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1980-1985): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (1990-1995): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2004-2009): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2014-2019): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2024-2029): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2034-2039): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2044-2049): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2054-2059): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2064-2069): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2074-2079): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2084-2089): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2094-2099): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2104-2109): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2114-2119): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2124-2129): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2134-2139): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2144-2149): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2154-2159): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2168-2173): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2178-2183): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2188-2193): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2198-2203): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2208-2213): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2218-2223): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2228-2233): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2238-2243): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2248-2253): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2258-2263): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2268-2273): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2278-2283): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2288-2293): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2298-2303): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2308-2313): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2318-2323): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2332-2337): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2342-2347): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2352-2357): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2362-2367): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2372-2377): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2382-2387): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2392-2397): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2402-2407): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2412-2417): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2422-2427): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2432-2437): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2442-2447): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2452-2457): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2462-2467): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2472-2477): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2482-2487): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2496-2501): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2506-2511): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2516-2521): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2526-2531): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2536-2541): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2546-2551): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2556-2561): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2566-2571): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2576-2581): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2586-2591): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2596-2601): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2606-2611): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2616-2621): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2626-2631): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2636-2641): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2646-2651): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2660-2665): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2670-2675): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2680-2685): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2690-2695): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2700-2705): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2710-2715): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2720-2725): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2730-2735): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2740-2745): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2750-2755): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2760-2765): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2770-2775): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2780-2785): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2790-2795): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2800-2805): "x" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (2810-2815): "x" is not a valid type (user defined types are not yet supported).
+// ParserError 5473: (200-205): Types are not valid in untyped Yul.
+// ParserError 5473: (210-215): Types are not valid in untyped Yul.
+// ParserError 5473: (220-225): Types are not valid in untyped Yul.
+// ParserError 5473: (230-235): Types are not valid in untyped Yul.
+// ParserError 5473: (240-245): Types are not valid in untyped Yul.
+// ParserError 5473: (250-255): Types are not valid in untyped Yul.
+// ParserError 5473: (260-265): Types are not valid in untyped Yul.
+// ParserError 5473: (270-275): Types are not valid in untyped Yul.
+// ParserError 5473: (280-285): Types are not valid in untyped Yul.
+// ParserError 5473: (290-295): Types are not valid in untyped Yul.
+// ParserError 5473: (300-305): Types are not valid in untyped Yul.
+// ParserError 5473: (310-315): Types are not valid in untyped Yul.
+// ParserError 5473: (320-325): Types are not valid in untyped Yul.
+// ParserError 5473: (330-335): Types are not valid in untyped Yul.
+// ParserError 5473: (340-345): Types are not valid in untyped Yul.
+// ParserError 5473: (350-355): Types are not valid in untyped Yul.
+// ParserError 5473: (364-369): Types are not valid in untyped Yul.
+// ParserError 5473: (374-379): Types are not valid in untyped Yul.
+// ParserError 5473: (384-389): Types are not valid in untyped Yul.
+// ParserError 5473: (394-399): Types are not valid in untyped Yul.
+// ParserError 5473: (404-409): Types are not valid in untyped Yul.
+// ParserError 5473: (414-419): Types are not valid in untyped Yul.
+// ParserError 5473: (424-429): Types are not valid in untyped Yul.
+// ParserError 5473: (434-439): Types are not valid in untyped Yul.
+// ParserError 5473: (444-449): Types are not valid in untyped Yul.
+// ParserError 5473: (454-459): Types are not valid in untyped Yul.
+// ParserError 5473: (464-469): Types are not valid in untyped Yul.
+// ParserError 5473: (474-479): Types are not valid in untyped Yul.
+// ParserError 5473: (484-489): Types are not valid in untyped Yul.
+// ParserError 5473: (494-499): Types are not valid in untyped Yul.
+// ParserError 5473: (504-509): Types are not valid in untyped Yul.
+// ParserError 5473: (514-519): Types are not valid in untyped Yul.
+// ParserError 5473: (528-533): Types are not valid in untyped Yul.
+// ParserError 5473: (538-543): Types are not valid in untyped Yul.
+// ParserError 5473: (548-553): Types are not valid in untyped Yul.
+// ParserError 5473: (558-563): Types are not valid in untyped Yul.
+// ParserError 5473: (568-573): Types are not valid in untyped Yul.
+// ParserError 5473: (578-583): Types are not valid in untyped Yul.
+// ParserError 5473: (588-593): Types are not valid in untyped Yul.
+// ParserError 5473: (598-603): Types are not valid in untyped Yul.
+// ParserError 5473: (608-613): Types are not valid in untyped Yul.
+// ParserError 5473: (618-623): Types are not valid in untyped Yul.
+// ParserError 5473: (628-633): Types are not valid in untyped Yul.
+// ParserError 5473: (638-643): Types are not valid in untyped Yul.
+// ParserError 5473: (648-653): Types are not valid in untyped Yul.
+// ParserError 5473: (658-663): Types are not valid in untyped Yul.
+// ParserError 5473: (668-673): Types are not valid in untyped Yul.
+// ParserError 5473: (678-683): Types are not valid in untyped Yul.
+// ParserError 5473: (692-697): Types are not valid in untyped Yul.
+// ParserError 5473: (702-707): Types are not valid in untyped Yul.
+// ParserError 5473: (712-717): Types are not valid in untyped Yul.
+// ParserError 5473: (722-727): Types are not valid in untyped Yul.
+// ParserError 5473: (732-737): Types are not valid in untyped Yul.
+// ParserError 5473: (742-747): Types are not valid in untyped Yul.
+// ParserError 5473: (752-757): Types are not valid in untyped Yul.
+// ParserError 5473: (762-767): Types are not valid in untyped Yul.
+// ParserError 5473: (772-777): Types are not valid in untyped Yul.
+// ParserError 5473: (782-787): Types are not valid in untyped Yul.
+// ParserError 5473: (792-797): Types are not valid in untyped Yul.
+// ParserError 5473: (802-807): Types are not valid in untyped Yul.
+// ParserError 5473: (812-817): Types are not valid in untyped Yul.
+// ParserError 5473: (822-827): Types are not valid in untyped Yul.
+// ParserError 5473: (832-837): Types are not valid in untyped Yul.
+// ParserError 5473: (842-847): Types are not valid in untyped Yul.
+// ParserError 5473: (856-861): Types are not valid in untyped Yul.
+// ParserError 5473: (866-871): Types are not valid in untyped Yul.
+// ParserError 5473: (876-881): Types are not valid in untyped Yul.
+// ParserError 5473: (886-891): Types are not valid in untyped Yul.
+// ParserError 5473: (896-901): Types are not valid in untyped Yul.
+// ParserError 5473: (906-911): Types are not valid in untyped Yul.
+// ParserError 5473: (916-921): Types are not valid in untyped Yul.
+// ParserError 5473: (926-931): Types are not valid in untyped Yul.
+// ParserError 5473: (936-941): Types are not valid in untyped Yul.
+// ParserError 5473: (946-951): Types are not valid in untyped Yul.
+// ParserError 5473: (956-961): Types are not valid in untyped Yul.
+// ParserError 5473: (966-971): Types are not valid in untyped Yul.
+// ParserError 5473: (976-981): Types are not valid in untyped Yul.
+// ParserError 5473: (986-991): Types are not valid in untyped Yul.
+// ParserError 5473: (996-1001): Types are not valid in untyped Yul.
+// ParserError 5473: (1006-1011): Types are not valid in untyped Yul.
+// ParserError 5473: (1020-1025): Types are not valid in untyped Yul.
+// ParserError 5473: (1030-1035): Types are not valid in untyped Yul.
+// ParserError 5473: (1040-1045): Types are not valid in untyped Yul.
+// ParserError 5473: (1050-1055): Types are not valid in untyped Yul.
+// ParserError 5473: (1060-1065): Types are not valid in untyped Yul.
+// ParserError 5473: (1070-1075): Types are not valid in untyped Yul.
+// ParserError 5473: (1080-1085): Types are not valid in untyped Yul.
+// ParserError 5473: (1090-1095): Types are not valid in untyped Yul.
+// ParserError 5473: (1100-1105): Types are not valid in untyped Yul.
+// ParserError 5473: (1110-1115): Types are not valid in untyped Yul.
+// ParserError 5473: (1120-1125): Types are not valid in untyped Yul.
+// ParserError 5473: (1130-1135): Types are not valid in untyped Yul.
+// ParserError 5473: (1140-1145): Types are not valid in untyped Yul.
+// ParserError 5473: (1150-1155): Types are not valid in untyped Yul.
+// ParserError 5473: (1160-1165): Types are not valid in untyped Yul.
+// ParserError 5473: (1170-1175): Types are not valid in untyped Yul.
+// ParserError 5473: (1184-1189): Types are not valid in untyped Yul.
+// ParserError 5473: (1194-1199): Types are not valid in untyped Yul.
+// ParserError 5473: (1204-1209): Types are not valid in untyped Yul.
+// ParserError 5473: (1214-1219): Types are not valid in untyped Yul.
+// ParserError 5473: (1224-1229): Types are not valid in untyped Yul.
+// ParserError 5473: (1234-1239): Types are not valid in untyped Yul.
+// ParserError 5473: (1244-1249): Types are not valid in untyped Yul.
+// ParserError 5473: (1254-1259): Types are not valid in untyped Yul.
+// ParserError 5473: (1264-1269): Types are not valid in untyped Yul.
+// ParserError 5473: (1274-1279): Types are not valid in untyped Yul.
+// ParserError 5473: (1284-1289): Types are not valid in untyped Yul.
+// ParserError 5473: (1294-1299): Types are not valid in untyped Yul.
+// ParserError 5473: (1304-1309): Types are not valid in untyped Yul.
+// ParserError 5473: (1314-1319): Types are not valid in untyped Yul.
+// ParserError 5473: (1324-1329): Types are not valid in untyped Yul.
+// ParserError 5473: (1334-1339): Types are not valid in untyped Yul.
+// ParserError 5473: (1348-1353): Types are not valid in untyped Yul.
+// ParserError 5473: (1358-1363): Types are not valid in untyped Yul.
+// ParserError 5473: (1368-1373): Types are not valid in untyped Yul.
+// ParserError 5473: (1378-1383): Types are not valid in untyped Yul.
+// ParserError 5473: (1388-1393): Types are not valid in untyped Yul.
+// ParserError 5473: (1398-1403): Types are not valid in untyped Yul.
+// ParserError 5473: (1408-1413): Types are not valid in untyped Yul.
+// ParserError 5473: (1418-1423): Types are not valid in untyped Yul.
+// ParserError 5473: (1428-1433): Types are not valid in untyped Yul.
+// ParserError 5473: (1438-1443): Types are not valid in untyped Yul.
+// ParserError 5473: (1448-1453): Types are not valid in untyped Yul.
+// ParserError 5473: (1458-1463): Types are not valid in untyped Yul.
+// ParserError 5473: (1468-1473): Types are not valid in untyped Yul.
+// ParserError 5473: (1478-1483): Types are not valid in untyped Yul.
+// ParserError 5473: (1488-1493): Types are not valid in untyped Yul.
+// ParserError 5473: (1498-1503): Types are not valid in untyped Yul.
+// ParserError 5473: (1512-1517): Types are not valid in untyped Yul.
+// ParserError 5473: (1522-1527): Types are not valid in untyped Yul.
+// ParserError 5473: (1532-1537): Types are not valid in untyped Yul.
+// ParserError 5473: (1542-1547): Types are not valid in untyped Yul.
+// ParserError 5473: (1552-1557): Types are not valid in untyped Yul.
+// ParserError 5473: (1562-1567): Types are not valid in untyped Yul.
+// ParserError 5473: (1572-1577): Types are not valid in untyped Yul.
+// ParserError 5473: (1582-1587): Types are not valid in untyped Yul.
+// ParserError 5473: (1592-1597): Types are not valid in untyped Yul.
+// ParserError 5473: (1602-1607): Types are not valid in untyped Yul.
+// ParserError 5473: (1612-1617): Types are not valid in untyped Yul.
+// ParserError 5473: (1622-1627): Types are not valid in untyped Yul.
+// ParserError 5473: (1632-1637): Types are not valid in untyped Yul.
+// ParserError 5473: (1642-1647): Types are not valid in untyped Yul.
+// ParserError 5473: (1652-1657): Types are not valid in untyped Yul.
+// ParserError 5473: (1662-1667): Types are not valid in untyped Yul.
+// ParserError 5473: (1676-1681): Types are not valid in untyped Yul.
+// ParserError 5473: (1686-1691): Types are not valid in untyped Yul.
+// ParserError 5473: (1696-1701): Types are not valid in untyped Yul.
+// ParserError 5473: (1706-1711): Types are not valid in untyped Yul.
+// ParserError 5473: (1716-1721): Types are not valid in untyped Yul.
+// ParserError 5473: (1726-1731): Types are not valid in untyped Yul.
+// ParserError 5473: (1736-1741): Types are not valid in untyped Yul.
+// ParserError 5473: (1746-1751): Types are not valid in untyped Yul.
+// ParserError 5473: (1756-1761): Types are not valid in untyped Yul.
+// ParserError 5473: (1766-1771): Types are not valid in untyped Yul.
+// ParserError 5473: (1776-1781): Types are not valid in untyped Yul.
+// ParserError 5473: (1786-1791): Types are not valid in untyped Yul.
+// ParserError 5473: (1796-1801): Types are not valid in untyped Yul.
+// ParserError 5473: (1806-1811): Types are not valid in untyped Yul.
+// ParserError 5473: (1816-1821): Types are not valid in untyped Yul.
+// ParserError 5473: (1826-1831): Types are not valid in untyped Yul.
+// ParserError 5473: (1840-1845): Types are not valid in untyped Yul.
+// ParserError 5473: (1850-1855): Types are not valid in untyped Yul.
+// ParserError 5473: (1860-1865): Types are not valid in untyped Yul.
+// ParserError 5473: (1870-1875): Types are not valid in untyped Yul.
+// ParserError 5473: (1880-1885): Types are not valid in untyped Yul.
+// ParserError 5473: (1890-1895): Types are not valid in untyped Yul.
+// ParserError 5473: (1900-1905): Types are not valid in untyped Yul.
+// ParserError 5473: (1910-1915): Types are not valid in untyped Yul.
+// ParserError 5473: (1920-1925): Types are not valid in untyped Yul.
+// ParserError 5473: (1930-1935): Types are not valid in untyped Yul.
+// ParserError 5473: (1940-1945): Types are not valid in untyped Yul.
+// ParserError 5473: (1950-1955): Types are not valid in untyped Yul.
+// ParserError 5473: (1960-1965): Types are not valid in untyped Yul.
+// ParserError 5473: (1970-1975): Types are not valid in untyped Yul.
+// ParserError 5473: (1980-1985): Types are not valid in untyped Yul.
+// ParserError 5473: (1990-1995): Types are not valid in untyped Yul.
+// ParserError 5473: (2004-2009): Types are not valid in untyped Yul.
+// ParserError 5473: (2014-2019): Types are not valid in untyped Yul.
+// ParserError 5473: (2024-2029): Types are not valid in untyped Yul.
+// ParserError 5473: (2034-2039): Types are not valid in untyped Yul.
+// ParserError 5473: (2044-2049): Types are not valid in untyped Yul.
+// ParserError 5473: (2054-2059): Types are not valid in untyped Yul.
+// ParserError 5473: (2064-2069): Types are not valid in untyped Yul.
+// ParserError 5473: (2074-2079): Types are not valid in untyped Yul.
+// ParserError 5473: (2084-2089): Types are not valid in untyped Yul.
+// ParserError 5473: (2094-2099): Types are not valid in untyped Yul.
+// ParserError 5473: (2104-2109): Types are not valid in untyped Yul.
+// ParserError 5473: (2114-2119): Types are not valid in untyped Yul.
+// ParserError 5473: (2124-2129): Types are not valid in untyped Yul.
+// ParserError 5473: (2134-2139): Types are not valid in untyped Yul.
+// ParserError 5473: (2144-2149): Types are not valid in untyped Yul.
+// ParserError 5473: (2154-2159): Types are not valid in untyped Yul.
+// ParserError 5473: (2168-2173): Types are not valid in untyped Yul.
+// ParserError 5473: (2178-2183): Types are not valid in untyped Yul.
+// ParserError 5473: (2188-2193): Types are not valid in untyped Yul.
+// ParserError 5473: (2198-2203): Types are not valid in untyped Yul.
+// ParserError 5473: (2208-2213): Types are not valid in untyped Yul.
+// ParserError 5473: (2218-2223): Types are not valid in untyped Yul.
+// ParserError 5473: (2228-2233): Types are not valid in untyped Yul.
+// ParserError 5473: (2238-2243): Types are not valid in untyped Yul.
+// ParserError 5473: (2248-2253): Types are not valid in untyped Yul.
+// ParserError 5473: (2258-2263): Types are not valid in untyped Yul.
+// ParserError 5473: (2268-2273): Types are not valid in untyped Yul.
+// ParserError 5473: (2278-2283): Types are not valid in untyped Yul.
+// ParserError 5473: (2288-2293): Types are not valid in untyped Yul.
+// ParserError 5473: (2298-2303): Types are not valid in untyped Yul.
+// ParserError 5473: (2308-2313): Types are not valid in untyped Yul.
+// ParserError 5473: (2318-2323): Types are not valid in untyped Yul.
+// ParserError 5473: (2332-2337): Types are not valid in untyped Yul.
+// ParserError 5473: (2342-2347): Types are not valid in untyped Yul.
+// ParserError 5473: (2352-2357): Types are not valid in untyped Yul.
+// ParserError 5473: (2362-2367): Types are not valid in untyped Yul.
+// ParserError 5473: (2372-2377): Types are not valid in untyped Yul.
+// ParserError 5473: (2382-2387): Types are not valid in untyped Yul.
+// ParserError 5473: (2392-2397): Types are not valid in untyped Yul.
+// ParserError 5473: (2402-2407): Types are not valid in untyped Yul.
+// ParserError 5473: (2412-2417): Types are not valid in untyped Yul.
+// ParserError 5473: (2422-2427): Types are not valid in untyped Yul.
+// ParserError 5473: (2432-2437): Types are not valid in untyped Yul.
+// ParserError 5473: (2442-2447): Types are not valid in untyped Yul.
+// ParserError 5473: (2452-2457): Types are not valid in untyped Yul.
+// ParserError 5473: (2462-2467): Types are not valid in untyped Yul.
+// ParserError 5473: (2472-2477): Types are not valid in untyped Yul.
+// ParserError 5473: (2482-2487): Types are not valid in untyped Yul.
+// ParserError 5473: (2496-2501): Types are not valid in untyped Yul.
+// ParserError 5473: (2506-2511): Types are not valid in untyped Yul.
+// ParserError 5473: (2516-2521): Types are not valid in untyped Yul.
+// ParserError 5473: (2526-2531): Types are not valid in untyped Yul.
+// ParserError 5473: (2536-2541): Types are not valid in untyped Yul.
+// ParserError 5473: (2546-2551): Types are not valid in untyped Yul.
+// ParserError 5473: (2556-2561): Types are not valid in untyped Yul.
+// ParserError 5473: (2566-2571): Types are not valid in untyped Yul.
+// ParserError 5473: (2576-2581): Types are not valid in untyped Yul.
+// ParserError 5473: (2586-2591): Types are not valid in untyped Yul.
+// ParserError 5473: (2596-2601): Types are not valid in untyped Yul.
+// ParserError 5473: (2606-2611): Types are not valid in untyped Yul.
+// ParserError 5473: (2616-2621): Types are not valid in untyped Yul.
+// ParserError 5473: (2626-2631): Types are not valid in untyped Yul.
+// ParserError 5473: (2636-2641): Types are not valid in untyped Yul.
+// ParserError 5473: (2646-2651): Types are not valid in untyped Yul.
+// ParserError 5473: (2660-2665): Types are not valid in untyped Yul.
+// ParserError 5473: (2670-2675): Types are not valid in untyped Yul.
+// ParserError 5473: (2680-2685): Types are not valid in untyped Yul.
+// ParserError 5473: (2690-2695): Types are not valid in untyped Yul.
+// ParserError 5473: (2700-2705): Types are not valid in untyped Yul.
+// ParserError 5473: (2710-2715): Types are not valid in untyped Yul.
+// ParserError 5473: (2720-2725): Types are not valid in untyped Yul.
+// ParserError 5473: (2730-2735): Types are not valid in untyped Yul.
+// ParserError 5473: (2740-2745): Types are not valid in untyped Yul.
+// ParserError 5473: (2750-2755): Types are not valid in untyped Yul.
+// ParserError 5473: (2760-2765): Types are not valid in untyped Yul.
+// ParserError 5473: (2770-2775): Types are not valid in untyped Yul.
+// ParserError 5473: (2780-2785): Types are not valid in untyped Yul.
+// ParserError 5473: (2790-2795): Types are not valid in untyped Yul.
+// ParserError 5473: (2800-2805): Types are not valid in untyped Yul.
+// ParserError 5473: (2810-2815): Types are not valid in untyped Yul.
 // Warning 4013: There are more than 256 errors. Aborting.

@@ -23,7 +23,6 @@
 #include <libyul/optimiser/ExpressionSplitter.h>
 
 #include <libyul/optimiser/OptimiserStep.h>
-#include <libyul/optimiser/TypeInfo.h>
 
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
@@ -37,8 +36,7 @@ using namespace solidity::langutil;
 
 void ExpressionSplitter::run(OptimiserStepContext& _context, Block& _ast)
 {
-	TypeInfo typeInfo(_context.dialect, _ast);
-	ExpressionSplitter{_context.dialect, _context.dispenser, typeInfo}(_ast);
+	ExpressionSplitter{_context.dialect, _context.dispenser}(_ast);
 }
 
 void ExpressionSplitter::operator()(FunctionCall& _funCall)
@@ -100,13 +98,11 @@ void ExpressionSplitter::outlineExpression(Expression& _expr)
 
 	langutil::DebugData::ConstPtr debugData = debugDataOf(_expr);
 	YulName var = m_nameDispenser.newName({});
-	YulName type = m_typeInfo.typeOf(_expr);
 	m_statementsToPrefix.emplace_back(VariableDeclaration{
 		debugData,
-		{{TypedName{debugData, var, type}}},
+		{{NameWithDebugData{debugData, var}}},
 		std::make_unique<Expression>(std::move(_expr))
 	});
 	_expr = Identifier{debugData, var};
-	m_typeInfo.setVariableType(var, type);
 }
 

@@ -63,7 +63,7 @@ public:
 	bool statementEqual(Leave const&, Leave const&) { return true; }
 	bool statementEqual(Block const& _lhs, Block const& _rhs);
 private:
-	bool visitDeclaration(TypedName const& _lhs, TypedName const& _rhs);
+	bool visitDeclaration(NameWithDebugData const& _lhs, NameWithDebugData const& _rhs);
 
 	template<typename U, typename V>
 	bool expressionEqual(U const&, V const&, std::enable_if_t<!std::is_same<U, V>::value>* = nullptr)

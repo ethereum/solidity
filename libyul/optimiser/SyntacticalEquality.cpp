@@ -67,9 +67,6 @@ bool SyntacticallyEqual::expressionEqual(Literal const& _lhs, Literal const& _rh
 	yulAssert(validLiteral(_lhs), "Invalid lhs literal during syntactical equality check");
 	yulAssert(validLiteral(_rhs), "Invalid rhs literal during syntactical equality check");
 
-	if (_lhs.type != _rhs.type)
-		return false;
-
 	return _lhs.value == _rhs.value;
 }
 
@@ -93,14 +90,14 @@ bool SyntacticallyEqual::statementEqual(VariableDeclaration const& _lhs, Variabl
 	// first visit expression, then variable declarations
 	if (!compareUniquePtr<Expression, &SyntacticallyEqual::operator()>(_lhs.value, _rhs.value))
 		return false;
-	return util::containerEqual(_lhs.variables, _rhs.variables, [this](TypedName const& _lhsVarName, TypedName const& _rhsVarName) -> bool {
+	return util::containerEqual(_lhs.variables, _rhs.variables, [this](NameWithDebugData const& _lhsVarName, NameWithDebugData const& _rhsVarName) -> bool {
 		return this->visitDeclaration(_lhsVarName, _rhsVarName);
 	});
 }
 
 bool SyntacticallyEqual::statementEqual(FunctionDefinition const& _lhs, FunctionDefinition const& _rhs)
 {
-	auto compare = [this](TypedName const& _lhsVarName, TypedName const& _rhsVarName) -> bool {
+	auto compare = [this](NameWithDebugData const& _lhsVarName, NameWithDebugData const& _rhsVarName) -> bool {
 		return this->visitDeclaration(_lhsVarName, _rhsVarName);
 	};
 	// first visit parameter declarations, then body
@@ -157,10 +154,8 @@ bool SyntacticallyEqual::statementEqual(Block const& _lhs, Block const& _rhs)
 	});
 }
 
-bool SyntacticallyEqual::visitDeclaration(TypedName const& _lhs, TypedName const& _rhs)
+bool SyntacticallyEqual::visitDeclaration(NameWithDebugData const& _lhs, NameWithDebugData const& _rhs)
 {
-	if (_lhs.type != _rhs.type)
-		return false;
 	std::size_t id = m_idsUsed++;
 	m_identifiersLHS[_lhs.name] = id;
 	m_identifiersRHS[_rhs.name] = id;

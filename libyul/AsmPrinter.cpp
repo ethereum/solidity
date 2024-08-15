@@ -24,7 +24,6 @@
 #include <libyul/AsmPrinter.h>
 #include <libyul/AST.h>
 #include <libyul/Exceptions.h>
-#include <libyul/Dialect.h>
 #include <libyul/Utilities.h>
 
 #include <libsolutil/CommonData.h>
@@ -54,12 +53,12 @@ std::string AsmPrinter::operator()(Literal const& _literal)
 	{
 	case LiteralKind::Number:
 	case LiteralKind::Boolean:
-		return locationComment + formattedValue + appendTypeName(_literal.type);
+		return locationComment + formattedValue;
 	case LiteralKind::String:
 		break;
 	}
 
-	return locationComment + escapeAndQuoteString(formattedValue) + appendTypeName(_literal.type);
+	return locationComment + escapeAndQuoteString(formattedValue);
 }
 
 std::string AsmPrinter::operator()(Identifier const& _identifier)
@@ -94,7 +93,7 @@ std::string AsmPrinter::operator()(VariableDeclaration const& _variableDeclarati
 	out += "let ";
 	out += boost::algorithm::join(
 		_variableDeclaration.variables | ranges::views::transform(
-			[this](TypedName argument) { return formatTypedName(argument); }
+			[this](NameWithDebugData argument) { return formatNameWithDebugData(argument); }
 		),
 		", "
 	);
@@ -114,7 +113,7 @@ std::string AsmPrinter::operator()(FunctionDefinition const& _functionDefinition
 	out += "function " + _functionDefinition.name.str() + "(";
 	out += boost::algorithm::join(
 		_functionDefinition.parameters | ranges::views::transform(
-			[this](TypedName argument) { return formatTypedName(argument); }
+			[this](NameWithDebugData argument) { return formatNameWithDebugData(argument); }
 		),
 		", "
 	);
@@ -124,7 +123,7 @@ std::string AsmPrinter::operator()(FunctionDefinition const& _functionDefinition
 		out += " -> ";
 		out += boost::algorithm::join(
 			_functionDefinition.returnVariables | ranges::views::transform(
-				[this](TypedName argument) { return formatTypedName(argument); }
+				[this](NameWithDebugData argument) { return formatNameWithDebugData(argument); }
 			),
 			", "
 		);
@@ -236,18 +235,10 @@ std::string AsmPrinter::operator()(Block const& _block)
 	}
 }
 
-std::string AsmPrinter::formatTypedName(TypedName _variable)
+std::string AsmPrinter::formatNameWithDebugData(NameWithDebugData _variable)
 {
 	yulAssert(!_variable.name.empty(), "Invalid variable name.");
-	return formatDebugData(_variable) + _variable.name.str() + appendTypeName(_variable.type);
-}
-
-std::string AsmPrinter::appendTypeName(YulName _type) const
-{
-	if (_type.empty())
-		return {};
-	else
-		return ":" + _type.str();
+	return formatDebugData(_variable) + _variable.name.str();
 }
 
 std::string AsmPrinter::formatSourceLocation(

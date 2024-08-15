@@ -49,7 +49,7 @@ std::vector<Statement> generateMemoryStore(
 		_debugData,
 		Identifier{_debugData, memoryStoreFunction->name},
 		{
-			Literal{_debugData, LiteralKind::Number, _mpos, {}},
+			Literal{_debugData, LiteralKind::Number, _mpos},
 			std::move(_value)
 		}
 	}});
@@ -66,8 +66,7 @@ FunctionCall generateMemoryLoad(Dialect const& _dialect, langutil::DebugData::Co
 			Literal{
 				_debugData,
 				LiteralKind::Number,
-				_mpos,
-				{}
+				_mpos
 			}
 		}
 	};
@@ -91,7 +90,7 @@ void StackToMemoryMover::run(
 			util::mapTuple([](YulName _name, FunctionDefinition const* _funDef) {
 				return make_pair(_name, _funDef->returnVariables);
 			}),
-			std::map<YulName, TypedNameList>{}
+			std::map<YulName, NameWithDebugDataList>{}
 		)
 	);
 	stackToMemoryMover(_block);
@@ -101,7 +100,7 @@ void StackToMemoryMover::run(
 StackToMemoryMover::StackToMemoryMover(
 	OptimiserStepContext& _context,
 	VariableMemoryOffsetTracker const& _memoryOffsetTracker,
-	std::map<YulName, TypedNameList> _functionReturnVariables
+	std::map<YulName, NameWithDebugDataList> _functionReturnVariables
 ):
 m_context(_context),
 m_memoryOffsetTracker(_memoryOffsetTracker),
@@ -124,7 +123,7 @@ void StackToMemoryMover::operator()(FunctionDefinition& _functionDefinition)
 	std::vector<Statement> memoryVariableInits;
 
 	// All function parameters with a memory slot are moved at the beginning of the function body.
-	for (TypedName const& param: _functionDefinition.parameters)
+	for (NameWithDebugData const& param: _functionDefinition.parameters)
 		if (auto slot = m_memoryOffsetTracker(param.name))
 			memoryVariableInits += generateMemoryStore(
 				m_context.dialect,
@@ -134,21 +133,21 @@ void StackToMemoryMover::operator()(FunctionDefinition& _functionDefinition)
 			);
 
 	// All memory return variables have to be initialized to zero in memory.
-	for (TypedName const& returnVariable: _functionDefinition.returnVariables)
+	for (NameWithDebugData const& returnVariable: _functionDefinition.returnVariables)
 		if (auto slot = m_memoryOffsetTracker(returnVariable.name))
 			memoryVariableInits += generateMemoryStore(
 				m_context.dialect,
 				returnVariable.debugData,
 				*slot,
-				Literal{returnVariable.debugData, LiteralKind::Number, LiteralValue(u256{0}), {}}
+				Literal{returnVariable.debugData, LiteralKind::Number, LiteralValue(u256{0})}
 			);
 
 	// Special case of a function with a single return argument that needs to move to memory.
 	if (_functionDefinition.returnVariables.size() == 1 && m_memoryOffsetTracker(_functionDefinition.returnVariables.front().name))
 	{
-		TypedNameList stackParameters = _functionDefinition.parameters | ranges::views::filter(
+		NameWithDebugDataList stackParameters = _functionDefinition.parameters | ranges::views::filter(
 			std::not_fn(m_memoryOffsetTracker)
-		) | ranges::to<TypedNameList>;
+		) | ranges::to<NameWithDebugDataList>;
 		// Generate new function without return variable and with only the non-moved parameters.
 		YulName newFunctionName = m_context.dispenser.newName(_functionDefinition.name);
 		m_newFunctionDefinitions.emplace_back(FunctionDefinition{
@@ -160,7 +159,7 @@ void StackToMemoryMover::operator()(FunctionDefinition& _functionDefinition)
 		});
 		// Generate new names for the arguments to maintain disambiguation.
 		std::map<YulName, YulName> newArgumentNames;
-		for (TypedName const& _var: stackParameters)
+		for (NameWithDebugData const& _var: stackParameters)
 			newArgumentNames[_var.name] = m_context.dispenser.newName(_var.name);
 		for (auto& parameter: _functionDefinition.parameters)
 			parameter.name = util::valueOrDefault(newArgumentNames, parameter.name, parameter.name);
@@ -171,7 +170,7 @@ void StackToMemoryMover::operator()(FunctionDefinition& _functionDefinition)
 			FunctionCall{
 				_functionDefinition.debugData,
 				Identifier{_functionDefinition.debugData, newFunctionName},
-				stackParameters | ranges::views::transform([&](TypedName const& _arg) {
+				stackParameters | ranges::views::transform([&](NameWithDebugData const& _arg) {
 					return Expression{Identifier{_arg.debugData, newArgumentNames.at(_arg.name)}};
 				}) | ranges::to<std::vector<Expression>>
 			}
@@ -193,7 +192,7 @@ void StackToMemoryMover::operator()(FunctionDefinition& _functionDefinition)
 
 	_functionDefinition.returnVariables = _functionDefinition.returnVariables | ranges::views::filter(
 		std::not_fn(m_memoryOffsetTracker)
-	) | ranges::to<TypedNameList>;
+	) | ranges::to<NameWithDebugDataList>;
 }
 
 void StackToMemoryMover::operator()(Block& _block)
@@ -214,7 +213,7 @@ void StackToMemoryMover::operator()(Block& _block)
 					m_context.dialect,
 					debugData,
 					*offset,
-					_stmt.value ? *std::move(_stmt.value) : Literal{debugData, LiteralKind::Number, LiteralValue(u256{0}), {}}
+					_stmt.value ? *std::move(_stmt.value) : Literal{debugData, LiteralKind::Number, LiteralValue(u256{0})}
 				);
 			else
 				return {};
@@ -256,7 +255,7 @@ void StackToMemoryMover::operator()(Block& _block)
 			else
 			{
 				YulName tempVarName = m_nameDispenser.newName(lhsVar.name);
-				tempDecl.variables.emplace_back(TypedName{lhsVar.debugData, tempVarName, {}});
+				tempDecl.variables.emplace_back(NameWithDebugData{lhsVar.debugData, tempVarName});
 				rhs = std::make_unique<Expression>(Identifier{debugData, tempVarName});
 			}
 
@@ -322,7 +321,7 @@ std::optional<LiteralValue> StackToMemoryMover::VariableMemoryOffsetTracker::ope
 		return std::nullopt;
 }
 
-std::optional<LiteralValue> StackToMemoryMover::VariableMemoryOffsetTracker::operator()(TypedName const& _variable) const
+std::optional<LiteralValue> StackToMemoryMover::VariableMemoryOffsetTracker::operator()(NameWithDebugData const& _variable) const
 {
 	return (*this)(_variable.name);
 }

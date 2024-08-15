@@ -53,9 +53,9 @@ void NameSimplifier::operator()(VariableDeclaration& _varDecl)
 	ASTModifier::operator()(_varDecl);
 }
 
-void NameSimplifier::renameVariables(std::vector<TypedName>& _variables)
+void NameSimplifier::renameVariables(std::vector<NameWithDebugData>& _variables)
 {
-	for (TypedName& typedName: _variables)
+	for (NameWithDebugData& typedName: _variables)
 		translate(typedName.name);
 }
 

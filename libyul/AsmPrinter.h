@@ -36,12 +36,10 @@
 
 namespace solidity::yul
 {
-struct Dialect;
 
 /**
  * Converts a parsed Yul AST into readable string representation.
  * Ignores source locations.
- * If a dialect is provided, the dialect's default type is omitted.
  */
 class AsmPrinter
 {
@@ -82,8 +80,7 @@ public:
 	);
 
 private:
-	std::string formatTypedName(TypedName _variable);
-	std::string appendTypeName(YulName _type) const;
+	std::string formatNameWithDebugData(NameWithDebugData _variable);
 	std::string formatDebugData(langutil::DebugData::ConstPtr const& _debugData, bool _statement);
 	template <class T>
 	std::string formatDebugData(T const& _node)

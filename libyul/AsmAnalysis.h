@@ -84,13 +84,13 @@ public:
 		std::set<std::string> const& _qualifiedDataNames
 	);
 
-	std::vector<YulName> operator()(Literal const& _literal);
-	std::vector<YulName> operator()(Identifier const&);
+	size_t operator()(Literal const& _literal);
+	size_t operator()(Identifier const&);
 	void operator()(ExpressionStatement const&);
 	void operator()(Assignment const& _assignment);
 	void operator()(VariableDeclaration const& _variableDeclaration);
 	void operator()(FunctionDefinition const& _functionDefinition);
-	std::vector<YulName> operator()(FunctionCall const& _functionCall);
+	size_t operator()(FunctionCall const& _functionCall);
 	void operator()(If const& _if);
 	void operator()(Switch const& _switch);
 	void operator()(ForLoop const& _forLoop);
@@ -104,20 +104,14 @@ public:
 private:
 	/// Visits the expression, expects that it evaluates to exactly one value and
 	/// returns the type. Reports errors on errors and returns the default type.
-	YulName expectExpression(Expression const& _expr);
-	YulName expectUnlimitedStringLiteral(Literal const& _literal);
-	/// Visits the expression and expects it to return a single boolean value.
-	/// Reports an error otherwise.
-	void expectBoolExpression(Expression const& _expr);
+	void expectExpression(Expression const& _expr);
+	void expectUnlimitedStringLiteral(Literal const& _literal);
 
-	/// Verifies that a variable to be assigned to exists, can be assigned to
-	/// and has the same type as the value.
-	void checkAssignment(Identifier const& _variable, YulName _valueType);
+	/// Verifies that a variable to be assigned to exists and can be assigned to.
+	void checkAssignment(Identifier const& _variable);
 
 	Scope& scope(Block const* _block);
 	void expectValidIdentifier(YulName _identifier, langutil::SourceLocation const& _location);
-	void expectValidType(YulName _type, langutil::SourceLocation const& _location);
-	void expectType(YulName _expectedType, YulName _givenType, langutil::SourceLocation const& _location);
 
 	bool validateInstructions(evmasm::Instruction _instr, langutil::SourceLocation const& _location);
 	bool validateInstructions(std::string const& _instrIdentifier, langutil::SourceLocation const& _location);

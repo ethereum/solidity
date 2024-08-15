@@ -28,8 +28,6 @@
 
 #include <libsolutil/CommonData.h>
 
-#include <libyul/optimiser/TypeInfo.h>
-
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::langutil;
@@ -46,12 +44,10 @@ class IntroduceSSA: public ASTModifier
 public:
 	explicit IntroduceSSA(
 		NameDispenser& _nameDispenser,
-		std::set<YulName> const& _variablesToReplace,
-		TypeInfo& _typeInfo
+		std::set<YulName> const& _variablesToReplace
 	):
 		m_nameDispenser(_nameDispenser),
-		m_variablesToReplace(_variablesToReplace),
-		m_typeInfo(_typeInfo)
+		m_variablesToReplace(_variablesToReplace)
 	{ }
 
 	void operator()(Block& _block) override;
@@ -59,7 +55,6 @@ public:
 private:
 	NameDispenser& m_nameDispenser;
 	std::set<YulName> const& m_variablesToReplace;
-	TypeInfo const& m_typeInfo;
 };
 
 
@@ -87,15 +82,15 @@ void IntroduceSSA::operator()(Block& _block)
 				langutil::DebugData::ConstPtr debugData = varDecl.debugData;
 				std::vector<Statement> statements;
 				statements.emplace_back(VariableDeclaration{debugData, {}, std::move(varDecl.value)});
-				TypedNameList newVariables;
+				NameWithDebugDataList newVariables;
 				for (auto const& var: varDecl.variables)
 				{
 					YulName oldName = var.name;
 					YulName newName = m_nameDispenser.newName(oldName);
-					newVariables.emplace_back(TypedName{debugData, newName, var.type});
+					newVariables.emplace_back(NameWithDebugData{debugData, newName});
 					statements.emplace_back(VariableDeclaration{
 						debugData,
-						{TypedName{debugData, oldName, var.type}},
+						{NameWithDebugData{debugData, oldName}},
 						std::make_unique<Expression>(Identifier{debugData, newName})
 					});
 				}
@@ -114,15 +109,12 @@ void IntroduceSSA::operator()(Block& _block)
 				langutil::DebugData::ConstPtr debugData = assignment.debugData;
 				std::vector<Statement> statements;
 				statements.emplace_back(VariableDeclaration{debugData, {}, std::move(assignment.value)});
-				TypedNameList newVariables;
+				NameWithDebugDataList newVariables;
 				for (auto const& var: assignment.variableNames)
 				{
 					YulName oldName = var.name;
 					YulName newName = m_nameDispenser.newName(oldName);
-					newVariables.emplace_back(TypedName{debugData,
-						newName,
-						m_typeInfo.typeOfVariable(oldName)
-					});
+					newVariables.emplace_back(NameWithDebugData{debugData, newName});
 					statements.emplace_back(Assignment{
 						debugData,
 						{Identifier{debugData, oldName}},
@@ -148,12 +140,10 @@ class IntroduceControlFlowSSA: public ASTModifier
 public:
 	explicit IntroduceControlFlowSSA(
 		NameDispenser& _nameDispenser,
-		std::set<YulName> const& _variablesToReplace,
-		TypeInfo const& _typeInfo
+		std::set<YulName> const& _variablesToReplace
 	):
 		m_nameDispenser(_nameDispenser),
-		m_variablesToReplace(_variablesToReplace),
-		m_typeInfo(_typeInfo)
+		m_variablesToReplace(_variablesToReplace)
 	{ }
 
 	void operator()(FunctionDefinition& _function) override;
@@ -168,7 +158,6 @@ private:
 	std::set<YulName> m_variablesInScope;
 	/// Variables that do not have a specific value.
 	util::UniqueVector<YulName> m_variablesToReassign;
-	TypeInfo const& m_typeInfo;
 };
 
 void IntroduceControlFlowSSA::operator()(FunctionDefinition& _function)
@@ -232,7 +221,7 @@ void IntroduceControlFlowSSA::operator()(Block& _block)
 				YulName newName = m_nameDispenser.newName(toReassign);
 				toPrepend.emplace_back(VariableDeclaration{
 					debugDataOf(_s),
-					{TypedName{debugDataOf(_s), newName, m_typeInfo.typeOfVariable(toReassign)}},
+					{NameWithDebugData{debugDataOf(_s), newName}},
 					std::make_unique<Expression>(Identifier{debugDataOf(_s), toReassign})
 				});
 				assignedVariables.pushBack(toReassign);
@@ -379,10 +368,9 @@ void PropagateValues::operator()(Block& _block)
 
 void SSATransform::run(OptimiserStepContext& _context, Block& _ast)
 {
-	TypeInfo typeInfo(_context.dialect, _ast);
 	std::set<YulName> assignedVariables = assignedVariableNames(_ast);
-	IntroduceSSA{_context.dispenser, assignedVariables, typeInfo}(_ast);
-	IntroduceControlFlowSSA{_context.dispenser, assignedVariables, typeInfo}(_ast);
+	IntroduceSSA{_context.dispenser, assignedVariables}(_ast);
+	IntroduceControlFlowSSA{_context.dispenser, assignedVariables}(_ast);
 	PropagateValues{assignedVariables}(_ast);
 }
 

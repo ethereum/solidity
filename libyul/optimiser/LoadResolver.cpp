@@ -125,8 +125,7 @@ void LoadResolver::tryEvaluateKeccak(
 			{},
 			LiteralKind::Number,
 			// a dummy 256-bit number to represent the Keccak256 hash.
-			LiteralValue{std::numeric_limits<u256>::max()},
-			{}
+			LiteralValue{std::numeric_limits<u256>::max()}
 		}
 	);
 
@@ -150,8 +149,7 @@ void LoadResolver::tryEvaluateKeccak(
 			_e = Literal{
 				debugDataOf(_e),
 				LiteralKind::Number,
-				LiteralValue{contentHash},
-				{}
+				LiteralValue{contentHash}
 			};
 		}
 	}

@@ -104,7 +104,7 @@ FunctionDefinition FunctionSpecializer::specialize(
 			missingVariableDeclarations.emplace_back(
 				VariableDeclaration{
 					_f.debugData,
-					std::vector<TypedName>{newFunction.parameters[index]},
+					std::vector<NameWithDebugData>{newFunction.parameters[index]},
 					std::make_unique<Expression>(std::move(*argument))
 				}
 			);

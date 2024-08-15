@@ -60,7 +60,7 @@ private:
 	NameSimplifier(OptimiserStepContext& _context, Block const& _ast);
 
 	/// Tries to rename a list of variables.
-	void renameVariables(std::vector<TypedName>& _variables);
+	void renameVariables(std::vector<NameWithDebugData>& _variables);
 
 	void findSimplification(YulName const& _name);
 	void translate(YulName& _name);

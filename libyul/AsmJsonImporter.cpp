@@ -74,12 +74,11 @@ Json AsmJsonImporter::member(Json const& _node, std::string const& _name)
 	return _node[_name];
 }
 
-TypedName AsmJsonImporter::createTypedName(Json const& _node)
+NameWithDebugData AsmJsonImporter::createNameWithDebugData(Json const& _node)
 {
-	auto typedName = createAsmNode<TypedName>(_node);
-	typedName.type = YulName{member(_node, "type").get<std::string>()};
-	typedName.name = YulName{member(_node, "name").get<std::string>()};
-	return typedName;
+	auto nameWithDebugData = createAsmNode<NameWithDebugData>(_node);
+	nameWithDebugData.name = YulName{member(_node, "name").get<std::string>()};
+	return nameWithDebugData;
 }
 
 Statement AsmJsonImporter::createStatement(Json const& _node)
@@ -176,7 +175,10 @@ Literal AsmJsonImporter::createLiteral(Json const& _node)
 		value = util::asString(util::fromHex(member(_node, "hexValue").get<std::string>()));
 	else
 		value = member(_node, "value").get<std::string>();
-	lit.type = YulName{member(_node, "type").get<std::string>()};
+	{
+		auto const typeNode = member(_node, "type");
+		yulAssert(typeNode.empty() || typeNode.get<std::string>().empty());
+	}
 	if (kind == "number")
 	{
 		langutil::CharStream charStream(value, "");
@@ -263,7 +265,7 @@ VariableDeclaration AsmJsonImporter::createVariableDeclaration(Json const& _node
 {
 	auto varDec = createAsmNode<VariableDeclaration>(_node);
 	for (auto const& var: member(_node, "variables"))
-		varDec.variables.emplace_back(createTypedName(var));
+		varDec.variables.emplace_back(createNameWithDebugData(var));
 
 	if (_node.contains("value"))
 		varDec.value = std::make_unique<Expression>(createExpression(member(_node, "value")));
@@ -278,11 +280,11 @@ FunctionDefinition AsmJsonImporter::createFunctionDefinition(Json const& _node)
 
 	if (_node.contains("parameters"))
 		for (auto const& var: member(_node, "parameters"))
-			funcDef.parameters.emplace_back(createTypedName(var));
+			funcDef.parameters.emplace_back(createNameWithDebugData(var));
 
 	if (_node.contains("returnVariables"))
 		for (auto const& var: member(_node, "returnVariables"))
-			funcDef.returnVariables.emplace_back(createTypedName(var));
+			funcDef.returnVariables.emplace_back(createNameWithDebugData(var));
 
 	funcDef.body = createBlock(member(_node, "body"));
 	return funcDef;

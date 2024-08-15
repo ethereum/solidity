@@ -2,5 +2,5 @@
     function f(a: invalidType) -> b: invalidType {}
 }
 // ----
-// TypeError 5473: (17-31): "invalidType" is not a valid type (user defined types are not yet supported).
-// TypeError 5473: (36-50): "invalidType" is not a valid type (user defined types are not yet supported).
+// ParserError 5473: (17-31): Types are not valid in untyped Yul.
+// ParserError 5473: (36-50): Types are not valid in untyped Yul.

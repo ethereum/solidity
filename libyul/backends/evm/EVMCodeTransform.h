@@ -114,7 +114,7 @@ protected:
 		ExternalIdentifierAccess::CodeGenerator _identifierAccessCodeGen,
 		UseNamedLabels _useNamedLabelsForFunctions,
 		std::shared_ptr<Context> _context,
-		std::vector<TypedName> _delayedReturnVariables,
+		std::vector<NameWithDebugData> _delayedReturnVariables,
 		std::optional<AbstractAssembly::LabelID> _functionExitLabel
 	);
 
@@ -209,7 +209,7 @@ private:
 	std::set<int> m_unusedStackSlots;
 
 	/// A list of return variables for which no stack slots have been assigned yet.
-	std::vector<TypedName> m_delayedReturnVariables;
+	std::vector<NameWithDebugData> m_delayedReturnVariables;
 
 	/// Function exit label. Used as jump target for ``leave``.
 	std::optional<AbstractAssembly::LabelID> m_functionExitLabel;

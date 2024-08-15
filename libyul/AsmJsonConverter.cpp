@@ -37,12 +37,12 @@ Json AsmJsonConverter::operator()(Block const& _node) const
 	return ret;
 }
 
-Json AsmJsonConverter::operator()(TypedName const& _node) const
+Json AsmJsonConverter::operator()(NameWithDebugData const& _node) const
 {
 	yulAssert(!_node.name.empty(), "Invalid variable name.");
 	Json ret = createAstNode(originLocationOf(_node), nativeLocationOf(_node), "YulTypedName");
 	ret["name"] = _node.name.str();
-	ret["type"] = _node.type.str();
+	ret["type"] = "";
 	return ret;
 }
 
@@ -63,7 +63,7 @@ Json AsmJsonConverter::operator()(Literal const& _node) const
 		ret["hexValue"] = util::toHex(util::asBytes(formatLiteral(_node)));
 		break;
 	}
-	ret["type"] = _node.type.str();
+	ret["type"] = "";
 	{
 		auto const formattedLiteral = formatLiteral(_node);
 		if (util::validateUTF8(formattedLiteral))
