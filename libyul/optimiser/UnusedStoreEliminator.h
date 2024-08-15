@@ -50,13 +50,11 @@ struct AssignedValue;
  * to sstore, as we don't know whether the memory location will be read once we leave the function's scope,
  * so the statement will be removed only if all code code paths lead to a memory overwrite.
  *
- * The m_store member of UnusedStoreBase uses the key "m" for memory and "s" for storage stores.
- *
  * Best run in SSA form.
  *
  * Prerequisite: Disambiguator, ForLoopInitRewriter.
  */
-class UnusedStoreEliminator: public UnusedStoreBase
+class UnusedStoreEliminator: public UnusedStoreBase<UnusedStoreEliminatorKey>
 {
 public:
 	static constexpr char const* name{"UnusedStoreEliminator"};
@@ -92,8 +90,8 @@ public:
 	};
 
 private:
-	std::set<Statement const*>& activeMemoryStores() { return m_activeStores["m"_yulname]; }
-	std::set<Statement const*>& activeStorageStores() { return m_activeStores["s"_yulname]; }
+	std::set<Statement const*>& activeMemoryStores() { return m_activeStores[UnusedStoreEliminatorKey::Memory]; }
+	std::set<Statement const*>& activeStorageStores() { return m_activeStores[UnusedStoreEliminatorKey::Storage]; }
 
 	void shortcutNestedLoop(ActiveStores const&) override
 	{
