@@ -57,6 +57,35 @@ void SMTSolverCommand::setCvc5(std::optional<unsigned int> timeoutInMilliseconds
 	}
 }
 
+void SMTSolverCommand::setZ3(std::optional<unsigned int> timeoutInMilliseconds, bool _preprocessing, bool _computeInvariants)
+{
+	constexpr int Z3ResourceLimit = 2000000;
+	m_arguments.clear();
+	m_solverCmd = "z3";
+	m_arguments.emplace_back("-in"); // Read from standard input
+	m_arguments.emplace_back("-smt2"); // Expect input in SMT-LIB2 format
+	if (_computeInvariants)
+		m_arguments.emplace_back("-model"); // Output model automatically after check-sat
+	if (timeoutInMilliseconds)
+		m_arguments.emplace_back("-t:" + std::to_string(timeoutInMilliseconds.value()));
+	else
+		m_arguments.emplace_back("rlimit=" + std::to_string(Z3ResourceLimit));
+
+	// These options have been empirically established to be helpful
+	m_arguments.emplace_back("rewriter.pull_cheap_ite=true");
+	m_arguments.emplace_back("fp.spacer.q3.use_qgen=true");
+	m_arguments.emplace_back("fp.spacer.mbqi=false");
+	m_arguments.emplace_back("fp.spacer.ground_pobs=false");
+
+	// Spacer optimization should be
+	// - enabled for better solving (default)
+	// - disable for counterexample generation
+	std::string preprocessingArg = _preprocessing ? "true" : "false";
+	m_arguments.emplace_back("fp.xform.slice=" + preprocessingArg);
+	m_arguments.emplace_back("fp.xform.inline_linear=" + preprocessingArg);
+	m_arguments.emplace_back("fp.xform.inline_eager=" + preprocessingArg);
+}
+
 ReadCallback::Result SMTSolverCommand::solve(std::string const& _kind, std::string const& _query) const
 {
 	try

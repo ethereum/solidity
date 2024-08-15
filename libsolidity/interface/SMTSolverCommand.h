@@ -38,6 +38,7 @@ public:
 
 	void setEldarica(std::optional<unsigned int> timeoutInMilliseconds, bool computeInvariants);
 	void setCvc5(std::optional<unsigned int> timeoutInMilliseconds);
+	void setZ3(std::optional<unsigned int> timeoutInMilliseconds, bool _preprocessing, bool _computeInvariants);
 
 private:
 	/// The name of the solver's binary.
