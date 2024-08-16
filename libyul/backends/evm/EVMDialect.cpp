@@ -50,8 +50,8 @@ std::pair<YulName, BuiltinFunctionForEVM> createEVMFunction(
 	evmasm::InstructionInfo info = evmasm::instructionInfo(_instruction, _evmVersion);
 	BuiltinFunctionForEVM f;
 	f.name = YulName{_name};
-	f.parameters.resize(static_cast<size_t>(info.args));
-	f.returns.resize(static_cast<size_t>(info.ret));
+	f.numParameters = static_cast<size_t>(info.args);
+	f.numReturns = static_cast<size_t>(info.ret);
 	f.sideEffects = EVMDialect::sideEffectsOfInstruction(_instruction);
 	if (evmasm::SemanticInformation::terminatesControlFlow(_instruction))
 	{
@@ -96,8 +96,8 @@ std::pair<YulName, BuiltinFunctionForEVM> createFunction(
 	YulName name{std::move(_name)};
 	BuiltinFunctionForEVM f;
 	f.name = name;
-	f.parameters.resize(_params);
-	f.returns.resize(_returns);
+	f.numParameters = _params;
+	f.numReturns = _returns;
 	f.sideEffects = std::move(_sideEffects);
 	f.literalArguments = std::move(_literalArguments);
 	f.isMSize = false;

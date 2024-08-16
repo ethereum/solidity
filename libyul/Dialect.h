@@ -32,7 +32,6 @@
 namespace solidity::yul
 {
 
-using Type = YulName;
 enum class LiteralKind;
 class LiteralValue;
 struct Literal;
@@ -40,8 +39,8 @@ struct Literal;
 struct BuiltinFunction
 {
 	YulName name;
-	std::vector<Type> parameters;
-	std::vector<Type> returns;
+	size_t numParameters;
+	size_t numReturns;
 	SideEffects sideEffects;
 	ControlFlowSideEffects controlFlowSideEffects;
 	/// If true, this is the msize instruction or might contain it.

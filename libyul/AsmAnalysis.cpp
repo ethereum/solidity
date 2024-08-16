@@ -327,8 +327,8 @@ size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 				"The use of transient storage for reentrancy guards that are cleared at the end of the call is safe."
 			);
 
-		numParameters = f->parameters.size();
-		numReturns = f->returns.size();
+		numParameters = f->numParameters;
+		numReturns = f->numReturns;
 		if (!f->literalArguments.empty())
 			literalArguments = &f->literalArguments;
 

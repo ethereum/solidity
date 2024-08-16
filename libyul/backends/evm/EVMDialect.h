@@ -34,7 +34,6 @@
 namespace solidity::yul
 {
 
-using Type = YulName;
 struct FunctionCall;
 struct Object;
 
