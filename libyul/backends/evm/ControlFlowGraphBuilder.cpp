@@ -527,7 +527,7 @@ Stack const& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _cal
 			// input
 			std::move(inputs),
 			// output
-			ranges::views::iota(0u, builtin->returns.size()) | ranges::views::transform([&](size_t _i) {
+			ranges::views::iota(0u, builtin->numReturns) | ranges::views::transform([&](size_t _i) {
 				return TemporarySlot{_call, _i};
 			}) | ranges::to<Stack>,
 			// operation

@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(builtins_analysis)
 		{
 			return _name == "builtin"_yulname ? &f : nullptr;
 		}
-		BuiltinFunction f{"builtin"_yulname, std::vector<Type>(2), std::vector<Type>(3), {}, {}, false, {}};
+		BuiltinFunction f{"builtin"_yulname, 2, 3, {}, {}, false, {}};
 	};
 
 	SimpleDialect dialect;

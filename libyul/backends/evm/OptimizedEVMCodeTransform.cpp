@@ -147,7 +147,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::BuiltinCall const& _call)
 		for (size_t i = 0; i < _call.arguments; ++i)
 			m_stack.pop_back();
 		// Push return values to m_stack.
-		for (size_t index: ranges::views::iota(0u, _call.builtin.get().returns.size()))
+		for (size_t index: ranges::views::iota(0u, _call.builtin.get().numReturns))
 			m_stack.emplace_back(TemporarySlot{_call.functionCall, index});
 		yulAssert(m_assembly.stackHeight() == static_cast<int>(m_stack.size()), "");
 	}
