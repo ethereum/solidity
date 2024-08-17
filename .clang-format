@@ -1,38 +1,53 @@
-# Formatting approximately used in Solidity's C++
+# Formatting used in Solidity's C++
 #
-# See https://clang.llvm.org/docs/ClangFormatStyleOptions.html
-# For an online formatter to test settings, see
-# https://zed0.co.uk/clang-format-configurator/
-# Note that clang-format cannot express the style that closing parentheses
-# behave similar to closing curly braces in a multi-line setting in that
-# they have to be on a line of their own at the same indentation level
-# as the opening part (aka "dangling parenthesis", see https://reviews.llvm.org/D33029).
+# Relies on a special patched branch of clang 20:
+# https://github.com/ekpyron/llvm-project/tree/clangFormatAlwaysBlockIndent
+# A build script as well as prebuilt binaries for a compatible fully static
+# clang-format can found at:
+# https://github.com/ekpyron/clang_format_always_block_indent
 
 Language: Cpp
 BasedOnStyle: LLVM
 AccessModifierOffset: -4
-AlignAfterOpenBracket: AlwaysBreak
+AlignAfterOpenBracket: AlwaysBlockIndent
 AlignEscapedNewlines: Left
+AlignOperands: DontAlign
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
 AlwaysBreakAfterReturnType: None
 AlwaysBreakTemplateDeclarations: Yes
 BinPackArguments: false
 BinPackParameters: false
-BreakBeforeBinaryOperators: All
+BreakBeforeBinaryOperators: None
 BreakBeforeBraces: Allman
+BreakBeforeTernaryOperators: false
+BreakBinaryOperations: RespectPrecedence
+BreakConstructorInitializers: AfterColon
 ColumnLimit: 120
 ContinuationIndentWidth: 4
+Cpp11BracedListStyle: true
 FixNamespaceComments: false
+IncludeBlocks: Preserve
 IndentWidth: 4
+IndentWrappedFunctionNames: false
+InsertNewlineAtEOF: true
+InsertTrailingCommas: Wrapped
 KeepEmptyLinesAtTheStartOfBlocks: false
 MaxEmptyLinesToKeep: 2
-PenaltyBreakBeforeFirstCallParameter: 2000
+PackConstructorInitializers: CurrentLine
+PenaltyBreakBeforeFirstCallParameter: 0
 PointerAlignment: Left
+ReflowComments: true
+RemoveBracesLLVM: true
+RemoveSemicolon: true
 SpaceAfterCStyleCast: true
 SpaceAfterTemplateKeyword: false
 SpaceBeforeCtorInitializerColon: false
 SpaceBeforeInheritanceColon: false
 SpaceBeforeParens: ControlStatements
 SpaceBeforeRangeBasedForLoopColon: false
+SortIncludes: CaseInsensitive
+QualifierAlignment: Right
 TabWidth: 4
 UseTab: Always
 
