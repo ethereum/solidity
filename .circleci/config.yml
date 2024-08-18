@@ -895,6 +895,9 @@ jobs:
             sudo apt -q update
             sudo apt install -y shellcheck
       - run:
+          name: Check for C++ coding style with clang-format
+          command: scripts/check_style_clang_format.sh
+      - run:
           name: Check for C++ coding style
           command: scripts/check_style.sh
       - run:

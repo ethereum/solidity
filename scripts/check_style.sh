@@ -16,6 +16,9 @@ EXCLUDE_FILES=(
     "test/scripts/fixtures/smt_contract_with_crlf_newlines.sol"
     "test/scripts/fixtures/smt_contract_with_cr_newlines.sol"
     "test/scripts/fixtures/smt_contract_with_mixed_newlines.sol"
+    # Handled by clang-format style check.
+    "libsolidity/analysis/TypeChecker.cpp"
+    "libsolidity/analysis/TypeChecker.h"
 )
 EXCLUDE_FILES_JOINED=$(printf "%s\|" "${EXCLUDE_FILES[@]}")
 EXCLUDE_FILES_JOINED=${EXCLUDE_FILES_JOINED%??}
