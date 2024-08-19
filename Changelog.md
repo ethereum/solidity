@@ -36,6 +36,8 @@ Bugfixes:
  * Yul Optimizer: Name simplification could lead to forbidden identifiers with a leading and/or trailing dot, e.g., ``x._`` would get simplified into ``x.``.
  * Yul Parser: Fix segfault when parsing very long location comments.
 
+Build System:
+ * Change build system to use git submodules for some dependencies (nlohmann-json, fmtlib & range-v3).
 
 ### 0.8.26 (2024-05-21)
 

@@ -44,7 +44,7 @@ set(sources
 )
 
 add_library(solutil ${sources})
-target_link_libraries(solutil PUBLIC Boost::boost Boost::filesystem Boost::system range-v3 fmt::fmt-header-only nlohmann-json)
+target_link_libraries(solutil PUBLIC Boost::boost Boost::filesystem Boost::system range-v3 fmt::fmt-header-only nlohmann_json::nlohmann_json)
 target_include_directories(solutil PUBLIC "${PROJECT_SOURCE_DIR}")
 add_dependencies(solutil solidity_BuildInfo.h)
 

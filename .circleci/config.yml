@@ -866,7 +866,7 @@ jobs:
           name: Check spelling
           command: |
             ~/.local/bin/codespell \
-              --skip "*.enc,.git,Dockerfile*,LICENSE,codespell_whitelist.txt,codespell_ignored_lines.txt" \
+              --skip "*.enc,.git,Dockerfile*,LICENSE,codespell_whitelist.txt,codespell_ignored_lines.txt,deps" \
               --ignore-words scripts/codespell_whitelist.txt \
               --exclude-file scripts/codespell_ignored_lines.txt
       - matrix_notify_failure_unless_pr
@@ -1273,7 +1273,7 @@ jobs:
       - run:
           name: Install runtime dependencies
           command: |
-            pacman --noconfirm -Syu --noprogressbar --needed z3
+            pacman --noconfirm -Syu --noprogressbar --needed z3 git
       - soltest
 
   t_ubu_clang_soltest: &t_ubu_clang_soltest
