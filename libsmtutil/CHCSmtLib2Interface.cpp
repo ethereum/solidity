@@ -200,6 +200,24 @@ bool isNumber(std::string const& _expr)
 {
 	return ranges::all_of(_expr, [](char c) { return isDigit(c) || c == '.'; });
 }
+
+bool isBitVectorHexConstant(std::string const& _string)
+{
+	if (_string.substr(0, 2) != "#x")
+		return false;
+	if (_string.find_first_not_of("0123456789abcdefABCDEF", 2) != std::string::npos)
+		return false;
+	return true;
+}
+
+bool isBitVectorConstant(std::string const& _string)
+{
+	if (_string.substr(0, 2) != "#b")
+		return false;
+	if (_string.find_first_not_of("01", 2) != std::string::npos)
+		return false;
+	return true;
+}
 }
 
 void CHCSmtLib2Interface::ScopedParser::addVariableDeclaration(std::string _name, solidity::smtutil::SortPointer _sort)
@@ -279,6 +297,10 @@ smtutil::Expression CHCSmtLib2Interface::ScopedParser::toSMTUtilExpression(SMTLi
 					return smtutil::Expression(_atom == "true");
 				else if (isNumber(_atom))
 					return smtutil::Expression(_atom, {}, SortProvider::sintSort);
+				else if (isBitVectorHexConstant(_atom))
+					return smtutil::Expression(_atom, {}, std::make_shared<BitVectorSort>((_atom.size() - 2) * 4));
+				else if (isBitVectorConstant(_atom))
+					return smtutil::Expression(_atom, {}, std::make_shared<BitVectorSort>(_atom.size() - 2));
 				else if (auto it = m_localVariables.find(_atom); it != m_localVariables.end())
 					return smtutil::Expression(_atom, {}, it->second);
 				else if (m_context.isDeclared(_atom))
