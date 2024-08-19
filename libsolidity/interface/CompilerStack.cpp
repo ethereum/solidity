@@ -111,6 +111,7 @@ static int g_compilerStackCounts = 0;
 
 CompilerStack::CompilerStack(ReadCallback::Callback _readFile):
 	m_readFile{std::move(_readFile)},
+	m_objectOptimizer(std::make_shared<yul::ObjectOptimizer>()),
 	m_errorReporter{m_errorList}
 {
 	// Because TypeProvider is currently a singleton API, we must ensure that
@@ -1493,7 +1494,8 @@ void CompilerStack::generateIR(ContractDefinition const& _contract, bool _unopti
 		m_eofVersion,
 		YulStack::Language::StrictAssembly,
 		m_optimiserSettings,
-		m_debugInfoSelection
+		m_debugInfoSelection,
+		m_objectOptimizer
 	);
 	bool yulAnalysisSuccessful = stack.parseAndAnalyze("", compiledContract.yulIR);
 	solAssert(
@@ -1530,7 +1532,8 @@ void CompilerStack::generateEVMFromIR(ContractDefinition const& _contract)
 		m_eofVersion,
 		yul::YulStack::Language::StrictAssembly,
 		m_optimiserSettings,
-		m_debugInfoSelection
+		m_debugInfoSelection,
+		m_objectOptimizer
 	);
 	bool analysisSuccessful = stack.parseAndAnalyze("", compiledContract.yulIROptimized);
 	solAssert(analysisSuccessful);
