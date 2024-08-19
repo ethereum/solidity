@@ -80,6 +80,9 @@ protected:
 		std::unordered_map<std::string, SortPointer> m_localVariables;
 	};
 
+	/* Modifies the passed expression by inlining all let subexpressions */
+	static void inlineLetExpressions(SMTLib2Expression& _expr);
+
 	std::string toSmtLibSort(SortPointer const& _sort);
 	std::vector<std::string> toSmtLibSort(std::vector<SortPointer> const& _sort);
 

@@ -407,7 +407,7 @@ std::optional<smtutil::Expression> CHCSmtLib2Interface::invariantsFromSolverResp
 		precondition(!isAtom(args[2]));
 		precondition(isAtom(args[3]) && asAtom(args[3]) == "Bool");
 		auto& interpretation = args[4];
-//		inlineLetExpressions(interpretation);
+		inlineLetExpressions(interpretation);
 		ScopedParser scopedParser(m_context);
 		auto const& formalArguments = asSubExpressions(args[2]);
 		std::vector<Expression> predicateArgs;
@@ -432,3 +432,126 @@ std::optional<smtutil::Expression> CHCSmtLib2Interface::invariantsFromSolverResp
 	return Expression::mkAnd(std::move(definitions));
 }
 #undef precondition
+
+namespace
+{
+
+struct LetBindings
+{
+	using BindingRecord = std::vector<SMTLib2Expression>;
+	std::unordered_map<std::string, BindingRecord> bindings;
+	std::vector<std::string> varNames;
+	std::vector<std::size_t> scopeBounds;
+
+	bool has(std::string const& varName) { return bindings.find(varName) != bindings.end(); }
+
+	SMTLib2Expression& operator[](std::string const& varName)
+	{
+		auto it = bindings.find(varName);
+		smtAssert(it != bindings.end());
+		smtAssert(!it->second.empty());
+		return it->second.back();
+	}
+
+	void pushScope() { scopeBounds.push_back(varNames.size()); }
+
+	void popScope()
+	{
+		smtAssert(!scopeBounds.empty());
+		auto bound = scopeBounds.back();
+		while (varNames.size() > bound)
+		{
+			auto const& varName = varNames.back();
+			auto it = bindings.find(varName);
+			smtAssert(it != bindings.end());
+			auto& record = it->second;
+			record.pop_back();
+			if (record.empty())
+				bindings.erase(it);
+			varNames.pop_back();
+		}
+		scopeBounds.pop_back();
+	}
+
+	void addBinding(std::string name, SMTLib2Expression expression)
+	{
+		auto it = bindings.find(name);
+		if (it == bindings.end())
+			bindings.insert({name, {std::move(expression)}});
+		else
+			it->second.push_back(std::move(expression));
+		varNames.push_back(std::move(name));
+	}
+};
+
+void inlineLetExpressions(SMTLib2Expression& _expr, LetBindings& _bindings)
+{
+	if (isAtom(_expr))
+	{
+		auto const& atom = asAtom(_expr);
+		if (_bindings.has(atom))
+			_expr = _bindings[atom];
+		return;
+	}
+	auto& subexprs = asSubExpressions(_expr);
+	smtAssert(!subexprs.empty());
+	auto const& first = subexprs.at(0);
+	if (isAtom(first) && asAtom(first) == "let")
+	{
+		smtAssert(subexprs.size() == 3);
+		smtAssert(!isAtom(subexprs[1]));
+		auto& bindingExpressions = asSubExpressions(subexprs[1]);
+		// process new bindings
+		std::vector<std::pair<std::string, SMTLib2Expression>> newBindings;
+		for (auto& binding: bindingExpressions)
+		{
+			smtAssert(!isAtom(binding));
+			auto& bindingPair = asSubExpressions(binding);
+			smtAssert(bindingPair.size() == 2);
+			smtAssert(isAtom(bindingPair.at(0)));
+			inlineLetExpressions(bindingPair.at(1), _bindings);
+			newBindings.emplace_back(asAtom(bindingPair.at(0)), bindingPair.at(1));
+		}
+		_bindings.pushScope();
+		for (auto&& [name, expr]: newBindings)
+			_bindings.addBinding(std::move(name), std::move(expr));
+
+		newBindings.clear();
+
+		// get new subexpression
+		inlineLetExpressions(subexprs.at(2), _bindings);
+		// remove the new bindings
+		_bindings.popScope();
+
+		// update the expression
+		auto tmp = std::move(subexprs.at(2));
+		_expr = std::move(tmp);
+		return;
+	}
+	else if (isAtom(first) && (asAtom(first) == "forall" || asAtom(first) == "exists"))
+	{
+		// A little hack to ensure quantified variables are not substituted because of some outer let definition:
+		// We define the current binding of the variable to itself, before we recurse in to subterm
+		smtAssert(subexprs.size() == 3);
+		_bindings.pushScope();
+		for (auto const& sortedVar: asSubExpressions(subexprs.at(1)))
+		{
+			auto const& varNameExpr = asSubExpressions(sortedVar).at(0);
+			_bindings.addBinding(asAtom(varNameExpr), varNameExpr);
+		}
+		inlineLetExpressions(subexprs.at(2), _bindings);
+		_bindings.popScope();
+		return;
+	}
+
+	// not a let expression, just process all arguments recursively
+	for (auto& subexpr: subexprs)
+		inlineLetExpressions(subexpr, _bindings);
+}
+}
+
+void CHCSmtLib2Interface::inlineLetExpressions(SMTLib2Expression& expr)
+{
+	LetBindings bindings;
+	::inlineLetExpressions(expr, bindings);
+}
