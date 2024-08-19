@@ -18,7 +18,7 @@
 
 #include <test/libyul/YulInterpreterTest.h>
 
-#include <test/tools/yulInterpreter/Interpreter.h>
+#include <test/tools/yulInterpreter/forward.h>
 
 #include <test/Common.h>
 

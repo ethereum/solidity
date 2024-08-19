@@ -42,7 +42,7 @@ class YulString;
 struct BuiltinFunctionForEVM;
 }
 
-namespace solidity::yul::test
+namespace solidity::yul::tools::interpreter
 {
 
 /// Copy @a _size bytes of @a _source at offset @a _sourceOffset to
@@ -168,9 +168,10 @@ private:
 	InterpreterState& m_state;
 	/// Flag to disable trace of instructions that write to memory.
 	bool m_disableMemoryWriteInstructions;
+
 public:
 	/// Maximum length for range-based memory access operations.
 	static constexpr unsigned s_maxRangeSize = 0xffff;
 };
 
-} // solidity::yul::test
+} // solidity::yul::interpreter::tools

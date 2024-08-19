@@ -189,6 +189,10 @@ add_library(yul
 	optimiser/VarDeclInitializer.h
 	optimiser/VarNameCleaner.cpp
 	optimiser/VarNameCleaner.h
+	tools/interpreter/Interpreter.h
+	tools/interpreter/Interpreter.cpp
+	tools/interpreter/EVMInstructionInterpreter.h
+	tools/interpreter/EVMInstructionInterpreter.cpp
 )
 
 target_link_libraries(yul PUBLIC evmasm solutil langutil smtutil fmt::fmt-header-only)

@@ -19,7 +19,9 @@
  * Yul inspector.
  */
 
-#include <test/tools/yulInterpreter/Interpreter.h>
+#include <libyul/tools/interpreter/Interpreter.h>
+
+#include <test/tools//yulInterpreter/forward.h>
 
 #include <libyul/AST.h>
 

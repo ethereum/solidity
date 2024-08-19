@@ -19,7 +19,7 @@
  * Yul interpreter.
  */
 
-#include <test/tools/yulInterpreter/Interpreter.h>
+#include <test/tools/yulInterpreter/forward.h>
 #include <test/tools/yulInterpreter/Inspector.h>
 
 #include <libyul/AsmAnalysisInfo.h>
@@ -47,6 +47,7 @@ using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::langutil;
 using namespace solidity::yul;
+using namespace solidity::yul::tools;
 using namespace solidity::yul::test;
 
 namespace po = boost::program_options;

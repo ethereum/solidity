@@ -38,7 +38,7 @@ namespace solidity::yul
 struct Dialect;
 }
 
-namespace solidity::yul::test
+namespace solidity::yul::tools::interpreter
 {
 
 class InterpreterTerminatedGeneric: public util::Exception

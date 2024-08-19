@@ -20,6 +20,7 @@
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::yul::test::yul_fuzzer;
+using namespace solidity::yul::tools::interpreter;
 
 yulFuzzerUtil::TerminationReason yulFuzzerUtil::interpret(
 	std::ostream& _os,

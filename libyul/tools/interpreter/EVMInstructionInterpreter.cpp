@@ -19,13 +19,13 @@
  * Yul interpreter module that evaluates EVM instructions.
  */
 
-#include <test/tools/yulInterpreter/EVMInstructionInterpreter.h>
+#include <libyul/tools/interpreter/EVMInstructionInterpreter.h>
 
-#include <test/tools/yulInterpreter/Interpreter.h>
+#include <libyul/tools/interpreter/Interpreter.h>
 
-#include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/AST.h>
 #include <libyul/Utilities.h>
+#include <libyul/backends/evm/EVMDialect.h>
 
 #include <libevmasm/Instruction.h>
 #include <libevmasm/SemanticInformation.h>
@@ -39,7 +39,7 @@
 using namespace solidity;
 using namespace solidity::evmasm;
 using namespace solidity::yul;
-using namespace solidity::yul::test;
+using namespace solidity::yul::tools::interpreter;
 
 using solidity::util::h160;
 using solidity::util::h256;
@@ -73,7 +73,7 @@ u256 readZeroExtended(bytes const& _data, u256 const& _offset)
 
 }
 
-namespace solidity::yul::test
+namespace solidity::yul::tools::interpreter
 {
 
 void copyZeroExtended(
