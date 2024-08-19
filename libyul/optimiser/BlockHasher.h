@@ -61,7 +61,8 @@ protected:
 class ASTHasherBase: public HasherBase
 {
 protected:
-	void hashLiteral(solidity::yul::Literal const& _literal);
+	void hashLiteral(Literal const& _literal);
+	void hashFunctionCall(FunctionCall const& _functionCall);
 };
 
 /**
@@ -86,6 +87,8 @@ public:
 
 	void operator()(Literal const&) override;
 	void operator()(Identifier const&) override;
+	void operator()(Builtin const&) override;
+	void operator()(Verbatim const&) override;
 	void operator()(FunctionCall const& _funCall) override;
 	void operator()(ExpressionStatement const& _statement) override;
 	void operator()(Assignment const& _assignment) override;

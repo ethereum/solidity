@@ -49,7 +49,7 @@ private:
 	explicit LoopInvariantCodeMotion(
 		Dialect const& _dialect,
 		std::set<YulName> const& _ssaVariables,
-		std::map<YulName, SideEffects> const& _functionSideEffects,
+		std::map<FunctionNameIdentifier, SideEffects> const& _functionSideEffects,
 		bool _containsMSize
 	):
 		m_containsMSize(_containsMSize),
@@ -69,7 +69,7 @@ private:
 	bool m_containsMSize = true;
 	Dialect const& m_dialect;
 	std::set<YulName> const& m_ssaVariables;
-	std::map<YulName, SideEffects> const& m_functionSideEffects;
+	std::map<FunctionNameIdentifier, SideEffects> const& m_functionSideEffects;
 };
 
 }

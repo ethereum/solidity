@@ -34,14 +34,17 @@
 #include <libyul/backends/evm/EVMDialect.h>
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Visitor.h>
 
 #include <libevmasm/Instruction.h>
 #include <libevmasm/SemanticInformation.h>
 
 #include <range/v3/algorithm/all_of.hpp>
+#include <utility>
 
 using namespace solidity;
 using namespace solidity::yul;
+using namespace solidity::util;
 
 /// Variable names for special constants that can never appear in actual Yul code.
 static std::string const zero{"@ 0"};
@@ -51,7 +54,7 @@ static std::string const thirtyTwo{"@ 32"};
 
 void UnusedStoreEliminator::run(OptimiserStepContext& _context, Block& _ast)
 {
-	std::map<YulName, SideEffects> functionSideEffects = SideEffectsPropagator::sideEffects(
+	std::map<FunctionNameIdentifier, SideEffects> functionSideEffects = SideEffectsPropagator::sideEffects(
 		_context.dialect,
 		CallGraphGenerator::callGraph(_ast)
 	);
@@ -93,7 +96,7 @@ void UnusedStoreEliminator::run(OptimiserStepContext& _context, Block& _ast)
 
 UnusedStoreEliminator::UnusedStoreEliminator(
 	Dialect const& _dialect,
-	std::map<YulName, SideEffects> const& _functionSideEffects,
+	std::map<FunctionNameIdentifier, SideEffects> const& _functionSideEffects,
 	std::map<YulName, ControlFlowSideEffects> _controlFlowSideEffects,
 	std::map<YulName, AssignedValue> const& _ssaValues,
 	bool _ignoreMemory
@@ -101,9 +104,9 @@ UnusedStoreEliminator::UnusedStoreEliminator(
 	UnusedStoreBase(_dialect),
 	m_ignoreMemory(_ignoreMemory),
 	m_functionSideEffects(_functionSideEffects),
-	m_controlFlowSideEffects(_controlFlowSideEffects),
+	m_controlFlowSideEffects(std::move(_controlFlowSideEffects)),
 	m_ssaValues(_ssaValues),
-	m_knowledgeBase(_ssaValues)
+	m_knowledgeBase(_ssaValues, _dialect)
 {}
 
 void UnusedStoreEliminator::operator()(FunctionCall const& _functionCall)
@@ -113,11 +116,11 @@ void UnusedStoreEliminator::operator()(FunctionCall const& _functionCall)
 	for (Operation const& op: operationsFromFunctionCall(_functionCall))
 		applyOperation(op);
 
-	ControlFlowSideEffects sideEffects;
-	if (auto builtin = m_dialect.builtin(_functionCall.functionName.name))
-		sideEffects = builtin->controlFlowSideEffects;
-	else
-		sideEffects = m_controlFlowSideEffects.at(_functionCall.functionName.name);
+	ControlFlowSideEffects sideEffects = std::visit(GenericVisitor{
+		[&](Builtin const& _builtin) { return m_dialect.builtinFunction(_builtin.handle).controlFlowSideEffects; },
+		[&](Verbatim const& _verbatim) { return m_dialect.verbatimFunction(_verbatim.handle).controlFlowSideEffects; },
+		[&](Identifier const& _identifier) { return m_controlFlowSideEffects.at(_identifier.name); },
+	}, _functionCall.functionName);
 
 	if (sideEffects.canTerminate)
 		markActiveAsUsed(Location::Storage);
@@ -153,7 +156,7 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 
 	FunctionCall const* funCall = std::get_if<FunctionCall>(&exprStatement->expression);
 	yulAssert(funCall);
-	std::optional<Instruction> instruction = toEVMInstruction(m_dialect, funCall->functionName.name);
+	std::optional<Instruction> instruction = toEVMInstruction(m_dialect, funCall->functionName);
 	if (!instruction)
 		return;
 
@@ -201,7 +204,7 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 				if (
 					m_knowledgeBase.knownToBeZero(*startOffset) &&
 					lengthCall &&
-					toEVMInstruction(m_dialect, lengthCall->functionName.name) == Instruction::RETURNDATASIZE
+					toEVMInstruction(m_dialect, lengthCall->functionName) == Instruction::RETURNDATASIZE
 				)
 					allowReturndatacopyToBeRemoved = true;
 			}
@@ -228,14 +231,13 @@ std::vector<UnusedStoreEliminator::Operation> UnusedStoreEliminator::operationsF
 {
 	using evmasm::Instruction;
 
-	YulName functionName = _functionCall.functionName.name;
-	SideEffects sideEffects;
-	if (BuiltinFunction const* f = m_dialect.builtin(functionName))
-		sideEffects = f->sideEffects;
-	else
-		sideEffects = m_functionSideEffects.at(functionName);
+	SideEffects sideEffects = std::visit(GenericVisitor{
+		[&](Builtin const& _builtin) { return m_dialect.builtinFunction(_builtin.handle).sideEffects; },
+		[&](Verbatim const& _verbatim) { return m_dialect.verbatimFunction(_verbatim.handle).sideEffects; },
+		[&](Identifier const& _identifier) { return m_functionSideEffects.at(_identifier.name); },
+	}, _functionCall.functionName);
 
-	std::optional<Instruction> instruction = toEVMInstruction(m_dialect, functionName);
+	std::optional<Instruction> instruction = toEVMInstruction(m_dialect, _functionCall.functionName);
 	if (!instruction)
 	{
 		std::vector<Operation> result;

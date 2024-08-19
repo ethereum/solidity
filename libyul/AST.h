@@ -24,6 +24,7 @@
 #pragma once
 
 #include <libyul/ASTForward.h>
+#include <libyul/Builtins.h>
 #include <libyul/YulName.h>
 
 #include <liblangutil/DebugData.h>
@@ -35,6 +36,9 @@
 
 namespace solidity::yul
 {
+
+struct BuiltinHandle;
+struct VerbatimHandle;
 
 struct NameWithDebugData { langutil::DebugData::ConstPtr debugData; YulName name; };
 using NameWithDebugDataList = std::vector<NameWithDebugData>;
@@ -69,6 +73,12 @@ private:
 struct Literal { langutil::DebugData::ConstPtr debugData; LiteralKind kind; LiteralValue value; };
 /// External / internal identifier or label reference
 struct Identifier { langutil::DebugData::ConstPtr debugData; YulName name; };
+/// Builtin function
+struct Builtin { langutil::DebugData::ConstPtr debugData; BuiltinHandle handle; };
+/// Verbatim function
+struct Verbatim { langutil::DebugData::ConstPtr debugData; VerbatimHandle handle; };
+/// Identifier for function names
+using FunctionNameIdentifier = std::variant<YulName, BuiltinHandle, VerbatimHandle>;
 /// Assignment ("x := mload(20:u256)", expects push-1-expression on the right hand
 /// side and requires x to occupy exactly one stack slot.
 ///
@@ -76,7 +86,7 @@ struct Identifier { langutil::DebugData::ConstPtr debugData; YulName name; };
 /// a single stack slot and expects a single expression on the right hand returning
 /// the same amount of items as the number of variables.
 struct Assignment { langutil::DebugData::ConstPtr debugData; std::vector<Identifier> variableNames; std::unique_ptr<Expression> value; };
-struct FunctionCall { langutil::DebugData::ConstPtr debugData; Identifier functionName; std::vector<Expression> arguments; };
+struct FunctionCall { langutil::DebugData::ConstPtr debugData; FunctionName functionName; std::vector<Expression> arguments; };
 /// Statement that contains only a single expression
 struct ExpressionStatement { langutil::DebugData::ConstPtr debugData; Expression expression; };
 /// Block-scope variable declaration ("let x:u256 := mload(20:u256)"), non-hoisted
@@ -98,6 +108,11 @@ struct Break { langutil::DebugData::ConstPtr debugData; };
 struct Continue { langutil::DebugData::ConstPtr debugData; };
 /// Leave statement (valid within function)
 struct Leave { langutil::DebugData::ConstPtr debugData; };
+
+constexpr bool isBuiltinFunctionCall(FunctionCall const& _functionCall) noexcept
+{
+	return std::holds_alternative<Builtin>(_functionCall.functionName) || std::holds_alternative<Verbatim>(_functionCall.functionName);
+}
 
 /// Immutable AST comprised of its top-level block
 class AST

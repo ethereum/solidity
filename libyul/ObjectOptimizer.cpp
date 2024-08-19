@@ -82,7 +82,7 @@ void ObjectOptimizer::optimize(Object& _object, Settings const& _settings, bool 
 	if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&dialect))
 		meter = std::make_unique<GasMeter>(*evmDialect, _isCreation, _settings.expectedExecutionsPerDeployment);
 
-	std::optional<h256> cacheKey = calculateCacheKey(_object.code()->root(), *_object.debugData, _settings, _isCreation);
+	std::optional<h256> cacheKey = calculateCacheKey(dialect, _object.code()->root(), *_object.debugData, _settings, _isCreation);
 	if (cacheKey.has_value() && m_cachedObjects.count(*cacheKey) != 0)
 	{
 		overwriteWithOptimizedObject(*cacheKey, _object);
@@ -135,6 +135,7 @@ void ObjectOptimizer::overwriteWithOptimizedObject(util::h256 _cacheKey, Object&
 }
 
 std::optional<h256> ObjectOptimizer::calculateCacheKey(
+	Dialect const& _dialect,
 	Block const& _ast,
 	ObjectDebugData const& _debugData,
 	Settings const& _settings,
@@ -142,6 +143,7 @@ std::optional<h256> ObjectOptimizer::calculateCacheKey(
 )
 {
 	AsmPrinter asmPrinter(
+		_dialect,
 		_debugData.sourceNames,
 		DebugInfoSelection::All()
 	);

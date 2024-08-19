@@ -41,12 +41,15 @@ class AsmJsonConverter: public boost::static_visitor<Json>
 public:
 	/// Create a converter to JSON for any block of inline assembly
 	/// @a _sourceIndex to be used to abbreviate source name in the source locations
-	explicit AsmJsonConverter(std::optional<size_t> _sourceIndex): m_sourceIndex(_sourceIndex) {}
+	AsmJsonConverter(Dialect const& _dialect, std::optional<size_t> _sourceIndex):
+		m_dialect(_dialect), m_sourceIndex(_sourceIndex) {}
 
 	Json operator()(Block const& _node) const;
 	Json operator()(NameWithDebugData const& _node) const;
 	Json operator()(Literal const& _node) const;
 	Json operator()(Identifier const& _node) const;
+	Json operator()(Builtin const& _node) const;
+	Json operator()(Verbatim const& _node) const;
 	Json operator()(Assignment const& _node) const;
 	Json operator()(VariableDeclaration const& _node) const;
 	Json operator()(FunctionDefinition const& _node) const;
@@ -66,6 +69,7 @@ private:
 	template <class T>
 	Json vectorOfVariantsToJson(std::vector<T> const& vec) const;
 
+	Dialect const& m_dialect;
 	std::optional<size_t> const m_sourceIndex;
 };
 

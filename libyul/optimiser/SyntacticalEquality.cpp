@@ -25,6 +25,7 @@
 #include <libyul/Exceptions.h>
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Visitor.h>
 
 using namespace solidity;
 using namespace solidity::yul;
@@ -52,6 +53,15 @@ bool SyntacticallyEqual::expressionEqual(FunctionCall const& _lhs, FunctionCall 
 		util::containerEqual(_lhs.arguments, _rhs.arguments, [this](Expression const& _lhsExpr, Expression const& _rhsExpr) -> bool {
 			return (*this)(_lhsExpr, _rhsExpr);
 		});
+}
+
+bool SyntacticallyEqual::expressionEqual(FunctionName const& _lhs, FunctionName const& _rhs)
+{
+	return std::visit(util::GenericVisitor{
+		[&](Builtin const& _builtin) { return std::holds_alternative<Builtin>(_rhs) && _builtin.handle == std::get<Builtin>(_rhs).handle; },
+		[&](Verbatim const& _verbatim) { return std::holds_alternative<Verbatim>(_rhs) && _verbatim.handle == std::get<Verbatim>(_rhs).handle; },
+		[&](Identifier const& _identifier) { return std::holds_alternative<Identifier>(_rhs) && expressionEqual(_identifier, std::get<Identifier>(_rhs)); },
+	}, _lhs);
 }
 
 bool SyntacticallyEqual::expressionEqual(Identifier const& _lhs, Identifier const& _rhs)

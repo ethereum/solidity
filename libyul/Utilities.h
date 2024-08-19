@@ -30,6 +30,11 @@
 namespace solidity::yul
 {
 
+struct Dialect;
+struct EVMDialect;
+struct BuiltinFunction;
+struct BuiltinFunctionForEVM;
+
 std::string reindent(std::string const& _code);
 
 LiteralValue valueOfNumberLiteral(std::string_view _literal);
@@ -82,5 +87,10 @@ struct SwitchCaseCompareByLiteralValue
 {
 	bool operator()(Case const* _lhsCase, Case const* _rhsCase) const;
 };
+
+std::string_view resolveFunctionName(FunctionName const& _functionName, Dialect const& _dialect);
+
+BuiltinFunction const* resolveBuiltinFunction(FunctionName const& _functionName, Dialect const& _dialect);
+BuiltinFunctionForEVM const* resolveBuiltinFunctionForEVM(FunctionName const& _functionName, EVMDialect const& _dialect);
 
 }

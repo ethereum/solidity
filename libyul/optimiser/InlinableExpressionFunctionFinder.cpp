@@ -27,15 +27,20 @@
 using namespace solidity;
 using namespace solidity::yul;
 
+void InlinableExpressionFunctionFinder::checkAllowed(FunctionName _name) {
+	if (std::holds_alternative<Identifier>(_name) && m_disallowedIdentifiers.count(std::get<Identifier>(_name).name))
+		m_foundDisallowedIdentifier = true;
+}
+
 void InlinableExpressionFunctionFinder::operator()(Identifier const& _identifier)
 {
-	checkAllowed(_identifier.name);
+	checkAllowed(_identifier);
 	ASTWalker::operator()(_identifier);
 }
 
 void InlinableExpressionFunctionFinder::operator()(FunctionCall const& _funCall)
 {
-	checkAllowed(_funCall.functionName.name);
+	checkAllowed(_funCall.functionName); // todo i think this should be fine b/c functiondefinitions are only for non-builtins (?)
 	ASTWalker::operator()(_funCall);
 }
 

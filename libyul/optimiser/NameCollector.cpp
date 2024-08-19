@@ -22,6 +22,7 @@
 #include <libyul/optimiser/NameCollector.h>
 
 #include <libyul/AST.h>
+#include <libyul/Utilities.h>
 
 using namespace solidity;
 using namespace solidity::yul;
@@ -55,7 +56,8 @@ void ReferencesCounter::operator()(Identifier const& _identifier)
 
 void ReferencesCounter::operator()(FunctionCall const& _funCall)
 {
-	++m_references[_funCall.functionName.name];
+	if (std::holds_alternative<Identifier>(_funCall.functionName))
+		++m_references[std::get<Identifier>(_funCall.functionName).name]; // todo not sure if we also have to deal with builtins/verbatims here
 	ASTWalker::operator()(_funCall);
 }
 

@@ -46,6 +46,8 @@ public:
 
 	void operator()(yul::Literal const&) {}
 	void operator()(yul::Identifier const&) {}
+	void operator()(yul::Builtin const&) {}
+	void operator()(yul::Verbatim const&) {}
 	void operator()(yul::ExpressionStatement const& _expr)
 	{
 		std::visit(*this, _expr.expression);
@@ -65,10 +67,13 @@ public:
 	}
 	void operator()(yul::FunctionCall const& _funCall)
 	{
-		if (yul::EVMDialect const* dialect = dynamic_cast<decltype(dialect)>(&m_dialect))
-			if (yul::BuiltinFunctionForEVM const* fun = dialect->builtin(_funCall.functionName.name))
-				if (fun->instruction)
-					checkInstruction(nativeLocationOf(_funCall), *fun->instruction);
+		if (auto const* dialect = dynamic_cast<yul::EVMDialect const*>(&m_dialect))
+			if (std::holds_alternative<yul::Builtin>(_funCall.functionName))
+				if (
+					auto const& fun = dialect->builtinFunction(std::get<yul::Builtin>(_funCall.functionName).handle);
+					fun.instruction
+				)
+					checkInstruction(nativeLocationOf(_funCall), *fun.instruction);
 
 		for (auto const& arg: _funCall.arguments)
 			std::visit(*this, arg);

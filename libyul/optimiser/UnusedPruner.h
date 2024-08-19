@@ -22,6 +22,7 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
+#include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/YulName.h>
 
@@ -64,7 +65,7 @@ public:
 		Dialect const& _dialect,
 		Block& _ast,
 		bool _allowMSizeOptimization,
-		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr,
+		std::map<FunctionNameIdentifier, SideEffects> const* _functionSideEffects = nullptr,
 		std::set<YulName> const& _externallyUsedFunctions = {}
 	);
 
@@ -104,7 +105,7 @@ private:
 		Dialect const& _dialect,
 		Block& _ast,
 		bool _allowMSizeOptimization,
-		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr,
+		std::map<FunctionNameIdentifier, SideEffects> const* _functionSideEffects = nullptr,
 		std::set<YulName> const& _externallyUsedFunctions = {}
 	);
 	UnusedPruner(
@@ -119,7 +120,7 @@ private:
 
 	Dialect const& m_dialect;
 	bool m_allowMSizeOptimization = false;
-	std::map<YulName, SideEffects> const* m_functionSideEffects = nullptr;
+	std::map<FunctionNameIdentifier, SideEffects> const* m_functionSideEffects = nullptr;
 	bool m_shouldRunAgain = false;
 	std::map<YulName, size_t> m_references;
 };

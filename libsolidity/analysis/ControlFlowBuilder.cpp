@@ -582,13 +582,25 @@ void ControlFlowBuilder::operator()(yul::FunctionCall const& _functionCall)
 	solAssert(m_currentNode && m_inlineAssembly, "");
 	yul::ASTWalker::operator()(_functionCall);
 
-	if (auto const *builtinFunction = m_inlineAssembly->dialect().builtin(_functionCall.functionName.name))
+	util::GenericVisitor visitor{
+		[&](yul::Builtin const& _builtin) -> std::optional<yul::ControlFlowSideEffects>
+		{
+			return m_inlineAssembly->dialect().builtinFunction(_builtin.handle).controlFlowSideEffects;
+		},
+		[&](yul::Verbatim const& _verbatim) -> std::optional<yul::ControlFlowSideEffects>
+		{
+			return m_inlineAssembly->dialect().verbatimFunction(_verbatim.handle).controlFlowSideEffects;
+		},
+		[](yul::Identifier const&) -> std::optional<yul::ControlFlowSideEffects> { return std::nullopt; }
+	};
+	std::optional<yul::ControlFlowSideEffects> sideEffects = std::visit(visitor, _functionCall.functionName);
+	if (sideEffects)
 	{
-		if (builtinFunction->controlFlowSideEffects.canTerminate)
+		if (sideEffects.value().canTerminate)
 			connect(m_currentNode, m_transactionReturnNode);
-		if (builtinFunction->controlFlowSideEffects.canRevert)
+		if (sideEffects.value().canRevert)
 			connect(m_currentNode, m_revertNode);
-		if (!builtinFunction->controlFlowSideEffects.canContinue)
+		if (!sideEffects.value().canContinue)
 			m_currentNode = newLabel();
 	}
 }

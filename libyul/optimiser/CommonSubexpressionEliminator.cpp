@@ -46,7 +46,7 @@ void CommonSubexpressionEliminator::run(OptimiserStepContext& _context, Block& _
 
 CommonSubexpressionEliminator::CommonSubexpressionEliminator(
 	Dialect const& _dialect,
-	std::map<YulName, SideEffects> _functionSideEffects
+	std::map<FunctionNameIdentifier, SideEffects> _functionSideEffects
 ):
 	DataFlowAnalyzer(_dialect, MemoryAndStorage::Ignore, std::move(_functionSideEffects))
 {
@@ -72,15 +72,24 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 	{
 		FunctionCall& funCall = std::get<FunctionCall>(_e);
 
-		if (BuiltinFunction const* builtin = m_dialect.builtin(funCall.functionName.name))
+		if (std::holds_alternative<Builtin>(funCall.functionName))
 		{
+			auto const& fun = m_dialect.builtinFunction(std::get<Builtin>(funCall.functionName).handle);
 			for (size_t i = funCall.arguments.size(); i > 0; i--)
 				// We should not modify function arguments that have to be literals
 				// Note that replacing the function call entirely is fine,
 				// if the function call is movable.
-				if (!builtin->literalArgument(i - 1))
+				if (!fun.literalArgument(i - 1))
 					visit(funCall.arguments[i - 1]);
 
+			descend = false;
+		}
+		else if (std::holds_alternative<Verbatim>(funCall.functionName))
+		{
+			auto const& fun = m_dialect.verbatimFunction(std::get<Verbatim>(funCall.functionName).handle);
+			// verbatims have all their arguments literal
+			yulAssert(fun.literalArguments.size() == fun.numParameters);
+			yulAssert(std::all_of(fun.literalArguments.begin(), fun.literalArguments.end(), [](auto const& arg) { return arg.has_value(); }));
 			descend = false;
 		}
 	}

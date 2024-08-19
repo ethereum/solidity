@@ -37,13 +37,13 @@ namespace
 
 ExpressionStatement makeDiscardCall(
 	langutil::DebugData::ConstPtr const& _debugData,
-	BuiltinFunction const& _discardFunction,
+	BuiltinHandle const& _discardFunction,
 	Expression&& _expression
 )
 {
 	return {_debugData, FunctionCall{
 		_debugData,
-		Identifier{_debugData, _discardFunction.name},
+		Builtin{_debugData, _discardFunction},
 		{std::move(_expression)}
 	}};
 }
@@ -177,14 +177,12 @@ void ControlFlowSimplifier::simplify(std::vector<yul::Statement>& _statements)
 OptionalStatements ControlFlowSimplifier::reduceNoCaseSwitch(Switch& _switchStmt) const
 {
 	yulAssert(_switchStmt.cases.empty(), "Expected no case!");
-	BuiltinFunction const* discardFunction =
-		m_dialect.discardFunction();
-	if (!discardFunction)
+	if (!m_dialect.discardFunction())
 		return {};
 
 	return make_vector<Statement>(makeDiscardCall(
 		debugDataOf(*_switchStmt.expression),
-		*discardFunction,
+		*m_dialect.discardFunction(),
 		std::move(*_switchStmt.expression)
 	));
 }
@@ -203,7 +201,7 @@ OptionalStatements ControlFlowSimplifier::reduceSingleCaseSwitch(Switch& _switch
 			std::move(_switchStmt.debugData),
 			std::make_unique<Expression>(FunctionCall{
 				debugData,
-				Identifier{debugData, m_dialect.equalityFunction()->name},
+				Builtin{debugData, *m_dialect.equalityFunction()},
 				{std::move(*switchCase.value), std::move(*_switchStmt.expression)}
 			}),
 			std::move(switchCase.body)

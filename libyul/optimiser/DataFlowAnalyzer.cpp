@@ -45,23 +45,19 @@ using namespace solidity::yul;
 DataFlowAnalyzer::DataFlowAnalyzer(
 	Dialect const& _dialect,
 	MemoryAndStorage _analyzeStores,
-	std::map<YulName, SideEffects> _functionSideEffects
+	std::map<FunctionNameIdentifier, SideEffects> _functionSideEffects
 ):
 	m_dialect(_dialect),
 	m_functionSideEffects(std::move(_functionSideEffects)),
-	m_knowledgeBase([this](YulName _var) { return variableValue(_var); }),
+	m_knowledgeBase([this](YulName _var) { return variableValue(_var); }, _dialect),
 	m_analyzeStores(_analyzeStores == MemoryAndStorage::Analyze)
 {
 	if (m_analyzeStores)
 	{
-		if (auto const* builtin = _dialect.memoryStoreFunction())
-			m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Memory)] = builtin->name;
-		if (auto const* builtin = _dialect.memoryLoadFunction())
-			m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Memory)] = builtin->name;
-		if (auto const* builtin = _dialect.storageStoreFunction())
-			m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Storage)] = builtin->name;
-		if (auto const* builtin = _dialect.storageLoadFunction())
-			m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Storage)] = builtin->name;
+		m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Memory)] = _dialect.memoryStoreFunction();
+		m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Memory)] = _dialect.memoryLoadFunction();
+		m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Storage)] = _dialect.storageStoreFunction();
+		m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Storage)] = _dialect.storageLoadFunction();
 	}
 }
 
@@ -424,7 +420,8 @@ std::optional<std::pair<YulName, YulName>> DataFlowAnalyzer::isSimpleStore(
 ) const
 {
 	if (FunctionCall const* funCall = std::get_if<FunctionCall>(&_statement.expression))
-		if (funCall->functionName.name == m_storeFunctionName[static_cast<unsigned>(_location)])
+		if (std::holds_alternative<Builtin>(funCall->functionName) &&
+			std::get<Builtin>(funCall->functionName).handle == m_storeFunctionName[static_cast<unsigned>(_location)])
 			if (Identifier const* key = std::get_if<Identifier>(&funCall->arguments.front()))
 				if (Identifier const* value = std::get_if<Identifier>(&funCall->arguments.back()))
 					return std::make_pair(key->name, value->name);
@@ -437,7 +434,8 @@ std::optional<YulName> DataFlowAnalyzer::isSimpleLoad(
 ) const
 {
 	if (FunctionCall const* funCall = std::get_if<FunctionCall>(&_expression))
-		if (funCall->functionName.name == m_loadFunctionName[static_cast<unsigned>(_location)])
+		if (std::holds_alternative<Builtin>(funCall->functionName) &&
+			std::get<Builtin>(funCall->functionName).handle == m_loadFunctionName[static_cast<unsigned>(_location)])
 			if (Identifier const* key = std::get_if<Identifier>(&funCall->arguments.front()))
 				return key->name;
 	return {};
@@ -446,7 +444,7 @@ std::optional<YulName> DataFlowAnalyzer::isSimpleLoad(
 std::optional<std::pair<YulName, YulName>> DataFlowAnalyzer::isKeccak(Expression const& _expression) const
 {
 	if (FunctionCall const* funCall = std::get_if<FunctionCall>(&_expression))
-		if (funCall->functionName.name == m_dialect.hashFunction())
+		if (std::holds_alternative<Builtin>(funCall->functionName) && std::get<Builtin>(funCall->functionName).handle == m_dialect.hashFunction())
 			if (Identifier const* start = std::get_if<Identifier>(&funCall->arguments.at(0)))
 				if (Identifier const* length = std::get_if<Identifier>(&funCall->arguments.at(1)))
 					return std::make_pair(start->name, length->name);

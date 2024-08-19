@@ -30,6 +30,7 @@
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Algorithms.h>
+#include <libsolutil/Visitor.h>
 
 #include <limits>
 
@@ -40,7 +41,7 @@ using namespace solidity::yul;
 SideEffectsCollector::SideEffectsCollector(
 		Dialect const& _dialect,
 		Expression const& _expression,
-		std::map<YulName, SideEffects> const* _functionSideEffects
+		std::map<FunctionNameIdentifier, SideEffects> const* _functionSideEffects
 ):
 	SideEffectsCollector(_dialect, _functionSideEffects)
 {
@@ -56,7 +57,7 @@ SideEffectsCollector::SideEffectsCollector(Dialect const& _dialect, Statement co
 SideEffectsCollector::SideEffectsCollector(
 	Dialect const& _dialect,
 	Block const& _ast,
-	std::map<YulName, SideEffects> const* _functionSideEffects
+	std::map<FunctionNameIdentifier, SideEffects> const* _functionSideEffects
 ):
 	SideEffectsCollector(_dialect, _functionSideEffects)
 {
@@ -66,7 +67,7 @@ SideEffectsCollector::SideEffectsCollector(
 SideEffectsCollector::SideEffectsCollector(
 	Dialect const& _dialect,
 	ForLoop const& _ast,
-	std::map<YulName, SideEffects> const* _functionSideEffects
+	std::map<FunctionNameIdentifier, SideEffects> const* _functionSideEffects
 ):
 	SideEffectsCollector(_dialect, _functionSideEffects)
 {
@@ -77,13 +78,18 @@ void SideEffectsCollector::operator()(FunctionCall const& _functionCall)
 {
 	ASTWalker::operator()(_functionCall);
 
-	YulName functionName = _functionCall.functionName.name;
-	if (BuiltinFunction const* f = m_dialect.builtin(functionName))
-		m_sideEffects += f->sideEffects;
-	else if (m_functionSideEffects && m_functionSideEffects->count(functionName))
-		m_sideEffects += m_functionSideEffects->at(functionName);
-	else
-		m_sideEffects += SideEffects::worst();
+	util::GenericVisitor visitor{
+		[&](Builtin const& _builtin) { m_sideEffects += m_dialect.builtinFunction(_builtin.handle).sideEffects; },
+		[&](Verbatim const& _verbatim) { m_sideEffects += m_dialect.verbatimFunction(_verbatim.handle).sideEffects; },
+		[&](Identifier const& _identifier)
+		{
+			if (m_functionSideEffects && m_functionSideEffects->count(_identifier.name))
+				m_sideEffects += m_functionSideEffects->at(_identifier.name);
+			else
+				m_sideEffects += SideEffects::worst();
+		}
+	};
+	std::visit(visitor, _functionCall.functionName);
 }
 
 bool MSizeFinder::containsMSize(Dialect const& _dialect, Block const& _ast)
@@ -110,12 +116,15 @@ void MSizeFinder::operator()(FunctionCall const& _functionCall)
 {
 	ASTWalker::operator()(_functionCall);
 
-	if (BuiltinFunction const* f = m_dialect.builtin(_functionCall.functionName.name))
-		if (f->isMSize)
-			m_msizeFound = true;
+	util::GenericVisitor visitor{
+		[](Identifier const&) {},
+		[&](Builtin const& _builtin) { m_msizeFound |= m_dialect.builtinFunction(_builtin.handle).isMSize; },
+		[&](Verbatim const& _verbatim) { m_msizeFound |= m_dialect.verbatimFunction(_verbatim.handle).isMSize; }
+	};
+	std::visit(visitor, _functionCall.functionName);
 }
 
-std::map<YulName, SideEffects> SideEffectsPropagator::sideEffects(
+std::map<FunctionNameIdentifier, SideEffects> SideEffectsPropagator::sideEffects(
 	Dialect const& _dialect,
 	CallGraph const& _directCallGraph
 )
@@ -126,8 +135,16 @@ std::map<YulName, SideEffects> SideEffectsPropagator::sideEffects(
 	// In the future, we should refine that, because the property
 	// is actually a bit different from "not movable".
 
-	std::map<YulName, SideEffects> ret;
-	for (auto const& function: _directCallGraph.functionsWithLoops + _directCallGraph.recursiveFunctions())
+	std::map<FunctionNameIdentifier, SideEffects> ret;
+	for (auto const& function: _directCallGraph.functionsWithLoops)
+	{
+		ret[function].movable = false;
+		ret[function].canBeRemoved = false;
+		ret[function].canBeRemovedIfNoMSize = false;
+		ret[function].cannotLoop = false;
+	}
+
+	for (auto const& function: _directCallGraph.recursiveFunctions())
 	{
 		ret[function].movable = false;
 		ret[function].canBeRemoved = false;
@@ -137,20 +154,23 @@ std::map<YulName, SideEffects> SideEffectsPropagator::sideEffects(
 
 	for (auto const& call: _directCallGraph.functionCalls)
 	{
-		YulName funName = call.first;
+		FunctionNameIdentifier funName = call.first;
 		SideEffects sideEffects;
-		auto _visit = [&, visited = std::set<YulName>{}](YulName _function, auto&& _recurse) mutable {
+		auto _visit = [&, visited = std::set<FunctionNameIdentifier>{}](FunctionNameIdentifier _function, auto&& _recurse) mutable {
 			if (!visited.insert(_function).second)
 				return;
 			if (sideEffects == SideEffects::worst())
 				return;
-			if (BuiltinFunction const* f = _dialect.builtin(_function))
-				sideEffects += f->sideEffects;
+			if (std::holds_alternative<BuiltinHandle>(_function))
+				sideEffects += _dialect.builtinFunction(std::get<BuiltinHandle>(_function)).sideEffects;
+			else if (std::holds_alternative<VerbatimHandle>(_function))
+				sideEffects += _dialect.verbatimFunction(std::get<VerbatimHandle>(_function)).sideEffects;
 			else
 			{
+				yulAssert(std::holds_alternative<YulName>(_function));
 				if (ret.count(_function))
 					sideEffects += ret[_function];
-				for (YulName callee: _directCallGraph.functionCalls.at(_function))
+				for (auto callee: _directCallGraph.functionCalls.at(std::get<YulName>(_function)))
 					_recurse(callee, _recurse);
 			}
 		};
@@ -227,10 +247,17 @@ bool TerminationFinder::containsNonContinuingFunctionCall(Expression const& _exp
 			if (containsNonContinuingFunctionCall(arg))
 				return true;
 
-		if (auto builtin = m_dialect.builtin(functionCall->functionName.name))
-			return !builtin->controlFlowSideEffects.canContinue;
-		else if (m_functionSideEffects && m_functionSideEffects->count(functionCall->functionName.name))
-			return !m_functionSideEffects->at(functionCall->functionName.name).canContinue;
+		util::GenericVisitor visitor{
+			[&](Builtin const& _builtin) { return !m_dialect.builtinFunction(_builtin.handle).controlFlowSideEffects.canContinue; },
+			[&](Verbatim const& _verbatim) { return !m_dialect.verbatimFunction(_verbatim.handle).controlFlowSideEffects.canContinue; },
+			[&](Identifier const& _identifier)
+			{
+				if (m_functionSideEffects && m_functionSideEffects->count(_identifier.name))
+					return !m_functionSideEffects->at(_identifier.name).canContinue;
+				return false;
+			}
+		};
+		return std::visit(visitor, functionCall->functionName);
 	}
 	return false;
 }

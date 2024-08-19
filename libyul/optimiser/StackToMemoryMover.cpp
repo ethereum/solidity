@@ -42,12 +42,12 @@ std::vector<Statement> generateMemoryStore(
 	Expression _value
 )
 {
-	BuiltinFunction const* memoryStoreFunction = _dialect.memoryStoreFunction();
+	std::optional<BuiltinHandle> memoryStoreFunction = _dialect.memoryStoreFunction();
 	yulAssert(memoryStoreFunction, "");
 	std::vector<Statement> result;
 	result.emplace_back(ExpressionStatement{_debugData, FunctionCall{
 		_debugData,
-		Identifier{_debugData, memoryStoreFunction->name},
+		Builtin{_debugData, *memoryStoreFunction},
 		{
 			Literal{_debugData, LiteralKind::Number, _mpos},
 			std::move(_value)
@@ -58,11 +58,11 @@ std::vector<Statement> generateMemoryStore(
 
 FunctionCall generateMemoryLoad(Dialect const& _dialect, langutil::DebugData::ConstPtr const& _debugData, LiteralValue const& _mpos)
 {
-	BuiltinFunction const* memoryLoadFunction = _dialect.memoryLoadFunction();
+	std::optional<BuiltinHandle> memoryLoadFunction = _dialect.memoryLoadFunction();
 	yulAssert(memoryLoadFunction, "");
 	return FunctionCall{
 		_debugData,
-		Identifier{_debugData, memoryLoadFunction->name}, {
+		Builtin{_debugData, *memoryLoadFunction}, {
 			Literal{
 				_debugData,
 				LiteralKind::Number,
@@ -223,13 +223,16 @@ void StackToMemoryMover::operator()(Block& _block)
 		{
 			FunctionCall const* functionCall = std::get_if<FunctionCall>(_stmt.value.get());
 			yulAssert(functionCall, "");
-			if (m_context.dialect.builtin(functionCall->functionName.name))
+			if (isBuiltinFunctionCall(*functionCall))
 				rhsMemorySlots = std::vector<std::optional<LiteralValue>>(_lhsVars.size(), std::nullopt);
 			else
+			{
+				yulAssert(std::holds_alternative<Identifier>(functionCall->functionName));
 				rhsMemorySlots =
-					m_functionReturnVariables.at(functionCall->functionName.name) |
+					m_functionReturnVariables.at(std::get<Identifier>(functionCall->functionName).name) |
 					ranges::views::transform(m_memoryOffsetTracker) |
 					ranges::to<std::vector<std::optional<LiteralValue>>>;
+			}
 		}
 		else
 			rhsMemorySlots = std::vector<std::optional<LiteralValue>>(_lhsVars.size(), std::nullopt);

@@ -55,21 +55,22 @@ void FunctionSpecializer::operator()(FunctionCall& _f)
 
 	// TODO When backtracking is implemented, the restriction of recursive functions can be lifted.
 	if (
-		m_dialect.builtin(_f.functionName.name) ||
-		m_recursiveFunctions.count(_f.functionName.name)
+		isBuiltinFunctionCall(_f) ||
+		(std::holds_alternative<Identifier>(_f.functionName) && m_recursiveFunctions.count(std::get<Identifier>(_f.functionName).name))
 	)
 		return;
-
+	yulAssert(std::holds_alternative<Identifier>(_f.functionName));
+	auto& identifier = std::get<Identifier>(_f.functionName);
 	LiteralArguments arguments = specializableArguments(_f);
 
 	if (ranges::any_of(arguments, [](auto& _a) { return _a.has_value(); }))
 	{
-		YulName oldName = std::move(_f.functionName.name);
+		YulName oldName = std::move(identifier.name);
 		auto newName = m_nameDispenser.newName(oldName);
 
 		m_oldToNewMap[oldName].emplace_back(std::make_pair(newName, arguments));
 
-		_f.functionName.name = newName;
+		identifier.name = newName;
 		_f.arguments = util::filter(
 			_f.arguments,
 			applyMap(arguments, [](auto& _a) { return !_a; })

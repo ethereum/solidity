@@ -131,6 +131,16 @@ size_t AsmAnalyzer::operator()(Literal const& _literal)
 	return 1;
 }
 
+size_t AsmAnalyzer::operator()(Builtin const&)
+{
+	yulAssert(false, "Should not be called for builtins");
+}
+
+size_t AsmAnalyzer::operator()(Verbatim const&)
+{
+	yulAssert(false, "Should not be called for builtins");
+}
+
 size_t AsmAnalyzer::operator()(Identifier const& _identifier)
 {
 	yulAssert(!_identifier.name.empty(), "");
@@ -293,91 +303,113 @@ void AsmAnalyzer::operator()(FunctionDefinition const& _funDef)
 
 size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 {
-	yulAssert(!_funCall.functionName.name.empty(), "");
 	auto watcher = m_errorReporter.errorWatcher();
 	std::optional<size_t> numParameters;
 	std::optional<size_t> numReturns;
 	std::vector<std::optional<LiteralKind>> const* literalArguments = nullptr;
 
-	if (BuiltinFunction const* f = m_dialect.builtin(_funCall.functionName.name))
-	{
-		if (_funCall.functionName.name == "selfdestruct"_yulname)
-			m_errorReporter.warning(
-				1699_error,
-				nativeLocationOf(_funCall.functionName),
-				"\"selfdestruct\" has been deprecated. "
-				"Note that, starting from the Cancun hard fork, the underlying opcode no longer deletes the code and "
-				"data associated with an account and only transfers its Ether to the beneficiary, "
-				"unless executed in the same transaction in which the contract was created (see EIP-6780). "
-				"Any use in newly deployed contracts is strongly discouraged even if the new behavior is taken into account. "
-				"Future changes to the EVM might further reduce the functionality of the opcode."
-			);
-		else if (
-			m_evmVersion.supportsTransientStorage() &&
-			_funCall.functionName.name == "tstore"_yulname &&
-			!m_errorReporter.hasError({2394})
-		)
-			m_errorReporter.warning(
-				2394_error,
-				nativeLocationOf(_funCall.functionName),
-				"Transient storage as defined by EIP-1153 can break the composability of smart contracts: "
-				"Since transient storage is cleared only at the end of the transaction and not at the end of the outermost call frame to the contract within a transaction, "
-				"your contract may unintentionally misbehave when invoked multiple times in a complex transaction. "
-				"To avoid this, be sure to clear all transient storage at the end of any call to your contract. "
-				"The use of transient storage for reentrancy guards that are cleared at the end of the call is safe."
-			);
-
-		numParameters = f->numParameters;
-		numReturns = f->numReturns;
-		if (!f->literalArguments.empty())
-			literalArguments = &f->literalArguments;
-
-		validateInstructions(_funCall);
-		m_sideEffects += f->sideEffects;
-	}
-	else if (m_currentScope->lookup(_funCall.functionName.name, GenericVisitor{
-		[&](Scope::Variable const&)
+	GenericVisitor visitor{
+		[&](Builtin const& _builtin)
 		{
-			m_errorReporter.typeError(
-				4202_error,
-				nativeLocationOf(_funCall.functionName),
-				"Attempt to call variable instead of function."
-			);
+			auto const& function = m_dialect.builtinFunction(_builtin.handle);
+			yulAssert(!function.name.empty(), "");
+			if (function.name == "selfdestruct")
+				m_errorReporter.warning(
+					1699_error,
+					nativeLocationOf(_funCall.functionName),
+					"\"selfdestruct\" has been deprecated. "
+					"Note that, starting from the Cancun hard fork, the underlying opcode no longer deletes the code and "
+					"data associated with an account and only transfers its Ether to the beneficiary, "
+					"unless executed in the same transaction in which the contract was created (see EIP-6780). "
+					"Any use in newly deployed contracts is strongly discouraged even if the new behavior is taken into account. "
+					"Future changes to the EVM might further reduce the functionality of the opcode."
+				);
+			else if (
+				m_evmVersion.supportsTransientStorage() &&
+				function.name == "tstore" &&
+				!m_errorReporter.hasError({2394})
+			)
+				m_errorReporter.warning(
+					2394_error,
+					nativeLocationOf(_funCall.functionName),
+					"Transient storage as defined by EIP-1153 can break the composability of smart contracts: "
+					"Since transient storage is cleared only at the end of the transaction and not at the end of the outermost call frame to the contract within a transaction, "
+					"your contract may unintentionally misbehave when invoked multiple times in a complex transaction. "
+					"To avoid this, be sure to clear all transient storage at the end of any call to your contract. "
+					"The use of transient storage for reentrancy guards that are cleared at the end of the call is safe."
+				);
+
+			numParameters = function.numParameters;
+			numReturns = function.numReturns;
+			if (!function.literalArguments.empty())
+				literalArguments = &function.literalArguments;
+
+			validateInstructions(_funCall);
+			m_sideEffects += function.sideEffects;
 		},
-		[&](Scope::Function const& _fun)
+		[&](Verbatim const& _verbatim)
 		{
-			numParameters = _fun.numArguments;
-			numReturns = _fun.numReturns;
+			auto const& function = m_dialect.verbatimFunction(_verbatim.handle);
+			yulAssert(!function.name.empty(), "");
+			numParameters = function.numParameters;
+			numReturns = function.numReturns;
+			if (!function.literalArguments.empty())
+				literalArguments = &function.literalArguments;
+
+			validateInstructions(_funCall);
+			m_sideEffects += function.sideEffects;
+		},
+		[&](Identifier const& _identifier)
+		{
+			yulAssert(!_identifier.name.empty(), "");
+			if (m_currentScope->lookup(_identifier.name, GenericVisitor{
+				[&](Scope::Variable const&)
+				{
+					m_errorReporter.typeError(
+						4202_error,
+						nativeLocationOf(_funCall.functionName),
+						"Attempt to call variable instead of function."
+					);
+				},
+				[&](Scope::Function const& _fun)
+				{
+					numParameters = _fun.numArguments;
+					numReturns = _fun.numReturns;
+				}
+			}))
+			{
+				if (m_resolver)
+					// We found a local reference, make sure there is no external reference.
+					m_resolver(
+						_identifier,
+						yul::IdentifierContext::NonExternal,
+						m_currentScope->insideFunction()
+					);
+			}
+			else
+			{
+				if (!validateInstructions(_funCall))
+					m_errorReporter.declarationError(
+						4619_error,
+						nativeLocationOf(_funCall.functionName),
+						"Function \"" + _identifier.name.str() + "\" not found."
+					);
+				yulAssert(!watcher.ok(), "Expected a reported error.");
+			}
 		}
-	}))
-	{
-		if (m_resolver)
-			// We found a local reference, make sure there is no external reference.
-			m_resolver(
-				_funCall.functionName,
-				yul::IdentifierContext::NonExternal,
-				m_currentScope->insideFunction()
-			);
-	}
-	else
-	{
-		if (!validateInstructions(_funCall))
-			m_errorReporter.declarationError(
-				4619_error,
-				nativeLocationOf(_funCall.functionName),
-				"Function \"" + _funCall.functionName.name.str() + "\" not found."
-			);
-		yulAssert(!watcher.ok(), "Expected a reported error.");
-	}
+	};
+	std::visit(visitor, _funCall.functionName);
 
 	if (numParameters && _funCall.arguments.size() != *numParameters)
 		m_errorReporter.typeError(
 			7000_error,
 			nativeLocationOf(_funCall.functionName),
-			"Function \"" + _funCall.functionName.name.str() + "\" expects " +
-			std::to_string(*numParameters) +
-			" arguments but got " +
-			std::to_string(_funCall.arguments.size()) + "."
+			fmt::format(
+				"Function \"{}\" expects {} arguments but got {}.",
+				resolveFunctionName(_funCall.functionName, m_dialect),
+				*numParameters,
+				_funCall.arguments.size()
+			)
 		);
 
 	for (size_t i = _funCall.arguments.size(); i > 0; i--)
@@ -403,7 +435,7 @@ size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 				);
 			else if (*literalArgumentKind == LiteralKind::String)
 			{
-				std::string functionName = _funCall.functionName.name.str();
+				std::string_view functionName = resolveFunctionName(_funCall.functionName, m_dialect);
 				if (functionName == "datasize" || functionName == "dataoffset")
 				{
 					auto const& argumentAsLiteral = std::get<Literal>(arg);
@@ -430,7 +462,7 @@ size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 			}
 			else if (*literalArgumentKind == LiteralKind::Number)
 			{
-				std::string functionName = _funCall.functionName.name.str();
+				std::string_view functionName = resolveFunctionName(_funCall.functionName, m_dialect);
 				if (functionName == "auxdataloadn")
 				{
 					auto const& argumentAsLiteral = std::get<Literal>(arg);
@@ -628,7 +660,7 @@ void AsmAnalyzer::expectValidIdentifier(YulName _identifier, SourceLocation cons
 			"\"" + _identifier.str() + "\" is not a valid identifier (contains consecutive dots)."
 		);
 
-	if (m_dialect.reservedIdentifier(_identifier))
+	if (m_dialect.reservedIdentifier(_identifier.str()))
 		m_errorReporter.declarationError(
 			5017_error,
 			_location,
@@ -636,17 +668,22 @@ void AsmAnalyzer::expectValidIdentifier(YulName _identifier, SourceLocation cons
 		);
 }
 
-bool AsmAnalyzer::validateInstructions(std::string const& _instructionIdentifier, langutil::SourceLocation const& _location)
+bool AsmAnalyzer::validateInstructions(std::string_view _instructionIdentifier, langutil::SourceLocation const& _location)
 {
 	// NOTE: This function uses the default EVM version instead of the currently selected one.
-	auto const builtin = EVMDialect::strictAssemblyForEVM(EVMVersion{}, std::nullopt).builtin(YulName(_instructionIdentifier));
-	if (builtin && builtin->instruction.has_value())
-		return validateInstructions(builtin->instruction.value(), _location);
+	auto const& defaultEVMDialect = EVMDialect::strictAssemblyForEVM(EVMVersion{}, std::nullopt);
+	auto const builtinHandle = defaultEVMDialect.builtin(_instructionIdentifier);
+	if (builtinHandle)
+	{
+		BuiltinFunctionForEVM const& builtin = defaultEVMDialect.builtinFunction(builtinHandle.value());
+		return builtin.instruction.has_value() && validateInstructions(builtin.instruction.value(), _location);
+	}
 
 	// TODO: Change `prague()` to `EVMVersion{}` once EOF gets deployed
-	auto const eofBuiltin = EVMDialect::strictAssemblyForEVM(EVMVersion::prague(), 1).builtin(YulName(_instructionIdentifier));
-	if (eofBuiltin && eofBuiltin->instruction.has_value())
-		return validateInstructions(eofBuiltin->instruction.value(), _location);
+	auto const& eofEVMDialect = EVMDialect::strictAssemblyForEVM(EVMVersion::prague(), 1);
+	auto const eofBuiltin = eofEVMDialect.builtin(_instructionIdentifier);
+	if (eofBuiltin && eofEVMDialect.builtinFunction(eofBuiltin.value()).instruction.has_value())
+		return validateInstructions(eofEVMDialect.builtinFunction(eofBuiltin.value()).instruction.value(), _location);
 
 	return false;
 }
@@ -761,5 +798,5 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 
 bool AsmAnalyzer::validateInstructions(FunctionCall const& _functionCall)
 {
-	return validateInstructions(_functionCall.functionName.name.str(), nativeLocationOf(_functionCall.functionName));
+	return validateInstructions(resolveFunctionName(_functionCall.functionName, m_dialect), nativeLocationOf(_functionCall.functionName));
 }

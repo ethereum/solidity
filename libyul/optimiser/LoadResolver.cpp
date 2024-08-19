@@ -56,13 +56,15 @@ void LoadResolver::visit(Expression& _e)
 {
 	DataFlowAnalyzer::visit(_e);
 
-	if (FunctionCall const* funCall = std::get_if<FunctionCall>(&_e))
+	if (FunctionCall const* funCall = std::get_if<FunctionCall>(&_e);
+		funCall && std::holds_alternative<Builtin>(funCall->functionName))
 	{
-		if (funCall->functionName.name == m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Memory)])
+		auto const& builtinHandle = std::get<Builtin>(funCall->functionName).handle;
+		if (builtinHandle == m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Memory)])
 			tryResolve(_e, StoreLoadLocation::Memory, funCall->arguments);
-		else if (funCall->functionName.name == m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Storage)])
+		else if (builtinHandle == m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Storage)])
 			tryResolve(_e, StoreLoadLocation::Storage, funCall->arguments);
-		else if (!m_containsMSize && funCall->functionName.name == m_dialect.hashFunction())
+		else if (!m_containsMSize && builtinHandle == m_dialect.hashFunction())
 		{
 			Identifier const* start = std::get_if<Identifier>(&funCall->arguments.at(0));
 			Identifier const* length = std::get_if<Identifier>(&funCall->arguments.at(1));

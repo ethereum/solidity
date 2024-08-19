@@ -141,10 +141,10 @@ protected:
 	Expression parseExpression(bool _unlimitedLiteralArgument = false);
 	/// Parses an elementary operation, i.e. a literal, identifier, instruction or
 	/// builtin function call (only the name).
-	std::variant<Literal, Identifier> parseLiteralOrIdentifier(bool _unlimitedLiteralArgument = false);
+	std::variant<Literal, Identifier, Builtin, Verbatim> parseLiteralOrIdentifier(bool _unlimitedLiteralArgument = false);
 	VariableDeclaration parseVariableDeclaration();
 	FunctionDefinition parseFunctionDefinition();
-	FunctionCall parseCall(std::variant<Literal, Identifier>&& _initialOp);
+	FunctionCall parseCall(std::variant<Literal, Identifier, Builtin, Verbatim>&& _initialOp);
 	NameWithDebugData parseNameWithDebugData();
 	YulName expectAsmIdentifier();
 	void raiseUnsupportedTypesError(langutil::SourceLocation const& _location) const;

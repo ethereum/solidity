@@ -99,6 +99,7 @@ protected:
 
 	Case translate(Case const& _case);
 	virtual Identifier translate(Identifier const& _identifier);
+	FunctionName translate(FunctionName const& _functionName);
 	Literal translate(Literal const& _literal);
 	NameWithDebugData translate(NameWithDebugData const& _typedName);
 

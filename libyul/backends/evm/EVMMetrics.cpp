@@ -30,6 +30,7 @@
 #include <libevmasm/GasMeter.h>
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Visitor.h>
 
 using namespace solidity;
 using namespace solidity::yul;
@@ -76,13 +77,22 @@ std::pair<bigint, bigint> GasMeterVisitor::instructionCosts(
 void GasMeterVisitor::operator()(FunctionCall const& _funCall)
 {
 	ASTWalker::operator()(_funCall);
-	if (BuiltinFunctionForEVM const* f = m_dialect.builtin(_funCall.functionName.name))
-		if (f->instruction)
+	util::GenericVisitor visitor
+	{
+		VisitorFallback<bool>{},
+		[&](Builtin const& _builtin)
 		{
-			instructionCostsInternal(*f->instruction);
-			return;
+			BuiltinFunctionForEVM const& function = m_dialect.builtinFunction(_builtin.handle);
+			if (function.instruction)
+			{
+				instructionCostsInternal(*function.instruction);
+				return true;
+			}
+			return false;
 		}
-	yulAssert(false, "Functions not implemented.");
+	};
+	bool evaluatedBuiltinWithInstruction = std::visit(visitor, _funCall.functionName);
+	yulAssert(evaluatedBuiltinWithInstruction, "Functions not implemented.");
 }
 
 void GasMeterVisitor::operator()(Literal const& _lit)

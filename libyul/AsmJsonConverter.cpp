@@ -23,6 +23,7 @@
 #include <libyul/AST.h>
 #include <libyul/AsmJsonConverter.h>
 #include <libyul/Exceptions.h>
+#include <libyul/Dialect.h>
 #include <libyul/Utilities.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/UTF8.h>
@@ -75,6 +76,20 @@ Json AsmJsonConverter::operator()(Literal const& _node) const
 	return ret;
 }
 
+Json AsmJsonConverter::operator()(Verbatim const& _node) const
+{
+	Json ret = createAstNode(originLocationOf(_node), nativeLocationOf(_node), "YulIdentifier");
+	ret["name"] = m_dialect.verbatimFunction(_node.handle).name;
+	return ret;
+}
+
+Json AsmJsonConverter::operator()(Builtin const& _node) const
+{
+	Json ret = createAstNode(originLocationOf(_node), nativeLocationOf(_node), "YulIdentifier");
+	ret["name"] = m_dialect.builtinFunction(_node.handle).name;
+	return ret;
+}
+
 Json AsmJsonConverter::operator()(Identifier const& _node) const
 {
 	yulAssert(!_node.name.empty(), "Invalid identifier");
@@ -96,7 +111,7 @@ Json AsmJsonConverter::operator()(Assignment const& _node) const
 Json AsmJsonConverter::operator()(FunctionCall const& _node) const
 {
 	Json ret = createAstNode(originLocationOf(_node), nativeLocationOf(_node), "YulFunctionCall");
-	ret["functionName"] = (*this)(_node.functionName);
+	ret["functionName"] = std::visit(*this, _node.functionName);
 	ret["arguments"] = vectorOfVariantsToJson(_node.arguments);
 	return ret;
 }

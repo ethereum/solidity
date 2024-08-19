@@ -21,11 +21,15 @@
 
 #include <libyul/Utilities.h>
 
+#include <libyul/backends/evm/EVMDialect.h>
+
 #include <libyul/AST.h>
+#include <libyul/Dialect.h>
 #include <libyul/Exceptions.h>
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/FixedHash.h>
+#include <libsolutil/Visitor.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -236,4 +240,34 @@ bool SwitchCaseCompareByLiteralValue::operator()(Case const* _lhs, Case const* _
 {
 	yulAssert(_lhs && _rhs, "");
 	return Less<Literal*>{}(_lhs->value.get(), _rhs->value.get());
+}
+
+std::string_view yul::resolveFunctionName(FunctionName const& _functionName, Dialect const& _dialect)
+{
+	GenericVisitor visitor{
+		[&](Identifier const& _identifier) -> std::string const& { return _identifier.name.str(); },
+		[&](Builtin const& _builtin) -> std::string const& { return _dialect.builtinFunction(_builtin.handle).name; },
+		[&](Verbatim const& _verbatim) -> std::string const& { return _dialect.verbatimFunction(_verbatim.handle).name; }
+	};
+	return std::visit(visitor, _functionName);
+}
+
+BuiltinFunction const* yul::resolveBuiltinFunction(FunctionName const& _functionName, Dialect const& _dialect)
+{
+	GenericVisitor visitor{
+		[&](Identifier const&) -> BuiltinFunction const* { return nullptr; },
+		[&](Builtin const& _builtin) -> BuiltinFunction const* { return &_dialect.builtinFunction(_builtin.handle); },
+		[&](Verbatim const& _verbatim) -> BuiltinFunction const* { return &_dialect.verbatimFunction(_verbatim.handle); }
+	};
+	return std::visit(visitor, _functionName);
+}
+
+BuiltinFunctionForEVM const* yul::resolveBuiltinFunctionForEVM(FunctionName const& _functionName, EVMDialect const& _dialect)
+{
+	GenericVisitor visitor{
+		[&](Identifier const&) -> BuiltinFunctionForEVM const* { return nullptr; },
+		[&](Builtin const& _builtin) -> BuiltinFunctionForEVM const* { return &_dialect.builtinFunction(_builtin.handle); },
+		[&](Verbatim const& _verbatim) -> BuiltinFunctionForEVM const* { return &_dialect.verbatimFunction(_verbatim.handle); }
+	};
+	return std::visit(visitor, _functionName);
 }

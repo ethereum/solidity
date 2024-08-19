@@ -349,7 +349,7 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 		CFG::Assignment{_switch.debugData, {ghostVarSlot}}
 	});
 
-	BuiltinFunction const* equalityBuiltin = m_dialect.equalityFunction();
+	std::optional<BuiltinHandle> equalityBuiltin = m_dialect.equalityFunction();
 	yulAssert(equalityBuiltin, "");
 
 	// Artificially generate:
@@ -357,13 +357,13 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 	auto makeValueCompare = [&](Case const& _case) {
 		yul::FunctionCall const& ghostCall = m_graph.ghostCalls.emplace_back(yul::FunctionCall{
 			debugDataOf(_case),
-			yul::Identifier{{}, "eq"_yulname},
+			Builtin{{}, *equalityBuiltin},
 			{*_case.value, Identifier{{}, ghostVariableName}}
 		});
 		CFG::Operation& operation = m_currentBlock->operations.emplace_back(CFG::Operation{
 			Stack{ghostVarSlot, LiteralSlot{_case.value->value.value(), debugDataOf(*_case.value)}},
 			Stack{TemporarySlot{ghostCall, 0}},
-			CFG::BuiltinCall{debugDataOf(_case), *equalityBuiltin, ghostCall, 2},
+			CFG::BuiltinCall{debugDataOf(_case), m_dialect.builtinFunction(*equalityBuiltin), ghostCall, 2},
 		});
 		return operation.output.front();
 	};
@@ -516,8 +516,15 @@ Stack const& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _cal
 
 	Stack const* output = nullptr;
 	bool canContinue = true;
-	if (BuiltinFunction const* builtin = m_dialect.builtin(_call.functionName.name))
+	if (isBuiltinFunctionCall(_call))
 	{
+		BuiltinFunction const* builtin;
+		if (std::holds_alternative<Builtin>(_call.functionName))
+			builtin = &m_dialect.builtinFunction(std::get<Builtin>(_call.functionName).handle);
+		else if (std::holds_alternative<Verbatim>(_call.functionName))
+			builtin = &m_dialect.verbatimFunction(std::get<Verbatim>(_call.functionName).handle);
+		else
+			yulAssert(false);
 		Stack inputs;
 		for (auto&& [idx, arg]: _call.arguments | ranges::views::enumerate | ranges::views::reverse)
 			if (!builtin->literalArgument(idx).has_value())
@@ -537,7 +544,8 @@ Stack const& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _cal
 	}
 	else
 	{
-		Scope::Function const& function = lookupFunction(_call.functionName.name);
+		yulAssert(std::holds_alternative<Identifier>(_call.functionName));
+		Scope::Function const& function = lookupFunction(std::get<Identifier>(_call.functionName).name);
 		canContinue = m_graph.functionInfo.at(&function).canContinue;
 		Stack inputs;
 		if (canContinue)

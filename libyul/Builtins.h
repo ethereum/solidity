@@ -14,33 +14,37 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
-/**
- * AST walker that finds all calls to a function of a given name.
- */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
 #include <libyul/ASTForward.h>
-#include <libyul/YulName.h>
 
-#include <vector>
+#include <cstddef>
+#include <tuple>
 
 namespace solidity::yul
 {
+
 struct Dialect;
 
-/**
- * Finds all calls to a function of a given name using an ASTModifier.
- *
- * Prerequisite: Disambiguator
- */
-std::vector<FunctionCall*> findFunctionCalls(Block& _block, std::string_view _functionName, Dialect const& _dialect);
+/// Handle to reference a builtin function in the AST
+struct BuiltinHandle
+{
+	size_t id;
 
-/**
- * Finds all calls to a function of a given name using an ASTWalker.
- *
- * Prerequisite: Disambiguator
- */
-std::vector<FunctionCall const*> findFunctionCalls(Block const& _block, std::string_view _functionName, Dialect const& _dialect);
+	bool operator==(BuiltinHandle const& _other) const { return id == _other.id; }
+	bool operator<(BuiltinHandle const& _other) const { return id < _other.id; }
+};
+
+/// Handle to reference a verbatim function in the AST
+struct VerbatimHandle
+{
+	size_t numArgs;
+	size_t numRets;
+
+	bool operator==(VerbatimHandle const& _other) const { return numArgs == _other.numArgs && numRets == _other.numRets; }
+	bool operator<(VerbatimHandle const& _other) const { return std::make_tuple(numArgs, numRets) < std::make_tuple(_other.numArgs, _other.numRets); }
+};
 
 }

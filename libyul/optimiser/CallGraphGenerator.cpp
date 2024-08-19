@@ -23,6 +23,8 @@
 #include <libyul/optimiser/CallGraphGenerator.h>
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Visitor.h>
+
 #include <stack>
 
 using namespace solidity;
@@ -35,11 +37,11 @@ namespace
 struct CallGraphCycleFinder
 {
 	CallGraph const& callGraph;
-	std::set<YulName> containedInCycle{};
-	std::set<YulName> visited{};
-	std::vector<YulName> currentPath{};
+	std::set<FunctionNameIdentifier> containedInCycle{};
+	std::set<FunctionNameIdentifier> visited{};
+	std::vector<FunctionNameIdentifier> currentPath{};
 
-	void visit(YulName _function)
+	void visit(FunctionNameIdentifier _function)
 	{
 		if (visited.count(_function))
 			return;
@@ -61,7 +63,7 @@ struct CallGraphCycleFinder
 };
 }
 
-std::set<YulName> CallGraph::recursiveFunctions() const
+std::set<FunctionNameIdentifier> CallGraph::recursiveFunctions() const
 {
 	CallGraphCycleFinder cycleFinder{*this};
 	// Visiting the root only is not enough, since there may be disconnected recursive functions.
@@ -80,8 +82,13 @@ CallGraph CallGraphGenerator::callGraph(Block const& _ast)
 void CallGraphGenerator::operator()(FunctionCall const& _functionCall)
 {
 	auto& functionCalls = m_callGraph.functionCalls[m_currentFunction];
-	if (!util::contains(functionCalls, _functionCall.functionName.name))
-		functionCalls.emplace_back(_functionCall.functionName.name);
+	FunctionNameIdentifier identifier = std::visit(GenericVisitor{
+		[](Builtin const& _builtin) -> FunctionNameIdentifier { return _builtin.handle; },
+		[](Verbatim const& _verbatim) -> FunctionNameIdentifier { return _verbatim.handle; },
+		[](Identifier const& _identifier) -> FunctionNameIdentifier { return _identifier.name; },
+	}, _functionCall.functionName);
+	if (!util::contains(functionCalls, identifier))
+		functionCalls.emplace_back(identifier);
 	ASTWalker::operator()(_functionCall);
 }
 

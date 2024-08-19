@@ -400,7 +400,7 @@ Statement Parser::parseStatement()
 	// Options left:
 	// Expression/FunctionCall
 	// Assignment
-	std::variant<Literal, Identifier> elementary(parseLiteralOrIdentifier());
+	std::variant<Literal, Identifier, Builtin, Verbatim> elementary(parseLiteralOrIdentifier());
 
 	switch (currentToken())
 	{
@@ -417,7 +417,10 @@ Statement Parser::parseStatement()
 
 		while (true)
 		{
-			if (!std::holds_alternative<Identifier>(elementary))
+			// todo as visitor / lambda
+			// add test!! 123 := f()
+			//            add := f()
+			if (std::holds_alternative<Literal>(elementary))
 			{
 				auto const token = currentToken() == Token::Comma ? "," : ":=";
 
@@ -430,11 +433,17 @@ Statement Parser::parseStatement()
 				);
 			}
 
+			if (std::holds_alternative<Builtin>(elementary) || std::holds_alternative<Verbatim>(elementary))
+			{
+				std::string name;
+				if (std::holds_alternative<Builtin>(elementary))
+					name = m_dialect.builtinFunction(std::get<Builtin>(elementary).handle).name;
+				else
+					name = m_dialect.verbatimFunction(std::get<Verbatim>(elementary).handle).name;
+				fatalParserError(6272_error, "Cannot assign to builtin function \"" + name + "\".");
+			}
+
 			auto const& identifier = std::get<Identifier>(elementary);
-
-			if (m_dialect.builtin(identifier.name))
-				fatalParserError(6272_error, "Cannot assign to builtin function \"" + identifier.name.str() + "\".");
-
 			assignment.variableNames.emplace_back(identifier);
 
 			if (currentToken() != Token::Comma)
@@ -470,7 +479,7 @@ Case Parser::parseCase()
 	else if (currentToken() == Token::Case)
 	{
 		advance();
-		std::variant<Literal, Identifier> literal = parseLiteralOrIdentifier();
+		auto literal = parseLiteralOrIdentifier();
 		if (!std::holds_alternative<Literal>(literal))
 			fatalParserError(4805_error, "Literal expected.");
 		_case.value = std::make_unique<Literal>(std::get<Literal>(std::move(literal)));
@@ -509,19 +518,35 @@ Expression Parser::parseExpression(bool _unlimitedLiteralArgument)
 {
 	RecursionGuard recursionGuard(*this);
 
-	std::variant<Literal, Identifier> operation = parseLiteralOrIdentifier(_unlimitedLiteralArgument);
+	std::variant<Literal, Identifier, Builtin, Verbatim> operation = parseLiteralOrIdentifier(_unlimitedLiteralArgument);
+	auto const uninvokedBuiltinError = [this](SourceLocation const& loc, BuiltinFunction const& function)
+	{
+		fatalParserError(
+			7104_error,
+			loc,
+			"Builtin function \"" + function.name + "\" must be called."
+		);
+	};
 	return visit(GenericVisitor{
 		[&](Identifier& _identifier) -> Expression
 		{
 			if (currentToken() == Token::LParen)
 				return parseCall(std::move(operation));
-			if (m_dialect.builtin(_identifier.name))
-				fatalParserError(
-					7104_error,
-					nativeLocationOf(_identifier),
-					"Builtin function \"" + _identifier.name.str() + "\" must be called."
-				);
 			return std::move(_identifier);
+		},
+		[&](Builtin& _builtin) -> Expression
+		{
+			if (currentToken() == Token::LParen)
+				return parseCall(std::move(operation));
+			uninvokedBuiltinError(nativeLocationOf(_builtin), m_dialect.builtinFunction(_builtin.handle));
+			return {};
+		},
+		[&](Verbatim& _verbatim) -> Expression
+		{
+			if (currentToken() == Token::LParen)
+				return parseCall(std::move(operation));
+			uninvokedBuiltinError(nativeLocationOf(_verbatim), m_dialect.verbatimFunction(_verbatim.handle));
+			return {};
 		},
 		[&](Literal& _literal) -> Expression
 		{
@@ -530,16 +555,31 @@ Expression Parser::parseExpression(bool _unlimitedLiteralArgument)
 	}, operation);
 }
 
-std::variant<Literal, Identifier> Parser::parseLiteralOrIdentifier(bool _unlimitedLiteralArgument)
+std::variant<Literal, Identifier, Builtin, Verbatim> Parser::parseLiteralOrIdentifier(bool _unlimitedLiteralArgument)
 {
 	RecursionGuard recursionGuard(*this);
 	switch (currentToken())
 	{
 	case Token::Identifier:
 	{
-		Identifier identifier{createDebugData(), YulName{currentLiteral()}};
-		advance();
-		return identifier;
+		if (auto builtinHandle = m_dialect.builtin(currentLiteral()))
+		{
+			Builtin builtin{createDebugData(), *builtinHandle};
+			advance();
+			return builtin;
+		}
+		else if (auto verbatimHandle = m_dialect.verbatim(currentLiteral()))
+		{
+			Verbatim verbatim{createDebugData(), *verbatimHandle};
+			advance();
+			return verbatim;
+		}
+		else
+		{
+			Identifier identifier{createDebugData(), YulName{currentLiteral()}};
+			advance();
+			return identifier;
+		}
 	}
 	case Token::StringLiteral:
 	case Token::HexStringLiteral:
@@ -666,21 +706,46 @@ FunctionDefinition Parser::parseFunctionDefinition()
 	return funDef;
 }
 
-FunctionCall Parser::parseCall(std::variant<Literal, Identifier>&& _initialOp)
+FunctionCall Parser::parseCall(std::variant<Literal, Identifier, Builtin, Verbatim>&& _initialOp)
 {
 	RecursionGuard recursionGuard(*this);
 
-	if (!std::holds_alternative<Identifier>(_initialOp))
-		fatalParserError(9980_error, "Function name expected.");
+	std::function<bool(size_t)> isUnlimitedLiteralArgument = [](size_t) { return false; };
+	auto ret = visit(GenericVisitor{
+		[&](Literal&)-> FunctionCall
+		{
+			fatalParserError(9980_error, "Function name expected.");
+			return {};
+		},
+		[&](Identifier& _identifier)-> FunctionCall
+		{
+			FunctionCall ret;
+			ret.debugData = _identifier.debugData;
+			ret.functionName = std::move(_identifier);
+			return ret;
+		},
+		[&](Builtin& _builtin) -> FunctionCall
+		{
+			isUnlimitedLiteralArgument = [f=m_dialect.builtinFunction(_builtin.handle)](size_t index) {
+				if (index < f.literalArguments.size())
+					return f.literalArgument(index).has_value();
+				return false;
+			};
+			FunctionCall ret;
+			ret.debugData = _builtin.debugData;
+			ret.functionName = std::move(_builtin);
+			return ret;
+		},
+		[&](Verbatim& _verbatim) -> FunctionCall
+		{
+			FunctionCall ret;
+			ret.debugData = _verbatim.debugData;
+			ret.functionName = std::move(_verbatim);
+			isUnlimitedLiteralArgument = [](size_t) { return true; };
+			return ret;
+		}
+	}, _initialOp);
 
-	FunctionCall ret;
-	ret.functionName = std::move(std::get<Identifier>(_initialOp));
-	ret.debugData = ret.functionName.debugData;
-	auto const isUnlimitedLiteralArgument = [f=m_dialect.builtin(ret.functionName.name)](size_t const index) {
-		if (f && index < f->literalArguments.size())
-			return f->literalArgument(index).has_value();
-		return false;
-	};
 	size_t argumentIndex {0};
 	expectToken(Token::LParen);
 	if (currentToken() != Token::RParen)
@@ -718,7 +783,7 @@ NameWithDebugData Parser::parseNameWithDebugData()
 YulName Parser::expectAsmIdentifier()
 {
 	YulName name{currentLiteral()};
-	if (currentToken() == Token::Identifier && m_dialect.builtin(name))
+	if (currentToken() == Token::Identifier && m_dialect.builtin(name.str()))
 		fatalParserError(5568_error, "Cannot use builtin function name \"" + name.str() + "\" as identifier name.");
 	// NOTE: We keep the expectation here to ensure the correct source location for the error above.
 	expectToken(Token::Identifier);

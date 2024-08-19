@@ -24,6 +24,7 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
+#include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/KnowledgeBase.h>
 #include <libyul/YulName.h>
 #include <libyul/AST.h> // Needed for m_zero below.
@@ -89,7 +90,7 @@ public:
 	explicit DataFlowAnalyzer(
 		Dialect const& _dialect,
 		MemoryAndStorage _analyzeStores,
-		std::map<YulName, SideEffects> _functionSideEffects = {}
+		std::map<FunctionNameIdentifier, SideEffects> _functionSideEffects = {}
 	);
 
 	using ASTModifier::operator();
@@ -165,7 +166,7 @@ protected:
 	Dialect const& m_dialect;
 	/// Side-effects of user-defined functions. Worst-case side-effects are assumed
 	/// if this is not provided or the function is not found.
-	std::map<YulName, SideEffects> m_functionSideEffects;
+	std::map<FunctionNameIdentifier, SideEffects> m_functionSideEffects;
 
 private:
 	struct Environment
@@ -203,8 +204,8 @@ protected:
 
 	/// If true, analyzes memory and storage content via mload/mstore and sload/sstore.
 	bool m_analyzeStores = true;
-	YulName m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Last) + 1];
-	YulName m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Last) + 1];
+	std::optional<BuiltinHandle> m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Last) + 1];
+	std::optional<BuiltinHandle> m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Last) + 1];
 
 	/// Current nesting depth of loops.
 	size_t m_loopDepth{0};

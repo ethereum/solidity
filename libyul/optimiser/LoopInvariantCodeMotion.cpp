@@ -32,7 +32,7 @@ using namespace solidity::yul;
 
 void LoopInvariantCodeMotion::run(OptimiserStepContext& _context, Block& _ast)
 {
-	std::map<YulName, SideEffects> functionSideEffects =
+	std::map<FunctionNameIdentifier, SideEffects> functionSideEffects =
 		SideEffectsPropagator::sideEffects(_context.dialect, CallGraphGenerator::callGraph(_ast));
 	bool containsMSize = MSizeFinder::containsMSize(_context.dialect, _ast);
 	std::set<YulName> ssaVars = SSAValueTracker::ssaVariables(_ast);

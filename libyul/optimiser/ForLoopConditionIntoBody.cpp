@@ -38,6 +38,7 @@ void ForLoopConditionIntoBody::operator()(ForLoop& _forLoop)
 		!std::holds_alternative<Identifier>(*_forLoop.condition)
 	)
 	{
+		yulAssert(m_dialect.booleanNegationFunction());
 		langutil::DebugData::ConstPtr debugData = debugDataOf(*_forLoop.condition);
 
 		_forLoop.body.statements.emplace(
@@ -47,7 +48,7 @@ void ForLoopConditionIntoBody::operator()(ForLoop& _forLoop)
 				std::make_unique<Expression>(
 					FunctionCall {
 						debugData,
-						{debugData, m_dialect.booleanNegationFunction()->name},
+						Builtin{debugData, *m_dialect.booleanNegationFunction()},
 						util::make_vector<Expression>(std::move(*_forLoop.condition))
 					}
 				),

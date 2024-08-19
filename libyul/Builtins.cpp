@@ -15,26 +15,12 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 // SPDX-License-Identifier: GPL-3.0
-/**
- * Yul dialect.
- */
+
+#include <libyul/Builtins.h>
 
 #include <libyul/AST.h>
-#include <libyul/Dialect.h>
-#include <libyul/Exceptions.h>
 
-using namespace solidity::yul;
-using namespace solidity::langutil;
-
-Literal Dialect::zeroLiteral() const
+namespace solidity::yul
 {
-	return {DebugData::create(), LiteralKind::Number, LiteralValue(0, std::nullopt)};
-}
 
-BuiltinFunction const& Dialect::builtinFunction(BuiltinHandle const&) const {
-	yulAssert(false);
-}
-
-BuiltinFunction const& Dialect::verbatimFunction(VerbatimHandle const&) const {
-	yulAssert(false);
 }

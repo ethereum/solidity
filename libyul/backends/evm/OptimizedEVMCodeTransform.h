@@ -68,7 +68,8 @@ private:
 		BuiltinContext& _builtinContext,
 		UseNamedLabels _useNamedLabelsForFunctions,
 		CFG const& _dfg,
-		StackLayout const& _stackLayout
+		StackLayout const& _stackLayout,
+		EVMDialect const& _dialect
 	);
 
 	/// Assert that it is valid to transition from @a _currentStack to @a _desiredStack.
@@ -79,7 +80,7 @@ private:
 	/// Creates and stores a new label, if none exists already.
 	AbstractAssembly::LabelID getFunctionLabel(Scope::Function const& _function);
 	/// Assert that @a _slot contains the value of @a _expression.
-	static void validateSlot(StackSlot const& _slot, Expression const& _expression);
+	static void validateSlot(StackSlot const& _slot, Expression const& _expression, EVMDialect const& _dialect);
 
 	/// Shuffles m_stack to the desired @a _targetStack while emitting the shuffling code to m_assembly.
 	/// Sets the source locations to the one in @a _debugData.
@@ -101,6 +102,7 @@ private:
 	BuiltinContext& m_builtinContext;
 	CFG const& m_dfg;
 	StackLayout const& m_stackLayout;
+	EVMDialect const& m_dialect;
 	Stack m_stack;
 	std::map<yul::FunctionCall const*, AbstractAssembly::LabelID> m_returnLabels;
 	std::map<CFG::BasicBlock const*, AbstractAssembly::LabelID> m_blockLabels;

@@ -42,23 +42,23 @@ class SideEffectsCollector: public ASTWalker
 public:
 	explicit SideEffectsCollector(
 		Dialect const& _dialect,
-		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr
+		std::map<FunctionNameIdentifier, SideEffects> const* _functionSideEffects = nullptr
 	): m_dialect(_dialect), m_functionSideEffects(_functionSideEffects) {}
 	SideEffectsCollector(
 		Dialect const& _dialect,
 		Expression const& _expression,
-		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr
+		std::map<FunctionNameIdentifier, SideEffects> const* _functionSideEffects = nullptr
 	);
 	SideEffectsCollector(Dialect const& _dialect, Statement const& _statement);
 	SideEffectsCollector(
 		Dialect const& _dialect,
 		Block const& _ast,
-		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr
+		std::map<FunctionNameIdentifier, SideEffects> const* _functionSideEffects = nullptr
 	);
 	SideEffectsCollector(
 		Dialect const& _dialect,
 		ForLoop const& _ast,
-		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr
+		std::map<FunctionNameIdentifier, SideEffects> const* _functionSideEffects = nullptr
 	);
 
 	using ASTWalker::operator();
@@ -117,7 +117,7 @@ public:
 
 private:
 	Dialect const& m_dialect;
-	std::map<YulName, SideEffects> const* m_functionSideEffects = nullptr;
+	std::map<FunctionNameIdentifier, SideEffects> const* m_functionSideEffects = nullptr;
 	SideEffects m_sideEffects;
 };
 
@@ -130,7 +130,7 @@ private:
 class SideEffectsPropagator
 {
 public:
-	static std::map<YulName, SideEffects> sideEffects(
+	static std::map<FunctionNameIdentifier, SideEffects> sideEffects(
 		Dialect const& _dialect,
 		CallGraph const& _directCallGraph
 	);
@@ -195,7 +195,7 @@ class MovableChecker: public SideEffectsCollector
 public:
 	explicit MovableChecker(
 		Dialect const& _dialect,
-		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr
+		std::map<FunctionNameIdentifier, SideEffects> const* _functionSideEffects = nullptr
 	): SideEffectsCollector(_dialect, _functionSideEffects) {}
 	MovableChecker(Dialect const& _dialect, Expression const& _expression);
 

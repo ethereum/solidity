@@ -88,6 +88,8 @@ public:
 	);
 
 	size_t operator()(Literal const& _literal);
+	size_t operator()(Builtin const& _builtin);
+	size_t operator()(Verbatim const& _verbatim);
 	size_t operator()(Identifier const&);
 	void operator()(ExpressionStatement const&);
 	void operator()(Assignment const& _assignment);
@@ -117,7 +119,7 @@ private:
 	void expectValidIdentifier(YulName _identifier, langutil::SourceLocation const& _location);
 
 	bool validateInstructions(evmasm::Instruction _instr, langutil::SourceLocation const& _location);
-	bool validateInstructions(std::string const& _instrIdentifier, langutil::SourceLocation const& _location);
+	bool validateInstructions(std::string_view _instrIdentifier, langutil::SourceLocation const& _location);
 	bool validateInstructions(FunctionCall const& _functionCall);
 
 	yul::ExternalIdentifierAccess::Resolver m_resolver;

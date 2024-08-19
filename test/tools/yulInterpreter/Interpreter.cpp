@@ -309,14 +309,16 @@ void ExpressionEvaluator::operator()(Identifier const& _identifier)
 void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 {
 	std::vector<std::optional<LiteralKind>> const* literalArguments = nullptr;
-	if (BuiltinFunction const* builtin = m_dialect.builtin(_funCall.functionName.name))
+	if (isBuiltinFunctionCall(_funCall))
+
+	if (BuiltinFunction const* builtin = resolveBuiltinFunction(_funCall.functionName, m_dialect))
 		if (!builtin->literalArguments.empty())
 			literalArguments = &builtin->literalArguments;
 	evaluateArgs(_funCall.arguments, literalArguments);
 
 	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
 	{
-		if (BuiltinFunctionForEVM const* fun = dialect->builtin(_funCall.functionName.name))
+		if (BuiltinFunctionForEVM const* fun = resolveBuiltinFunctionForEVM(_funCall.functionName, *dialect))
 		{
 			EVMInstructionInterpreter interpreter(dialect->evmVersion(), m_state, m_disableMemoryTrace);
 
@@ -335,28 +337,35 @@ void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 	}
 
 	Scope* scope = &m_scope;
-	for (; scope; scope = scope->parent)
-		if (scope->names.count(_funCall.functionName.name))
-			break;
-	yulAssert(scope, "");
+	if (!isBuiltinFunctionCall(_funCall))
+	{
+		yulAssert(std::holds_alternative<Identifier>(_funCall.functionName));
+		for (; scope; scope = scope->parent)
+			if (scope->names.count(std::get<Identifier>(_funCall.functionName).name))
+				break;
 
-	FunctionDefinition const* fun = scope->names.at(_funCall.functionName.name);
-	yulAssert(fun, "Function not found.");
-	yulAssert(m_values.size() == fun->parameters.size(), "");
-	std::map<YulName, u256> variables;
-	for (size_t i = 0; i < fun->parameters.size(); ++i)
-		variables[fun->parameters.at(i).name] = m_values.at(i);
-	for (size_t i = 0; i < fun->returnVariables.size(); ++i)
-		variables[fun->returnVariables.at(i).name] = 0;
+		yulAssert(scope, "");
 
-	m_state.controlFlowState = ControlFlowState::Default;
-	std::unique_ptr<Interpreter> interpreter = makeInterpreterCopy(std::move(variables));
-	(*interpreter)(fun->body);
-	m_state.controlFlowState = ControlFlowState::Default;
+		FunctionDefinition const* fun = scope->names.at(std::get<Identifier>(_funCall.functionName).name);
+		yulAssert(fun, "Function not found.");
+		yulAssert(m_values.size() == fun->parameters.size(), "");
+		std::map<YulName, u256> variables;
+		for (size_t i = 0; i < fun->parameters.size(); ++i)
+			variables[fun->parameters.at(i).name] = m_values.at(i);
+		for (size_t i = 0; i < fun->returnVariables.size(); ++i)
+			variables[fun->returnVariables.at(i).name] = 0;
 
-	m_values.clear();
-	for (auto const& retVar: fun->returnVariables)
-		m_values.emplace_back(interpreter->valueOfVariable(retVar.name));
+		m_state.controlFlowState = ControlFlowState::Default;
+		std::unique_ptr<Interpreter> interpreter = makeInterpreterCopy(std::move(variables));
+		(*interpreter)(fun->body);
+		m_state.controlFlowState = ControlFlowState::Default;
+
+		m_values.clear();
+		for (auto const& retVar: fun->returnVariables)
+			m_values.emplace_back(interpreter->valueOfVariable(retVar.name));
+	}
+	else
+		yulAssert(false);  // should not be reachable
 }
 
 u256 ExpressionEvaluator::value() const

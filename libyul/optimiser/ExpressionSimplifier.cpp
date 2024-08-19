@@ -21,6 +21,7 @@
 
 #include <libyul/optimiser/ExpressionSimplifier.h>
 
+#include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/optimiser/SimplificationRules.h>
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
@@ -46,10 +47,13 @@ void ExpressionSimplifier::visit(Expression& _expression)
 		m_dialect,
 		[this](YulName _var) { return variableValue(_var); }
 	))
-		_expression = match->action().toExpression(debugDataOf(_expression), evmVersionFromDialect(m_dialect));
+	{
+		yulAssert(dynamic_cast<EVMDialect const*>(&m_dialect));
+		_expression = match->action().toExpression(debugDataOf(_expression), dynamic_cast<EVMDialect const&>(m_dialect));
+	}
 
 	if (auto* functionCall = std::get_if<FunctionCall>(&_expression))
-		if (std::optional<evmasm::Instruction> instruction = toEVMInstruction(m_dialect, functionCall->functionName.name))
+		if (std::optional<evmasm::Instruction> instruction = toEVMInstruction(m_dialect, functionCall->functionName))
 			for (auto op: evmasm::SemanticInformation::readWriteOperations(*instruction))
 				if (op.startParameter && op.lengthParameter)
 				{

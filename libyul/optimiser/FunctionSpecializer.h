@@ -19,6 +19,7 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
+#include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/NameDispenser.h>
 #include <libyul/optimiser/OptimiserStep.h>
 
@@ -67,7 +68,7 @@ public:
 
 private:
 	explicit FunctionSpecializer(
-		std::set<YulName> _recursiveFunctions,
+		std::set<FunctionNameIdentifier> _recursiveFunctions,
 		NameDispenser& _nameDispenser,
 		Dialect const& _dialect
 	):
@@ -104,7 +105,7 @@ private:
 	/// Note that at least one of the argument will have a literal value.
 	std::map<YulName, std::vector<std::pair<YulName, LiteralArguments>>> m_oldToNewMap;
 	/// We skip specializing recursive functions. Need backtracking to properly deal with them.
-	std::set<YulName> const m_recursiveFunctions;
+	std::set<FunctionNameIdentifier> const m_recursiveFunctions;
 
 	NameDispenser& m_nameDispenser;
 	Dialect const& m_dialect;

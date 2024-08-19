@@ -22,9 +22,9 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
+#include <libyul/AST.h>
 
 #include <map>
-#include <optional>
 #include <set>
 
 namespace solidity::yul
@@ -32,12 +32,13 @@ namespace solidity::yul
 
 struct CallGraph
 {
-	std::map<YulName, std::vector<YulName>> functionCalls;
+	/// Map function definition name -> function name
+	std::map<FunctionNameIdentifier, std::vector<FunctionNameIdentifier>> functionCalls;
 	std::set<YulName> functionsWithLoops;
 	/// @returns the set of functions contained in cycles in the call graph, i.e.
 	/// functions that are part of a (mutual) recursion.
 	/// Note that this does not include functions that merely call recursive functions.
-	std::set<YulName> recursiveFunctions() const;
+	std::set<FunctionNameIdentifier> recursiveFunctions() const;
 };
 
 /**

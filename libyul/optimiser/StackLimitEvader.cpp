@@ -57,7 +57,7 @@ namespace
  */
 struct MemoryOffsetAllocator
 {
-	uint64_t run(YulName _function = YulName{})
+	uint64_t run(FunctionNameIdentifier _function = YulName{})
 	{
 		if (slotsRequiredForFunction.count(_function))
 			return slotsRequiredForFunction[_function];
@@ -65,14 +65,17 @@ struct MemoryOffsetAllocator
 		// Assign to zero early to guard against recursive calls.
 		slotsRequiredForFunction[_function] = 0;
 
+		if (!std::holds_alternative<YulName>(_function))
+			return 0;
+
 		uint64_t requiredSlots = 0;
-		if (callGraph.count(_function))
-			for (YulName child: callGraph.at(_function))
+		if (callGraph.count(std::get<YulName>(_function)))
+			for (auto child: callGraph.at(std::get<YulName>(_function)))
 				requiredSlots = std::max(run(child), requiredSlots);
 
-		if (auto const* unreachables = util::valueOrNullptr(unreachableVariables, _function))
+		if (auto const* unreachables = util::valueOrNullptr(unreachableVariables, std::get<YulName>(_function)))
 		{
-			if (FunctionDefinition const* functionDefinition = util::valueOrDefault(functionDefinitions, _function, nullptr, util::allow_copy))
+			if (FunctionDefinition const* functionDefinition = util::valueOrDefault(functionDefinitions, std::get<YulName>(_function), nullptr, util::allow_copy))
 				if (
 					size_t totalArgCount = functionDefinition->returnVariables.size() + functionDefinition->parameters.size();
 					totalArgCount > 16
@@ -99,14 +102,14 @@ struct MemoryOffsetAllocator
 	/// An empty variable name means that the function has too many arguments or return variables.
 	std::map<YulName, std::vector<YulName>> const& unreachableVariables;
 	/// The graph of immediate function calls of all functions.
-	std::map<YulName, std::vector<YulName>> const& callGraph;
+	std::map<FunctionNameIdentifier, std::vector<FunctionNameIdentifier>> const& callGraph;
 	/// Maps the name of each user-defined function to its definition.
 	std::map<YulName, FunctionDefinition const*> const& functionDefinitions;
 
 	/// Maps variable names to the memory slot the respective variable is assigned.
 	std::map<YulName, uint64_t> slotAllocations{};
 	/// Maps function names to the number of memory slots the respective function requires.
-	std::map<YulName, uint64_t> slotsRequiredForFunction{};
+	std::map<FunctionNameIdentifier, uint64_t> slotsRequiredForFunction{};
 };
 
 u256 literalArgumentValue(FunctionCall const& _call)
@@ -178,7 +181,7 @@ void StackLimitEvader::run(
 		"StackLimitEvader can only be run on objects using the EVMDialect with object access."
 	);
 
-	std::vector<FunctionCall*> memoryGuardCalls = findFunctionCalls(_astRoot, "memoryguard"_yulname);
+	std::vector<FunctionCall*> memoryGuardCalls = findFunctionCalls(_astRoot, "memoryguard", *evmDialect);
 	// Do not optimise, if no ``memoryguard`` call is found.
 	if (memoryGuardCalls.empty())
 		return;
@@ -194,8 +197,8 @@ void StackLimitEvader::run(
 	CallGraph callGraph = CallGraphGenerator::callGraph(_astRoot);
 
 	// We cannot move variables in recursive functions to fixed memory offsets.
-	for (YulName function: callGraph.recursiveFunctions())
-		if (_unreachableVariables.count(function))
+	for (FunctionNameIdentifier function: callGraph.recursiveFunctions())
+		if (std::holds_alternative<YulName>(function) && _unreachableVariables.count(std::get<YulName>(function))) // todo also relevant for builtins?
 			return;
 
 	std::map<YulName, FunctionDefinition const*> functionDefinitions = allFunctionDefinitions(_astRoot);
@@ -207,7 +210,7 @@ void StackLimitEvader::run(
 	StackToMemoryMover::run(_context, reservedMemory, memoryOffsetAllocator.slotAllocations, requiredSlots, _astRoot);
 
 	reservedMemory += 32 * requiredSlots;
-	for (FunctionCall* memoryGuardCall: findFunctionCalls(_astRoot, "memoryguard"_yulname))
+	for (FunctionCall* memoryGuardCall: findFunctionCalls(_astRoot, "memoryguard", *evmDialect))
 	{
 		Literal* literal = std::get_if<Literal>(&memoryGuardCall->arguments.front());
 		yulAssert(literal && literal->kind == LiteralKind::Number, "");

@@ -93,8 +93,8 @@ private:
 	Representation const& findRepresentation(u256 const& _value);
 
 	Representation represent(u256 const& _value) const;
-	Representation represent(YulName _instruction, Representation const& _arg) const;
-	Representation represent(YulName _instruction, Representation const& _arg1, Representation const& _arg2) const;
+	Representation represent(BuiltinHandle _instruction, Representation const& _arg) const;
+	Representation represent(BuiltinHandle _instruction, Representation const& _arg1, Representation const& _arg2) const;
 
 	Representation min(Representation _a, Representation _b);
 

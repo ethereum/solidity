@@ -79,9 +79,19 @@ std::optional<std::pair<evmasm::Instruction, std::vector<Expression> const*>>
 {
 	if (std::holds_alternative<FunctionCall>(_expr))
 		if (auto const* dialect = dynamic_cast<EVMDialect const*>(&_dialect))
-			if (auto const* builtin = dialect->builtin(std::get<FunctionCall>(_expr).functionName.name))
-				if (builtin->instruction)
-					return std::make_pair(*builtin->instruction, &std::get<FunctionCall>(_expr).arguments);
+			if (isBuiltinFunctionCall(std::get<FunctionCall>(_expr)))
+			{
+				auto const& functionCall = std::get<FunctionCall>(_expr);
+				std::optional<evmasm::Instruction> instruction;
+				if (std::holds_alternative<Builtin>(functionCall.functionName))
+					instruction = dialect->builtinFunction(std::get<Builtin>(functionCall.functionName).handle).instruction;
+				else if (std::holds_alternative<Verbatim>(functionCall.functionName))
+					instruction = dialect->verbatimFunction(std::get<Verbatim>(functionCall.functionName).handle).instruction;
+				else
+					yulAssert(false);
+				if (instruction)
+					return std::make_pair(*instruction, &functionCall.arguments);
+			}
 
 	return {};
 }
@@ -234,7 +244,7 @@ evmasm::Instruction Pattern::instruction() const
 	return m_instruction;
 }
 
-Expression Pattern::toExpression(langutil::DebugData::ConstPtr const& _debugData, langutil::EVMVersion _evmVersion) const
+Expression Pattern::toExpression(langutil::DebugData::ConstPtr const& _debugData, EVMDialect const& _dialect) const
 {
 	if (matchGroup())
 		return ASTCopier().translate(matchGroupValue());
@@ -247,12 +257,18 @@ Expression Pattern::toExpression(langutil::DebugData::ConstPtr const& _debugData
 	{
 		std::vector<Expression> arguments;
 		for (auto const& arg: m_arguments)
-			arguments.emplace_back(arg.toExpression(_debugData, _evmVersion));
+			arguments.emplace_back(arg.toExpression(_debugData, _dialect));
 
-		std::string name = util::toLower(instructionInfo(m_instruction, _evmVersion).name);
+		if (!m_instructionBuiltinHandle)
+		{
+			std::string name = util::toLower(instructionInfo(m_instruction, _dialect.evmVersion()).name);
+			std::optional<BuiltinHandle> handle = _dialect.builtin(name);
+			yulAssert(handle);
+			m_instructionBuiltinHandle = *handle;
+		}
 
 		return FunctionCall{_debugData,
-			Identifier{_debugData, YulName{name}},
+			Builtin{_debugData, *m_instructionBuiltinHandle},
 			std::move(arguments)
 		};
 	}

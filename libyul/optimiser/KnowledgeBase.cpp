@@ -22,7 +22,9 @@
 #include <libyul/optimiser/KnowledgeBase.h>
 
 #include <libyul/AST.h>
+#include <libyul/Dialect.h>
 #include <libyul/Utilities.h>
+#include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/optimiser/DataFlowAnalyzer.h>
 
 #include <libsolutil/CommonData.h>
@@ -32,9 +34,10 @@
 using namespace solidity;
 using namespace solidity::yul;
 
-KnowledgeBase::KnowledgeBase(std::map<YulName, AssignedValue> const& _ssaValues):
+KnowledgeBase::KnowledgeBase(std::map<YulName, AssignedValue> const& _ssaValues, Dialect const& _dialect):
 	m_valuesAreSSA(true),
-	m_variableValues([_ssaValues](YulName _var) { return util::valueOrNullptr(_ssaValues, _var); })
+	m_variableValues([_ssaValues](YulName _var) { return util::valueOrNullptr(_ssaValues, _var); }),
+	m_dialect(_dialect)
 {}
 
 bool KnowledgeBase::knownToBeDifferent(YulName _a, YulName _b)
@@ -112,13 +115,19 @@ KnowledgeBase::VariableOffset KnowledgeBase::explore(YulName _var)
 
 std::optional<KnowledgeBase::VariableOffset> KnowledgeBase::explore(Expression const& _value)
 {
+	auto const* evmDialect = dynamic_cast<EVMDialect const*>(&m_dialect);
+	yulAssert(evmDialect);
 	if (Literal const* literal = std::get_if<Literal>(&_value))
 		return VariableOffset{YulName{}, literal->value.value()};
 	else if (Identifier const* identifier = std::get_if<Identifier>(&_value))
 		return explore(identifier->name);
-	else if (FunctionCall const* f = std::get_if<FunctionCall>(&_value))
+	else if
+	(
+		FunctionCall const* f = std::get_if<FunctionCall>(&_value);
+		f && std::holds_alternative<Builtin>(f->functionName)
+	)
 	{
-		if (f->functionName.name == "add"_yulname)
+		if (std::get<Builtin>(f->functionName).handle == evmDialect->handles().add)
 		{
 			if (std::optional<VariableOffset> a = explore(f->arguments[0]))
 				if (std::optional<VariableOffset> b = explore(f->arguments[1]))
@@ -132,7 +141,7 @@ std::optional<KnowledgeBase::VariableOffset> KnowledgeBase::explore(Expression c
 						return VariableOffset{a->reference, offset};
 				}
 		}
-		else if (f->functionName.name == "sub"_yulname)
+		else if (std::get<Builtin>(f->functionName).handle == evmDialect->handles().sub)
 			if (std::optional<VariableOffset> a = explore(f->arguments[0]))
 				if (std::optional<VariableOffset> b = explore(f->arguments[1]))
 				{

@@ -28,6 +28,7 @@
 #include <libyul/Dialect.h>
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Visitor.h>
 
 using namespace solidity;
 using namespace solidity::yul;
@@ -41,11 +42,29 @@ void ExpressionSplitter::run(OptimiserStepContext& _context, Block& _ast)
 
 void ExpressionSplitter::operator()(FunctionCall& _funCall)
 {
-	BuiltinFunction const* builtin = m_dialect.builtin(_funCall.functionName.name);
-
-	for (size_t i = _funCall.arguments.size(); i > 0; i--)
-		if (!builtin || !builtin->literalArgument(i - 1))
-			outlineExpression(_funCall.arguments[i - 1]);
+	GenericVisitor visitor
+	{
+		[&](Builtin const& _builtin)
+		{
+			auto const& fun = m_dialect.builtinFunction(_builtin.handle);
+			for (size_t i = _funCall.arguments.size(); i > 0; i--)
+				if (!fun.literalArgument(i - 1))
+					outlineExpression(_funCall.arguments[i - 1]);
+		},
+		[&](Verbatim const& _verbatim)
+		{
+			// all literal, nothing to do but assert that this is really the case
+			auto const& fun = m_dialect.verbatimFunction(_verbatim.handle);
+			yulAssert(fun.literalArguments.size() == fun.numParameters);
+			yulAssert(std::all_of(fun.literalArguments.begin(), fun.literalArguments.end(), [](auto const& arg) { return arg.has_value(); }));
+		},
+		[&](Identifier const&)
+		{
+			for (size_t i = _funCall.arguments.size(); i > 0; i--)
+				outlineExpression(_funCall.arguments[i - 1]);
+		}
+	};
+	std::visit(visitor, _funCall.functionName);
 }
 
 void ExpressionSplitter::operator()(If& _if)

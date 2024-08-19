@@ -104,7 +104,7 @@ private:
 		bool _formatted
 	);
 	bool checkGasCostExpectation(TestFunctionCall& io_test, bool _compileViaYul) const;
-	std::map<std::string, Builtin> makeBuiltins();
+	std::map<std::string, frontend::test::Builtin> makeBuiltins();
 	std::vector<SideEffectHook> makeSideEffectHooks() const;
 	std::vector<std::string> eventSideEffectHook(FunctionCall const&) const;
 	std::optional<AnnotatedEventSignature> matchEvent(util::h256 const& hash) const;

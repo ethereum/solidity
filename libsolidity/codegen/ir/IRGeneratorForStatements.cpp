@@ -80,14 +80,8 @@ struct CopyTranslate: public yul::ASTCopier
 
 	yul::YulName translateIdentifier(yul::YulName _name) override
 	{
-		// Strictly, the dialect used by inline assembly (m_dialect) could be different
-		// from the Yul dialect we are compiling to. So we are assuming here that the builtin
-		// functions are identical. This should not be a problem for now since everything
-		// is EVM anyway.
-		if (m_dialect.builtin(_name))
-			return _name;
-		else
-			return yul::YulName{"usr$" + _name.str()};
+		// Builtin functions are handled separately and will not show up as Identifiers
+		return yul::YulName{"usr$" + _name.str()};
 	}
 
 	yul::Identifier translate(yul::Identifier const& _identifier) override
@@ -2258,7 +2252,7 @@ bool IRGeneratorForStatements::visit(InlineAssembly const& _inlineAsm)
 
 	solAssert(std::holds_alternative<yul::Block>(modified));
 
-	appendCode() << yul::AsmPrinter()(std::get<yul::Block>(modified)) << "\n";
+	appendCode() << yul::AsmPrinter(_inlineAsm.dialect())(std::get<yul::Block>(modified)) << "\n";
 	return false;
 }
 

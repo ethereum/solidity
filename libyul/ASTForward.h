@@ -46,11 +46,14 @@ struct Continue;
 struct Leave;
 struct ExpressionStatement;
 struct Block;
+struct Builtin;
+struct Verbatim;
 class AST;
 
 struct NameWithDebugData;
 
 using Expression = std::variant<FunctionCall, Identifier, Literal>;
+using FunctionName = std::variant<Identifier, Builtin, Verbatim>;
 using Statement = std::variant<ExpressionStatement, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Break, Continue, Leave, Block>;
 
 }

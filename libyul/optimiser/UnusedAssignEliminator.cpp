@@ -29,12 +29,14 @@
 #include <libyul/AsmPrinter.h>
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Visitor.h>
 
 #include <range/v3/action/remove_if.hpp>
 
 #include <iostream>
 
 using namespace solidity;
+using namespace solidity::util;
 using namespace solidity::yul;
 
 void UnusedAssignEliminator::run(OptimiserStepContext& _context, Block& _ast)
@@ -78,11 +80,11 @@ void UnusedAssignEliminator::operator()(FunctionCall const& _functionCall)
 {
 	UnusedStoreBase::operator()(_functionCall);
 
-	ControlFlowSideEffects sideEffects;
-	if (auto builtin = m_dialect.builtin(_functionCall.functionName.name))
-		sideEffects = builtin->controlFlowSideEffects;
-	else
-		sideEffects = m_controlFlowSideEffects.at(_functionCall.functionName.name);
+	ControlFlowSideEffects sideEffects = std::visit(GenericVisitor{
+		[&](Builtin const& _builtin) { return m_dialect.builtinFunction(_builtin.handle).controlFlowSideEffects; },
+		[&](Verbatim const& _verbatim) { return m_dialect.verbatimFunction(_verbatim.handle).controlFlowSideEffects; },
+		[&](Identifier const& _identifier) { return m_controlFlowSideEffects.at(_identifier.name); }
+	}, _functionCall.functionName);
 
 	if (!sideEffects.canContinue)
 		// We do not return from the current function, so it is OK to also

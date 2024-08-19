@@ -50,6 +50,8 @@ public:
 
 	bool operator()(Literal const&) { return true; }
 	bool operator()(Identifier const&) { return true; }
+	bool operator()(Builtin const&) { return true; }
+	bool operator()(Verbatim const&) { return true; }
 	bool operator()(ExpressionStatement const& _expr);
 	bool operator()(Assignment const&) { return true; }
 	bool operator()(VariableDeclaration const& _variableDeclaration);

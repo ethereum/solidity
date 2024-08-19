@@ -64,7 +64,7 @@ public:
 
 	explicit UnusedStoreEliminator(
 		Dialect const& _dialect,
-		std::map<YulName, SideEffects> const& _functionSideEffects,
+		std::map<FunctionNameIdentifier, SideEffects> const& _functionSideEffects,
 		std::map<YulName, ControlFlowSideEffects> _controlFlowSideEffects,
 		std::map<YulName, AssignedValue> const& _ssaValues,
 		bool _ignoreMemory
@@ -116,7 +116,7 @@ private:
 	std::optional<YulName> identifierNameIfSSA(Expression const& _expression) const;
 
 	bool const m_ignoreMemory;
-	std::map<YulName, SideEffects> const& m_functionSideEffects;
+	std::map<FunctionNameIdentifier, SideEffects> const& m_functionSideEffects;
 	std::map<YulName, ControlFlowSideEffects> m_controlFlowSideEffects;
 	std::map<YulName, AssignedValue> const& m_ssaValues;
 

@@ -83,7 +83,7 @@ FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser, Dialect const& 
 	}
 
 	// Check for memory guard.
-	std::vector<FunctionCall*> memoryGuardCalls = findFunctionCalls(_ast, "memoryguard"_yulname);
+	std::vector<FunctionCall*> memoryGuardCalls = findFunctionCalls(_ast, "memoryguard", m_dialect);
 	// We will perform less aggressive inlining, if no ``memoryguard`` call is found.
 	if (!memoryGuardCalls.empty())
 		m_hasMemoryGuard = true;
@@ -101,7 +101,7 @@ void FullInliner::run(Pass _pass)
 	// function name) order.
 	// We use stable_sort below to keep the inlining order of two functions
 	// with the same depth.
-	std::map<YulName, size_t> depths = callDepths();
+	std::map<FunctionNameIdentifier, size_t> depths = callDepths();
 	std::vector<FunctionDefinition*> functions;
 	for (auto& statement: m_ast.statements)
 		if (std::holds_alternative<FunctionDefinition>(statement))
@@ -123,7 +123,7 @@ void FullInliner::run(Pass _pass)
 			handleBlock({}, std::get<Block>(statement));
 }
 
-std::map<YulName, size_t> FullInliner::callDepths() const
+std::map<FunctionNameIdentifier, size_t> FullInliner::callDepths() const
 {
 	CallGraph cg = CallGraphGenerator::callGraph(m_ast);
 	cg.functionCalls.erase(""_yulname);
@@ -131,17 +131,17 @@ std::map<YulName, size_t> FullInliner::callDepths() const
 	// Remove calls to builtin functions.
 	for (auto& call: cg.functionCalls)
 		for (auto it = call.second.begin(); it != call.second.end();)
-			if (m_dialect.builtin(*it))
+			if (std::holds_alternative<BuiltinHandle>(*it) || std::holds_alternative<VerbatimHandle>(*it))
 				it = call.second.erase(it);
 			else
 				++it;
 
-	std::map<YulName, size_t> depths;
+	std::map<FunctionNameIdentifier, size_t> depths;
 	size_t currentDepth = 0;
 
 	while (true)
 	{
-		std::vector<YulName> removed;
+		std::vector<FunctionNameIdentifier> removed;
 		for (auto it = cg.functionCalls.begin(); it != cg.functionCalls.end();)
 		{
 			auto const& [fun, callees] = *it;
@@ -156,8 +156,10 @@ std::map<YulName, size_t> FullInliner::callDepths() const
 		}
 
 		for (auto& call: cg.functionCalls)
-			for (YulName toBeRemoved: removed)
+		{
+			for (FunctionNameIdentifier toBeRemoved: removed)
 				ranges::actions::remove(call.second, toBeRemoved);
+		}
 
 		currentDepth++;
 
@@ -167,22 +169,27 @@ std::map<YulName, size_t> FullInliner::callDepths() const
 
 	// Only recursive functions left here.
 	for (auto const& fun: cg.functionCalls)
+	{
 		depths[fun.first] = currentDepth;
+	}
 
 	return depths;
 }
 
 bool FullInliner::shallInline(FunctionCall const& _funCall, YulName _callSite)
 {
+	if (isBuiltinFunctionCall(_funCall))
+		return false;
+	yulAssert(std::holds_alternative<Identifier>(_funCall.functionName));
 	// No recursive inlining
-	if (_funCall.functionName.name == _callSite)
+	if (std::get<Identifier>(_funCall.functionName).name == _callSite)
 		return false;
 
-	FunctionDefinition* calledFunction = function(_funCall.functionName.name);
+	FunctionDefinition* calledFunction = function(std::get<Identifier>(_funCall.functionName).name);
 	if (!calledFunction)
 		return false;
 
-	if (m_noInlineFunctions.count(_funCall.functionName.name) || recursive(*calledFunction))
+	if (m_noInlineFunctions.count(std::get<Identifier>(_funCall.functionName).name) || recursive(*calledFunction))
 		return false;
 
 	// No inlining of calls where argument expressions may have side-effects.
@@ -291,7 +298,8 @@ std::vector<Statement> InlineModifier::performInline(Statement& _statement, Func
 	std::vector<Statement> newStatements;
 	std::map<YulName, YulName> variableReplacements;
 
-	FunctionDefinition* function = m_driver.function(_funCall.functionName.name);
+	yulAssert(std::holds_alternative<Identifier>(_funCall.functionName));
+	FunctionDefinition* function = m_driver.function(std::get<Identifier>(_funCall.functionName).name);
 	assertThrow(!!function, OptimizerException, "Attempt to inline invalid function.");
 
 	m_driver.tentativelyUpdateCodeSize(function->name, m_currentFunction);

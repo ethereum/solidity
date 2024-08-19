@@ -23,6 +23,7 @@
 
 #include <libyul/AsmPrinter.h>
 #include <libyul/AST.h>
+#include <libyul/Dialect.h>
 #include <libyul/Exceptions.h>
 #include <libyul/Utilities.h>
 
@@ -59,6 +60,16 @@ std::string AsmPrinter::operator()(Literal const& _literal)
 	}
 
 	return locationComment + escapeAndQuoteString(formattedValue);
+}
+
+std::string AsmPrinter::operator()(Builtin const& _builtin)
+{
+	return formatDebugData(_builtin) + m_dialect.builtinFunction(_builtin.handle).name;
+}
+
+std::string AsmPrinter::operator()(Verbatim const& _verbatim)
+{
+	return formatDebugData(_verbatim) + m_dialect.verbatimFunction(_verbatim.handle).name;
 }
 
 std::string AsmPrinter::operator()(Identifier const& _identifier)
@@ -135,7 +146,7 @@ std::string AsmPrinter::operator()(FunctionDefinition const& _functionDefinition
 std::string AsmPrinter::operator()(FunctionCall const& _functionCall)
 {
 	std::string const locationComment = formatDebugData(_functionCall);
-	std::string const functionName = (*this)(_functionCall.functionName);
+	std::string const functionName = std::visit(*this, _functionCall.functionName);
 	return
 		locationComment +
 		functionName + "(" +

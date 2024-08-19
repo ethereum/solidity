@@ -62,11 +62,11 @@ class KnowledgeBase
 public:
 	/// Constructor for arbitrary value callback that allows for variable values
 	/// to change in between calls to functions of this class.
-	explicit KnowledgeBase(std::function<AssignedValue const*(YulName)> _variableValues):
-		m_variableValues(std::move(_variableValues))
+	explicit KnowledgeBase(std::function<AssignedValue const*(YulName)> _variableValues, Dialect const& _dialect):
+		m_variableValues(std::move(_variableValues)), m_dialect(_dialect)
 	{}
 	/// Constructor to use if source code is in SSA form and values are constant.
-	explicit KnowledgeBase(std::map<YulName, AssignedValue> const& _ssaValues);
+	KnowledgeBase(std::map<YulName, AssignedValue> const& _ssaValues, Dialect const& _dialect);
 
 	bool knownToBeDifferent(YulName _a, YulName _b);
 	std::optional<u256> differenceIfKnownConstant(YulName _a, YulName _b);
@@ -115,6 +115,7 @@ private:
 	bool m_valuesAreSSA = false;
 	/// Callback to retrieve the current value of a variable.
 	std::function<AssignedValue const*(YulName)> m_variableValues;
+	Dialect const& m_dialect;
 
 	/// Offsets for each variable to one representative per group.
 	/// The empty string is the representative of the constant value zero.
