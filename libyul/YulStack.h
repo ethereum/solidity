@@ -16,7 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
- * Full assembly stack that can support EVM-assembly and Yul as input and EVM.
+ * Full assembly stack that can support Yul as input.
  */
 
 #pragma once
@@ -55,7 +55,7 @@ class AbstractAssembly;
 struct MachineAssemblyObject
 {
 	std::shared_ptr<evmasm::LinkerObject> bytecode;
-	std::string assembly;
+	std::shared_ptr<evmasm::Assembly> assembly;
 	std::unique_ptr<std::string> sourceMappings;
 };
 
@@ -65,7 +65,7 @@ struct MachineAssemblyObject
 class YulStack: public langutil::CharStreamProvider
 {
 public:
-	enum class Language { Yul, Assembly, StrictAssembly };
+	enum class Language { Assembly, StrictAssembly };
 	enum class Machine { EVM };
 	enum State {
 		Empty,
@@ -137,8 +137,11 @@ public:
 		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
 	) const;
 	Json astJson() const;
+
 	/// Return the parsed and analyzed object.
 	std::shared_ptr<Object> parserResult() const;
+
+	langutil::DebugInfoSelection debugInfoSelection() const { return m_debugInfoSelection; }
 
 private:
 	bool parse(std::string const& _sourceName, std::string const& _source);
@@ -148,6 +151,13 @@ private:
 	void compileEVM(yul::AbstractAssembly& _assembly, bool _optimize) const;
 
 	void optimize(yul::Object& _object, bool _isCreation);
+
+	/// Prints the Yul object stored internally and parses it again.
+	/// This ensures that the debug info in the AST matches the source that printing would produce
+	/// rather than the initial source.
+	/// @warning Does not update the error list or the original source (@a m_charStream) to make
+	/// it possible to report errors to the user even after the optimization has been performed.
+	void reparse();
 
 	void reportUnimplementedFeatureError(langutil::UnimplementedFeatureError const& _error);
 

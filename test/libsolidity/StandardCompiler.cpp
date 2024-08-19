@@ -29,6 +29,7 @@
 #include <libsolutil/JSON.h>
 #include <libsolutil/CommonData.h>
 #include <test/Metadata.h>
+#include <test/Common.h>
 
 #include <algorithm>
 #include <set>
@@ -383,22 +384,20 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	BOOST_CHECK(contract["evm"]["bytecode"]["object"].is_string());
 	BOOST_CHECK_EQUAL(
 		solidity::test::bytecodeSansMetadata(contract["evm"]["bytecode"]["object"].get<std::string>()),
-		std::string("6080604052348015600e575f80fd5b5060") +
+		std::string("6080604052348015600e575f5ffd5b5060") +
 		(VersionIsRelease ? "3e" : util::toHex(bytes{uint8_t(60 + VersionStringStrict.size())})) +
-		"80601a5f395ff3fe60806040525f80fdfe"
+		"80601a5f395ff3fe60806040525f5ffdfe"
 	);
 	BOOST_CHECK(contract["evm"]["assembly"].is_string());
 	BOOST_CHECK(contract["evm"]["assembly"].get<std::string>().find(
 		"    /* \"fileA\":0:14  contract A { } */\n  mstore(0x40, 0x80)\n  "
 		"callvalue\n  dup1\n  "
 		"iszero\n  tag_1\n  jumpi\n  "
-		"0x00\n  "
-		"dup1\n  revert\n"
+		"revert(0x00, 0x00)\n"
 		"tag_1:\n  pop\n  dataSize(sub_0)\n  dup1\n  "
 		"dataOffset(sub_0)\n  0x00\n  codecopy\n  0x00\n  return\nstop\n\nsub_0: assembly {\n        "
 		"/* \"fileA\":0:14  contract A { } */\n      mstore(0x40, 0x80)\n      "
-		"0x00\n      "
-		"dup1\n      revert\n\n    auxdata: 0xa26469706673582212"
+		"revert(0x00, 0x00)\n\n    auxdata: 0xa26469706673582212"
 	) == 0);
 	BOOST_CHECK(contract["evm"]["gasEstimates"].is_object());
 	BOOST_CHECK_EQUAL(contract["evm"]["gasEstimates"].size(), 1);
@@ -427,7 +426,7 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 		"{\"begin\":0,\"end\":14,\"name\":\"PUSH [tag]\",\"source\":0,\"value\":\"1\"},"
 		"{\"begin\":0,\"end\":14,\"name\":\"JUMPI\",\"source\":0},"
 		"{\"begin\":0,\"end\":14,\"name\":\"PUSH\",\"source\":0,\"value\":\"0\"},"
-		"{\"begin\":0,\"end\":14,\"name\":\"DUP1\",\"source\":0},"
+		"{\"begin\":0,\"end\":14,\"name\":\"PUSH\",\"source\":0,\"value\":\"0\"},"
 		"{\"begin\":0,\"end\":14,\"name\":\"REVERT\",\"source\":0},"
 		"{\"begin\":0,\"end\":14,\"name\":\"tag\",\"source\":0,\"value\":\"1\"},"
 		"{\"begin\":0,\"end\":14,\"name\":\"JUMPDEST\",\"source\":0},"

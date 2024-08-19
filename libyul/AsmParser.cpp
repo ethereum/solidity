@@ -104,15 +104,15 @@ void Parser::updateLocationEndFrom(
 	}
 }
 
-std::unique_ptr<Block> Parser::parse(CharStream& _charStream)
+std::unique_ptr<AST> Parser::parse(CharStream& _charStream)
 {
 	m_scanner = std::make_shared<Scanner>(_charStream);
-	std::unique_ptr<Block> block = parseInline(m_scanner);
+	std::unique_ptr<AST> ast = parseInline(m_scanner);
 	expectToken(Token::EOS);
-	return block;
+	return ast;
 }
 
-std::unique_ptr<Block> Parser::parseInline(std::shared_ptr<Scanner> const& _scanner)
+std::unique_ptr<AST> Parser::parseInline(std::shared_ptr<Scanner> const& _scanner)
 {
 	m_recursionDepth = 0;
 
@@ -125,7 +125,7 @@ std::unique_ptr<Block> Parser::parseInline(std::shared_ptr<Scanner> const& _scan
 		m_scanner = _scanner;
 		if (m_useSourceLocationFrom == UseSourceLocationFrom::Comments)
 			fetchDebugDataFromComment();
-		return std::make_unique<Block>(parseBlock());
+		return std::make_unique<AST>(parseBlock());
 	}
 	catch (FatalError const& error)
 	{

@@ -39,7 +39,7 @@ bool Z3Interface::available()
 }
 
 Z3Interface::Z3Interface(std::optional<unsigned> _queryTimeout):
-	SolverInterface(_queryTimeout),
+	BMCSolverInterface(_queryTimeout),
 	m_solver(m_context)
 {
 	// These need to be set globally.

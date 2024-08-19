@@ -74,7 +74,7 @@ unsigned Assembly::codeSize(unsigned subTagSize) const
 			ret += i.second.size();
 
 		for (AssemblyItem const& i: m_items)
-			ret += i.bytesRequired(tagSize, Precision::Approximate);
+			ret += i.bytesRequired(tagSize, m_evmVersion, Precision::Approximate);
 		if (numberEncodingSize(ret) <= tagSize)
 			return static_cast<unsigned>(ret);
 	}
@@ -479,8 +479,18 @@ Json Assembly::assemblyJSON(std::map<std::string, unsigned> const& _sourceIndice
 	{
 		root["sourceList"] = Json::array();
 		Json& jsonSourceList = root["sourceList"];
-		for (auto const& [name, index]: _sourceIndices)
-			jsonSourceList[index] = name;
+		unsigned maxSourceIndex = 0;
+		for (auto const& [sourceName, sourceIndex]: _sourceIndices)
+		{
+			maxSourceIndex = std::max(sourceIndex, maxSourceIndex);
+			jsonSourceList[sourceIndex] = sourceName;
+		}
+		solAssert(maxSourceIndex + 1 >= _sourceIndices.size());
+		solRequire(
+			_sourceIndices.size() == 0 || _sourceIndices.size() == maxSourceIndex + 1,
+			AssemblyImportException,
+			"The 'sourceList' array contains invalid 'null' item."
+		);
 	}
 
 	if (!m_data.empty() || !m_subs.empty())
@@ -522,7 +532,14 @@ std::pair<std::shared_ptr<Assembly>, std::vector<std::string>> Assembly::fromJSO
 		{
 			solRequire(_json["sourceList"].is_array(), AssemblyImportException, "Optional member 'sourceList' is not an array.");
 			for (Json const& sourceName: _json["sourceList"])
-				solRequire(sourceName.is_string(), AssemblyImportException, "The 'sourceList' array contains an item that is not a string.");
+			{
+				solRequire(!sourceName.is_null(), AssemblyImportException, "The 'sourceList' array contains invalid 'null' item.");
+				solRequire(
+					sourceName.is_string(),
+					AssemblyImportException,
+					"The 'sourceList' array contains an item that is not a string."
+				);
+			}
 		}
 	}
 	else
@@ -736,7 +753,7 @@ std::map<u256, u256> const& Assembly::optimiseInternal(
 
 		if (_settings.runPeephole)
 		{
-			PeepholeOptimiser peepOpt{m_items};
+			PeepholeOptimiser peepOpt{m_items, m_evmVersion};
 			while (peepOpt.optimise())
 			{
 				count++;

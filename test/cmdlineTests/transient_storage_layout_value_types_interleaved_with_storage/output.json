@@ -1,0 +1,155 @@
+{
+    "contracts": {
+        "fileA": {
+            "A": {
+                "storageLayout": {
+                    "storage": [
+                        {
+                            "astId": 7,
+                            "contract": "fileA:A",
+                            "label": "y",
+                            "offset": 0,
+                            "slot": "0",
+                            "type": "t_uint256"
+                        },
+                        {
+                            "astId": 11,
+                            "contract": "fileA:A",
+                            "label": "w",
+                            "offset": 0,
+                            "slot": "1",
+                            "type": "t_int256"
+                        },
+                        {
+                            "astId": 15,
+                            "contract": "fileA:A",
+                            "label": "d",
+                            "offset": 0,
+                            "slot": "2",
+                            "type": "t_address"
+                        },
+                        {
+                            "astId": 19,
+                            "contract": "fileA:A",
+                            "label": "c",
+                            "offset": 20,
+                            "slot": "2",
+                            "type": "t_bool"
+                        },
+                        {
+                            "astId": 22,
+                            "contract": "fileA:A",
+                            "label": "i",
+                            "offset": 21,
+                            "slot": "2",
+                            "type": "t_userDefinedValueType(MyInt)3"
+                        }
+                    ],
+                    "types": {
+                        "t_address": {
+                            "encoding": "inplace",
+                            "label": "address",
+                            "numberOfBytes": "20"
+                        },
+                        "t_bool": {
+                            "encoding": "inplace",
+                            "label": "bool",
+                            "numberOfBytes": "1"
+                        },
+                        "t_int256": {
+                            "encoding": "inplace",
+                            "label": "int256",
+                            "numberOfBytes": "32"
+                        },
+                        "t_uint256": {
+                            "encoding": "inplace",
+                            "label": "uint256",
+                            "numberOfBytes": "32"
+                        },
+                        "t_userDefinedValueType(MyInt)3": {
+                            "encoding": "inplace",
+                            "label": "MyInt",
+                            "numberOfBytes": "1"
+                        }
+                    }
+                },
+                "transientStorageLayout": {
+                    "storage": [
+                        {
+                            "astId": 5,
+                            "contract": "fileA:A",
+                            "label": "x",
+                            "offset": 0,
+                            "slot": "0",
+                            "type": "t_uint256"
+                        },
+                        {
+                            "astId": 9,
+                            "contract": "fileA:A",
+                            "label": "z",
+                            "offset": 0,
+                            "slot": "1",
+                            "type": "t_int256"
+                        },
+                        {
+                            "astId": 13,
+                            "contract": "fileA:A",
+                            "label": "addr",
+                            "offset": 0,
+                            "slot": "2",
+                            "type": "t_address"
+                        },
+                        {
+                            "astId": 17,
+                            "contract": "fileA:A",
+                            "label": "b",
+                            "offset": 20,
+                            "slot": "2",
+                            "type": "t_bool"
+                        },
+                        {
+                            "astId": 25,
+                            "contract": "fileA:A",
+                            "label": "j",
+                            "offset": 21,
+                            "slot": "2",
+                            "type": "t_userDefinedValueType(MyInt)3"
+                        }
+                    ],
+                    "types": {
+                        "t_address": {
+                            "encoding": "inplace",
+                            "label": "address",
+                            "numberOfBytes": "20"
+                        },
+                        "t_bool": {
+                            "encoding": "inplace",
+                            "label": "bool",
+                            "numberOfBytes": "1"
+                        },
+                        "t_int256": {
+                            "encoding": "inplace",
+                            "label": "int256",
+                            "numberOfBytes": "32"
+                        },
+                        "t_uint256": {
+                            "encoding": "inplace",
+                            "label": "uint256",
+                            "numberOfBytes": "32"
+                        },
+                        "t_userDefinedValueType(MyInt)3": {
+                            "encoding": "inplace",
+                            "label": "MyInt",
+                            "numberOfBytes": "1"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "sources": {
+        "fileA": {
+            "id": 0
+        }
+    }
+}

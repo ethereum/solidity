@@ -28,9 +28,10 @@
 
 namespace solidity::yul
 {
-	struct AsmAnalysisInfo;
-	struct Object;
-	struct Dialect;
+struct AsmAnalysisInfo;
+struct Object;
+struct Dialect;
+class AST;
 }
 
 namespace solidity::yul::test
@@ -39,7 +40,7 @@ class YulOptimizerTestCommon
 {
 public:
 	explicit YulOptimizerTestCommon(
-		std::shared_ptr<Object> _obj,
+		std::shared_ptr<Object const> _obj,
 		Dialect const& _dialect
 	);
 	/// Sets optimiser step to be run to @param
@@ -47,7 +48,7 @@ public:
 	void setStep(std::string const& _optimizerStep);
 	/// Runs chosen optimiser step returning pointer
 	/// to yul AST Block post optimisation.
-	std::shared_ptr<Block> run();
+	Block const* run();
 	/// Runs chosen optimiser step returning true if
 	/// successful, false otherwise.
 	bool runStep();
@@ -56,9 +57,11 @@ public:
 	/// @param _seed is an unsigned integer that
 	/// seeds the random selection.
 	std::string randomOptimiserStep(unsigned _seed);
+	/// the resulting object after performing optimization steps
+	std::shared_ptr<Object> optimizedObject() const;
 private:
-	void disambiguate();
-	void updateContext();
+	Block disambiguate();
+	void updateContext(Block const& _block);
 
 	std::string m_optimizerStep;
 
@@ -67,10 +70,9 @@ private:
 	std::unique_ptr<NameDispenser> m_nameDispenser;
 	std::unique_ptr<OptimiserStepContext> m_context;
 
-	std::shared_ptr<Object> m_object;
-	std::shared_ptr<Block> m_ast;
-	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
-	std::map<std::string, std::function<void(void)>> m_namedSteps;
+	std::shared_ptr<Object const> m_object;
+	std::shared_ptr<Object> m_optimizedObject;
+	std::map<std::string, std::function<Block(void)>> m_namedSteps;
 };
 
 }

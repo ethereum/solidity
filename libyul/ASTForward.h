@@ -46,6 +46,7 @@ struct Continue;
 struct Leave;
 struct ExpressionStatement;
 struct Block;
+class AST;
 
 struct TypedName;
 

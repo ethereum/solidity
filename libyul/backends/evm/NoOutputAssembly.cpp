@@ -71,7 +71,7 @@ void NoOutputAssembly::appendLinkerSymbol(std::string const&)
 
 void NoOutputAssembly::appendVerbatim(bytes, size_t _arguments, size_t _returnVariables)
 {
-	m_stackHeight += static_cast<int>(_returnVariables - _arguments);
+	m_stackHeight += static_cast<int>(_returnVariables) - static_cast<int>(_arguments);
 }
 
 void NoOutputAssembly::appendJump(int _stackDiffAfter, JumpType)

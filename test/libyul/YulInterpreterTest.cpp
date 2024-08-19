@@ -25,6 +25,7 @@
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/YulStack.h>
 #include <libyul/AsmAnalysisInfo.h>
+#include <libyul/AST.h>
 
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/ErrorReporter.h>
@@ -74,7 +75,7 @@ bool YulInterpreterTest::parse(std::ostream& _stream, std::string const& _linePr
 	);
 	if (stack.parseAndAnalyze("", m_source))
 	{
-		m_ast = stack.parserResult()->code;
+		m_ast = stack.parserResult()->code();
 		m_analysisInfo = stack.parserResult()->analysisInfo;
 		return true;
 	}
@@ -98,7 +99,7 @@ std::string YulInterpreterTest::interpret()
 		Interpreter::run(
 			state,
 			EVMDialect::strictAssemblyForEVMObjects(solidity::test::CommonOptions::get().evmVersion()),
-			*m_ast,
+			m_ast->root(),
 			/*disableExternalCalls=*/ !m_simulateExternalCallsToSelf,
 			/*disableMemoryTracing=*/ false
 		);

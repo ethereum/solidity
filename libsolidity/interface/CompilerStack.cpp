@@ -846,9 +846,9 @@ Json CompilerStack::generatedSources(std::string const& _contractName, bool _run
 				ErrorReporter errorReporter(errors);
 				CharStream charStream(source, sourceName);
 				yul::EVMDialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(m_evmVersion);
-				std::shared_ptr<yul::Block> parserResult = yul::Parser{errorReporter, dialect}.parse(charStream);
+				std::shared_ptr<yul::AST> parserResult = yul::Parser{errorReporter, dialect}.parse(charStream);
 				solAssert(parserResult, "");
-				sources[0]["ast"] = yul::AsmJsonConverter{sourceIndex}(*parserResult);
+				sources[0]["ast"] = yul::AsmJsonConverter{sourceIndex}(parserResult->root());
 				sources[0]["name"] = sourceName;
 				sources[0]["id"] = sourceIndex;
 				sources[0]["language"] = "Yul";
@@ -1015,7 +1015,22 @@ Json const& CompilerStack::storageLayout(Contract const& _contract) const
 	solAssert(_contract.contract);
 	solUnimplementedAssert(!isExperimentalSolidity());
 
-	return _contract.storageLayout.init([&]{ return StorageLayout().generate(*_contract.contract); });
+	return _contract.storageLayout.init([&]{ return StorageLayout().generate(*_contract.contract, DataLocation::Storage); });
+}
+
+Json const& CompilerStack::transientStorageLayout(std::string const& _contractName) const
+{
+	solAssert(m_stackState >= AnalysisSuccessful, "Analysis was not successful.");
+	return transientStorageLayout(contract(_contractName));
+}
+
+Json const& CompilerStack::transientStorageLayout(Contract const& _contract) const
+{
+	solAssert(m_stackState >= AnalysisSuccessful, "Analysis was not successful.");
+	solAssert(_contract.contract);
+	solUnimplementedAssert(!isExperimentalSolidity());
+
+	return _contract.transientStorageLayout.init([&]{ return StorageLayout().generate(*_contract.contract, DataLocation::Transient); });
 }
 
 Json const& CompilerStack::natspecUser(std::string const& _contractName) const
@@ -1473,39 +1488,26 @@ void CompilerStack::generateIR(ContractDefinition const& _contract, bool _unopti
 		);
 	}
 
-	auto const parseYul = [&](std::string const& _irSource) {
-		YulStack stack(
-			m_evmVersion,
-			m_eofVersion,
-			YulStack::Language::StrictAssembly,
-			m_optimiserSettings,
-			m_debugInfoSelection
-		);
-		bool yulAnalysisSuccessful = stack.parseAndAnalyze("", _irSource);
-		solAssert(
-			yulAnalysisSuccessful,
-			_irSource + "\n\n"
-			"Invalid IR generated:\n" +
-			langutil::SourceReferenceFormatter::formatErrorInformation(stack.errors(), stack) + "\n"
-		);
-		return stack;
-	};
+	YulStack stack(
+		m_evmVersion,
+		m_eofVersion,
+		YulStack::Language::StrictAssembly,
+		m_optimiserSettings,
+		m_debugInfoSelection
+	);
+	bool yulAnalysisSuccessful = stack.parseAndAnalyze("", compiledContract.yulIR);
+	solAssert(
+		yulAnalysisSuccessful,
+		compiledContract.yulIR + "\n\n"
+		"Invalid IR generated:\n" +
+		SourceReferenceFormatter::formatErrorInformation(stack.errors(), stack) + "\n"
+	);
 
-	{
-		YulStack stack = parseYul(compiledContract.yulIR);
-		compiledContract.yulIRAst = stack.astJson();
-		if (!_unoptimizedOnly)
-		{
-			stack.optimize();
-			compiledContract.yulIROptimized = stack.print(this);
-		}
-	}
-
+	compiledContract.yulIRAst = stack.astJson();
 	if (!_unoptimizedOnly)
 	{
-		// Optimizer does not maintain correct native source locations in the AST.
-		// We can work around it by regenerating the AST from scratch from optimized IR.
-		YulStack stack = parseYul(compiledContract.yulIROptimized);
+		stack.optimize();
+		compiledContract.yulIROptimized = stack.print(this);
 		compiledContract.yulIROptimizedAst = stack.astJson();
 	}
 }

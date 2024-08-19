@@ -8,21 +8,31 @@ Language Features:
 
 Compiler Features:
  * Command Line Interface: Do not perform IR optimization when only unoptimized IR is requested.
+ * Commandline Interface: Add ``--transient-storage-layout`` output.
+ * Constant Optimizer: Uses ``PUSH0`` if supported by the selected evm version.
  * Error Reporting: Unimplemented features are now properly reported as errors instead of being handled as if they were bugs.
  * EVM: Support for the EVM version "Prague".
+ * Peephole Optimizer: ``PUSH0``, when supported, is duplicated explicitly instead of using ``DUP1``.
+ * Peephole optimizer: Remove identical code snippets that terminate the control flow if they occur one after another.
  * SMTChecker: Add CHC engine check for underflow and overflow in unary minus operation.
  * SMTChecker: Replace CVC4 as a possible BMC backend with cvc5.
  * Standard JSON Interface: Do not perform IR optimization when only unoptimized IR is requested.
+ * Standard JSON Interface: Add ``transientStorageLayout`` output.
+ * Yul: Drop the deprecated typed Yul dialect that was only accessible via ``--yul`` in the CLI.
  * Yul Optimizer: The optimizer now treats some previously unrecognized identical literals as identical.
+ * Commandline Interface: Allow the use of ``--asm-json`` output option in assembler mode to export EVM assembly of the contracts in JSON format.
 
 
 Bugfixes:
+ * Parser: Fix spuriously emitted parser error for unary plus operations when used as binary operator in some cases.
  * SMTChecker: Fix error that reports invalid number of verified checks for BMC and CHC engines.
  * SMTChecker: Fix formatting of unary minus expressions in invariants.
  * SMTChecker: Fix internal compiler error when reporting proved targets for BMC engine.
+ * SMTChecker: Fix SMT logic error when assigning to an array of contracts or functions.
  * TypeChecker: Fix segfault when assigning nested tuple to tuple.
- * Yul AST: Fix ``nativeSrc`` attributes in optimized IR AST referring to locations in unoptimized IR.
  * Yul IR Code Generation: Deterministic order of Yul subobjects.
+ * Yul Optimizer: Fix Yul source locations always referring to unoptimized source, even in optimized outputs.
+ * Yul Optimizer: Fix warnings being generated twice when there are no errors.
  * Yul Optimizer: Name simplification could lead to forbidden identifiers with a leading and/or trailing dot, e.g., ``x._`` would get simplified into ``x.``.
  * Yul Parser: Fix segfault when parsing very long location comments.
 

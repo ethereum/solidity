@@ -1,5 +1,5 @@
 {
-	{ let x:u256 }
-	function f() -> x:u256 {}
+	{ let x }
+	function f() -> x {}
 }
 // ----

@@ -19,15 +19,7 @@
 
 #include <liblangutil/Exceptions.h>
 
-#include <libsolutil/CommonIO.h>
-#include <libsolutil/Exceptions.h>
-#include <libsolutil/Keccak256.h>
-#include <libsolutil/TemporaryDirectory.h>
-
 #include <boost/algorithm/string/join.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
 #include <boost/process.hpp>
 
 namespace solidity::frontend
@@ -37,6 +29,8 @@ void SMTSolverCommand::setEldarica(std::optional<unsigned int> timeoutInMillisec
 {
 	m_arguments.clear();
 	m_solverCmd = "eld";
+	m_arguments.emplace_back("-hsmt"); // Tell Eldarica to expect input in SMT2 format
+	m_arguments.emplace_back("-in"); // Tell Eldarica to read from standard input
 	if (timeoutInMilliseconds)
 	{
 		unsigned int timeoutInSeconds = timeoutInMilliseconds.value() / 1000u;
@@ -44,7 +38,7 @@ void SMTSolverCommand::setEldarica(std::optional<unsigned int> timeoutInMillisec
 		m_arguments.push_back("-t:" + std::to_string(timeoutInSeconds));
 	}
 	if (computeInvariants)
-		m_arguments.emplace_back("-ssol");
+		m_arguments.emplace_back("-ssol"); // Tell Eldarica to produce model (invariant)
 }
 
 void SMTSolverCommand::setCvc5(std::optional<unsigned int> timeoutInMilliseconds)
@@ -53,14 +47,43 @@ void SMTSolverCommand::setCvc5(std::optional<unsigned int> timeoutInMilliseconds
 	m_solverCmd = "cvc5";
 	if (timeoutInMilliseconds)
 	{
-		m_arguments.push_back("--tlimit-per");
+		m_arguments.emplace_back("--tlimit-per");
 		m_arguments.push_back(std::to_string(timeoutInMilliseconds.value()));
 	}
 	else
 	{
-		m_arguments.push_back("--rlimit");
+		m_arguments.emplace_back("--rlimit"); // Set resource limit cvc5 can spend on a query
 		m_arguments.push_back(std::to_string(12000));
 	}
+}
+
+void SMTSolverCommand::setZ3(std::optional<unsigned int> timeoutInMilliseconds, bool _preprocessing, bool _computeInvariants)
+{
+	constexpr int Z3ResourceLimit = 2000000;
+	m_arguments.clear();
+	m_solverCmd = "z3";
+	m_arguments.emplace_back("-in"); // Read from standard input
+	m_arguments.emplace_back("-smt2"); // Expect input in SMT-LIB2 format
+	if (_computeInvariants)
+		m_arguments.emplace_back("-model"); // Output model automatically after check-sat
+	if (timeoutInMilliseconds)
+		m_arguments.emplace_back("-t:" + std::to_string(timeoutInMilliseconds.value()));
+	else
+		m_arguments.emplace_back("rlimit=" + std::to_string(Z3ResourceLimit));
+
+	// These options have been empirically established to be helpful
+	m_arguments.emplace_back("rewriter.pull_cheap_ite=true");
+	m_arguments.emplace_back("fp.spacer.q3.use_qgen=true");
+	m_arguments.emplace_back("fp.spacer.mbqi=false");
+	m_arguments.emplace_back("fp.spacer.ground_pobs=false");
+
+	// Spacer optimization should be
+	// - enabled for better solving (default)
+	// - disable for counterexample generation
+	std::string preprocessingArg = _preprocessing ? "true" : "false";
+	m_arguments.emplace_back("fp.xform.slice=" + preprocessingArg);
+	m_arguments.emplace_back("fp.xform.inline_linear=" + preprocessingArg);
+	m_arguments.emplace_back("fp.xform.inline_eager=" + preprocessingArg);
 }
 
 ReadCallback::Result SMTSolverCommand::solve(std::string const& _kind, std::string const& _query) const
@@ -73,32 +96,30 @@ ReadCallback::Result SMTSolverCommand::solve(std::string const& _kind, std::stri
 		if (m_solverCmd.empty())
 			return ReadCallback::Result{false, "No solver set."};
 
-		auto tempDir = solidity::util::TemporaryDirectory("smt");
-		util::h256 queryHash = util::keccak256(_query);
-		auto queryFileName = tempDir.path() / ("query_" + queryHash.hex() + ".smt2");
-
-		auto queryFile = boost::filesystem::ofstream(queryFileName);
-		queryFile << _query << std::flush;
-
 		auto solverBin = boost::process::search_path(m_solverCmd);
 
 		if (solverBin.empty())
 			return ReadCallback::Result{false, m_solverCmd + " binary not found."};
 
 		auto args = m_arguments;
-		args.push_back(queryFileName.string());
 
-		boost::process::ipstream pipe;
+		boost::process::opstream in;  // input to subprocess written to by the main process
+		boost::process::ipstream out; // output from subprocess read by the main process
 		boost::process::child solverProcess(
 			solverBin,
 			args,
-			boost::process::std_out > pipe,
+			boost::process::std_out > out,
+			boost::process::std_in < in,
 			boost::process::std_err > boost::process::null
 		);
 
+		in << _query << std::flush;
+		in.pipe().close();
+		in.close();
+
 		std::vector<std::string> data;
 		std::string line;
-		while (solverProcess.running() && std::getline(pipe, line))
+		while (!(out.fail() || out.eof()) && std::getline(out, line))
 			if (!line.empty())
 				data.push_back(line);
 

@@ -1,5 +1,5 @@
 {
-    x.y(2:u256)
-    function x.y(a:u256) {}
+    x.y(2)
+    function x.y(a) {}
 }
 // ----

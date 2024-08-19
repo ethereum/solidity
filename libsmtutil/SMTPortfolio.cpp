@@ -26,10 +26,10 @@ using namespace solidity::frontend;
 using namespace solidity::smtutil;
 
 SMTPortfolio::SMTPortfolio(
-	std::vector<std::unique_ptr<SolverInterface>> _solvers,
+	std::vector<std::unique_ptr<BMCSolverInterface>> _solvers,
 	std::optional<unsigned> _queryTimeout
 ):
-	SolverInterface(_queryTimeout), m_solvers(std::move(_solvers))
+	BMCSolverInterface(_queryTimeout), m_solvers(std::move(_solvers))
 {}
 
 

@@ -255,7 +255,7 @@ void CodeTransform::operator()(FunctionCall const& _call)
 		m_assembly.setSourceLocation(originLocationOf(_call));
 		m_assembly.appendJumpTo(
 			functionEntryID(*function),
-			static_cast<int>(function->returns.size() - function->arguments.size()) - 1,
+			static_cast<int>(function->returns.size()) - static_cast<int>(function->arguments.size()) - 1,
 			AbstractAssembly::JumpType::IntoFunction
 		);
 		m_assembly.appendLabel(returnLabel);

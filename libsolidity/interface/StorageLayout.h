@@ -16,7 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
- * Generates the storage layout of a contract.
+ * Generates the storage/transient storage layout of a contract.
  */
 
 #pragma once
@@ -33,8 +33,9 @@ class StorageLayout
 public:
 	/// Generates the storage layout of the contract
 	/// @param _contractDef The contract definition
+	/// @param _location The location (storage or transient storage) for which to generate the layout
 	/// @return A JSON representation of the contract's storage layout.
-	Json generate(ContractDefinition const& _contractDef);
+	Json generate(ContractDefinition const& _contractDef, DataLocation const _location);
 
 private:
 	/// Generates the JSON information for a variable and its storage location.

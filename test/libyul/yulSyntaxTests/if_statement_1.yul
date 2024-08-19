@@ -1,6 +1,4 @@
 {
-	if true:bool {}
+	if true {}
 }
-// ====
-// dialect: evmTyped
 // ----

@@ -6,9 +6,9 @@ EVM assembly:
     /* "optimizer_user_yul/input.sol":101:106  int a */
   0x00
     /* "optimizer_user_yul/input.sol":181:190  let x,y,z */
-  dup1
   0x00
-  dup1
+  0x00
+  0x00
     /* "optimizer_user_yul/input.sol":205:206  1 */
   0x01
     /* "optimizer_user_yul/input.sol":202:203  0 */
@@ -78,9 +78,7 @@ stop
 sub_0: assembly {
         /* "optimizer_user_yul/input.sol":60:518  contract C... */
       mstore(0x40, 0x80)
-      0x00
-      dup1
-      revert
+      revert(0x00, 0x00)
 
     auxdata: <AUXDATA REMOVED>
 }

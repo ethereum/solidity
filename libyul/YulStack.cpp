@@ -15,10 +15,6 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 // SPDX-License-Identifier: GPL-3.0
-/**
- * Full assembly stack that can support EVM-assembly and Yul as input and EVM, EVM1.5
- */
-
 
 #include <libyul/YulStack.h>
 
@@ -34,6 +30,7 @@
 #include <libyul/optimiser/Suite.h>
 #include <libevmasm/Assembly.h>
 #include <liblangutil/Scanner.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 #include <libsolidity/interface/OptimiserSettings.h>
 
 #include <boost/algorithm/string.hpp>
@@ -55,15 +52,12 @@ Dialect const& languageToDialect(YulStack::Language _language, EVMVersion _versi
 	case YulStack::Language::Assembly:
 	case YulStack::Language::StrictAssembly:
 		return EVMDialect::strictAssemblyForEVMObjects(_version);
-	case YulStack::Language::Yul:
-		return EVMDialectTyped::instance(_version);
 	}
-	yulAssert(false, "");
-	return Dialect::yulDeprecated();
+	yulAssert(false);
+	util::unreachable();
 }
 
 }
-
 
 CharStream const& YulStack::charStream(std::string const& _sourceName) const
 {
@@ -102,7 +96,7 @@ bool YulStack::parseAndAnalyze(std::string const& _sourceName, std::string const
 
 	yulAssert(m_stackState == Parsed);
 	yulAssert(m_parserResult, "");
-	yulAssert(m_parserResult->code, "");
+	yulAssert(m_parserResult->hasCode());
 
 	return analyzeParsed();
 }
@@ -122,7 +116,10 @@ void YulStack::optimize()
 
 		m_stackState = Parsed;
 		optimize(*m_parserResult, true);
-		yulAssert(analyzeParsed(), "Invalid source code after optimization.");
+
+		// Optimizer does not maintain correct native source locations in the AST.
+		// We can work around it by regenerating the AST from scratch from optimized IR.
+		reparse();
 	}
 	catch (UnimplementedFeatureError const& _error)
 	{
@@ -140,7 +137,7 @@ bool YulStack::analyzeParsed()
 bool YulStack::analyzeParsed(Object& _object)
 {
 	yulAssert(m_stackState >= Parsed);
-	yulAssert(_object.code, "");
+	yulAssert(_object.hasCode());
 	_object.analysisInfo = std::make_shared<AsmAnalysisInfo>();
 
 	AsmAnalyzer analyzer(
@@ -154,7 +151,7 @@ bool YulStack::analyzeParsed(Object& _object)
 	bool success = false;
 	try
 	{
-		success = analyzer.analyze(*_object.code);
+		success = analyzer.analyze(_object.code()->root());
 		for (auto& subNode: _object.subObjects)
 			if (auto subObject = dynamic_cast<Object*>(subNode.get()))
 				if (!analyzeParsed(*subObject))
@@ -181,9 +178,6 @@ void YulStack::compileEVM(AbstractAssembly& _assembly, bool _optimize) const
 		case Language::StrictAssembly:
 			dialect = &EVMDialect::strictAssemblyForEVMObjects(m_evmVersion);
 			break;
-		case Language::Yul:
-			dialect = &EVMDialectTyped::instance(m_evmVersion);
-			break;
 		default:
 			yulAssert(false, "Invalid language.");
 			break;
@@ -194,7 +188,7 @@ void YulStack::compileEVM(AbstractAssembly& _assembly, bool _optimize) const
 
 void YulStack::optimize(Object& _object, bool _isCreation)
 {
-	yulAssert(_object.code, "");
+	yulAssert(_object.hasCode(), "");
 	yulAssert(_object.analysisInfo, "");
 	for (auto& subNode: _object.subObjects)
 		if (auto subObject = dynamic_cast<Object*>(subNode.get()))
@@ -246,11 +240,38 @@ void YulStack::optimize(Object& _object, bool _isCreation)
 	);
 }
 
+void YulStack::reparse()
+{
+	yulAssert(m_parserResult);
+	yulAssert(m_charStream);
+
+	// NOTE: Without passing in _soliditySourceProvider, printed debug info will not include code
+	// snippets, but it does not matter - we'll still get the same AST after we parse it. Snippets
+	// are not stored in the AST and the other info that is (location, AST ID, etc) will still be present.
+	std::string source = print(nullptr /* _soliditySourceProvider */);
+
+	YulStack cleanStack(m_evmVersion, m_eofVersion, m_language, m_optimiserSettings, m_debugInfoSelection);
+	bool reanalysisSuccessful = cleanStack.parseAndAnalyze(m_charStream->name(), source);
+	yulAssert(
+		reanalysisSuccessful,
+		source + "\n\n"
+		"Invalid IR generated:\n" +
+		SourceReferenceFormatter::formatErrorInformation(cleanStack.errors(), cleanStack) + "\n"
+	);
+
+	m_stackState = AnalysisSuccessful;
+	m_parserResult = std::move(cleanStack.m_parserResult);
+
+	// NOTE: We keep the char stream, and errors, even though they no longer match the object,
+	// because it's the original source that matters to the user. Optimized code may have different
+	// locations and fewer warnings.
+}
+
 MachineAssemblyObject YulStack::assemble(Machine _machine)
 {
 	yulAssert(m_stackState >= AnalysisSuccessful);
 	yulAssert(m_parserResult, "");
-	yulAssert(m_parserResult->code, "");
+	yulAssert(m_parserResult->hasCode(), "");
 	yulAssert(m_parserResult->analysisInfo, "");
 
 	switch (_machine)
@@ -274,7 +295,7 @@ YulStack::assembleWithDeployed(std::optional<std::string_view> _deployName)
 	{
 		creationObject.bytecode = std::make_shared<evmasm::LinkerObject>(creationAssembly->assemble());
 		yulAssert(creationObject.bytecode->immutableReferences.empty(), "Leftover immutables.");
-		creationObject.assembly = creationAssembly->assemblyString(m_debugInfoSelection);
+		creationObject.assembly = creationAssembly;
 		creationObject.sourceMappings = std::make_unique<std::string>(
 			evmasm::AssemblyItem::computeSourceMapping(
 				creationAssembly->items(),
@@ -285,7 +306,7 @@ YulStack::assembleWithDeployed(std::optional<std::string_view> _deployName)
 		if (deployedAssembly)
 		{
 			deployedObject.bytecode = std::make_shared<evmasm::LinkerObject>(deployedAssembly->assemble());
-			deployedObject.assembly = deployedAssembly->assemblyString(m_debugInfoSelection);
+			deployedObject.assembly = deployedAssembly;
 			deployedObject.sourceMappings = std::make_unique<std::string>(
 				evmasm::AssemblyItem::computeSourceMapping(
 					deployedAssembly->items(),
@@ -307,7 +328,7 @@ YulStack::assembleEVMWithDeployed(std::optional<std::string_view> _deployName)
 {
 	yulAssert(m_stackState >= AnalysisSuccessful);
 	yulAssert(m_parserResult, "");
-	yulAssert(m_parserResult->code, "");
+	yulAssert(m_parserResult->hasCode(), "");
 	yulAssert(m_parserResult->analysisInfo, "");
 
 	evmasm::Assembly assembly(m_evmVersion, true, {});
@@ -364,7 +385,7 @@ std::string YulStack::print(
 {
 	yulAssert(m_stackState >= Parsed);
 	yulAssert(m_parserResult, "");
-	yulAssert(m_parserResult->code, "");
+	yulAssert(m_parserResult->hasCode(), "");
 	return m_parserResult->toString(
 		languageToDialect(m_language, m_evmVersion),
 		AsmPrinter::TypePrinting::OmitDefault,
@@ -377,7 +398,7 @@ Json YulStack::astJson() const
 {
 	yulAssert(m_stackState >= Parsed);
 	yulAssert(m_parserResult, "");
-	yulAssert(m_parserResult->code, "");
+	yulAssert(m_parserResult->hasCode(), "");
 	return  m_parserResult->toJson();
 }
 
@@ -385,7 +406,7 @@ std::shared_ptr<Object> YulStack::parserResult() const
 {
 	yulAssert(m_stackState >= AnalysisSuccessful, "Analysis was not successful.");
 	yulAssert(m_parserResult, "");
-	yulAssert(m_parserResult->code, "");
+	yulAssert(m_parserResult->hasCode(), "");
 	return m_parserResult;
 }
 

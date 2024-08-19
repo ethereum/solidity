@@ -30,8 +30,10 @@ EldaricaCHCSmtLib2Interface::EldaricaCHCSmtLib2Interface(
 {
 }
 
-void EldaricaCHCSmtLib2Interface::setupSmtCallback()
+std::string EldaricaCHCSmtLib2Interface::querySolver(std::string const& _input)
 {
 	if (auto* universalCallback = m_smtCallback.target<frontend::UniversalCallback>())
 		universalCallback->smtCommand().setEldarica(m_queryTimeout, m_computeInvariants);
+
+	return CHCSmtLib2Interface::querySolver(_input);
 }

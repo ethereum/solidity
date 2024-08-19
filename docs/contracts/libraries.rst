@@ -196,7 +196,7 @@ It is possible to obtain the address of a library by converting
 the library type to the ``address`` type, i.e. using ``address(LibraryName)``.
 
 As the compiler does not know the address where the library will be deployed, the compiled hex code
-will contain placeholders of the form ``__$30bbc0abd4d6364515865950d3e0d10953$__``. The placeholder
+will contain placeholders of the form ``__$30bbc0abd4d6364515865950d3e0d10953$__`` `(format was different <v0.5.0) <https://docs.soliditylang.org/en/v0.4.26/contracts.html#libraries>`_. The placeholder
 is a 34 character prefix of the hex encoding of the keccak256 hash of the fully qualified library
 name, which would be for example ``libraries/bigint.sol:BigInt`` if the library was stored in a file
 called ``bigint.sol`` in a ``libraries/`` directory. Such bytecode is incomplete and should not be

@@ -478,13 +478,6 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	Type const* varType = _variable.annotation().type;
 	solAssert(!!varType, "Variable type not provided.");
 
-	if (_variable.referenceLocation() == VariableDeclaration::Location::Transient)
-		m_errorReporter.unimplementedFeatureError(
-			6715_error,
-			_variable.location(),
-			"Transient storage is not yet implemented."
-		);
-
 	if (_variable.value())
 	{
 		if (_variable.isStateVariable() && varType->containsNestedMapping())
@@ -947,7 +940,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		_inlineAssembly.dialect(),
 		identifierAccess
 	);
-	if (!analyzer.analyze(_inlineAssembly.operations()))
+	if (!analyzer.analyze(_inlineAssembly.operations().root()))
 		solAssert(m_errorReporter.hasErrors());
 	_inlineAssembly.annotation().hasMemoryEffects =
 		lvalueAccessToMemoryVariable ||

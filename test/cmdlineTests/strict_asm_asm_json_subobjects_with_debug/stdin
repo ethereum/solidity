@@ -1,0 +1,51 @@
+/// @use-src 0:"a.sol"
+object "A" {
+    code {
+        /// @src 0:41:137  "contract A {..."
+        sstore(0, dataoffset("A"))
+        sstore(1, datasize("A"))
+        sstore(2, dataoffset("B"))
+        sstore(3, datasize("B"))
+        sstore(4, dataoffset("B.C"))
+        sstore(5, datasize("B.C"))
+        sstore(6, dataoffset("B.E"))
+        sstore(7, datasize("B.E"))
+        sstore(8, dataoffset("B.C.D"))
+        sstore(9, datasize("B.C.D"))
+    }
+
+    data "data1" "Hello, World!"
+
+    /// @use-src 1:"b.sol"
+    object "B" {
+        code {
+            /// @src 1:57:158  "contract B {..."
+            sstore(10, dataoffset("C"))
+            sstore(11, datasize("C"))
+            sstore(12, dataoffset("E"))
+            sstore(13, datasize("E"))
+            sstore(14, dataoffset("C.D"))
+            sstore(15, datasize("C.D"))
+        }
+        /// @use-src 2:"c.sol"
+        object "C" {
+            code {
+                /// @src 2:41:100  "contract C {..."
+                sstore(16, dataoffset("D"))
+                sstore(17, datasize("D"))
+            }
+            /// @use-src 3:"d.sol"
+            object "D" {
+                code {
+                    invalid()
+                }
+            }
+        }
+        /// @use-src 4:"e.sol"
+        object "E" {
+            code {
+                invalid()
+            }
+        }
+    }
+}

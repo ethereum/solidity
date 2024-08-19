@@ -506,7 +506,7 @@ public:
 			return;
 
 		YulLValueChecker yulChecker{m_declaration->name()};
-		yulChecker(_inlineAssembly.operations());
+		yulChecker(_inlineAssembly.operations().root());
 		m_willBeWrittenTo = yulChecker.willBeWrittenTo();
 	}
 private:

@@ -116,7 +116,7 @@ void AssemblyItem::setPushTagSubIdAndTag(size_t _subId, size_t _tag)
 	setData(data);
 }
 
-size_t AssemblyItem::bytesRequired(size_t _addressLength, Precision _precision) const
+size_t AssemblyItem::bytesRequired(size_t _addressLength, langutil::EVMVersion _evmVersion, Precision _precision) const
 {
 	switch (m_type)
 	{
@@ -124,7 +124,9 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength, Precision _precision) 
 	case Tag: // 1 byte for the JUMPDEST
 		return 1;
 	case Push:
-		return 1 + std::max<size_t>(1, numberEncodingSize(data()));
+		return
+			1 +
+			std::max<size_t>((_evmVersion.hasPush0() ? 0 : 1), numberEncodingSize(data()));
 	case PushSubSize:
 	case PushProgramSize:
 		return 1 + 4; // worst case: a 16MB program

@@ -34,7 +34,7 @@ class EVMObjectCompiler
 {
 public:
 	static void compile(
-		Object& _object,
+		Object const& _object,
 		AbstractAssembly& _assembly,
 		EVMDialect const& _dialect,
 		bool _optimize,
@@ -45,7 +45,7 @@ private:
 		m_assembly(_assembly), m_dialect(_dialect), m_eofVersion(_eofVersion)
 	{}
 
-	void run(Object& _object, bool _optimize);
+	void run(Object const& _object, bool _optimize);
 
 	AbstractAssembly& m_assembly;
 	EVMDialect const& m_dialect;

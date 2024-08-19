@@ -1438,6 +1438,14 @@ jobs:
             # TODO: temporarily set hardhat stack traces tests to use cancun hardfork
             # Remove this when hardhat switch to cancun by default: https://github.com/NomicFoundation/hardhat/issues/4851
             sed -i 's/hardfork: "shanghai",/hardfork: "cancun",/' test/internal/hardhat-network/stack-traces/execution.ts
+            # TODO: Remove these tests because they rely on specific stack sequence which has changed since
+            # Remove when hardhat properly fix a specific version for the tests: https://github.com/NomicFoundation/hardhat/issues/5443
+            rm -rf test/internal/hardhat-network/stack-traces/test-files/0_8/revert-without-message/modifiers/call-message/multiple-modifiers-require/
+            rm -rf test/internal/hardhat-network/stack-traces/test-files/0_8/revert-without-message/modifiers/create-message/multiple-modifiers-require/
+            rm -rf test/internal/hardhat-network/stack-traces/test-files/0_8/revert-without-message/revert-without-message/within-receive/between-statements/
+            rm -rf test/internal/hardhat-network/stack-traces/test-files/0_8/revert-without-message/revert-without-message/within-receive/no-other-statements/
+            rm -rf test/internal/hardhat-network/stack-traces/test-files/0_8/revert-without-message/revert-without-message/within-receive/statement-after/
+            rm -rf test/internal/hardhat-network/stack-traces/test-files/0_8/revert-without-message/revert-without-message/within-receive/statement-before/
             pnpm test
       - matrix_notify_failure_unless_pr
 

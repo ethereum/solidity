@@ -203,7 +203,7 @@ smtutil::Expression SymbolicFunctionVariable::increaseIndex()
 	return m_abstract.currentValue();
 }
 
-smtutil::Expression SymbolicFunctionVariable::operator()(std::vector<smtutil::Expression> _arguments) const
+smtutil::Expression SymbolicFunctionVariable::operator()(std::vector<smtutil::Expression> const& _arguments) const
 {
 	return m_declaration(_arguments);
 }

@@ -87,10 +87,11 @@ void GasMeterVisitor::operator()(FunctionCall const& _funCall)
 
 void GasMeterVisitor::operator()(Literal const& _lit)
 {
-	m_runGas += evmasm::GasMeter::runGas(evmasm::Instruction::PUSH1, m_dialect.evmVersion());
-	m_dataGas +=
-		singleByteDataGas() +
-		evmasm::GasMeter::dataGas(
+	m_runGas += evmasm::GasMeter::pushGas(_lit.value.value(), m_dialect.evmVersion());
+
+	m_dataGas += singleByteDataGas();
+	if (!m_dialect.evmVersion().hasPush0() || _lit.value.value() != u256(0))
+		m_dataGas += evmasm::GasMeter::dataGas(
 			toCompactBigEndian(_lit.value.value(), 1),
 			m_isCreation,
 			m_dialect.evmVersion()

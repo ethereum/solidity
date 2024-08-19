@@ -119,18 +119,32 @@ public:
 	/// The path must not lead to a @a Data object (will throw in that case).
 	std::vector<size_t> pathToSubObject(std::string_view _qualifiedName) const;
 
+	std::shared_ptr<AST const> code() const;
+	void setCode(std::shared_ptr<AST const> const& _ast, std::shared_ptr<yul::AsmAnalysisInfo> = nullptr);
+	bool hasCode() const;
+
 	/// sub id for object if it is subobject of another object, max value if it is not subobject
 	size_t subId = std::numeric_limits<size_t>::max();
 
-	std::shared_ptr<Block> code;
 	std::vector<std::shared_ptr<ObjectNode>> subObjects;
 	std::map<std::string, size_t, std::less<>> subIndexByName;
 	std::shared_ptr<yul::AsmAnalysisInfo> analysisInfo;
 
 	std::shared_ptr<ObjectDebugData const> debugData;
 
+	/// Collects names of all Solidity source units present in the debug data
+	/// of the Yul object (including sub-objects) and their assigned indices.
+	/// @param _indices map that will be filled with source indices of the current Yul object & its sub-objects.
+	void collectSourceIndices(std::map<std::string, unsigned>& _indices) const;
+
+	/// @returns true, if the range of source indices starts at zero and is contiguous, false otherwise.
+	bool hasContiguousSourceIndices() const;
+
 	/// @returns the name of the special metadata data object.
 	static std::string metadataName() { return ".metadata"; }
+
+private:
+	std::shared_ptr<AST const> m_code;
 };
 
 }

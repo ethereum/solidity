@@ -21,6 +21,7 @@
 #include <libyul/Dialect.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/YulStack.h>
+#include <libyul/AST.h>
 
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/Exceptions.h>
@@ -70,7 +71,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 	{
 		if (
 			!stack.parseAndAnalyze("source", input) ||
-			!stack.parserResult()->code ||
+			!stack.parserResult()->hasCode() ||
 			!stack.parserResult()->analysisInfo
 		)
 			return 0;
@@ -88,7 +89,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 	// that would be removed by the redundant store eliminator.
 	yulFuzzerUtil::TerminationReason termReason = yulFuzzerUtil::interpret(
 		os1,
-		stack.parserResult()->code,
+		stack.parserResult()->code()->root(),
 		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion()),
 		/*disableMemoryTracing=*/true
 	);
@@ -98,7 +99,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 	stack.optimize();
 	termReason = yulFuzzerUtil::interpret(
 		os2,
-		stack.parserResult()->code,
+		stack.parserResult()->code()->root(),
 		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion()),
 		/*disableMemoryTracing=*/true
 	);

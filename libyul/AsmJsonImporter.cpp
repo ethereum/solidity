@@ -49,6 +49,11 @@ SourceLocation const AsmJsonImporter::createSourceLocation(Json const& _node)
 	return solidity::langutil::parseSourceLocation(_node["src"].get<std::string>(), m_sourceNames);
 }
 
+AST AsmJsonImporter::createAST(solidity::Json const& _node)
+{
+	return AST(createBlock(_node));
+}
+
 template <class T>
 T AsmJsonImporter::createAsmNode(Json const& _node)
 {

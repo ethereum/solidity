@@ -1,10 +1,16 @@
-.. index:: storage, state variable, mapping
+.. index:: storage, state variable, mapping, transient storage
 
-************************************
-Layout of State Variables in Storage
-************************************
+**********************************************************
+Layout of State Variables in Storage and Transient Storage
+**********************************************************
 
 .. _storage-inplace-encoding:
+
+.. note::
+    The rules described in this section apply for both storage and transient storage data locations.
+    The layouts are completely independent and don't interfere with each other's variable locations.
+    Thus storage and transient storage state variables can be safely interleaved without any side effects.
+    Only value types are supported for transient storage.
 
 State variables of contracts are stored in storage in a compact way such
 that multiple values sometimes use the same storage slot.

@@ -1,0 +1,13 @@
+{
+	"language": "Solidity",
+	"sources": {
+		"fileA": {"urls": ["transient_storage_layout_value_types/in.sol"]}
+	},
+	"settings": {
+		"outputSelection": {
+			"fileA": {
+				"A": ["transientStorageLayout"]
+			}
+		}
+	}
+}

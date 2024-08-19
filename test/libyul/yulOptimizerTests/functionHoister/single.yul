@@ -1,9 +1,7 @@
 {
-    let a:u256
+    let a
     function f() {}
 }
-// ====
-// dialect: yul
 // ----
 // step: functionHoister
 //

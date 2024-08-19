@@ -135,6 +135,7 @@ static std::string const g_strSources = "sources";
 static std::string const g_strSrcMap = "srcmap";
 static std::string const g_strSrcMapRuntime = "srcmap-runtime";
 static std::string const g_strStorageLayout = "storage-layout";
+static std::string const g_strTransientStorageLayout = "transient-storage-layout";
 static std::string const g_strVersion = "version";
 
 static bool needsHumanTargetedStdout(CommandLineOptions const& _options)
@@ -154,7 +155,8 @@ static bool needsHumanTargetedStdout(CommandLineOptions const& _options)
 		_options.compiler.outputs.natspecDev ||
 		_options.compiler.outputs.opcodes ||
 		_options.compiler.outputs.signatureHashes ||
-		_options.compiler.outputs.storageLayout;
+		_options.compiler.outputs.storageLayout ||
+		_options.compiler.outputs.transientStorageLayout;
 }
 
 static bool coloredOutput(CommandLineOptions const& _options)
@@ -177,7 +179,7 @@ void CommandLineInterface::handleEVMAssembly(std::string const& _contract)
 
 	std::string assembly;
 	if (m_options.compiler.outputs.asmJson)
-		assembly = util::jsonPrint(removeNullMembers(m_assemblyStack->assemblyJSON(_contract)), m_options.formatting.json);
+		assembly = util::jsonPrint(m_assemblyStack->assemblyJSON(_contract), m_options.formatting.json);
 	else
 		assembly = m_assemblyStack->assemblyString(_contract, m_fileReader.sourceUnits());
 
@@ -418,6 +420,19 @@ void CommandLineInterface::handleStorageLayout(std::string const& _contract)
 		createFile(m_compiler->filesystemFriendlyName(_contract) + "_storage.json", data);
 	else
 		sout() << "Contract Storage Layout:" << std::endl << data << std::endl;
+}
+
+void CommandLineInterface::handleTransientStorageLayout(std::string const& _contract)
+{
+	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
+
+	if (!m_options.compiler.outputs.transientStorageLayout)
+		return;
+	std::string data = jsonPrint(removeNullMembers(m_compiler->transientStorageLayout(_contract)), m_options.formatting.json);
+	if (!m_options.output.dir.empty())
+		createFile(m_compiler->filesystemFriendlyName(_contract) + "_transient_storage.json", data);
+	else
+		sout() << "Contract Transient Storage Layout:" << std::endl << data << std::endl;
 }
 
 void CommandLineInterface::handleNatspec(bool _natspecDev, std::string const& _contract)
@@ -956,6 +971,8 @@ void CommandLineInterface::handleCombinedJSON()
 				contractData["metadata"] = m_compiler->metadata(contractName);
 			if (m_options.compiler.combinedJsonRequests->storageLayout)
 				contractData[g_strStorageLayout] = m_compiler->storageLayout(contractName);
+			if (m_options.compiler.combinedJsonRequests->transientStorageLayout)
+				contractData[g_strTransientStorageLayout] = m_compiler->transientStorageLayout(contractName);
 			if (m_options.compiler.combinedJsonRequests->generatedSources)
 				contractData[g_strGeneratedSources] = m_compiler->generatedSources(contractName, false);
 			if (m_options.compiler.combinedJsonRequests->generatedSourcesRuntime)
@@ -1197,6 +1214,17 @@ void CommandLineInterface::assembleYul(yul::YulStack::Language _language, yul::Y
 			successful = false;
 		else
 			stack.optimize();
+
+		if (successful && m_options.compiler.outputs.asmJson)
+		{
+			std::shared_ptr<yul::Object> result = stack.parserResult();
+			if (result && !result->hasContiguousSourceIndices())
+				solThrow(
+					CommandLineExecutionError,
+					"Generating the assembly JSON output was not possible. "
+					"Source indices provided in the @use-src annotation in the Yul input do not start at 0 or are not contiguous."
+				);
+		}
 	}
 
 	for (auto const& sourceAndStack: yulStacks)
@@ -1256,10 +1284,21 @@ void CommandLineInterface::assembleYul(yul::YulStack::Language _language, yul::Y
 		if (m_options.compiler.outputs.asm_)
 		{
 			sout() << std::endl << "Text representation:" << std::endl;
-			if (!object.assembly.empty())
-				sout() << object.assembly << std::endl;
+			std::string assemblyText{object.assembly->assemblyString(stack.debugInfoSelection())};
+			if (!assemblyText.empty())
+				sout() << assemblyText << std::endl;
 			else
 				report(Error::Severity::Info, "No text representation found.");
+		}
+		if (m_options.compiler.outputs.asmJson)
+		{
+			sout() << std::endl << "EVM assembly:" << std::endl;
+			std::map<std::string, unsigned> sourceIndices;
+			stack.parserResult()->collectSourceIndices(sourceIndices);
+			sout() << util::jsonPrint(
+				object.assembly->assemblyJSON(sourceIndices),
+				m_options.formatting.json
+			) << std::endl;
 		}
 	}
 }
@@ -1300,6 +1339,7 @@ void CommandLineInterface::outputCompilationResults()
 			handleMetadata(contract);
 			handleABI(contract);
 			handleStorageLayout(contract);
+			handleTransientStorageLayout(contract);
 			handleNatspec(true, contract);
 			handleNatspec(false, contract);
 		} // end of contracts iteration

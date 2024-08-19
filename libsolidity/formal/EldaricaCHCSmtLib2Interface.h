@@ -33,7 +33,7 @@ public:
 	);
 
 private:
-	void setupSmtCallback() override;
+	std::string querySolver(std::string const& _input) override;
 
 	bool m_computeInvariants;
 };

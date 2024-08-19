@@ -3,8 +3,8 @@ object "a" {
 }
 // ----
 // Assembly:
-//     /* "source":20:22   */
+//     /* "source":22:29   */
 //   stop
 // Bytecode: 00
 // Opcodes: STOP
-// SourceMappings: 20:2:0:-:0
+// SourceMappings: 22:7:0:-:0
