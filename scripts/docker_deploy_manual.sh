@@ -16,7 +16,7 @@ DIR=$(mktemp -d)
 (
 cd "$DIR"
 
-git clone --depth 2 https://github.com/ethereum/solidity.git -b "$branch"
+git clone --recursive --depth 2 https://github.com/ethereum/solidity.git -b "$branch"
 cd solidity
 commithash=$(git rev-parse --short=8 HEAD)
 echo -n "$commithash" > commit_hash.txt
