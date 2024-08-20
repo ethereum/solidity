@@ -73,7 +73,7 @@ struct OptimiserSettings
 	{
 		OptimiserSettings s = none();
 		s.runJumpdestRemover = true;
-		s.runPeephole = true;
+		s.runPeephole = false;
 		s.simpleCounterForLoopUncheckedIncrement = true;
 		return s;
 	}

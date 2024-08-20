@@ -24,6 +24,7 @@
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/evm/OptimizedEVMCodeTransform.h>
+#include <libyul/backends/evm/SSAEVMCodeTransform.h>
 
 #include <libyul/optimiser/FunctionCallFinder.h>
 
@@ -80,13 +81,13 @@ void EVMObjectCompiler::run(Object const& _object, bool _optimize)
 		);
 	if (_optimize && m_dialect.evmVersion().canOverchargeGasForCall())
 	{
-		auto stackErrors = OptimizedEVMCodeTransform::run(
+		auto stackErrors = SSAEVMCodeTransform::run(
 			m_assembly,
 			*_object.analysisInfo,
 			_object.code()->root(),
 			m_dialect,
 			context,
-			OptimizedEVMCodeTransform::UseNamedLabels::ForFirstFunctionOfEachName
+			SSAEVMCodeTransform::UseNamedLabels::ForFirstFunctionOfEachName
 		);
 		if (!stackErrors.empty())
 		{
