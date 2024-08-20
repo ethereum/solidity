@@ -143,6 +143,8 @@ set(sources
 	formal/VariableUsage.h
 	formal/Z3CHCSmtLib2Interface.cpp
 	formal/Z3CHCSmtLib2Interface.h
+	formal/Z3SMTLib2Interface.cpp
+	formal/Z3SMTLib2Interface.h
 	interface/ABI.cpp
 	interface/ABI.h
 	interface/CompilerStack.cpp

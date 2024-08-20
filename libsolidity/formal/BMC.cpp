@@ -20,12 +20,10 @@
 
 #include <libsolidity/formal/Cvc5SMTLib2Interface.h>
 #include <libsolidity/formal/SymbolicTypes.h>
+#include <libsolidity/formal/Z3SMTLib2Interface.h>
 
 #include <libsmtutil/SMTLib2Interface.h>
 #include <libsmtutil/SMTPortfolio.h>
-#ifdef HAVE_Z3
-#include <libsmtutil/Z3Interface.h>
-#endif
 
 #include <liblangutil/CharStream.h>
 #include <liblangutil/CharStreamProvider.h>
@@ -61,10 +59,8 @@ BMC::BMC(
 		solvers.emplace_back(std::make_unique<SMTLib2Interface>(_smtlib2Responses, _smtCallback, _settings.timeout));
 	if (_settings.solvers.cvc5)
 		solvers.emplace_back(std::make_unique<Cvc5SMTLib2Interface>(_smtCallback, _settings.timeout));
-#ifdef HAVE_Z3
-	if (_settings.solvers.z3 && Z3Interface::available())
-		solvers.emplace_back(std::make_unique<Z3Interface>(_settings.timeout));
-#endif
+	if (_settings.solvers.z3 )
+		solvers.emplace_back(std::make_unique<Z3SMTLib2Interface>(_smtCallback, _settings.timeout));
 	m_interface = std::make_unique<SMTPortfolio>(std::move(solvers), _settings.timeout);
 #if defined (HAVE_Z3)
 	if (m_settings.solvers.z3)
