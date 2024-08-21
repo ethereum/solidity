@@ -386,13 +386,8 @@ void ExpressionEvaluator::evaluateArgs(
 			visit(expr);
 		else
 		{
-			if (std::get<Literal>(expr).value.unlimited())
-			{
-				yulAssert(std::get<Literal>(expr).kind == LiteralKind::String);
-				m_values = {0xdeadbeef};
-			}
-			else
-				m_values = {std::get<Literal>(expr).value.value()};
+			yulAssert(!std::get<Literal>(expr).value.unlimited(), "Can not evaluate unlimited literal");
+			m_values = {std::get<Literal>(expr).value.value()};
 		}
 
 		values.push_back(value());
