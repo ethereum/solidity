@@ -27,6 +27,7 @@
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/NameDispenser.h>
 #include <libyul/optimiser/OptimiserStep.h>
+#include <libyul/tools/interpreter/Interpreter.h>
 #include <libyul/Exceptions.h>
 
 #include <liblangutil/SourceLocation.h>
@@ -90,5 +91,54 @@ private:
 };
 
 
+}
+
+namespace solidity::yul::tools::interpreter
+{
+
+class BuiltinNonArithmeticFunctionInvoked: public InterpreterTerminatedGeneric
+{
+};
+
+class ArithmeticOnlyInterpreter : public Interpreter
+{
+public:
+	ArithmeticOnlyInterpreter(
+		InterpreterState& _state,
+		Dialect const& _dialect,
+		Scope& _scope,
+		std::map<YulName, u256> _variables = {}
+	): Interpreter(
+		_state,
+		_dialect,
+		_scope,
+		/* _disableExternalCalls=*/ false,  // we disable by explicit check
+		/* _disableMemoryTracing=*/ true,
+		_variables
+	)
+	{
+	}
+
+protected:
+	virtual u256 evaluate(Expression const& _expression) override;
+};
+
+class ArithmeticOnlyExpressionEvaluator: public ExpressionEvaluator
+{
+public:
+	using ExpressionEvaluator::ExpressionEvaluator;
+
+	void operator()(FunctionCall const& _funCall) override;
+
+protected:
+	enum class FunctionCallType
+	{
+		BuiltinArithmetic,
+		BuiltinNonArithmetic,
+		InvokeOther,
+	};
+
+	FunctionCallType determineFunctionCallType(FunctionCall const& _funCall);
+};
 
 }
