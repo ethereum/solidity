@@ -540,8 +540,10 @@ u256 EVMInstructionInterpreter::evalBuiltin(
 	}
 	else if (fun == "memoryguard")
 		return _evaluatedArguments.at(0);
-	else
-		yulAssert(false, "Unknown builtin: " + fun);
+	else {
+		m_state.trace.push_back("Unknown builtin: " + fun);
+		BOOST_THROW_EXCEPTION(UnsupportedBuiltinFunctionEvaluated());
+	}
 	return 0;
 }
 

@@ -65,6 +65,10 @@ class ExpressionNestingLimitReached: public InterpreterTerminatedGeneric
 {
 };
 
+class UnsupportedBuiltinFunctionEvaluated : public InterpreterTerminatedGeneric
+{
+};
+
 enum class ControlFlowState
 {
 	Default,
