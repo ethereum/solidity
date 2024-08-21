@@ -29,10 +29,10 @@
 
 #include <libsolutil/Numeric.h>
 
+#include <range/v3/view/map.hpp>
 #include <deque>
 #include <functional>
 #include <list>
-#include <range/v3/view/map.hpp>
 #include <vector>
 
 namespace solidity::yul
@@ -41,7 +41,7 @@ namespace solidity::yul
 class SSACFG
 {
 public:
-	SSACFG() {}
+	SSACFG() = default;
 	SSACFG(SSACFG const&) = delete;
 	SSACFG(SSACFG&&) = delete;
 	SSACFG& operator=(SSACFG const&) = delete;
@@ -51,7 +51,6 @@ public:
 	struct BlockId
 	{
 		size_t value = std::numeric_limits<size_t>::max();
-		operator bool() const { return value != std::numeric_limits<size_t>::max(); }
 		bool operator<(BlockId const& _rhs) const { return value < _rhs.value; }
 		bool operator==(BlockId const& _rhs) const { return value == _rhs.value; }
 		bool operator!=(BlockId const& _rhs) const { return value != _rhs.value; }
@@ -59,11 +58,12 @@ public:
 	struct ValueId
 	{
 		size_t value = std::numeric_limits<size_t>::max();
-		operator bool() const { return value != std::numeric_limits<size_t>::max(); }
+		bool hasValue() const { return value != std::numeric_limits<size_t>::max(); }
 		bool operator<(ValueId const& _rhs) const { return value < _rhs.value; }
 		bool operator==(ValueId const& _rhs) const { return value == _rhs.value; }
 		bool operator!=(ValueId const& _rhs) const { return value != _rhs.value; }
 	};
+
 	struct BuiltinCall
 	{
 		langutil::DebugData::ConstPtr debugData;
@@ -104,7 +104,6 @@ public:
 			ValueId value;
 			std::map<u256, BlockId> cases;
 			BlockId defaultCase;
-
 		};
 		struct FunctionReturn
 		{
@@ -115,7 +114,7 @@ public:
 		langutil::DebugData::ConstPtr debugData;
 		std::set<BlockId> entries;
 		std::set<ValueId> phis;
-		std::list<Operation> operations;
+		std::vector<Operation> operations;
 		std::variant<MainExit, Jump, ConditionalJump, JumpTable, FunctionReturn, Terminated> exit = MainExit{};
 		template<typename Callable>
 		void forEachExit(Callable&& _callable)
@@ -147,50 +146,57 @@ public:
 private:
 	std::vector<BasicBlock> m_blocks;
 public:
-	struct LiteralValue { u256 value; };
-	struct VariableValue { SSACFG::BlockId definingBlock; };
+	struct LiteralValue {
+		langutil::DebugData::ConstPtr debugData;
+		u256 value;
+	};
+	struct VariableValue {
+		langutil::DebugData::ConstPtr debugData;
+		BlockId definingBlock;
+	};
 	struct PhiValue {
+		langutil::DebugData::ConstPtr debugData;
 		BlockId block;
 		std::vector<ValueId> arguments;
 	};
 	struct UnreachableValue {};
 	using ValueInfo = std::variant<UnreachableValue, VariableValue, LiteralValue, PhiValue>;
-	ValueInfo& valueInfo(SSACFG::ValueId _var)
+	ValueInfo& valueInfo(ValueId const _var)
 	{
-		yulAssert(_var.value < m_valueInfos.size());
 		return m_valueInfos.at(_var.value);
 	}
-	ValueInfo const& valueInfo(SSACFG::ValueId _var) const
+	ValueInfo const& valueInfo(ValueId const _var) const
 	{
-		yulAssert(_var.value < m_valueInfos.size());
 		return m_valueInfos.at(_var.value);
 	}
-	ValueId newPhi(SSACFG::BlockId _definingBlock)
+	ValueId newPhi(BlockId const _definingBlock)
 	{
-		SSACFG::ValueId id { m_valueInfos.size() };
-		m_valueInfos.emplace_back(PhiValue{_definingBlock, {}});
+		ValueId id { m_valueInfos.size() };
+		auto block = m_blocks.at(_definingBlock.value);
+		m_valueInfos.emplace_back(PhiValue{debugDataOf(block), _definingBlock, {}});
 		return id;
 	}
-	ValueId newVariable(SSACFG::BlockId _definingBlock)
+	ValueId newVariable(BlockId const _definingBlock)
 	{
-		SSACFG::ValueId id { m_valueInfos.size() };
-		m_valueInfos.emplace_back(VariableValue{_definingBlock});
+		ValueId id { m_valueInfos.size() };
+		auto block = m_blocks.at(_definingBlock.value);
+		m_valueInfos.emplace_back(VariableValue{debugDataOf(block), _definingBlock});
 		return id;
 	}
 	ValueId unreachableValue()
 	{
 		if (!m_unreachableValue)
 		{
-			m_unreachableValue = SSACFG::ValueId { m_valueInfos.size() };
+			m_unreachableValue = ValueId { m_valueInfos.size() };
 			m_valueInfos.emplace_back(UnreachableValue{});
 		}
 		return *m_unreachableValue;
 	}
-	ValueId newLiteral(u256 _value)
+	ValueId newLiteral(langutil::DebugData::ConstPtr _debugData, u256 _value)
 	{
-		auto [it, inserted] = m_literals.emplace(std::make_pair(_value, SSACFG::ValueId{m_valueInfos.size()}));
+		auto [it, inserted] = m_literals.emplace(_value, ValueId{m_valueInfos.size()});
 		if (inserted)
-			m_valueInfos.emplace_back(LiteralValue{_value});
+			m_valueInfos.emplace_back(LiteralValue{std::move(_debugData), _value});
 		else
 		{
 			yulAssert(_value == it->first);
@@ -205,21 +211,15 @@ private:
 	std::map<u256, ValueId> m_literals;
 	std::optional<ValueId> m_unreachableValue;
 public:
-	// TODO: the interface for function infos and functions here still sucks.
-	// Maybe we should split the graphs entirely and just have one SSACFG per function instead.
-	struct FunctionInfo {
-		langutil::DebugData::ConstPtr debugData;
-		std::reference_wrapper<Scope::Function const> function;
-		BlockId entry;
-		std::set<BlockId> exits;
-		bool canContinue = true;
-		std::vector<std::tuple<std::reference_wrapper<Scope::Variable const>, ValueId>> arguments;
-		std::vector<std::reference_wrapper<Scope::Variable const>> returns;
-	};
+	langutil::DebugData::ConstPtr debugData;
+	BlockId entry = BlockId{0};
+	std::set<BlockId> exits;
+	Scope::Function const* function = nullptr;
+	bool canContinue = true;
+	std::vector<std::tuple<std::reference_wrapper<Scope::Variable const>, ValueId>> arguments;
+	std::vector<std::reference_wrapper<Scope::Variable const>> returns;
 	std::vector<std::reference_wrapper<Scope::Function const>> functions;
-	/// Container for artificial calls generated for switch statements.
-	/// Ghost calls are used for the equality comparisons of the switch condition ghost variable with
-	/// the switch case literals when transforming the control flow of a switch to a sequence of conditional jumps.
+	// Container for artificial calls generated for switch statements.
 	std::list<FunctionCall> ghostCalls;
 };
 
