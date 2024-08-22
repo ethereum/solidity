@@ -63,6 +63,60 @@ ConstantFunctionEvaluator::ConstantFunctionEvaluator(Block& _ast, Dialect const&
 {
 }
 
+void ConstantFunctionEvaluator::operator()(FunctionDefinition& _function)
+{
+	ASTModifier::operator()(_function);
+	if (_function.parameters.size() > 0) return ;
+
+	Scope scope;
+	InterpreterState state;
+	// TODO make these configurable
+	state.maxExprNesting = 100;
+	state.maxSteps = 10000;
+	state.maxTraceSize = 0;
+
+	std::map<YulName, u256> returnVariables;
+	for (auto const& retVar: _function.returnVariables)
+	{
+		returnVariables[retVar.name] = 0;
+	}
+
+	ArithmeticOnlyInterpreter interpreter(state, m_dialect, scope, returnVariables);
+	try
+	{
+		interpreter(_function.body);
+	} catch (InterpreterTerminatedGeneric const&)
+	{
+		// won't replace body
+		return ;
+	}
+
+	Block newBody;
+	newBody.debugData = _function.body.debugData;
+
+	for (auto const& retVar: _function.returnVariables)
+	{
+		Identifier ident;
+		ident.name = retVar.name;
+
+		Literal val;
+		val.kind = LiteralKind::Number;
+		val.type = retVar.type;
+		val.value = LiteralValue(interpreter.valueOfVariable(retVar.name));
+
+		Assignment assignment;
+		assignment.variableNames = { std::move(ident) };
+		assignment.value = { std::make_unique<Expression>(std::move(val)) };
+
+		newBody.statements.push_back(std::move(assignment));
+	}
+	_function.body = newBody;
+}
+
+void ConstantFunctionEvaluator::operator()(Block& _block)
+{
+}
+
 u256 ArithmeticOnlyInterpreter::evaluate(Expression const& _expression)
 {
 	ArithmeticOnlyExpressionEvaluator ev(m_state, m_dialect, *m_scope, m_variables, m_disableExternalCalls, m_disableMemoryTrace);

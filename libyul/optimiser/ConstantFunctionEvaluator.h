@@ -82,11 +82,13 @@ public:
 	static constexpr char const* name{"ConstantFunctionEvaluator"};
 	static void run(OptimiserStepContext& _context, Block& _ast);
 
+	void operator()(FunctionDefinition& _function) override;
+	void operator()(Block& _block) override;
+
 private:
 	ConstantFunctionEvaluator(Block& _ast, Dialect const& _dialect);
 
 	Block& m_ast;
-	std::map<YulName, FunctionDefinition*> m_functions;
 	Dialect const& m_dialect;
 };
 
