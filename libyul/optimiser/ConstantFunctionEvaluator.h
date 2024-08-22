@@ -107,6 +107,10 @@ class BuiltinNonArithmeticFunctionInvoked: public InterpreterTerminatedGeneric
 {
 };
 
+class UnlimitedLiteralEncountered: public InterpreterTerminatedGeneric
+{
+};
+
 class ArithmeticOnlyInterpreter : public Interpreter
 {
 public:
@@ -146,6 +150,11 @@ protected:
 		InvokeOther,
 	};
 
+
+	u256 getValueForUnlimitedLiteral(Literal const&) override
+	{
+		BOOST_THROW_EXCEPTION(UnlimitedLiteralEncountered());
+	}
 	FunctionCallType determineFunctionCallType(FunctionCall const& _funCall);
 };
 
