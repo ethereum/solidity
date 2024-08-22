@@ -386,13 +386,14 @@ void ExpressionEvaluator::evaluateArgs(
 			visit(expr);
 		else
 		{
-			if (std::get<Literal>(expr).value.unlimited())
+			Literal const& lit = std::get<Literal>(expr);
+			if (lit.value.unlimited())
 			{
-				yulAssert(std::get<Literal>(expr).kind == LiteralKind::String);
-				m_values = {0xdeadbeef};
+				yulAssert(lit.kind == LiteralKind::String);
+				m_values = {getValueForUnlimitedLiteral(lit)};
 			}
 			else
-				m_values = {std::get<Literal>(expr).value.value()};
+				m_values = {lit.value.value()};
 		}
 
 		values.push_back(value());
@@ -400,6 +401,11 @@ void ExpressionEvaluator::evaluateArgs(
 	}
 	m_values = std::move(values);
 	std::reverse(m_values.begin(), m_values.end());
+}
+
+u256 ExpressionEvaluator::getValueForUnlimitedLiteral(Literal const&)
+{
+	return 0xdeadbeef;
 }
 
 void ExpressionEvaluator::incrementStep()

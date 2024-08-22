@@ -294,6 +294,8 @@ protected:
 		std::vector<std::optional<LiteralKind>> const* _literalArguments
 	);
 
+	virtual u256 getValueForUnlimitedLiteral(Literal const& _literal);
+
 	/// Increment evaluation count, throwing exception if the
 	/// nesting level is beyond the upper bound configured in
 	/// the interpreter state.
