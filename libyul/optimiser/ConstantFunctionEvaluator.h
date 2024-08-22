@@ -128,6 +128,7 @@ public:
 
 protected:
 	virtual u256 evaluate(Expression const& _expression) override;
+	virtual std::vector<u256> evaluateMulti(Expression const& _expression) override;
 };
 
 class ArithmeticOnlyExpressionEvaluator: public ExpressionEvaluator

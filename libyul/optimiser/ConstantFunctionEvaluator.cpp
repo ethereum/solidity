@@ -157,6 +157,13 @@ u256 ArithmeticOnlyInterpreter::evaluate(Expression const& _expression)
 	return ev.value();
 }
 
+std::vector<u256> ArithmeticOnlyInterpreter::evaluateMulti(Expression const& _expression)
+{
+	ArithmeticOnlyExpressionEvaluator ev(m_state, m_dialect, *m_scope, m_variables, m_disableExternalCalls, m_disableMemoryTrace);
+	ev.visit(_expression);
+	return ev.values();
+}
+
 
 void ArithmeticOnlyExpressionEvaluator::operator()(FunctionCall const& _funCall)
 {
