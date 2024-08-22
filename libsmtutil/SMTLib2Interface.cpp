@@ -18,6 +18,8 @@
 
 #include <libsmtutil/SMTLib2Interface.h>
 
+#include <libsmtutil/SMTLib2Parser.h>
+
 #include <libsolutil/Keccak256.h>
 
 #include <boost/algorithm/string/join.hpp>
@@ -110,6 +112,41 @@ void SMTLib2Interface::addAssertion(Expression const& _expr)
 	m_commands.assertion(toSExpr(_expr));
 }
 
+namespace
+{
+std::vector<std::string> parseValuesFromResponse(std::string const& _response)
+{
+	std::stringstream ss(_response);
+	std::string answer;
+	ss >> answer;
+	smtAssert(answer == "sat");
+
+	std::vector<SMTLib2Expression> parsedOutput;
+	SMTLib2Parser parser(ss);
+	try
+	{
+		while (!parser.isEOF())
+			parsedOutput.push_back(parser.parseExpression());
+	}
+	catch(SMTLib2Parser::ParsingException&)
+	{
+		return {};
+	}
+	smtAssert(parsedOutput.size() == 1, "SMT: Expected model values as a single s-expression");
+	auto const& values = parsedOutput[0];
+	smtAssert(!isAtom(values));
+	std::vector<std::string> parsedValues;
+	for (auto const& nameValuePair: asSubExpressions(values))
+	{
+		smtAssert(!isAtom(nameValuePair));
+		smtAssert(asSubExpressions(nameValuePair).size() == 2);
+		auto const& value = asSubExpressions(nameValuePair)[1];
+		parsedValues.push_back(value.toString());
+	}
+	return parsedValues;
+}
+} // namespace
+
 std::pair<CheckResult, std::vector<std::string>> SMTLib2Interface::check(std::vector<Expression> const& _expressionsToEvaluate)
 {
 	std::string response = querySolver(dumpQuery(_expressionsToEvaluate));
@@ -127,7 +164,7 @@ std::pair<CheckResult, std::vector<std::string>> SMTLib2Interface::check(std::ve
 
 	std::vector<std::string> values;
 	if (result == CheckResult::SATISFIABLE && !_expressionsToEvaluate.empty())
-		values = parseValues(find(response.cbegin(), response.cend(), '\n'), response.cend());
+		values = parseValuesFromResponse(response);
 	return std::make_pair(result, values);
 }
 
@@ -173,22 +210,6 @@ std::string SMTLib2Interface::checkSatAndGetValuesCommand(std::vector<Expression
 	}
 
 	return command;
-}
-
-std::vector<std::string> SMTLib2Interface::parseValues(std::string::const_iterator _start, std::string::const_iterator _end)
-{
-	std::vector<std::string> values;
-	while (_start < _end)
-	{
-		auto valStart = find(_start, _end, ' ');
-		if (valStart < _end)
-			++valStart;
-		auto valEnd = find(valStart, _end, ')');
-		values.emplace_back(valStart, valEnd);
-		_start = find(valEnd, _end, '(');
-	}
-
-	return values;
 }
 
 std::string SMTLib2Interface::querySolver(std::string const& _input)
