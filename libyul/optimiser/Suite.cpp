@@ -29,6 +29,7 @@
 #include <libyul/optimiser/ControlFlowSimplifier.h>
 #include <libyul/optimiser/ConditionalSimplifier.h>
 #include <libyul/optimiser/ConditionalUnsimplifier.h>
+#include <libyul/optimiser/ConstantFunctionEvaluator.h>
 #include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/FunctionGrouper.h>
 #include <libyul/optimiser/FunctionHoister.h>
@@ -264,6 +265,7 @@ std::map<std::string, std::unique_ptr<OptimiserStep>> const& OptimiserSuite::all
 			ConditionalSimplifier,
 			ConditionalUnsimplifier,
 			ControlFlowSimplifier,
+			ConstantFunctionEvaluator,
 			DeadCodeEliminator,
 			EqualStoreEliminator,
 			EquivalentFunctionCombiner,
@@ -305,6 +307,7 @@ std::map<std::string, char> const& OptimiserSuite::stepNameToAbbreviationMap()
 		{ConditionalSimplifier::name,         'C'},
 		{ConditionalUnsimplifier::name,       'U'},
 		{ControlFlowSimplifier::name,         'n'},
+		{ConstantFunctionEvaluator::name,     'k'},
 		{DeadCodeEliminator::name,            'D'},
 		{EqualStoreEliminator::name,          'E'},
 		{EquivalentFunctionCombiner::name,    'v'},
