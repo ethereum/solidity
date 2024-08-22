@@ -88,6 +88,8 @@ add_library(yul
 	optimiser/ConditionalUnsimplifier.h
 	optimiser/ControlFlowSimplifier.cpp
 	optimiser/ControlFlowSimplifier.h
+	optimiser/ConstantFunctionEvaluator.cpp
+	optimiser/ConstantFunctionEvaluator.h
 	optimiser/DataFlowAnalyzer.cpp
 	optimiser/DataFlowAnalyzer.h
 	optimiser/DeadCodeEliminator.cpp
