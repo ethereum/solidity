@@ -53,7 +53,7 @@ using namespace std::literals::string_literals;
 
 void ConstantFunctionEvaluator::run(OptimiserStepContext& _context, Block& _ast)
 {
-	ConstantFunctionEvaluator cfe(_ast, _context.dialect);
+	ConstantFunctionEvaluator(_ast, _context.dialect)(_ast);
 }
 
 
