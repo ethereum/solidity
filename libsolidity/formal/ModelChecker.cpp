@@ -167,7 +167,11 @@ SMTSolverChoice ModelChecker::availableSolvers()
 	smtutil::SMTSolverChoice available = smtutil::SMTSolverChoice::SMTLIB2();
 	available.eld = !boost::process::search_path("eld").empty();
 	available.cvc5 = !boost::process::search_path("cvc5").empty();
-	available.z3 = !boost::process::search_path("z3").empty();;
+#ifdef EMSCRIPTEN_BUILD
+	available.z3 = true;
+#else
+	available.z3 = !boost::process::search_path("z3").empty();
+#endif
 	return available;
 }
 
