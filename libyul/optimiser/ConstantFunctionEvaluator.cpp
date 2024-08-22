@@ -59,7 +59,9 @@ void ConstantFunctionEvaluator::run(OptimiserStepContext& _context, Block& _ast)
 
 ConstantFunctionEvaluator::ConstantFunctionEvaluator(Block& _ast, Dialect const& _dialect):
 	m_ast(_ast),
-	m_dialect(_dialect)
+	m_dialect(_dialect),
+	m_rootScope(),
+	m_currentScope(&m_rootScope)
 {
 }
 
@@ -68,7 +70,6 @@ void ConstantFunctionEvaluator::operator()(FunctionDefinition& _function)
 	ASTModifier::operator()(_function);
 	if (_function.parameters.size() > 0) return ;
 
-	Scope scope;
 	InterpreterState state;
 	// TODO make these configurable
 	state.maxExprNesting = 100;
@@ -81,7 +82,7 @@ void ConstantFunctionEvaluator::operator()(FunctionDefinition& _function)
 		returnVariables[retVar.name] = 0;
 	}
 
-	ArithmeticOnlyInterpreter interpreter(state, m_dialect, scope, returnVariables);
+	ArithmeticOnlyInterpreter interpreter(state, m_dialect, *m_currentScope, returnVariables);
 	try
 	{
 		interpreter(_function.body);
@@ -115,6 +116,38 @@ void ConstantFunctionEvaluator::operator()(FunctionDefinition& _function)
 
 void ConstantFunctionEvaluator::operator()(Block& _block)
 {
+	enterScope(_block);
+
+	for (auto const& statement: _block.statements)
+		if (std::holds_alternative<FunctionDefinition>(statement))
+		{
+			FunctionDefinition const& funDef = std::get<FunctionDefinition>(statement);
+			m_currentScope->names.emplace(funDef.name, &funDef);
+		}
+
+	for (auto& statement: _block.statements)
+	{
+		visit(statement);
+	}
+
+	leaveScope();
+}
+
+void ConstantFunctionEvaluator::enterScope(Block const& _block)
+{
+	if (!m_currentScope->subScopes.count(&_block))
+		m_currentScope->subScopes[&_block] = std::make_unique<Scope>(Scope{
+			{},
+			{},
+			m_currentScope,
+		});
+	m_currentScope = m_currentScope->subScopes[&_block].get();
+}
+
+void ConstantFunctionEvaluator::leaveScope()
+{
+	m_currentScope = m_currentScope->parent;
+	yulAssert(m_currentScope, "");
 }
 
 u256 ArithmeticOnlyInterpreter::evaluate(Expression const& _expression)
