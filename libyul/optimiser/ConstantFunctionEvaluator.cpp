@@ -111,7 +111,7 @@ void ConstantFunctionEvaluator::operator()(FunctionDefinition& _function)
 
 		newBody.statements.push_back(std::move(assignment));
 	}
-	_function.body = newBody;
+	_function.body = std::move(newBody);
 }
 
 void ConstantFunctionEvaluator::operator()(Block& _block)
