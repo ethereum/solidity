@@ -150,6 +150,23 @@ protected:
 		InvokeOther,
 	};
 
+	virtual std::unique_ptr<Interpreter> makeInterpreterCopy(std::map<YulName, u256> _variables = {}) const override
+	{
+		return std::make_unique<ArithmeticOnlyInterpreter>(
+			m_state,
+			m_dialect,
+			m_scope,
+			std::move(_variables)
+		);
+	}
+	virtual std::unique_ptr<Interpreter> makeInterpreterNew(InterpreterState& _state, Scope& _scope) const override
+	{
+		return std::make_unique<ArithmeticOnlyInterpreter>(
+			_state,
+			m_dialect,
+			_scope
+		);
+	}
 
 	u256 getValueForUnlimitedLiteral(Literal const&) override
 	{
