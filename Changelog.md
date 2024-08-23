@@ -25,6 +25,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Assembler: Fix ICE caused by imprecise calculation of required size of tags in bytecode when code size is above 255.
  * Parser: Fix spuriously emitted parser error for unary plus operations when used as binary operator in some cases.
  * SMTChecker: Fix error that reports invalid number of verified checks for BMC and CHC engines.
  * SMTChecker: Fix formatting of unary minus expressions in invariants.
