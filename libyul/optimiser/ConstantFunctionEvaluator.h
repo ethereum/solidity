@@ -23,14 +23,10 @@
 
 #include <libyul/ASTForward.h>
 
-#include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/ASTWalker.h>
-#include <libyul/optimiser/NameDispenser.h>
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/tools/interpreter/Interpreter.h>
 #include <libyul/Exceptions.h>
-
-#include <liblangutil/SourceLocation.h>
 
 namespace solidity::yul
 {

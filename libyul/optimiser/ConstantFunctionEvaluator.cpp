@@ -22,14 +22,6 @@
 
 #include <libyul/optimiser/ConstantFunctionEvaluator.h>
 
-#include <libyul/optimiser/ASTCopier.h>
-#include <libyul/optimiser/CallGraphGenerator.h>
-#include <libyul/optimiser/FunctionCallFinder.h>
-#include <libyul/optimiser/NameCollector.h>
-#include <libyul/optimiser/Metrics.h>
-#include <libyul/optimiser/SSAValueTracker.h>
-#include <libyul/optimiser/Semantics.h>
-#include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/Exceptions.h>
 #include <libyul/AST.h>
