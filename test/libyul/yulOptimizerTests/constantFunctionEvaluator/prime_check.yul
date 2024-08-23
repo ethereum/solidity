@@ -33,7 +33,7 @@
     // https://en.wikipedia.org/wiki/List_of_prime_numbers#Circular_primes
     function c999331() -> r { r := is_prime(999331) }
 
-    // The followings are too big. Need better algorithm.
+    // The following are too big. Need better algorithm.
     function c1e9plus7() -> r { r := is_prime(add(exp(10, 9), 7)) }
     function c998244353() -> r { r := is_prime(998244353) }
 }

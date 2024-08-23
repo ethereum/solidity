@@ -34,18 +34,18 @@ def sdiv(p):
     (a, b) = u2s(p[0]), u2s(p[1])
     if b == 0:
        return 0
-    ans = abs(a) // abs(b)
+    res = abs(a) // abs(b)
     if (a < 0) != (b < 0):
-        ans = -ans
-    return ans
+        res = -res
+    return res
 def smod(p):
     (a, b) = u2s(p[0]), u2s(p[1])
     if b == 0:
        return 0
-    ans = abs(a) % abs(b)
+    res = abs(a) % abs(b)
     if a < 0:
-        ans = -ans
-    return ans
+        res = -res
+    return res
 gen_test('sdiv', sdiv, 2)
 gen_test('mod', lambda p: p[0] % p[1] if p[1] != 0 else 0, 2)
 gen_test('smod', smod, 2)
