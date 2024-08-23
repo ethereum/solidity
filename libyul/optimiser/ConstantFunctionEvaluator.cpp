@@ -44,6 +44,8 @@
 #include <range/v3/view/reverse.hpp>
 #include <range/v3/view/zip.hpp>
 
+#include <boost/algorithm/string/predicate.hpp>
+
 using namespace solidity;
 using namespace solidity::evmasm;
 using namespace solidity::yul;
@@ -358,9 +360,16 @@ ArithmeticOnlyExpressionEvaluator::determineFunctionCallType(FunctionCall const&
 					"datasize",
 					"dataoffset",
 					"datacopy",
-					"memoryguard"
+					"memoryguard",
+					"loadimmutable",
+					"setimmutable",
+					"linkersymbol"
 				};
 				if (NON_INSTRUCTION_FUNC_NAME.count(fun->name.str()))
+				{
+					return FunctionCallType::BuiltinNonArithmetic;
+				}
+				if (boost::algorithm::starts_with(fun->name.str(), "verbatim"))
 				{
 					return FunctionCallType::BuiltinNonArithmetic;
 				}
