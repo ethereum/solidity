@@ -56,9 +56,11 @@ namespace solidity::yul
  *
  *	 function bar() -> u, v {
  *		if iszero(0) {
- *			u, v := 6, 9
+ *			u := 6
+ *			v := 9
  *		} else {
- *			u, v := 4, 20
+ *			u := 4
+ *			v := 20
  *		}
  *	 }
  *
