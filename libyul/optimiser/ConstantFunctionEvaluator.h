@@ -49,30 +49,25 @@ namespace solidity::yul
  *
  * For example, this component may change the following code:
  *
- *	 function foo() -> x {
- *		let u, v := bar()
- *		x := add(u, v)
- *	 }
+ * function foo() -> x
+ * {
+ *  let u, v := bar()
+ *	x := add(u, v)
+ * }
  *
- *	 function bar() -> u, v {
- *		if iszero(0) {
- *			u := 6
- *			v := 9
- *		} else {
- *			u := 4
- *			v := 20
- *		}
- *	 }
+ * function bar() -> u, v
+ * {
+ * 	switch iszero(0) { u := 6 v := 9 }
+ * 	default { u := 4 v := 20 }
+ * }
  *
  * into
  *
- *	 function foo() -> x {
- *		x := 15
- *	 }
+ * function foo() -> x
+ * { x := 15 }
  *
- *	 function bar() -> u, v {
- *		u, v := 6, 9
- *	 }
+ * function bar() -> u, v
+ * { u, v := 6, 9 }
  */
 class ConstantFunctionEvaluator: public ASTModifier
 {
