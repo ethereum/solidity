@@ -213,7 +213,6 @@ ArithmeticOnlyExpressionEvaluator::determineFunctionCallType(FunctionCall const&
 				case Instruction::MULMOD:
 				case Instruction::SIGNEXTEND:
 					return FunctionCallType::BuiltinArithmetic;
-
 				// --------------- stop ---------------------------
 				case Instruction::STOP:
 				// --------------- blockchain stuff ---------------
@@ -273,8 +272,11 @@ ArithmeticOnlyExpressionEvaluator::determineFunctionCallType(FunctionCall const&
 				case Instruction::REVERT:
 				case Instruction::INVALID:
 				case Instruction::SELFDESTRUCT:
-				case Instruction::POP:
 					return FunctionCallType::BuiltinNonArithmetic;
+
+				// --------------- pop only discard value. ------------------
+				case Instruction::POP:
+					return FunctionCallType::BuiltinArithmetic;
 
 				// --------------- invalid in strict assembly ---------------
 				case Instruction::JUMP:
