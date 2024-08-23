@@ -74,7 +74,7 @@ unsigned Assembly::codeSize(unsigned subTagSize) const
 			ret += i.second.size();
 
 		for (AssemblyItem const& i: m_items)
-			ret += i.bytesRequired(tagSize, m_evmVersion, Precision::Approximate);
+			ret += i.bytesRequired(tagSize, m_evmVersion, Precision::Precise);
 		if (numberEncodingSize(ret) <= tagSize)
 			return static_cast<unsigned>(ret);
 	}
