@@ -94,6 +94,7 @@ std::string YulInterpreterTest::interpret()
 	state.maxTraceSize = 32;
 	state.maxSteps = 512;
 	state.maxExprNesting = 64;
+	state.maxRecursionDepth = 200;
 	try
 	{
 		Interpreter::run(
