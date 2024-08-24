@@ -79,12 +79,11 @@ public:
 	void operator()(Block& _block) override;
 
 private:
-	ConstantFunctionEvaluator(Block& _ast, Dialect const& _dialect);
+	ConstantFunctionEvaluator(Dialect const& _dialect);
 
 	void enterScope(Block const& _block);
 	void leaveScope();
 
-	Block& m_ast;
 	Dialect const& m_dialect;
 	tools::interpreter::Scope m_rootScope;
 	tools::interpreter::Scope* m_currentScope;

@@ -47,12 +47,11 @@ using namespace std::literals::string_literals;
 
 void ConstantFunctionEvaluator::run(OptimiserStepContext& _context, Block& _ast)
 {
-	ConstantFunctionEvaluator(_ast, _context.dialect)(_ast);
+	ConstantFunctionEvaluator(_context.dialect)(_ast);
 }
 
 
-ConstantFunctionEvaluator::ConstantFunctionEvaluator(Block& _ast, Dialect const& _dialect):
-	m_ast(_ast),
+ConstantFunctionEvaluator::ConstantFunctionEvaluator(Dialect const& _dialect):
 	m_dialect(_dialect),
 	m_rootScope(),
 	m_currentScope(&m_rootScope)
