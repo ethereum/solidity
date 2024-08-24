@@ -116,7 +116,7 @@ void Interpreter::run(
 )
 {
 	Scope scope;
-	Interpreter{_state, _dialect, scope, _disableExternalCalls, _disableMemoryTrace}(_ast);
+	Interpreter{_state, _dialect, scope, _disableExternalCalls, _disableMemoryTrace, 0}(_ast);
 }
 
 void Interpreter::operator()(ExpressionStatement const& _expressionStatement)
@@ -251,14 +251,14 @@ void Interpreter::operator()(Block const& _block)
 
 u256 Interpreter::evaluate(Expression const& _expression)
 {
-	ExpressionEvaluator ev(m_state, m_dialect, *m_scope, m_variables, m_disableExternalCalls, m_disableMemoryTrace);
+	ExpressionEvaluator ev(m_state, m_dialect, *m_scope, m_variables, m_disableExternalCalls, m_disableMemoryTrace, m_recursionDepth);
 	ev.visit(_expression);
 	return ev.value();
 }
 
 std::vector<u256> Interpreter::evaluateMulti(Expression const& _expression)
 {
-	ExpressionEvaluator ev(m_state, m_dialect, *m_scope, m_variables, m_disableExternalCalls, m_disableMemoryTrace);
+	ExpressionEvaluator ev(m_state, m_dialect, *m_scope, m_variables, m_disableExternalCalls, m_disableMemoryTrace, m_recursionDepth);
 	ev.visit(_expression);
 	return ev.values();
 }
@@ -285,11 +285,24 @@ void Interpreter::leaveScope()
 
 void Interpreter::incrementStep()
 {
+	// recursion depth is checked here since `incrementStep` got called
+	// when an actual statement is executed
+	checkRecursionDepth();
+
 	m_state.numSteps++;
 	if (m_state.maxSteps > 0 && m_state.numSteps >= m_state.maxSteps)
 	{
 		m_state.trace.emplace_back("Interpreter execution step limit reached.");
 		BOOST_THROW_EXCEPTION(StepLimitReached());
+	}
+}
+
+void Interpreter::checkRecursionDepth()
+{
+	if (m_state.maxRecursionDepth > 0 && m_recursionDepth > m_state.maxRecursionDepth)
+	{
+		m_state.trace.emplace_back("Interpreter recursion depth exceeded");
+		BOOST_THROW_EXCEPTION(RecursionDepthExceeded());
 	}
 }
 

@@ -69,6 +69,10 @@ class UnsupportedBuiltinFunctionEvaluated : public InterpreterTerminatedGeneric
 {
 };
 
+class RecursionDepthExceeded : public InterpreterTerminatedGeneric
+{
+};
+
 enum class ControlFlowState
 {
 	Default,
@@ -113,6 +117,7 @@ struct InterpreterState
 	size_t maxSteps = 0;
 	size_t numSteps = 0;
 	size_t maxExprNesting = 0;
+	size_t maxRecursionDepth = 0;
 	ControlFlowState controlFlowState = ControlFlowState::Default;
 
 	/// Number of the current state instance, used for recursion protection
@@ -178,6 +183,7 @@ public:
 		Scope& _scope,
 		bool _disableExternalCalls,
 		bool _disableMemoryTracing,
+		size_t _callerRecursionDepth,
 		std::map<YulName, u256> _variables = {}
 	):
 		m_dialect(_dialect),
@@ -185,7 +191,9 @@ public:
 		m_variables(std::move(_variables)),
 		m_scope(&_scope),
 		m_disableExternalCalls(_disableExternalCalls),
-		m_disableMemoryTrace(_disableMemoryTracing)
+		m_disableMemoryTrace(_disableMemoryTracing),
+		// Increment here so that this is the only place need to do so
+		m_recursionDepth(_callerRecursionDepth + 1)
 	{
 	}
 
@@ -219,6 +227,8 @@ protected:
 	/// is reached.
 	void incrementStep();
 
+	void checkRecursionDepth();
+
 	Dialect const& m_dialect;
 	InterpreterState& m_state;
 	/// Values of variables.
@@ -228,6 +238,8 @@ protected:
 	/// are evaluated in a new parser instance.
 	bool m_disableExternalCalls;
 	bool m_disableMemoryTrace;
+
+	size_t const m_recursionDepth;
 };
 
 /**
@@ -242,14 +254,16 @@ public:
 		Scope& _scope,
 		std::map<YulName, u256> const& _variables,
 		bool _disableExternalCalls,
-		bool _disableMemoryTrace
+		bool _disableMemoryTrace,
+		size_t _recursionDepth
 	):
 		m_state(_state),
 		m_dialect(_dialect),
 		m_variables(_variables),
 		m_scope(_scope),
 		m_disableExternalCalls(_disableExternalCalls),
-		m_disableMemoryTrace(_disableMemoryTrace)
+		m_disableMemoryTrace(_disableMemoryTrace),
+		m_recursionDepth(_recursionDepth)
 	{}
 
 	void operator()(Literal const&) override;
@@ -271,6 +285,7 @@ protected:
 			m_scope,
 			m_disableExternalCalls,
 			m_disableMemoryTrace,
+			m_recursionDepth,
 			std::move(_variables)
 		);
 	}
@@ -281,7 +296,8 @@ protected:
 			m_dialect,
 			_scope,
 			m_disableExternalCalls,
-			m_disableMemoryTrace
+			m_disableMemoryTrace,
+			m_recursionDepth
 		);
 	}
 
@@ -313,6 +329,8 @@ protected:
 	bool m_disableExternalCalls;
 	/// Flag to disable memory tracing
 	bool m_disableMemoryTrace;
+
+	size_t const m_recursionDepth;
 };
 
 }
