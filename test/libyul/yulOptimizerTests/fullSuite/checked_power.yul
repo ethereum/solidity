@@ -8,7 +8,7 @@
     { r := checked_exp_t_uint256_t_uint256(not(0), not(0)) }
 
     let a1, a2 := test_ok()
-    sstore(0, add(a1, a2))
+   sstore(0, add(a1, a2))
     sstore(1, test_overflow())
 
     function panic_error_0x11() {
@@ -82,6 +82,8 @@
         power := checked_exp_unsigned(base, exponent, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
     }
 }
+// ====
+// EVMVersion: >=cancun
 // ----
 // step: fullSuite
 //

@@ -142,6 +142,8 @@ object "Myobj"
     }
     data "Mydata" hex"1234"
 }
+// ====
+// EVMVersion: >=cancun
 // ----
 // step: constantFunctionEvaluator
 //
