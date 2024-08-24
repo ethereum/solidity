@@ -110,6 +110,7 @@ public:
 		InterpreterState& _state,
 		Dialect const& _dialect,
 		Scope& _scope,
+		size_t _callerRecursionDepth,
 		std::map<YulName, u256> _variables = {}
 	): Interpreter(
 		_state,
@@ -117,6 +118,7 @@ public:
 		_scope,
 		/* _disableExternalCalls=*/ false,  // we disable by explicit check
 		/* _disableMemoryTracing=*/ true,
+		_callerRecursionDepth,
 		_variables
 	)
 	{
@@ -148,6 +150,7 @@ protected:
 			m_state,
 			m_dialect,
 			m_scope,
+			m_recursionDepth,
 			std::move(_variables)
 		);
 	}
@@ -156,7 +159,8 @@ protected:
 		return std::make_unique<ArithmeticOnlyInterpreter>(
 			_state,
 			m_dialect,
-			_scope
+			_scope,
+			m_recursionDepth
 		);
 	}
 

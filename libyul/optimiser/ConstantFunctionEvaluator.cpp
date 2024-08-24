@@ -68,6 +68,8 @@ void ConstantFunctionEvaluator::operator()(FunctionDefinition& _function)
 	state.maxExprNesting = 100;
 	state.maxSteps = 10000;
 	state.maxTraceSize = 0;
+	// This must be limited, because the stack is also used in this optimizer component
+	state.maxRecursionDepth = 64;
 
 	std::map<YulName, u256> returnVariables;
 	for (auto const& retVar: _function.returnVariables)
@@ -75,7 +77,13 @@ void ConstantFunctionEvaluator::operator()(FunctionDefinition& _function)
 		returnVariables[retVar.name] = 0;
 	}
 
-	ArithmeticOnlyInterpreter interpreter(state, m_dialect, *m_currentScope, returnVariables);
+	ArithmeticOnlyInterpreter interpreter(
+		state,
+		m_dialect,
+		*m_currentScope,
+		/* _callerRecursionDepth=*/ 0,
+		returnVariables
+	);
 	try
 	{
 		interpreter(_function.body);
@@ -145,14 +153,30 @@ void ConstantFunctionEvaluator::leaveScope()
 
 u256 ArithmeticOnlyInterpreter::evaluate(Expression const& _expression)
 {
-	ArithmeticOnlyExpressionEvaluator ev(m_state, m_dialect, *m_scope, m_variables, m_disableExternalCalls, m_disableMemoryTrace);
+	ArithmeticOnlyExpressionEvaluator ev(
+		m_state,
+		m_dialect,
+		*m_scope,
+		m_variables,
+		m_disableExternalCalls,
+		m_disableMemoryTrace,
+		m_recursionDepth
+	);
 	ev.visit(_expression);
 	return ev.value();
 }
 
 std::vector<u256> ArithmeticOnlyInterpreter::evaluateMulti(Expression const& _expression)
 {
-	ArithmeticOnlyExpressionEvaluator ev(m_state, m_dialect, *m_scope, m_variables, m_disableExternalCalls, m_disableMemoryTrace);
+	ArithmeticOnlyExpressionEvaluator ev(
+		m_state,
+		m_dialect,
+		*m_scope,
+		m_variables,
+		m_disableExternalCalls,
+		m_disableMemoryTrace,
+		m_recursionDepth
+	);
 	ev.visit(_expression);
 	return ev.values();
 }
