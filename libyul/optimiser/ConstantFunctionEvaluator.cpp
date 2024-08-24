@@ -96,12 +96,21 @@ void ConstantFunctionEvaluator::operator()(FunctionDefinition& _function)
 	Block newBody;
 	newBody.debugData = _function.body.debugData;
 
+	// After the execution, all debug data got swept away. To still maintain
+	// useful information, we assign the literal debug data with the debug data
+	// of the function itself.
+	// One case this assignment is helpful is in the case of function with only
+	// one return variable. In this case, it would likely be a solidity
+	// constant.
+	langutil::DebugData::ConstPtr literalDebugData = _function.debugData;
+
 	for (auto const& retVar: _function.returnVariables)
 	{
 		Identifier ident;
 		ident.name = retVar.name;
 
 		Literal val;
+		val.debugData = literalDebugData;
 		val.kind = LiteralKind::Number;
 		val.type = retVar.type;
 		val.value = LiteralValue(interpreter.valueOfVariable(retVar.name));
