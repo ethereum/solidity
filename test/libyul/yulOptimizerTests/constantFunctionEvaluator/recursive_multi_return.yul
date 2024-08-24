@@ -7,11 +7,12 @@
 }
 // ----
 // step: constantFunctionEvaluator
-//  {
-//      function g() -> a, b
-//        {
-//          let x, y := g()
-//          a := x
-//          b := y
-//      }
-//  }
+//
+// {
+//     function g() -> a, b
+//     {
+//         let x, y := g()
+//         a := x
+//         b := y
+//     }
+// }
