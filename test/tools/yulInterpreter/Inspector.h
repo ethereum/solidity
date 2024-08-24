@@ -118,9 +118,10 @@ public:
 		Scope& _scope,
 		bool _disableExternalCalls,
 		bool _disableMemoryTracing,
+		size_t _callerRecursionDepth,
 		std::map<YulName, u256> _variables = {}
 	):
-		Interpreter(_state, _dialect, _scope, _disableExternalCalls, _disableMemoryTracing, _variables),
+		Interpreter(_state, _dialect, _scope, _disableExternalCalls, _disableMemoryTracing, _callerRecursionDepth, _variables),
 		m_inspector(_inspector)
 	{
 	}
@@ -164,9 +165,10 @@ public:
 		Scope& _scope,
 		std::map<YulName, u256> const& _variables,
 		bool _disableExternalCalls,
-		bool _disableMemoryTrace
+		bool _disableMemoryTrace,
+		size_t _recursionDepth
 	):
-		ExpressionEvaluator(_state, _dialect, _scope, _variables, _disableExternalCalls, _disableMemoryTrace),
+		ExpressionEvaluator(_state, _dialect, _scope, _variables, _disableExternalCalls, _disableMemoryTrace, _recursionDepth),
 		m_inspector(_inspector)
 	{}
 
@@ -191,6 +193,7 @@ protected:
 			m_scope,
 			m_disableExternalCalls,
 			m_disableMemoryTrace,
+			m_recursionDepth,
 			std::move(_variables)
 		);
 	}
@@ -205,6 +208,7 @@ protected:
 			m_dialect,
 			_scope,
 			m_disableExternalCalls,
+			m_recursionDepth,
 			m_disableMemoryTrace
 		);
 	}
