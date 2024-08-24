@@ -661,7 +661,7 @@ object \"C_54\" {
                         let _1 := loadimmutable(\"8\")
                         /// @src 0:322:341  \"constVar + immutVar\"
                         let sum := /** @src 0:79:510  \"contract C...\" */ 0
-                        sum := add(/** @src 0:127:129  \"41\" */ 0x29, /** @src 0:79:510  \"contract C...\" */ _1)
+                        sum := add(/** @src 0:96:129  \"int public constant constVar = 41\" */ 41, /** @src 0:79:510  \"contract C...\" */ _1)
                         if and(1, slt(sum, _1))
                         {
                             mstore(0, shl(224, 0x4e487b71))
@@ -740,7 +740,7 @@ object \"C_54\" {
                         if callvalue() { revert(0, 0) }
                         if slt(add(calldatasize(), not(3)), 0) { revert(0, 0) }
                         let memPos_3 := mload(64)
-                        mstore(memPos_3, /** @src 0:127:129  \"41\" */ 0x29)
+                        mstore(memPos_3, /** @ast-id 5 @src 0:96:129  \"int public constant constVar = 41\" */ 41)
                         /// @src 0:79:510  \"contract C...\"
                         return(memPos_3, 32)
                     }
@@ -1504,7 +1504,7 @@ object \"D_72\" {
                         let _1 := loadimmutable(\"8\")
                         /// @src 0:322:341  \"constVar + immutVar\"
                         let sum := /** @src 1:91:181  \"contract D is C(3)...\" */ 0
-                        sum := add(/** @src 0:127:129  \"41\" */ 0x29, /** @src 1:91:181  \"contract D is C(3)...\" */ _1)
+                        sum := add(/** @src 0:96:129  \"int public constant constVar = 41\" */ 41, /** @src 1:91:181  \"contract D is C(3)...\" */ _1)
                         if and(1, slt(sum, _1))
                         {
                             mstore(0, shl(224, 0x4e487b71))
@@ -1583,7 +1583,7 @@ object \"D_72\" {
                         if callvalue() { revert(0, 0) }
                         if slt(add(calldatasize(), not(3)), 0) { revert(0, 0) }
                         let memPos_3 := mload(64)
-                        mstore(memPos_3, /** @src 0:127:129  \"41\" */ 0x29)
+                        mstore(memPos_3, /** @ast-id 5 @src 0:96:129  \"int public constant constVar = 41\" */ 41)
                         /// @src 1:91:181  \"contract D is C(3)...\"
                         return(memPos_3, 32)
                     }
