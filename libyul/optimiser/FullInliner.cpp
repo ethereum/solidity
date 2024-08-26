@@ -156,10 +156,8 @@ std::map<FunctionNameIdentifier, size_t> FullInliner::callDepths() const
 		}
 
 		for (auto& call: cg.functionCalls)
-		{
 			for (FunctionNameIdentifier toBeRemoved: removed)
 				ranges::actions::remove(call.second, toBeRemoved);
-		}
 
 		currentDepth++;
 
@@ -169,9 +167,7 @@ std::map<FunctionNameIdentifier, size_t> FullInliner::callDepths() const
 
 	// Only recursive functions left here.
 	for (auto const& fun: cg.functionCalls)
-	{
 		depths[fun.first] = currentDepth;
-	}
 
 	return depths;
 }
@@ -181,15 +177,16 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulName _callSite)
 	if (isBuiltinFunctionCall(_funCall))
 		return false;
 	yulAssert(std::holds_alternative<Identifier>(_funCall.functionName));
+	auto const& functionName = std::get<Identifier>(_funCall.functionName).name;
 	// No recursive inlining
-	if (std::get<Identifier>(_funCall.functionName).name == _callSite)
+	if (functionName == _callSite)
 		return false;
 
-	FunctionDefinition* calledFunction = function(std::get<Identifier>(_funCall.functionName).name);
+	FunctionDefinition* calledFunction = function(functionName);
 	if (!calledFunction)
 		return false;
 
-	if (m_noInlineFunctions.count(std::get<Identifier>(_funCall.functionName).name) || recursive(*calledFunction))
+	if (m_noInlineFunctions.count(functionName) || recursive(*calledFunction))
 		return false;
 
 	// No inlining of calls where argument expressions may have side-effects.

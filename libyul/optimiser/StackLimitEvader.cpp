@@ -70,7 +70,7 @@ struct MemoryOffsetAllocator
 
 		uint64_t requiredSlots = 0;
 		if (callGraph.count(std::get<YulName>(_function)))
-			for (auto child: callGraph.at(std::get<YulName>(_function)))
+			for (FunctionNameIdentifier const& child: callGraph.at(std::get<YulName>(_function)))
 				requiredSlots = std::max(run(child), requiredSlots);
 
 		if (auto const* unreachables = util::valueOrNullptr(unreachableVariables, std::get<YulName>(_function)))
@@ -198,8 +198,11 @@ void StackLimitEvader::run(
 
 	// We cannot move variables in recursive functions to fixed memory offsets.
 	for (FunctionNameIdentifier function: callGraph.recursiveFunctions())
-		if (std::holds_alternative<YulName>(function) && _unreachableVariables.count(std::get<YulName>(function))) // todo also relevant for builtins?
+	{
+		yulAssert(std::holds_alternative<YulName>(function), "Builtins are not recursive.");
+		if (_unreachableVariables.count(std::get<YulName>(function)))
 			return;
+	}
 
 	std::map<YulName, FunctionDefinition const*> functionDefinitions = allFunctionDefinitions(_astRoot);
 

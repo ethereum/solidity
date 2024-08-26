@@ -19,12 +19,11 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
-#include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/NameDispenser.h>
 #include <libyul/optimiser/OptimiserStep.h>
 
+#include <libyul/AST.h>
 #include <libyul/ASTForward.h>
-#include <libyul/Dialect.h>
 
 #include <map>
 #include <optional>
@@ -69,12 +68,10 @@ public:
 private:
 	explicit FunctionSpecializer(
 		std::set<FunctionNameIdentifier> _recursiveFunctions,
-		NameDispenser& _nameDispenser,
-		Dialect const& _dialect
+		NameDispenser& _nameDispenser
 	):
 		m_recursiveFunctions(std::move(_recursiveFunctions)),
-		m_nameDispenser(_nameDispenser),
-		m_dialect(_dialect)
+		m_nameDispenser(_nameDispenser)
 	{}
 	/// Returns a vector of Expressions, where the index `i` is an expression if the function's
 	/// `i`-th argument can be specialized, nullopt otherwise.
@@ -108,7 +105,6 @@ private:
 	std::set<FunctionNameIdentifier> const m_recursiveFunctions;
 
 	NameDispenser& m_nameDispenser;
-	Dialect const& m_dialect;
 };
 
 }

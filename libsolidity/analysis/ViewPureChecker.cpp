@@ -18,8 +18,9 @@
 
 #include <libsolidity/analysis/ViewPureChecker.h>
 #include <libsolidity/ast/ExperimentalFeatures.h>
-#include <libyul/AST.h>
 #include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/AST.h>
+#include <libyul/Utilities.h>
 #include <liblangutil/ErrorReporter.h>
 #include <libevmasm/SemanticInformation.h>
 
@@ -46,8 +47,6 @@ public:
 
 	void operator()(yul::Literal const&) {}
 	void operator()(yul::Identifier const&) {}
-	void operator()(yul::Builtin const&) {}
-	void operator()(yul::Verbatim const&) {}
 	void operator()(yul::ExpressionStatement const& _expr)
 	{
 		std::visit(*this, _expr.expression);
@@ -67,13 +66,10 @@ public:
 	}
 	void operator()(yul::FunctionCall const& _funCall)
 	{
-		if (auto const* dialect = dynamic_cast<yul::EVMDialect const*>(&m_dialect))
-			if (std::holds_alternative<yul::Builtin>(_funCall.functionName))
-				if (
-					auto const& fun = dialect->builtinFunction(std::get<yul::Builtin>(_funCall.functionName).handle);
-					fun.instruction
-				)
-					checkInstruction(nativeLocationOf(_funCall), *fun.instruction);
+		if (yul::EVMDialect const* dialect = dynamic_cast<decltype(dialect)>(&m_dialect))
+			if (yul::BuiltinFunctionForEVM const* fun = yul::resolveBuiltinFunctionForEVM(_funCall.functionName, *dialect))
+				if (fun->instruction)
+					checkInstruction(nativeLocationOf(_funCall), *fun->instruction);
 
 		for (auto const& arg: _funCall.arguments)
 			std::visit(*this, arg);

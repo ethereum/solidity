@@ -79,19 +79,9 @@ std::optional<std::pair<evmasm::Instruction, std::vector<Expression> const*>>
 {
 	if (std::holds_alternative<FunctionCall>(_expr))
 		if (auto const* dialect = dynamic_cast<EVMDialect const*>(&_dialect))
-			if (isBuiltinFunctionCall(std::get<FunctionCall>(_expr)))
-			{
-				auto const& functionCall = std::get<FunctionCall>(_expr);
-				std::optional<evmasm::Instruction> instruction;
-				if (std::holds_alternative<Builtin>(functionCall.functionName))
-					instruction = dialect->builtinFunction(std::get<Builtin>(functionCall.functionName).handle).instruction;
-				else if (std::holds_alternative<Verbatim>(functionCall.functionName))
-					instruction = dialect->verbatimFunction(std::get<Verbatim>(functionCall.functionName).handle).instruction;
-				else
-					yulAssert(false);
-				if (instruction)
-					return std::make_pair(*instruction, &functionCall.arguments);
-			}
+			if (auto const* builtin = resolveBuiltinFunctionForEVM(std::get<FunctionCall>(_expr).functionName, *dialect))
+				if (builtin->instruction)
+					return std::make_pair(*builtin->instruction, &std::get<FunctionCall>(_expr).arguments);
 
 	return {};
 }

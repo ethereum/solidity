@@ -57,7 +57,7 @@ void ReferencesCounter::operator()(Identifier const& _identifier)
 void ReferencesCounter::operator()(FunctionCall const& _funCall)
 {
 	if (std::holds_alternative<Identifier>(_funCall.functionName))
-		++m_references[std::get<Identifier>(_funCall.functionName).name]; // todo not sure if we also have to deal with builtins/verbatims here
+		++m_references[std::get<Identifier>(_funCall.functionName).name];
 	ASTWalker::operator()(_funCall);
 }
 

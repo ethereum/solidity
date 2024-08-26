@@ -66,12 +66,12 @@ struct EVMDialect: public Dialect
 {
 	struct Handles
 	{
-		BuiltinHandle add;
-		BuiltinHandle exp;
-		BuiltinHandle mul;
-		BuiltinHandle not_;
-		BuiltinHandle shl;
-		BuiltinHandle sub;
+		std::optional<BuiltinHandle> add;
+		std::optional<BuiltinHandle> exp;
+		std::optional<BuiltinHandle> mul;
+		std::optional<BuiltinHandle> not_;
+		std::optional<BuiltinHandle> shl;
+		std::optional<BuiltinHandle> sub;
 	};
 	/// Constructor, should only be used internally. Use the factory functions below.
 	EVMDialect(langutil::EVMVersion _evmVersion, std::optional<uint8_t> _eofVersion, bool _objectAccess);

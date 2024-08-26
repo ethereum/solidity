@@ -19,7 +19,6 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
-#include <libyul/Dialect.h>
 
 namespace solidity::yul
 {

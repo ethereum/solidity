@@ -30,21 +30,19 @@
 #include <libyul/optimiser/KnowledgeBase.h>
 #include <libyul/ControlFlowSideEffectsCollector.h>
 #include <libyul/AST.h>
+#include <libyul/Utilities.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
 
 #include <libsolutil/CommonData.h>
-#include <libsolutil/Visitor.h>
 
 #include <libevmasm/Instruction.h>
 #include <libevmasm/SemanticInformation.h>
 
 #include <range/v3/algorithm/all_of.hpp>
-#include <utility>
 
 using namespace solidity;
 using namespace solidity::yul;
-using namespace solidity::util;
 
 /// Variable names for special constants that can never appear in actual Yul code.
 static std::string const zero{"@ 0"};
@@ -116,11 +114,14 @@ void UnusedStoreEliminator::operator()(FunctionCall const& _functionCall)
 	for (Operation const& op: operationsFromFunctionCall(_functionCall))
 		applyOperation(op);
 
-	ControlFlowSideEffects sideEffects = std::visit(GenericVisitor{
-		[&](Builtin const& _builtin) { return m_dialect.builtinFunction(_builtin.handle).controlFlowSideEffects; },
-		[&](Verbatim const& _verbatim) { return m_dialect.verbatimFunction(_verbatim.handle).controlFlowSideEffects; },
-		[&](Identifier const& _identifier) { return m_controlFlowSideEffects.at(_identifier.name); },
-	}, _functionCall.functionName);
+	ControlFlowSideEffects sideEffects;
+	if (auto builtin = resolveBuiltinFunction(_functionCall.functionName, m_dialect))
+		sideEffects = builtin->controlFlowSideEffects;
+	else
+	{
+		yulAssert(std::holds_alternative<Identifier>(_functionCall.functionName));
+		sideEffects = m_controlFlowSideEffects.at(std::get<Identifier>(_functionCall.functionName).name);
+	}
 
 	if (sideEffects.canTerminate)
 		markActiveAsUsed(Location::Storage);
@@ -231,11 +232,14 @@ std::vector<UnusedStoreEliminator::Operation> UnusedStoreEliminator::operationsF
 {
 	using evmasm::Instruction;
 
-	SideEffects sideEffects = std::visit(GenericVisitor{
-		[&](Builtin const& _builtin) { return m_dialect.builtinFunction(_builtin.handle).sideEffects; },
-		[&](Verbatim const& _verbatim) { return m_dialect.verbatimFunction(_verbatim.handle).sideEffects; },
-		[&](Identifier const& _identifier) { return m_functionSideEffects.at(_identifier.name); },
-	}, _functionCall.functionName);
+	SideEffects sideEffects;
+	if (BuiltinFunction const* f = resolveBuiltinFunction(_functionCall.functionName, m_dialect))
+		sideEffects = f->sideEffects;
+	else
+	{
+		yulAssert(std::holds_alternative<Identifier>(_functionCall.functionName));
+		sideEffects = m_functionSideEffects.at(std::get<Identifier>(_functionCall.functionName).name);
+	}
 
 	std::optional<Instruction> instruction = toEVMInstruction(m_dialect, _functionCall.functionName);
 	if (!instruction)

@@ -151,14 +151,14 @@ TestCase::TestResult StackShufflingTest::run(std::ostream& _stream, std::string 
 		m_targetStack,
 		[&](unsigned _swapDepth) // swap
 		{
-			output << stackToString(m_sourceStack, EVMDialect::strictAssemblyForEVM({})) << std::endl;
+			output << stackToString(m_sourceStack, EVMDialect::strictAssemblyForEVM({}, {})) << std::endl;
 			output << "SWAP" << _swapDepth << std::endl;
 		},
 		[&](StackSlot const& _slot) // dupOrPush
 		{
-			output << stackToString(m_sourceStack, EVMDialect::strictAssemblyForEVM({})) << std::endl;
+			output << stackToString(m_sourceStack, EVMDialect::strictAssemblyForEVM({}, {})) << std::endl;
 			if (canBeFreelyGenerated(_slot))
-				output << "PUSH " << stackSlotToString(_slot, EVMDialect::strictAssemblyForEVM({})) << std::endl;
+				output << "PUSH " << stackSlotToString(_slot, EVMDialect::strictAssemblyForEVM({}, {})) << std::endl;
 			else
 			{
 				if (auto depth = util::findOffset(m_sourceStack | ranges::views::reverse, _slot))
@@ -168,12 +168,12 @@ TestCase::TestResult StackShufflingTest::run(std::ostream& _stream, std::string 
 			}
 		},
 		[&](){ // pop
-			output << stackToString(m_sourceStack, EVMDialect::strictAssemblyForEVM({})) << std::endl;
+			output << stackToString(m_sourceStack, EVMDialect::strictAssemblyForEVM({}, {})) << std::endl;
 			output << "POP" << std::endl;
 		}
     );
 
-	output << stackToString(m_sourceStack, EVMDialect::strictAssemblyForEVM({})) << std::endl;
+	output << stackToString(m_sourceStack, EVMDialect::strictAssemblyForEVM({}, {})) << std::endl;
 	m_obtainedResult = output.str();
 
 	return checkResult(_stream, _linePrefix, _formatted);

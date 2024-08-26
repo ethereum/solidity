@@ -23,6 +23,7 @@
 
 #include <libyul/backends/evm/EVMDialect.h>
 
+#include <libyul/Utilities.h>
 #include <libyul/Dialect.h>
 #include <libyul/AST.h>
 
@@ -63,8 +64,8 @@ bool yul::isRestrictedIdentifier(Dialect const& _dialect, YulName const& _identi
 std::optional<evmasm::Instruction> yul::toEVMInstruction(Dialect const& _dialect, FunctionName const& _name)
 {
 	if (auto const* dialect = dynamic_cast<EVMDialect const*>(&_dialect))
-		if (std::holds_alternative<Builtin>(_name))
-			return dialect->builtinFunction(std::get<Builtin>(_name).handle).instruction;
+		if (BuiltinFunctionForEVM const* builtin = resolveBuiltinFunctionForEVM(_name, *dialect))
+			return builtin->instruction;
 	return std::nullopt;
 }
 

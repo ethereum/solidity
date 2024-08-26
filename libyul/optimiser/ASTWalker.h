@@ -43,8 +43,6 @@ public:
 	virtual ~ASTWalker() = default;
 	virtual void operator()(Literal const&) {}
 	virtual void operator()(Identifier const&) {}
-	virtual void operator()(Builtin const&) {}
-	virtual void operator()(Verbatim const&) {}
 	virtual void operator()(FunctionCall const& _funCall);
 	virtual void operator()(ExpressionStatement const& _statement);
 	virtual void operator()(Assignment const& _assignment);
@@ -79,8 +77,6 @@ public:
 	virtual ~ASTModifier() = default;
 	virtual void operator()(Literal&) {}
 	virtual void operator()(Identifier&) {}
-	virtual void operator()(Builtin&) {}
-	virtual void operator()(Verbatim&) {}
 	virtual void operator()(FunctionCall& _funCall);
 	virtual void operator()(ExpressionStatement& _statement);
 	virtual void operator()(Assignment& _assignment);

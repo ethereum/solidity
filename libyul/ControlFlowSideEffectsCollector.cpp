@@ -21,11 +21,11 @@
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
 #include <libyul/FunctionReferenceResolver.h>
+#include <libyul/Utilities.h>
 
 #include <libsolutil/Common.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Algorithms.h>
-#include <libsolutil/Visitor.h>
 
 #include <range/v3/view/map.hpp>
 #include <range/v3/view/reverse.hpp>
@@ -272,13 +272,10 @@ ControlFlowNode const* ControlFlowSideEffectsCollector::nextProcessableNode(Func
 
 ControlFlowSideEffects const& ControlFlowSideEffectsCollector::sideEffects(FunctionCall const& _call) const
 {
-	util::GenericVisitor visitor
-	{
-		[&](Builtin const& _builtin) -> ControlFlowSideEffects const& { return m_dialect.builtinFunction(_builtin.handle).controlFlowSideEffects; },
-		[&](Verbatim const& _verbatim) -> ControlFlowSideEffects const& { return m_dialect.verbatimFunction(_verbatim.handle).controlFlowSideEffects; },
-		[&](Identifier const&) -> ControlFlowSideEffects const& { return m_functionSideEffects.at(m_functionReferences.at(&_call)); }
-	};
-	return std::visit(visitor, _call.functionName);
+	if (auto const* builtin = resolveBuiltinFunction(_call.functionName, m_dialect))
+		return builtin->controlFlowSideEffects;
+	else
+		return m_functionSideEffects.at(m_functionReferences.at(&_call));
 }
 
 void ControlFlowSideEffectsCollector::recordReachabilityAndQueue(

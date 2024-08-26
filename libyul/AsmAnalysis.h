@@ -88,8 +88,6 @@ public:
 	);
 
 	size_t operator()(Literal const& _literal);
-	size_t operator()(Builtin const& _builtin);
-	size_t operator()(Verbatim const& _verbatim);
 	size_t operator()(Identifier const&);
 	void operator()(ExpressionStatement const&);
 	void operator()(Assignment const& _assignment);

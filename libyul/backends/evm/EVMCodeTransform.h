@@ -131,8 +131,6 @@ protected:
 public:
 	void operator()(Literal const& _literal);
 	void operator()(Identifier const& _identifier);
-	void operator()(Builtin const& _identifier);
-	void operator()(Verbatim const& _identifier);
 	void operator()(FunctionCall const&);
 	void operator()(ExpressionStatement const& _statement);
 	void operator()(Assignment const& _assignment);

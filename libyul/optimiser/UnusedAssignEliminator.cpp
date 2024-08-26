@@ -25,18 +25,12 @@
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/ControlFlowSideEffectsCollector.h>
+#include <libyul/Utilities.h>
 #include <libyul/AST.h>
-#include <libyul/AsmPrinter.h>
 
 #include <libsolutil/CommonData.h>
-#include <libsolutil/Visitor.h>
-
-#include <range/v3/action/remove_if.hpp>
-
-#include <iostream>
 
 using namespace solidity;
-using namespace solidity::util;
 using namespace solidity::yul;
 
 void UnusedAssignEliminator::run(OptimiserStepContext& _context, Block& _ast)
@@ -80,11 +74,14 @@ void UnusedAssignEliminator::operator()(FunctionCall const& _functionCall)
 {
 	UnusedStoreBase::operator()(_functionCall);
 
-	ControlFlowSideEffects sideEffects = std::visit(GenericVisitor{
-		[&](Builtin const& _builtin) { return m_dialect.builtinFunction(_builtin.handle).controlFlowSideEffects; },
-		[&](Verbatim const& _verbatim) { return m_dialect.verbatimFunction(_verbatim.handle).controlFlowSideEffects; },
-		[&](Identifier const& _identifier) { return m_controlFlowSideEffects.at(_identifier.name); }
-	}, _functionCall.functionName);
+	ControlFlowSideEffects sideEffects;
+	if (auto const* builtin = resolveBuiltinFunction(_functionCall.functionName, m_dialect))
+		sideEffects = builtin->controlFlowSideEffects;
+	else
+	{
+		yulAssert(std::holds_alternative<Identifier>(_functionCall.functionName));
+		sideEffects = m_controlFlowSideEffects.at(std::get<Identifier>(_functionCall.functionName).name);
+	}
 
 	if (!sideEffects.canContinue)
 		// We do not return from the current function, so it is OK to also

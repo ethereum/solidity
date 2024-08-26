@@ -92,16 +92,6 @@ void BlockHasher::operator()(Literal const& _literal)
 	hashLiteral(_literal);
 }
 
-void BlockHasher::operator()(Builtin const&)
-{
-	yulAssert(false);  // todo same as hashing identifiers
-}
-
-void BlockHasher::operator()(Verbatim const&)
-{
-	yulAssert(false);  // todo same as hashing identifiers
-}
-
 void BlockHasher::operator()(Identifier const& _identifier)
 {
 	hash64(compileTimeLiteralHash("Identifier"));

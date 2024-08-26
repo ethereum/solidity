@@ -309,8 +309,6 @@ void ExpressionEvaluator::operator()(Identifier const& _identifier)
 void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 {
 	std::vector<std::optional<LiteralKind>> const* literalArguments = nullptr;
-	if (isBuiltinFunctionCall(_funCall))
-
 	if (BuiltinFunction const* builtin = resolveBuiltinFunction(_funCall.functionName, m_dialect))
 		if (!builtin->literalArguments.empty())
 			literalArguments = &builtin->literalArguments;

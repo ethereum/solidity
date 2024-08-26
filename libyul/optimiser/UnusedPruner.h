@@ -22,8 +22,8 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
-#include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/OptimiserStep.h>
+#include <libyul/AST.h>
 #include <libyul/YulName.h>
 
 #include <map>

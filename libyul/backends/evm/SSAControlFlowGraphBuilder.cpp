@@ -24,6 +24,7 @@
 #include <libyul/Exceptions.h>
 #include <libyul/backends/evm/ControlFlow.h>
 #include <libyul/ControlFlowSideEffectsCollector.h>
+#include <libyul/Utilities.h>
 
 #include <libsolutil/Algorithms.h>
 #include <libsolutil/StringUtils.h>
@@ -342,19 +343,22 @@ void SSAControlFlowGraphBuilder::operator()(Switch const& _switch)
 	}
 	else
 	{
+		std::optional<BuiltinHandle> equalityBuiltin = m_dialect.equalityFunction();
+		yulAssert(equalityBuiltin, "");
+
 		auto makeValueCompare = [&](Case const& _case) {
 			FunctionCall const& ghostCall = m_graph.ghostCalls.emplace_back(FunctionCall{
 				debugDataOf(_case),
-				Identifier{{}, "eq"_yulname},
+				Builtin{{}, *equalityBuiltin},
 				{*_case.value /* skip second argument */ }
 			});
 			auto outputValue = m_graph.newVariable(m_currentBlock);
-			BuiltinFunction const* builtin = m_dialect.builtin(ghostCall.functionName.name);
+			BuiltinFunction const& builtin = m_dialect.builtinFunction(*equalityBuiltin);
 			currentBlock().operations.emplace_back(SSACFG::Operation{
 				{outputValue},
 				SSACFG::BuiltinCall{
 					debugDataOf(_case),
-					*builtin,
+					builtin,
 					ghostCall
 				},
 				{m_graph.newLiteral(debugDataOf(_case), _case.value->value.value()), expression}
@@ -546,7 +550,7 @@ std::vector<SSACFG::ValueId> SSAControlFlowGraphBuilder::visitFunctionCall(Funct
 {
 	bool canContinue = true;
 	SSACFG::Operation operation = [&](){
-		if (BuiltinFunction const* builtin = m_dialect.builtin(_call.functionName.name))
+		if (BuiltinFunction const* builtin = resolveBuiltinFunction(_call.functionName, m_dialect))
 		{
 			SSACFG::Operation result{{}, SSACFG::BuiltinCall{_call.debugData, *builtin, _call}, {}};
 			for (auto&& [idx, arg]: _call.arguments | ranges::views::enumerate | ranges::views::reverse)
@@ -559,7 +563,8 @@ std::vector<SSACFG::ValueId> SSAControlFlowGraphBuilder::visitFunctionCall(Funct
 		}
 		else
 		{
-			Scope::Function const& function = lookupFunction(_call.functionName.name);
+			YulName const functionName{std::string(resolveFunctionName(_call.functionName, m_dialect))};
+			Scope::Function const& function = lookupFunction(functionName);
 			auto const* definition = findFunctionDefinition(&function);
 			yulAssert(definition);
 			canContinue = m_sideEffects.functionSideEffects().at(definition).canContinue;

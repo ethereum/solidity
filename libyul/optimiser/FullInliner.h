@@ -24,12 +24,9 @@
 
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/ASTWalker.h>
-#include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/NameDispenser.h>
 #include <libyul/optimiser/OptimiserStep.h>
-#include <libyul/Exceptions.h>
-
-#include <liblangutil/SourceLocation.h>
+#include <libyul/AST.h>
 
 #include <optional>
 #include <set>

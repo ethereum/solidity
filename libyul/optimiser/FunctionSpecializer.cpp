@@ -129,8 +129,7 @@ void FunctionSpecializer::run(OptimiserStepContext& _context, Block& _ast)
 {
 	FunctionSpecializer f{
 		CallGraphGenerator::callGraph(_ast).recursiveFunctions(),
-		_context.dispenser,
-		_context.dialect
+		_context.dispenser
 	};
 	f(_ast);
 

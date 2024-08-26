@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(builtins_analysis)
 			return std::nullopt;
 		}
 
-		const BuiltinFunction& builtinFunction(BuiltinHandle const& handle) const override
+		BuiltinFunction const& builtinFunction(BuiltinHandle const& handle) const override
 		{
 			BOOST_REQUIRE(handle.id == std::numeric_limits<size_t>::max());
 			return f;

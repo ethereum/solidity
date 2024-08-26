@@ -230,60 +230,37 @@ void CodeTransform::operator()(FunctionCall const& _call)
 	yulAssert(m_scope, "");
 
 	m_assembly.setSourceLocation(originLocationOf(_call));
-	GenericVisitor visitor
+	if (BuiltinFunctionForEVM const* builtin = resolveBuiltinFunctionForEVM(_call.functionName, m_dialect))
 	{
-		[&](Builtin const& _builtin)
-		{
-			auto const& builtinFunction = m_dialect.builtinFunction(_builtin.handle);
-			for (auto&& [i, arg]: _call.arguments | ranges::views::enumerate | ranges::views::reverse)
-				if (!builtinFunction.literalArgument(i))
-					visitExpression(arg);
-			m_assembly.setSourceLocation(originLocationOf(_call));
-			builtinFunction.generateCode(_call, m_assembly, m_builtinContext);
-		},
-		[&](Verbatim const& _verbatim)
-		{
-			auto const& builtinFunction = m_dialect.verbatimFunction(_verbatim.handle);
-			for (auto&& [i, arg]: _call.arguments | ranges::views::enumerate | ranges::views::reverse)
-				if (!builtinFunction.literalArgument(i))
-					visitExpression(arg);
-			m_assembly.setSourceLocation(originLocationOf(_call));
-			builtinFunction.generateCode(_call, m_assembly, m_builtinContext);
-		},
-		[&](Identifier const& _identifier)
-		{
-			AbstractAssembly::LabelID returnLabel = m_assembly.newLabelId();
-			m_assembly.appendLabelReference(returnLabel);
-
-			Scope::Function* function = nullptr;
-			yulAssert(m_scope->lookup(_identifier.name, GenericVisitor{
-				[](Scope::Variable&) { yulAssert(false, "Expected function name."); },
-				[&](Scope::Function& _function) { function = &_function; }
-			}), "Function name not found.");
-			yulAssert(function, "");
-			yulAssert(function->numArguments == _call.arguments.size(), "");
-			for (auto const& arg: _call.arguments | ranges::views::reverse)
+		for (auto&& [i, arg]: _call.arguments | ranges::views::enumerate | ranges::views::reverse)
+			if (!builtin->literalArgument(i))
 				visitExpression(arg);
-			m_assembly.setSourceLocation(originLocationOf(_call));
-			m_assembly.appendJumpTo(
-				functionEntryID(*function),
-				static_cast<int>(function->numReturns) - static_cast<int>(function->numArguments) - 1,
-				AbstractAssembly::JumpType::IntoFunction
-			);
-			m_assembly.appendLabel(returnLabel);
-		}
-	};
-	std::visit(visitor, _call.functionName);
-}
+		m_assembly.setSourceLocation(originLocationOf(_call));
+		builtin->generateCode(_call, m_assembly, m_builtinContext);
+	}
+	else
+	{
+		yulAssert(std::holds_alternative<Identifier>(_call.functionName));
+		AbstractAssembly::LabelID returnLabel = m_assembly.newLabelId();
+		m_assembly.appendLabelReference(returnLabel);
 
-void CodeTransform::operator()(Builtin const&)
-{
-	yulAssert(false); // todo can this occur?
-}
-
-void CodeTransform::operator()(Verbatim const&)
-{
-	yulAssert(false); // todo can this occur?
+		Scope::Function* function = nullptr;
+		yulAssert(m_scope->lookup(std::get<Identifier>(_call.functionName).name, GenericVisitor{
+			[](Scope::Variable&) { yulAssert(false, "Expected function name."); },
+			[&](Scope::Function& _function) { function = &_function; }
+		}), "Function name not found.");
+		yulAssert(function, "");
+		yulAssert(function->numArguments == _call.arguments.size(), "");
+		for (auto const& arg: _call.arguments | ranges::views::reverse)
+			visitExpression(arg);
+		m_assembly.setSourceLocation(originLocationOf(_call));
+		m_assembly.appendJumpTo(
+			functionEntryID(*function),
+			static_cast<int>(function->numReturns) - static_cast<int>(function->numArguments) - 1,
+			AbstractAssembly::JumpType::IntoFunction
+		);
+		m_assembly.appendLabel(returnLabel);
+	}
 }
 
 void CodeTransform::operator()(Identifier const& _identifier)

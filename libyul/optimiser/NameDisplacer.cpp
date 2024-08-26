@@ -55,7 +55,7 @@ void NameDisplacer::operator()(FunctionDefinition& _function)
 void NameDisplacer::operator()(FunctionCall& _funCall)
 {
 	if (std::holds_alternative<Identifier>(_funCall.functionName))
-		checkAndReplace(std::get<Identifier>(_funCall.functionName).name); // todo also builtins?
+		checkAndReplace(std::get<Identifier>(_funCall.functionName).name);
 	ASTModifier::operator()(_funCall);
 }
 

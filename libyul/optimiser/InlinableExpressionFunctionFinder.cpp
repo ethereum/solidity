@@ -28,6 +28,7 @@ using namespace solidity;
 using namespace solidity::yul;
 
 void InlinableExpressionFunctionFinder::checkAllowed(FunctionName _name) {
+	// disallowed identifiers can only ever hold identifiers, not builtins or verbatims
 	if (std::holds_alternative<Identifier>(_name) && m_disallowedIdentifiers.count(std::get<Identifier>(_name).name))
 		m_foundDisallowedIdentifier = true;
 }
@@ -40,7 +41,7 @@ void InlinableExpressionFunctionFinder::operator()(Identifier const& _identifier
 
 void InlinableExpressionFunctionFinder::operator()(FunctionCall const& _funCall)
 {
-	checkAllowed(_funCall.functionName); // todo i think this should be fine b/c functiondefinitions are only for non-builtins (?)
+	checkAllowed(_funCall.functionName);
 	ASTWalker::operator()(_funCall);
 }
 

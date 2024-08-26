@@ -63,8 +63,8 @@ struct CopyTranslate: public yul::ASTCopier
 {
 	using ExternalRefsMap = std::map<yul::Identifier const*, InlineAssemblyAnnotation::ExternalIdentifierInfo>;
 
-	CopyTranslate(yul::Dialect const& _dialect, IRGenerationContext& _context, ExternalRefsMap const& _references):
-		m_dialect(_dialect), m_context(_context), m_references(_references) {}
+	CopyTranslate(IRGenerationContext& _context, ExternalRefsMap const& _references):
+		m_context(_context), m_references(_references) {}
 
 	using ASTCopier::operator();
 
@@ -204,7 +204,6 @@ private:
 	}
 
 
-	yul::Dialect const& m_dialect;
 	IRGenerationContext& m_context;
 	ExternalRefsMap const& m_references;
 };
@@ -2246,7 +2245,7 @@ bool IRGeneratorForStatements::visit(InlineAssembly const& _inlineAsm)
 	setLocation(_inlineAsm);
 	if (*_inlineAsm.annotation().hasMemoryEffects && !_inlineAsm.annotation().markedMemorySafe)
 		m_context.setMemoryUnsafeInlineAssemblySeen();
-	CopyTranslate bodyCopier{_inlineAsm.dialect(), m_context, _inlineAsm.annotation().externalReferences};
+	CopyTranslate bodyCopier{m_context, _inlineAsm.annotation().externalReferences};
 
 	yul::Statement modified = bodyCopier(_inlineAsm.operations().root());
 

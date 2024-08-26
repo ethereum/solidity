@@ -25,12 +25,12 @@
 #include <libyul/Exceptions.h>
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
+#include <libyul/Utilities.h>
 
 #include <libevmasm/SemanticInformation.h>
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Algorithms.h>
-#include <libsolutil/Visitor.h>
 
 #include <limits>
 
@@ -78,18 +78,13 @@ void SideEffectsCollector::operator()(FunctionCall const& _functionCall)
 {
 	ASTWalker::operator()(_functionCall);
 
-	util::GenericVisitor visitor{
-		[&](Builtin const& _builtin) { m_sideEffects += m_dialect.builtinFunction(_builtin.handle).sideEffects; },
-		[&](Verbatim const& _verbatim) { m_sideEffects += m_dialect.verbatimFunction(_verbatim.handle).sideEffects; },
-		[&](Identifier const& _identifier)
-		{
-			if (m_functionSideEffects && m_functionSideEffects->count(_identifier.name))
-				m_sideEffects += m_functionSideEffects->at(_identifier.name);
-			else
-				m_sideEffects += SideEffects::worst();
-		}
-	};
-	std::visit(visitor, _functionCall.functionName);
+	std::optional<YulName> functionName = isBuiltinFunctionCall(_functionCall) ? std::nullopt : std::optional{std::get<Identifier>(_functionCall.functionName).name};
+	if (BuiltinFunction const* f = resolveBuiltinFunction(_functionCall.functionName, m_dialect))
+		m_sideEffects += f->sideEffects;
+	else if (functionName && m_functionSideEffects && m_functionSideEffects->count(*functionName))
+		m_sideEffects += m_functionSideEffects->at(*functionName);
+	else
+		m_sideEffects += SideEffects::worst();
 }
 
 bool MSizeFinder::containsMSize(Dialect const& _dialect, Block const& _ast)
@@ -116,12 +111,9 @@ void MSizeFinder::operator()(FunctionCall const& _functionCall)
 {
 	ASTWalker::operator()(_functionCall);
 
-	util::GenericVisitor visitor{
-		[](Identifier const&) {},
-		[&](Builtin const& _builtin) { m_msizeFound |= m_dialect.builtinFunction(_builtin.handle).isMSize; },
-		[&](Verbatim const& _verbatim) { m_msizeFound |= m_dialect.verbatimFunction(_verbatim.handle).isMSize; }
-	};
-	std::visit(visitor, _functionCall.functionName);
+	if (BuiltinFunction const* f = resolveBuiltinFunction(_functionCall.functionName, m_dialect))
+		if (f->isMSize)
+			m_msizeFound = true;
 }
 
 std::map<FunctionNameIdentifier, SideEffects> SideEffectsPropagator::sideEffects(
@@ -247,17 +239,15 @@ bool TerminationFinder::containsNonContinuingFunctionCall(Expression const& _exp
 			if (containsNonContinuingFunctionCall(arg))
 				return true;
 
-		util::GenericVisitor visitor{
-			[&](Builtin const& _builtin) { return !m_dialect.builtinFunction(_builtin.handle).controlFlowSideEffects.canContinue; },
-			[&](Verbatim const& _verbatim) { return !m_dialect.verbatimFunction(_verbatim.handle).controlFlowSideEffects.canContinue; },
-			[&](Identifier const& _identifier)
-			{
-				if (m_functionSideEffects && m_functionSideEffects->count(_identifier.name))
-					return !m_functionSideEffects->at(_identifier.name).canContinue;
-				return false;
-			}
-		};
-		return std::visit(visitor, functionCall->functionName);
+		if (auto const* builtin = resolveBuiltinFunction(functionCall->functionName, m_dialect))
+			return !builtin->controlFlowSideEffects.canContinue;
+		else
+		{
+			yulAssert(std::holds_alternative<Identifier>(functionCall->functionName));
+			auto const& name = std::get<Identifier>(functionCall->functionName).name;
+			if (m_functionSideEffects && m_functionSideEffects->count(name))
+				return !m_functionSideEffects->at(name).canContinue;
+		}
 	}
 	return false;
 }

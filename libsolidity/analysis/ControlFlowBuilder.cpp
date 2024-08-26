@@ -19,6 +19,7 @@
 #include <libsolidity/analysis/ControlFlowBuilder.h>
 #include <libsolidity/ast/ASTUtils.h>
 #include <libyul/AST.h>
+#include <libyul/Utilities.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
 using namespace solidity::langutil;
@@ -582,25 +583,13 @@ void ControlFlowBuilder::operator()(yul::FunctionCall const& _functionCall)
 	solAssert(m_currentNode && m_inlineAssembly, "");
 	yul::ASTWalker::operator()(_functionCall);
 
-	util::GenericVisitor visitor{
-		[&](yul::Builtin const& _builtin) -> std::optional<yul::ControlFlowSideEffects>
-		{
-			return m_inlineAssembly->dialect().builtinFunction(_builtin.handle).controlFlowSideEffects;
-		},
-		[&](yul::Verbatim const& _verbatim) -> std::optional<yul::ControlFlowSideEffects>
-		{
-			return m_inlineAssembly->dialect().verbatimFunction(_verbatim.handle).controlFlowSideEffects;
-		},
-		[](yul::Identifier const&) -> std::optional<yul::ControlFlowSideEffects> { return std::nullopt; }
-	};
-	std::optional<yul::ControlFlowSideEffects> sideEffects = std::visit(visitor, _functionCall.functionName);
-	if (sideEffects)
+	if (auto const *builtinFunction = resolveBuiltinFunction(_functionCall.functionName, m_inlineAssembly->dialect()))
 	{
-		if (sideEffects.value().canTerminate)
+		if (builtinFunction->controlFlowSideEffects.canTerminate)
 			connect(m_currentNode, m_transactionReturnNode);
-		if (sideEffects.value().canRevert)
+		if (builtinFunction->controlFlowSideEffects.canRevert)
 			connect(m_currentNode, m_revertNode);
-		if (!sideEffects.value().canContinue)
+		if (!builtinFunction->controlFlowSideEffects.canContinue)
 			m_currentNode = newLabel();
 	}
 }

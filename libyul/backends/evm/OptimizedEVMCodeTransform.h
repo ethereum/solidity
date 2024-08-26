@@ -80,7 +80,7 @@ private:
 	/// Creates and stores a new label, if none exists already.
 	AbstractAssembly::LabelID getFunctionLabel(Scope::Function const& _function);
 	/// Assert that @a _slot contains the value of @a _expression.
-	static void validateSlot(StackSlot const& _slot, Expression const& _expression, EVMDialect const& _dialect);
+	static void validateSlot(StackSlot const& _slot, Expression const& _expression);
 
 	/// Shuffles m_stack to the desired @a _targetStack while emitting the shuffling code to m_assembly.
 	/// Sets the source locations to the one in @a _debugData.

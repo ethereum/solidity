@@ -131,16 +131,6 @@ size_t AsmAnalyzer::operator()(Literal const& _literal)
 	return 1;
 }
 
-size_t AsmAnalyzer::operator()(Builtin const&)
-{
-	yulAssert(false, "Should not be called for builtins");
-}
-
-size_t AsmAnalyzer::operator()(Verbatim const&)
-{
-	yulAssert(false, "Should not be called for builtins");
-}
-
 size_t AsmAnalyzer::operator()(Identifier const& _identifier)
 {
 	yulAssert(!_identifier.name.empty(), "");
@@ -308,97 +298,77 @@ size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 	std::optional<size_t> numReturns;
 	std::vector<std::optional<LiteralKind>> const* literalArguments = nullptr;
 
-	GenericVisitor visitor{
-		[&](Builtin const& _builtin)
+	if (BuiltinFunction const* f = resolveBuiltinFunction(_funCall.functionName, m_dialect))
+	{
+		if (f->name == "selfdestruct")
+			m_errorReporter.warning(
+				1699_error,
+				nativeLocationOf(_funCall.functionName),
+				"\"selfdestruct\" has been deprecated. "
+				"Note that, starting from the Cancun hard fork, the underlying opcode no longer deletes the code and "
+				"data associated with an account and only transfers its Ether to the beneficiary, "
+				"unless executed in the same transaction in which the contract was created (see EIP-6780). "
+				"Any use in newly deployed contracts is strongly discouraged even if the new behavior is taken into account. "
+				"Future changes to the EVM might further reduce the functionality of the opcode."
+			);
+		else if (
+			m_evmVersion.supportsTransientStorage() &&
+			f->name == "tstore" &&
+			!m_errorReporter.hasError({2394})
+		)
+			m_errorReporter.warning(
+				2394_error,
+				nativeLocationOf(_funCall.functionName),
+				"Transient storage as defined by EIP-1153 can break the composability of smart contracts: "
+				"Since transient storage is cleared only at the end of the transaction and not at the end of the outermost call frame to the contract within a transaction, "
+				"your contract may unintentionally misbehave when invoked multiple times in a complex transaction. "
+				"To avoid this, be sure to clear all transient storage at the end of any call to your contract. "
+				"The use of transient storage for reentrancy guards that are cleared at the end of the call is safe."
+			);
+
+		numParameters = f->numParameters;
+		numReturns = f->numReturns;
+		if (!f->literalArguments.empty())
+			literalArguments = &f->literalArguments;
+
+		validateInstructions(_funCall);
+		m_sideEffects += f->sideEffects;
+	}
+	else if (m_currentScope->lookup(YulName{std::string(resolveFunctionName(_funCall.functionName, m_dialect))}, GenericVisitor{
+		[&](Scope::Variable const&)
 		{
-			auto const& function = m_dialect.builtinFunction(_builtin.handle);
-			yulAssert(!function.name.empty(), "");
-			if (function.name == "selfdestruct")
-				m_errorReporter.warning(
-					1699_error,
-					nativeLocationOf(_funCall.functionName),
-					"\"selfdestruct\" has been deprecated. "
-					"Note that, starting from the Cancun hard fork, the underlying opcode no longer deletes the code and "
-					"data associated with an account and only transfers its Ether to the beneficiary, "
-					"unless executed in the same transaction in which the contract was created (see EIP-6780). "
-					"Any use in newly deployed contracts is strongly discouraged even if the new behavior is taken into account. "
-					"Future changes to the EVM might further reduce the functionality of the opcode."
-				);
-			else if (
-				m_evmVersion.supportsTransientStorage() &&
-				function.name == "tstore" &&
-				!m_errorReporter.hasError({2394})
-			)
-				m_errorReporter.warning(
-					2394_error,
-					nativeLocationOf(_funCall.functionName),
-					"Transient storage as defined by EIP-1153 can break the composability of smart contracts: "
-					"Since transient storage is cleared only at the end of the transaction and not at the end of the outermost call frame to the contract within a transaction, "
-					"your contract may unintentionally misbehave when invoked multiple times in a complex transaction. "
-					"To avoid this, be sure to clear all transient storage at the end of any call to your contract. "
-					"The use of transient storage for reentrancy guards that are cleared at the end of the call is safe."
-				);
-
-			numParameters = function.numParameters;
-			numReturns = function.numReturns;
-			if (!function.literalArguments.empty())
-				literalArguments = &function.literalArguments;
-
-			validateInstructions(_funCall);
-			m_sideEffects += function.sideEffects;
+			m_errorReporter.typeError(
+				4202_error,
+				nativeLocationOf(_funCall.functionName),
+				"Attempt to call variable instead of function."
+			);
 		},
-		[&](Verbatim const& _verbatim)
+		[&](Scope::Function const& _fun)
 		{
-			auto const& function = m_dialect.verbatimFunction(_verbatim.handle);
-			yulAssert(!function.name.empty(), "");
-			numParameters = function.numParameters;
-			numReturns = function.numReturns;
-			if (!function.literalArguments.empty())
-				literalArguments = &function.literalArguments;
-
-			validateInstructions(_funCall);
-			m_sideEffects += function.sideEffects;
-		},
-		[&](Identifier const& _identifier)
-		{
-			yulAssert(!_identifier.name.empty(), "");
-			if (m_currentScope->lookup(_identifier.name, GenericVisitor{
-				[&](Scope::Variable const&)
-				{
-					m_errorReporter.typeError(
-						4202_error,
-						nativeLocationOf(_funCall.functionName),
-						"Attempt to call variable instead of function."
-					);
-				},
-				[&](Scope::Function const& _fun)
-				{
-					numParameters = _fun.numArguments;
-					numReturns = _fun.numReturns;
-				}
-			}))
-			{
-				if (m_resolver)
-					// We found a local reference, make sure there is no external reference.
-					m_resolver(
-						_identifier,
-						yul::IdentifierContext::NonExternal,
-						m_currentScope->insideFunction()
-					);
-			}
-			else
-			{
-				if (!validateInstructions(_funCall))
-					m_errorReporter.declarationError(
-						4619_error,
-						nativeLocationOf(_funCall.functionName),
-						"Function \"" + _identifier.name.str() + "\" not found."
-					);
-				yulAssert(!watcher.ok(), "Expected a reported error.");
-			}
+			numParameters = _fun.numArguments;
+			numReturns = _fun.numReturns;
 		}
-	};
-	std::visit(visitor, _funCall.functionName);
+	}))
+	{
+		yulAssert(std::holds_alternative<Identifier>(_funCall.functionName));
+		if (m_resolver)
+			// We found a local reference, make sure there is no external reference.
+			m_resolver(
+				std::get<Identifier>(_funCall.functionName),
+				yul::IdentifierContext::NonExternal,
+				m_currentScope->insideFunction()
+			);
+	}
+	else
+	{
+		if (!validateInstructions(_funCall))
+			m_errorReporter.declarationError(
+				4619_error,
+				nativeLocationOf(_funCall.functionName),
+				fmt::format("Function \"{}\" not found.", resolveFunctionName(_funCall.functionName, m_dialect))
+			);
+		yulAssert(!watcher.ok(), "Expected a reported error.");
+	}
 
 	if (numParameters && _funCall.arguments.size() != *numParameters)
 		m_errorReporter.typeError(

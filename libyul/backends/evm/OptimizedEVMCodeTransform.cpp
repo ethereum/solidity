@@ -77,7 +77,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::FunctionCall const& _call)
 			_call.functionCall.get().arguments | ranges::views::reverse,
 			m_stack | ranges::views::take_last(_call.functionCall.get().arguments.size())
 		))
-			validateSlot(slot, arg, m_dialect);
+			validateSlot(slot, arg);
 		// Assert that we got the correct return label on stack.
 		if (_call.canContinue)
 		{
@@ -129,7 +129,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::BuiltinCall const& _call)
 			ranges::views::values,
 			m_stack | ranges::views::take_last(_call.arguments)
 		))
-			validateSlot(slot, arg, m_dialect);
+			validateSlot(slot, arg);
 	}
 
 	// Emit code.
@@ -222,7 +222,7 @@ AbstractAssembly::LabelID OptimizedEVMCodeTransform::getFunctionLabel(Scope::Fun
 	return m_functionLabels.at(&m_dfg.functionInfo.at(&_function));
 }
 
-void OptimizedEVMCodeTransform::validateSlot(StackSlot const& _slot, Expression const& _expression, EVMDialect const& _dialect)
+void OptimizedEVMCodeTransform::validateSlot(StackSlot const& _slot, Expression const& _expression)
 {
 	std::visit(util::GenericVisitor{
 		[&](yul::Literal const& _literal) {
@@ -232,14 +232,6 @@ void OptimizedEVMCodeTransform::validateSlot(StackSlot const& _slot, Expression 
 		[&](yul::Identifier const& _identifier) {
 			auto* variableSlot = std::get_if<VariableSlot>(&_slot);
 			yulAssert(variableSlot && variableSlot->variable.get().name == _identifier.name, "");
-		},
-		[&](yul::Builtin const& _builtin) {
-			auto const* variableSlot = std::get_if<VariableSlot>(&_slot);
-			yulAssert(variableSlot && variableSlot->variable.get().name == YulName(std::string(resolveFunctionName(_builtin, _dialect))), "");
-		},
-		[&](yul::Verbatim const& _verbatim) {
-			auto const* variableSlot = std::get_if<VariableSlot>(&_slot);
-			yulAssert(variableSlot && variableSlot->variable.get().name == YulName(std::string(resolveFunctionName(_verbatim, _dialect))), "");
 		},
 		[&](yul::FunctionCall const& _call) {
 			auto* temporarySlot = std::get_if<TemporarySlot>(&_slot);

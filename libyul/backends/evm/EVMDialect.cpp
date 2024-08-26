@@ -397,27 +397,21 @@ EVMDialect::EVMDialect(langutil::EVMVersion _evmVersion, std::optional<uint8_t> 
 	m_functions(createBuiltins(_evmVersion, _eofVersion, _objectAccess)),
 	m_reserved(createReservedIdentifiers(_evmVersion))
 {
-	auto const assertBuiltin = [this](std::string_view name)
-	{
-		std::optional<BuiltinHandle> const handle = builtin(name);
-		yulAssert(handle.has_value());
-		return *handle;
-	};
-	m_handles.add = assertBuiltin("add");
-	m_handles.exp = assertBuiltin("exp");
-	m_handles.mul = assertBuiltin("mul");
-	m_handles.not_ = assertBuiltin("not");
-	m_handles.shl = assertBuiltin("shl");
-	m_handles.sub = assertBuiltin("sub");
+	m_handles.add = EVMDialect::builtin("add");
+	m_handles.exp = EVMDialect::builtin("exp");
+	m_handles.mul = EVMDialect::builtin("mul");
+	m_handles.not_ = EVMDialect::builtin("not");
+	m_handles.shl = EVMDialect::builtin("shl");
+	m_handles.sub = EVMDialect::builtin("sub");
 
-	m_discardFunction = builtin("pop");
-	m_equalityFunction = builtin("eq");
-	m_booleanNegationFunction = builtin("iszero");
-	m_memoryStoreFunction = builtin("mstore");
-	m_memoryLoadFunction = builtin("mload");
-	m_storageStoreFunction = builtin("sstore");
-	m_storageLoadFunction = builtin("sload");
-	m_hashFunction = builtin("keccak256");
+	m_discardFunction = EVMDialect::builtin("pop");
+	m_equalityFunction = EVMDialect::builtin("eq");
+	m_booleanNegationFunction = EVMDialect::builtin("iszero");
+	m_memoryStoreFunction = EVMDialect::builtin("mstore");
+	m_memoryLoadFunction = EVMDialect::builtin("mload");
+	m_storageStoreFunction = EVMDialect::builtin("sstore");
+	m_storageLoadFunction = EVMDialect::builtin("sload");
+	m_hashFunction = EVMDialect::builtin("keccak256");
 }
 
 std::optional<BuiltinHandle> EVMDialect::builtin(std::string_view _name) const
@@ -529,6 +523,6 @@ BuiltinFunctionForEVM const& EVMDialect::builtinFunction(BuiltinHandle const& ha
 BuiltinFunctionForEVM const& EVMDialect::verbatimFunction(VerbatimHandle const& handle) const
 {
 	auto it = m_verbatimFunctions.find(std::make_pair(handle.numArgs, handle.numRets));
-	yulAssert(it != m_verbatimFunctions.end());
+	yulAssert(it != m_verbatimFunctions.end(), fmt::format("Didn't find verbatim function with {} args and {} rets (EVM Version {})", handle.numArgs, handle.numRets, m_evmVersion.name()));
 	return it->second;
 }

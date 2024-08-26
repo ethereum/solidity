@@ -87,8 +87,6 @@ public:
 
 	void operator()(Literal const&) override;
 	void operator()(Identifier const&) override;
-	void operator()(Builtin const&) override;
-	void operator()(Verbatim const&) override;
 	void operator()(FunctionCall const& _funCall) override;
 	void operator()(ExpressionStatement const& _statement) override;
 	void operator()(Assignment const& _assignment) override;
