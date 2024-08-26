@@ -864,6 +864,10 @@ std::string const* CompilerStack::sourceMapping(std::string const& _contractName
 {
 	solAssert(m_stackState == CompilationSuccessful, "Compilation was not successful.");
 
+	// TODO
+	if (m_eofVersion.has_value())
+		return nullptr;
+
 	Contract const& c = contract(_contractName);
 	if (!c.sourceMapping)
 	{
@@ -876,6 +880,10 @@ std::string const* CompilerStack::sourceMapping(std::string const& _contractName
 std::string const* CompilerStack::runtimeSourceMapping(std::string const& _contractName) const
 {
 	solAssert(m_stackState == CompilationSuccessful, "Compilation was not successful.");
+
+	// TODO
+	if (m_eofVersion.has_value())
+		return nullptr;
 
 	Contract const& c = contract(_contractName);
 	if (!c.runtimeSourceMapping)
