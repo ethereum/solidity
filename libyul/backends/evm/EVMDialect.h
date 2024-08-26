@@ -106,6 +106,8 @@ struct EVMDialect: public Dialect
 
 	static SideEffects sideEffectsOfInstruction(evmasm::Instruction _instruction);
 
+	std::map<std::pair<size_t, size_t>, BuiltinFunctionForEVM> const& verbatimFunctions() const { return m_verbatimFunctions; }
+
 protected:
 	VerbatimHandle verbatimFunction(size_t _arguments, size_t _returnVariables) const;
 
