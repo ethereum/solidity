@@ -19,12 +19,16 @@
 # You should have received a copy of the GNU General Public License
 # along with solidity.  If not, see <http://www.gnu.org/licenses/>
 #
-# (c) 2016-2019 solidity contributors.
+# (c) 2016-2024 solidity contributors.
 #------------------------------------------------------------------------------
-FROM buildpack-deps:focal AS base
-LABEL version="25"
+FROM buildpack-deps:noble AS base
+LABEL version="1"
 
 ARG DEBIAN_FRONTEND=noninteractive
+
+# From Python3.11, pip requires a virtual environment, and will thus terminate when installing packages globally.
+# Since we're building this image from scratch, it's perfectly fine to use the below flag.
+ENV PIP_BREAK_SYSTEM_PACKAGES 1
 
 RUN set -ex; \
 	dist=$(grep DISTRIB_CODENAME /etc/lsb-release | cut -d= -f2); \
@@ -39,7 +43,9 @@ RUN set -ex; \
 		libboost-program-options-dev \
 		libboost-system-dev \
 		libboost-test-dev \
+		libcln-dev \
 		libz3-static-dev \
+		locales-all \
 		lsof \
 		ninja-build \
 		python3-pip \
@@ -47,7 +53,8 @@ RUN set -ex; \
 		software-properties-common \
 		sudo \
 		unzip \
-		z3-static; \
+		z3-static \
+		zip; \
 	pip3 install \
 		codecov \
 		colorama \
@@ -59,10 +66,6 @@ RUN set -ex; \
 		tabulate \
 		z3-solver;
 
-# TODO: we could eliminate duplication by using a Dockerfile extension like:
-# https://github.com/edrevo/dockerfile-plus?tab=readme-ov-file#dockerfile
-# or mult-stage builds, then we could define a base image which would be included/used by all the other Dockerfiles.
-# Or we could move the common parts to a shell script, copying and calling it from the Dockerfiles.
 # Eldarica
 RUN set -ex; \
 	apt-get update; \

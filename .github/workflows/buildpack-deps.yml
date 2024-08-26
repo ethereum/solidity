@@ -9,6 +9,7 @@ on:
       - 'scripts/docker/buildpack-deps/Dockerfile.ubuntu2004'
       - 'scripts/docker/buildpack-deps/Dockerfile.ubuntu2204.clang'
       - 'scripts/docker/buildpack-deps/Dockerfile.ubuntu2204'
+      - 'scripts/docker/buildpack-deps/Dockerfile.ubuntu2404'
 
 jobs:
   buildpack-deps:
@@ -23,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image_variant: [emscripten, ubuntu.clang.ossfuzz, ubuntu2004, ubuntu2204.clang, ubuntu2204]
+        image_variant: [emscripten, ubuntu.clang.ossfuzz, ubuntu2004, ubuntu2204.clang, ubuntu2204, ubuntu2404]
 
     steps:
       - uses: actions/checkout@v4
