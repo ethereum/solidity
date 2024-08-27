@@ -102,8 +102,8 @@ public:
 	/// @returns the worst side effects encountered during analysis (including within defined functions).
 	SideEffects const& sideEffects() const { return m_sideEffects; }
 private:
-	/// Visits the expression, expects that it evaluates to exactly one value and
-	/// returns the type. Reports errors on errors and returns the default type.
+	/// Visits the expression, expects that it evaluates to exactly one value.
+	/// Reports errors otherwise.
 	void expectExpression(Expression const& _expr);
 	void expectUnlimitedStringLiteral(Literal const& _literal);
 

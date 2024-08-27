@@ -42,6 +42,9 @@ Json AsmJsonConverter::operator()(NameWithDebugData const& _node) const
 	yulAssert(!_node.name.empty(), "Invalid variable name.");
 	Json ret = createAstNode(originLocationOf(_node), nativeLocationOf(_node), "YulTypedName");
 	ret["name"] = _node.name.str();
+	// even though types are removed from Yul, we keep this field in the Json interface to not introduce
+	// a breaking change
+	// can be removed with the next breaking version
 	ret["type"] = "";
 	return ret;
 }
