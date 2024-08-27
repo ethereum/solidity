@@ -465,6 +465,8 @@ private:
 		mutable std::optional<std::string const> runtimeSourceMapping;
 	};
 
+	Json ethdebugInstructions(Contract const& _contract, bool _runtime) const;
+
 	void createAndAssignCallGraphs();
 	void findAndReportCyclicContractDependencies();
 
