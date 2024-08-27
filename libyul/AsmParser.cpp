@@ -567,7 +567,7 @@ std::variant<Literal, Identifier> Parser::parseLiteralOrIdentifier(bool _unlimit
 			break;
 		}
 
-		auto const beginOfLiteralLoc = currentLocation();
+		auto const literalLocation = currentLocation();
 		Literal literal{
 			createDebugData(),
 			kind,
@@ -578,9 +578,9 @@ std::variant<Literal, Identifier> Parser::parseLiteralOrIdentifier(bool _unlimit
 		{
 			expectToken(Token::Colon);
 			updateLocationEndFrom(literal.debugData, currentLocation());
-			auto const loc = SourceLocation::smallestCovering(beginOfLiteralLoc, currentLocation());
+			auto const typedLiteralLocation = SourceLocation::smallestCovering(literalLocation, currentLocation());
 			std::ignore = expectAsmIdentifier();
-			expectUntyped(loc);
+			raiseUnsupportedTypesError(typedLiteralLocation);
 		}
 
 		return literal;
@@ -701,15 +701,15 @@ NameWithDebugData Parser::parseNameWithDebugData()
 {
 	RecursionGuard recursionGuard(*this);
 	NameWithDebugData typedName = createWithDebugData<NameWithDebugData>();
-	auto const locNameStart = currentLocation();
+	auto const nameLocation = currentLocation();
 	typedName.name = expectAsmIdentifier();
 	if (currentToken() == Token::Colon)
 	{
 		expectToken(Token::Colon);
 		updateLocationEndFrom(typedName.debugData, currentLocation());
-		auto const loc = SourceLocation::smallestCovering(locNameStart, currentLocation());
+		auto const typedNameLocation = SourceLocation::smallestCovering(nameLocation, currentLocation());
 		std::ignore = expectAsmIdentifier();
-		expectUntyped(loc);
+		raiseUnsupportedTypesError(typedNameLocation);
 	}
 
 	return typedName;
@@ -760,7 +760,7 @@ bool Parser::isValidNumberLiteral(std::string const& _literal)
 		return _literal.find_first_not_of("0123456789") == std::string::npos;
 }
 
-void Parser::expectUntyped(SourceLocation const& loc)
+void Parser::raiseUnsupportedTypesError(SourceLocation const& _location) const
 {
-	m_errorReporter.parserError(5473_error, loc, "Types are not valid in untyped Yul.");
+	m_errorReporter.parserError(5473_error, _location, "Types are not supported in untyped Yul.");
 }

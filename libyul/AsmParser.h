@@ -147,7 +147,7 @@ protected:
 	FunctionCall parseCall(std::variant<Literal, Identifier>&& _initialOp);
 	NameWithDebugData parseNameWithDebugData();
 	YulName expectAsmIdentifier();
-	void expectUntyped(langutil::SourceLocation const& loc);
+	void raiseUnsupportedTypesError(langutil::SourceLocation const& _location) const;
 
 	/// Reports an error if we are currently not inside the body part of a for loop.
 	void checkBreakContinuePosition(std::string const& _which);

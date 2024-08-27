@@ -380,7 +380,6 @@ size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 			std::to_string(_funCall.arguments.size()) + "."
 		);
 
-	size_t numArgs{0};
 	for (size_t i = _funCall.arguments.size(); i > 0; i--)
 	{
 		Expression const& arg = _funCall.arguments[i - 1];
@@ -427,18 +426,16 @@ size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 						);
 				}
 				expectUnlimitedStringLiteral(std::get<Literal>(arg));
-				++numArgs;
 				continue;
 			}
 		}
 		expectExpression(arg);
-		++numArgs;
 	}
 
 	if (watcher.ok())
 	{
-		yulAssert(numParameters && numParameters == numArgs, "");
-		yulAssert(numReturns, "");
+		yulAssert(numParameters && numParameters == _funCall.arguments.size());
+		yulAssert(numReturns);
 		return *numReturns;
 	}
 	else if (numReturns)

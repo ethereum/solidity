@@ -177,7 +177,13 @@ Literal AsmJsonImporter::createLiteral(Json const& _node)
 		value = member(_node, "value").get<std::string>();
 	{
 		auto const typeNode = member(_node, "type");
-		yulAssert(typeNode.empty() || typeNode.get<std::string>().empty());
+		yulAssert(
+			typeNode.empty() || typeNode.get<std::string>().empty(),
+			fmt::format(
+				"Expected literal types to be either empty or absent in the JSON. Got \"{}\".",
+				typeNode.get<std::string>()
+			)
+		);
 	}
 	if (kind == "number")
 	{
