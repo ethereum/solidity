@@ -1,6 +1,6 @@
 contract C {
     uint[] storageArray;
-    function test_zeroed_indicies(uint256 len) public
+    function test_zeroed_indices(uint256 len) public
     {
         while(storageArray.length < len)
             storageArray.push();
@@ -50,20 +50,20 @@ contract C {
     }
 }
 // ----
-// test_zeroed_indicies(uint256): 1 ->
-// test_zeroed_indicies(uint256): 5 ->
+// test_zeroed_indices(uint256): 1 ->
+// test_zeroed_indices(uint256): 5 ->
 // gas irOptimized: 133763
 // gas legacy: 131664
 // gas legacyOptimized: 129990
-// test_zeroed_indicies(uint256): 10 ->
+// test_zeroed_indices(uint256): 10 ->
 // gas irOptimized: 228556
 // gas legacy: 225215
 // gas legacyOptimized: 222351
-// test_zeroed_indicies(uint256): 15 ->
+// test_zeroed_indices(uint256): 15 ->
 // gas irOptimized: 327360
 // gas legacy: 322899
 // gas legacyOptimized: 318907
-// test_zeroed_indicies(uint256): 0xFF ->
+// test_zeroed_indices(uint256): 0xFF ->
 // gas irOptimized: 5180120
 // gas legacy: 5093135
 // gas legacyOptimized: 5020523
