@@ -132,7 +132,8 @@ void YulStack::optimize()
 				yulOptimiserSteps,
 				yulOptimiserCleanupSteps,
 				m_optimiserSettings.expectedExecutionsPerDeployment
-			}
+			},
+			m_eofVersion
 		);
 
 		// Optimizer does not maintain correct native source locations in the AST.

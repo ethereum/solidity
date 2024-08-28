@@ -68,7 +68,7 @@ public:
 	/// or caching the result otherwise. The object is modified in-place.
 	/// Automatically accounts for the difference between creation and deployed objects.
 	/// @warning Does not ensure that nativeLocations in the resulting AST match the optimized code.
-	void optimize(Object& _object, Settings const& _settings);
+	void optimize(Object& _object, Settings const& _settings, std::optional<uint8_t> _eofVersion);
 
 	size_t size() const { return m_cachedObjects.size(); }
 
@@ -79,7 +79,7 @@ private:
 		Dialect const* dialect;
 	};
 
-	void optimize(Object& _object, Settings const& _settings, bool _isCreation);
+	void optimize(Object& _object, Settings const& _settings, bool _isCreation, std::optional<uint8_t> _eofVersion);
 
 	void storeOptimizedObject(util::h256 _cacheKey, Object const& _optimizedObject, Dialect const& _dialect);
 	void overwriteWithOptimizedObject(util::h256 _cacheKey, Object& _object) const;

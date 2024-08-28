@@ -54,14 +54,14 @@ Dialect const& yul::languageToDialect(Language _language, EVMVersion _version)
 	util::unreachable();
 }
 
-void ObjectOptimizer::optimize(Object& _object, Settings const& _settings)
+void ObjectOptimizer::optimize(Object& _object, Settings const& _settings, std::optional<uint8_t> _eofVersion)
 {
 	yulAssert(_object.subId == std::numeric_limits<size_t>::max(), "Not a top-level object.");
 
-	optimize(_object, _settings, true /* _isCreation */);
+	optimize(_object, _settings, true /* _isCreation */, _eofVersion);
 }
 
-void ObjectOptimizer::optimize(Object& _object, Settings const& _settings, bool _isCreation)
+void ObjectOptimizer::optimize(Object& _object, Settings const& _settings, bool _isCreation, std::optional<uint8_t> _eofVersion)
 {
 	yulAssert(_object.code());
 	yulAssert(_object.debugData);
@@ -91,6 +91,7 @@ void ObjectOptimizer::optimize(Object& _object, Settings const& _settings, bool 
 
 	OptimiserSuite::run(
 		dialect,
+		_eofVersion,
 		meter.get(),
 		_object,
 		_settings.optimizeStackAllocation,

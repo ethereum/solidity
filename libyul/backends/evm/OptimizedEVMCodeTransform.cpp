@@ -111,7 +111,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::FunctionCall const& _call)
 		m_assembly.setSourceLocation(originLocationOf(_call));
 		if (m_dfg.useFunctions)
 			m_assembly.appendFunctionCall(m_builtinContext.functionIDs.at(&_call.function.get()),
-				!_call.canContinue ? static_cast<int>(_call.function.get().returns.size()) : 0);
+				!_call.canContinue ? static_cast<int>(_call.function.get().numReturns) : 0);
 		else
 			m_assembly.appendJumpTo(
 				getFunctionLabel(_call.function),
@@ -128,7 +128,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::FunctionCall const& _call)
 		for (size_t i = 0; i < _call.function.get().numArguments + (useReturnLabel ? 1 : 0); ++i)
 			m_stack.pop_back();
 		// Push return values to m_stack.
-		yulAssert(_call.function.get().returns.size() < 0x80, "Num of function output >= 128");
+		yulAssert(_call.function.get().numReturns < 0x80, "Num of function output >= 128");
 
 		for (size_t index: ranges::views::iota(0u, _call.function.get().numReturns))
 			m_stack.emplace_back(TemporarySlot{_call.functionCall, index});
