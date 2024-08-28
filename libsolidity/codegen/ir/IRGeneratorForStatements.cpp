@@ -204,7 +204,7 @@ private:
 			solAssert(false);
 
 		if (isDigit(value.front()))
-			return yul::Literal{_identifier.debugData, yul::LiteralKind::Number, yul::valueOfNumberLiteral(value), {}};
+			return yul::Literal{_identifier.debugData, yul::LiteralKind::Number, yul::valueOfNumberLiteral(value)};
 		else
 			return yul::Identifier{_identifier.debugData, yul::YulName{value}};
 	}
@@ -2256,7 +2256,7 @@ bool IRGeneratorForStatements::visit(InlineAssembly const& _inlineAsm)
 
 	solAssert(std::holds_alternative<yul::Block>(modified));
 
-	appendCode() << yul::AsmPrinter(yul::AsmPrinter::TypePrinting::Full, _inlineAsm.dialect())(std::get<yul::Block>(modified)) << "\n";
+	appendCode() << yul::AsmPrinter()(std::get<yul::Block>(modified)) << "\n";
 	return false;
 }
 

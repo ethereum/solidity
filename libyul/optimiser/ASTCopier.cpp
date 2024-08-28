@@ -163,9 +163,9 @@ Literal ASTCopier::translate(Literal const& _literal)
 	return _literal;
 }
 
-TypedName ASTCopier::translate(TypedName const& _typedName)
+NameWithDebugData ASTCopier::translate(NameWithDebugData const& _typedName)
 {
-	return TypedName{_typedName.debugData, translateIdentifier(_typedName.name), _typedName.type};
+	return NameWithDebugData{_typedName.debugData, translateIdentifier(_typedName.name)};
 }
 
 YulName FunctionCopier::translateIdentifier(YulName _name)

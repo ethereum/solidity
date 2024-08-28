@@ -96,9 +96,7 @@ yul::Block yul::test::disambiguate(std::string const& _source)
 
 std::string yul::test::format(std::string const& _source)
 {
-	auto const version = solidity::test::CommonOptions::get().evmVersion();
-	Dialect const& dialect = EVMDialect::strictAssemblyForEVMObjects(version);
-	return yul::AsmPrinter(yul::AsmPrinter::TypePrinting::Full, dialect)(parse(_source).first->root());
+	return yul::AsmPrinter()(parse(_source).first->root());
 }
 
 namespace

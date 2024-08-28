@@ -217,7 +217,7 @@ protected:
 	};
 	/// Special expression whose address will be used in m_value.
 	/// YulName does not need to be reset because DataFlowAnalyzer is short-lived.
-	Expression const m_zero{Literal{{}, LiteralKind::Number, LiteralValue{0, "0"}, {}}};
+	Expression const m_zero{Literal{{}, LiteralKind::Number, LiteralValue{0, std::nullopt}}};
 	/// List of scopes.
 	std::vector<Scope> m_variableScopes;
 };

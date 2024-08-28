@@ -169,7 +169,7 @@ private:
 		std::optional<LiteralValue> operator()(YulName const& _variable) const;
 		/// @returns a YulName containing the memory offset to be assigned to @a _variable as number literal
 		/// or std::nullopt if the variable should not be moved.
-		std::optional<LiteralValue> operator()(TypedName const& _variable) const;
+		std::optional<LiteralValue> operator()(NameWithDebugData const& _variable) const;
 		/// @returns a YulName containing the memory offset to be assigned to @a _variable as number literal
 		/// or std::nullopt if the variable should not be moved.
 		std::optional<LiteralValue> operator()(Identifier const& _variable) const;
@@ -187,14 +187,14 @@ private:
 	StackToMemoryMover(
 		OptimiserStepContext& _context,
 		VariableMemoryOffsetTracker const& _memoryOffsetTracker,
-		std::map<YulName, std::vector<TypedName>> _functionReturnVariables
+		std::map<YulName, std::vector<NameWithDebugData>> _functionReturnVariables
 	);
 
 	OptimiserStepContext& m_context;
 	VariableMemoryOffsetTracker const& m_memoryOffsetTracker;
 	NameDispenser& m_nameDispenser;
 	/// Map from function names to the return variables of the function with that name.
-	std::map<YulName, std::vector<TypedName>> m_functionReturnVariables;
+	std::map<YulName, std::vector<NameWithDebugData>> m_functionReturnVariables;
 	/// List of functions generated while running this step that are to be appended to the code in the end.
 	std::list<Statement> m_newFunctionDefinitions;
 };

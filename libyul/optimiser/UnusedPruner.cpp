@@ -92,7 +92,7 @@ void UnusedPruner::operator()(Block& _block)
 			if (std::none_of(
 				varDecl.variables.begin(),
 				varDecl.variables.end(),
-				[&](TypedName const& _typedName) { return used(_typedName.name); }
+				[&](NameWithDebugData const& _typedName) { return used(_typedName.name); }
 			))
 			{
 				if (!varDecl.value)
@@ -105,10 +105,10 @@ void UnusedPruner::operator()(Block& _block)
 					subtractReferences(ReferencesCounter::countReferences(*varDecl.value));
 					statement = Block{std::move(varDecl.debugData), {}};
 				}
-				else if (varDecl.variables.size() == 1 && m_dialect.discardFunction(varDecl.variables.front().type))
+				else if (varDecl.variables.size() == 1 && m_dialect.discardFunction())
 					statement = ExpressionStatement{varDecl.debugData, FunctionCall{
 						varDecl.debugData,
-						{varDecl.debugData, m_dialect.discardFunction(varDecl.variables.front().type)->name},
+						{varDecl.debugData, m_dialect.discardFunction()->name},
 						{*std::move(varDecl.value)}
 					}};
 			}

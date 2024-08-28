@@ -134,7 +134,7 @@ NoOutputEVMDialect::NoOutputEVMDialect(EVMDialect const& _copyFrom):
 {
 	for (auto& fun: m_functions)
 	{
-		size_t returns = fun.second.returns.size();
+		size_t returns = fun.second.numReturns;
 		fun.second.generateCode = [=](FunctionCall const& _call, AbstractAssembly& _assembly, BuiltinContext&)
 		{
 			for (size_t i: ranges::views::iota(0u, _call.arguments.size()))

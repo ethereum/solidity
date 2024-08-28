@@ -54,13 +54,13 @@ DataFlowAnalyzer::DataFlowAnalyzer(
 {
 	if (m_analyzeStores)
 	{
-		if (auto const* builtin = _dialect.memoryStoreFunction(YulName{}))
+		if (auto const* builtin = _dialect.memoryStoreFunction())
 			m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Memory)] = builtin->name;
-		if (auto const* builtin = _dialect.memoryLoadFunction(YulName{}))
+		if (auto const* builtin = _dialect.memoryLoadFunction())
 			m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Memory)] = builtin->name;
-		if (auto const* builtin = _dialect.storageStoreFunction(YulName{}))
+		if (auto const* builtin = _dialect.storageStoreFunction())
 			m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Storage)] = builtin->name;
-		if (auto const* builtin = _dialect.storageLoadFunction(YulName{}))
+		if (auto const* builtin = _dialect.storageLoadFunction())
 			m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Storage)] = builtin->name;
 	}
 }
@@ -446,7 +446,7 @@ std::optional<YulName> DataFlowAnalyzer::isSimpleLoad(
 std::optional<std::pair<YulName, YulName>> DataFlowAnalyzer::isKeccak(Expression const& _expression) const
 {
 	if (FunctionCall const* funCall = std::get_if<FunctionCall>(&_expression))
-		if (funCall->functionName.name == m_dialect.hashFunction({}))
+		if (funCall->functionName.name == m_dialect.hashFunction())
 			if (Identifier const* start = std::get_if<Identifier>(&funCall->arguments.at(0)))
 				if (Identifier const* length = std::get_if<Identifier>(&funCall->arguments.at(1)))
 					return std::make_pair(start->name, length->name);

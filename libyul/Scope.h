@@ -35,27 +35,24 @@ namespace solidity::yul
 
 struct Scope
 {
-	using YulType = YulName;
-
 	struct Variable
 	{
-		YulType type;
 		YulName name;
 	};
 	struct Function
 	{
-		std::vector<YulType> arguments;
-		std::vector<YulType> returns;
+		size_t numArguments;
+		size_t numReturns;
 		YulName name;
 	};
 
 	using Identifier = std::variant<Variable, Function>;
 
-	bool registerVariable(YulName _name, YulType const& _type);
+	bool registerVariable(YulName _name);
 	bool registerFunction(
 		YulName _name,
-		std::vector<YulType> _arguments,
-		std::vector<YulType> _returns
+		size_t _numArguments,
+		size_t _numReturns
 	);
 
 	/// Looks up the identifier in this or super scopes and returns a valid pointer if found

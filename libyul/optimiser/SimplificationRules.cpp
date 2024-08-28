@@ -241,7 +241,7 @@ Expression Pattern::toExpression(langutil::DebugData::ConstPtr const& _debugData
 	if (m_kind == PatternKind::Constant)
 	{
 		assertThrow(m_data, OptimizerException, "No match group and no constant value given.");
-		return Literal{_debugData, LiteralKind::Number, LiteralValue{*m_data, formatNumber(*m_data)}, {}};
+		return Literal{_debugData, LiteralKind::Number, LiteralValue{*m_data, formatNumber(*m_data)}};
 	}
 	else if (m_kind == PatternKind::Operation)
 	{

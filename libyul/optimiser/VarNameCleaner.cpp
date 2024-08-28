@@ -72,17 +72,17 @@ void VarNameCleaner::operator()(VariableDeclaration& _varDecl)
 	ASTModifier::operator()(_varDecl);
 }
 
-void VarNameCleaner::renameVariables(std::vector<TypedName>& _variables)
+void VarNameCleaner::renameVariables(std::vector<NameWithDebugData>& _variables)
 {
-	for (TypedName& typedName: _variables)
+	for (NameWithDebugData& variable: _variables)
 	{
-		auto newName = findCleanName(typedName.name);
-		if (newName != typedName.name)
+		auto newName = findCleanName(variable.name);
+		if (newName != variable.name)
 		{
-			m_translatedNames[typedName.name] = newName;
-			typedName.name = newName;
+			m_translatedNames[variable.name] = newName;
+			variable.name = newName;
 		}
-		m_usedNames.insert(typedName.name);
+		m_usedNames.insert(variable.name);
 	}
 }
 

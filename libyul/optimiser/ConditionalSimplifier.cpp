@@ -84,7 +84,7 @@ void ConditionalSimplifier::operator()(Block& _block)
 						Assignment{
 							debugData,
 							{Identifier{debugData, condition}},
-							std::make_unique<Expression>(m_dialect.zeroLiteralForType(m_dialect.boolType))
+							std::make_unique<Expression>(m_dialect.zeroLiteral())
 						}
 					);
 				}

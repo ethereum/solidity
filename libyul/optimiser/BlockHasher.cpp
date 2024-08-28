@@ -48,7 +48,6 @@ void ASTHasherBase::hashLiteral(solidity::yul::Literal const& _literal)
 		hash64(std::hash<u256>{}(_literal.value.value()));
 	else
 		hash64(std::hash<std::string>{}(_literal.value.builtinStringLiteralValue()));
-	hash64(_literal.type.hash());
 	hash8(_literal.value.unlimited());
 }
 
