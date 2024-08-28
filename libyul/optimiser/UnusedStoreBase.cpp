@@ -32,7 +32,8 @@
 using namespace solidity;
 using namespace solidity::yul;
 
-void UnusedStoreBase::operator()(If const& _if)
+template<typename ActiveStoresKeyType>
+void UnusedStoreBase<ActiveStoresKeyType>::operator()(If const& _if)
 {
 	visit(*_if.condition);
 
@@ -42,7 +43,8 @@ void UnusedStoreBase::operator()(If const& _if)
 	merge(m_activeStores, std::move(skipBranch));
 }
 
-void UnusedStoreBase::operator()(Switch const& _switch)
+template<typename ActiveStoresKeyType>
+void UnusedStoreBase<ActiveStoresKeyType>::operator()(Switch const& _switch)
 {
 	visit(*_switch.expression);
 
@@ -68,7 +70,8 @@ void UnusedStoreBase::operator()(Switch const& _switch)
 		merge(m_activeStores, std::move(branch));
 }
 
-void UnusedStoreBase::operator()(FunctionDefinition const& _functionDefinition)
+template<typename ActiveStoresKeyType>
+void UnusedStoreBase<ActiveStoresKeyType>::operator()(FunctionDefinition const& _functionDefinition)
 {
 	ScopedSaveAndRestore allStores(m_allStores, {});
 	ScopedSaveAndRestore usedStores(m_usedStores, {});
@@ -82,7 +85,8 @@ void UnusedStoreBase::operator()(FunctionDefinition const& _functionDefinition)
 	m_storesToRemove += m_allStores - m_usedStores;
 }
 
-void UnusedStoreBase::operator()(ForLoop const& _forLoop)
+template<typename ActiveStoresKeyType>
+void UnusedStoreBase<ActiveStoresKeyType>::operator()(ForLoop const& _forLoop)
 {
 	ScopedSaveAndRestore outerForLoopInfo(m_forLoopInfo, {});
 	ScopedSaveAndRestore forLoopNestingDepth(m_forLoopNestingDepth, m_forLoopNestingDepth + 1);
@@ -130,19 +134,22 @@ void UnusedStoreBase::operator()(ForLoop const& _forLoop)
 	m_forLoopInfo.pendingBreakStmts.clear();
 }
 
-void UnusedStoreBase::operator()(Break const&)
+template<typename ActiveStoresKeyType>
+void UnusedStoreBase<ActiveStoresKeyType>::operator()(Break const&)
 {
 	m_forLoopInfo.pendingBreakStmts.emplace_back(std::move(m_activeStores));
 	m_activeStores.clear();
 }
 
-void UnusedStoreBase::operator()(Continue const&)
+template<typename ActiveStoresKeyType>
+void UnusedStoreBase<ActiveStoresKeyType>::operator()(Continue const&)
 {
 	m_forLoopInfo.pendingContinueStmts.emplace_back(std::move(m_activeStores));
 	m_activeStores.clear();
 }
 
-void UnusedStoreBase::merge(ActiveStores& _target, ActiveStores&& _other)
+template<typename ActiveStoresKeyType>
+void UnusedStoreBase<ActiveStoresKeyType>::merge(ActiveStores& _target, ActiveStores&& _other)
 {
 	util::joinMap(_target, std::move(_other), [](
 		std::set<Statement const*>& _storesHere,
@@ -153,9 +160,13 @@ void UnusedStoreBase::merge(ActiveStores& _target, ActiveStores&& _other)
 	});
 }
 
-void UnusedStoreBase::merge(ActiveStores& _target, std::vector<ActiveStores>&& _source)
+template<typename ActiveStoresKeyType>
+void UnusedStoreBase<ActiveStoresKeyType>::merge(ActiveStores& _target, std::vector<ActiveStores>&& _source)
 {
 	for (ActiveStores& ts: _source)
 		merge(_target, std::move(ts));
 	_source.clear();
 }
+
+template class solidity::yul::UnusedStoreBase<UnusedStoreEliminatorKey>;
+template class solidity::yul::UnusedStoreBase<YulName>;

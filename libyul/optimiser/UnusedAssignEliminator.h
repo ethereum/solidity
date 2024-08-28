@@ -113,7 +113,7 @@ struct Dialect;
  *
  * Prerequisite: Disambiguator, ForLoopInitRewriter.
  */
-class UnusedAssignEliminator: public UnusedStoreBase
+class UnusedAssignEliminator: public UnusedStoreBase<YulName>
 {
 public:
 	static constexpr char const* name{"UnusedAssignEliminator"};
