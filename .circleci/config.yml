@@ -1656,7 +1656,7 @@ jobs:
           shell: powershell.exe
       - run:
           name: Install LSP test dependencies
-          command: python -m pip install --user deepdiff colorama
+          command: python -m pip install --user numpy deepdiff colorama
       - run:
           name: Executing solc LSP test suite
           command: python test/lsp.py build\solc\Release\solc.exe --non-interactive
