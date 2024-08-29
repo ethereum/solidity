@@ -35,7 +35,7 @@ public:
 private:
 	void setupSmtCallback(bool _disablePreprocessing);
 
-	std::tuple<smtutil::CheckResult, smtutil::Expression, CexGraph> query(smtutil::Expression const& _expr) override;
+	CHCSolverInterface::QueryResult query(smtutil::Expression const& _expr) override;
 
 	CHCSolverInterface::CexGraph graphFromZ3Answer(std::string const& _proof) const;
 

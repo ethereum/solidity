@@ -49,11 +49,15 @@ public:
 		std::map<unsigned, std::vector<unsigned>> edges;
 	};
 
+	struct QueryResult
+	{
+		CheckResult answer;
+		Expression invariant;
+		CexGraph cex;
+	};
 	/// Takes a function application _expr and checks for reachability.
 	/// @returns solving result, an invariant, and counterexample graph, if possible.
-	virtual std::tuple<CheckResult, Expression, CexGraph> query(
-		Expression const& _expr
-	) = 0;
+	virtual QueryResult query(Expression const& _expr) = 0;
 
 protected:
 	std::optional<unsigned> m_queryTimeout;

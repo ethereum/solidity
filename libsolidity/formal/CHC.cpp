@@ -1916,11 +1916,8 @@ void CHC::addRule(smtutil::Expression const& _rule, std::string const& _ruleName
 	m_interface->addRule(_rule, _ruleName);
 }
 
-std::tuple<CheckResult, smtutil::Expression, CHCSolverInterface::CexGraph> CHC::query(smtutil::Expression const& _query, langutil::SourceLocation const& _location)
+CHCSolverInterface::QueryResult CHC::query(smtutil::Expression const& _query, langutil::SourceLocation const& _location)
 {
-	CheckResult result;
-	smtutil::Expression invariant(true);
-	CHCSolverInterface::CexGraph cex;
 	if (m_settings.printQuery)
 	{
 		auto smtLibInterface = dynamic_cast<CHCSmtLib2Interface*>(m_interface.get());
@@ -1931,8 +1928,8 @@ std::tuple<CheckResult, smtutil::Expression, CHCSolverInterface::CexGraph> CHC::
 			"CHC: Requested query:\n" + smtLibCode
 		);
 	}
-	std::tie(result, invariant, cex) = m_interface->query(_query);
-	switch (result)
+	auto result = m_interface->query(_query);
+	switch (result.answer)
 	{
 	case CheckResult::SATISFIABLE:
 	{
@@ -1946,13 +1943,10 @@ std::tuple<CheckResult, smtutil::Expression, CHCSolverInterface::CexGraph> CHC::
 			solAssert(spacer, "");
 			spacer->setSpacerOptions(false);
 
-			CheckResult resultNoOpt;
-			smtutil::Expression invariantNoOpt(true);
-			CHCSolverInterface::CexGraph cexNoOpt;
-			std::tie(resultNoOpt, invariantNoOpt, cexNoOpt) = m_interface->query(_query);
+			auto resultNoOpt = m_interface->query(_query);
 
-			if (resultNoOpt == CheckResult::SATISFIABLE)
-				cex = std::move(cexNoOpt);
+			if (resultNoOpt.answer == CheckResult::SATISFIABLE)
+				result.cex = std::move(resultNoOpt.cex);
 
 			spacer->setSpacerOptions(true);
 #else
@@ -1962,7 +1956,6 @@ std::tuple<CheckResult, smtutil::Expression, CHCSolverInterface::CexGraph> CHC::
 		break;
 	}
 	case CheckResult::UNSATISFIABLE:
-		break;
 	case CheckResult::UNKNOWN:
 		break;
 	case CheckResult::CONFLICTING:
@@ -1972,7 +1965,7 @@ std::tuple<CheckResult, smtutil::Expression, CHCSolverInterface::CexGraph> CHC::
 		m_errorReporter.warning(1218_error, _location, "CHC: Error trying to invoke SMT solver.");
 		break;
 	}
-	return {result, invariant, cex};
+	return result;
 }
 
 void CHC::verificationTargetEncountered(

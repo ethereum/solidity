@@ -90,7 +90,7 @@ void CHCSmtLib2Interface::addRule(Expression const& _expr, std::string const& /*
 	m_commands.assertion("(forall" + forall(_expr) + '\n' + m_context.toSExpr(_expr) + ")\n");
 }
 
-std::tuple<CheckResult, Expression, CHCSolverInterface::CexGraph> CHCSmtLib2Interface::query(Expression const& _block)
+CHCSolverInterface::QueryResult CHCSmtLib2Interface::query(Expression const& _block)
 {
 	std::string query = dumpQuery(_block);
 	std::string response = querySolver(query);

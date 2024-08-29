@@ -296,7 +296,7 @@ private:
 	void addRule(smtutil::Expression const& _rule, std::string const& _ruleName);
 	/// @returns <true, invariant, empty> if query is unsatisfiable (safe).
 	/// @returns <false, Expression(true), model> otherwise.
-	std::tuple<smtutil::CheckResult, smtutil::Expression, smtutil::CHCSolverInterface::CexGraph> query(smtutil::Expression const& _query, langutil::SourceLocation const& _location);
+	smtutil::CHCSolverInterface::QueryResult query(smtutil::Expression const& _query, langutil::SourceLocation const& _location);
 
 	void verificationTargetEncountered(ASTNode const* const _errorNode, VerificationTargetType _type, smtutil::Expression const& _errorCondition);
 
