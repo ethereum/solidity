@@ -23,19 +23,32 @@
 namespace solidity::yul
 {
 
+struct SSACFGEdgeClassification
+{
+	SSACFGEdgeClassification(SSACFG const& _cfg);
+
+	using Vertex = SSACFG::BlockId;
+	using Edge = std::tuple<Vertex, Vertex>;
+
+	std::set<Edge> treeEdges;
+	std::set<Edge> backEdges;
+	std::set<Edge> forwardEdges;
+	std::set<Edge> crossEdges;
+
+	std::map<Vertex, std::set<Vertex>> ancestors;
+};
+
 class SSACFGLiveness
 {
 public:
 	using ReducedReachableNodes = std::map<SSACFG::BlockId, std::vector<SSACFG::BlockId>>;
-	using BackEdges = std::set<std::tuple<SSACFG::BlockId, SSACFG::BlockId>>;
 
 	SSACFGLiveness(SSACFG const& _cfg);
 
 private:
 
 	static ReducedReachableNodes computeReducedReachableNodes(SSACFG const& _cfg);
-	static BackEdges findBackEdges(SSACFG const& _cfg);
-	static bool isConnectedInReducedGraph(SSACFG::BlockId v, SSACFG::BlockId w, SSACFG const& _cfg, BackEdges const& _backEdges);
+	static bool isConnectedInReducedGraph(SSACFG::BlockId v, SSACFG::BlockId w, SSACFG const& _cfg, std::set<SSACFGEdgeClassification::Edge> const& _backEdges);
 
 	ReducedReachableNodes m_reducedReachableNodes;
 };
