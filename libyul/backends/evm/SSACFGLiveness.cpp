@@ -16,13 +16,9 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include "SSAControlFlowGraphBuilder.h"
-
-
 #include <libyul/backends/evm/SSACFGLiveness.h>
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/reverse.hpp>
-#include <stack>
 
 using namespace solidity;
 using namespace solidity::util;
@@ -123,7 +119,7 @@ SSACFGEdgeClassification::SSACFGEdgeClassification(SSACFG const& _cfg)
 		toVisit.emplace_back(blockId);
 		std::vector<Vertex> path{};
 
-		while(!toVisit.empty())
+		while (!toVisit.empty())
 		{
 			auto const id = toVisit.back();
 			toVisit.pop_back();
@@ -143,7 +139,7 @@ SSACFGEdgeClassification::SSACFGEdgeClassification(SSACFG const& _cfg)
 				}
 				else
 				{
-					if(!isBackEdge)
+					if (!isBackEdge)
 						forwardEdges.emplace(id, _exitBlock);
 					else
 						crossEdges.emplace(id, _exitBlock);
@@ -169,7 +165,7 @@ SSACFGLiveness::SSACFGLiveness(SSACFG const& _cfg):
 		| ranges::views::transform([](auto const& edge) { return std::get<1>(edge); })
 		| ranges::to<std::set>();
 
-	for (auto const& rootNode : loopNestingForestRootNodes)
+	for (auto const& rootNode: loopNestingForestRootNodes)
 		runLoopTreeDfs(SSACFG::BlockId{rootNode}, liveIns, liveOuts, loopNestingForestRootNodes);
 }
 
@@ -205,7 +201,7 @@ bool SSACFGLiveness::isConnectedInReducedGraph(SSACFG::BlockId v, SSACFG::BlockI
 		std::vector<SSACFG::BlockId> toVisit{};
 		toVisit.emplace_back(blockId);
 
-		while(!toVisit.empty())
+		while (!toVisit.empty())
 		{
 			auto const id = toVisit.back();
 			if (id == w)
@@ -233,7 +229,7 @@ void SSACFGLiveness::runDagDfs(SSACFG::BlockId blockId, std::vector<char>& _proc
 	auto const& block = m_cfg.block(blockId);
 	std::set<SSACFG::ValueId> live{};
 	block.forEachExit([&](SSACFG::BlockId const& _successor){
-		for (auto const& phi : m_cfg.block(_successor).phis)
+		for (auto const& phi: m_cfg.block(_successor).phis)
 		{
 			auto const& info = m_cfg.valueInfo(phi);
 			yulAssert(std::holds_alternative<SSACFG::PhiValue>(info), "value info of phi wasn't PhiValue");
@@ -248,7 +244,7 @@ void SSACFGLiveness::runDagDfs(SSACFG::BlockId blockId, std::vector<char>& _proc
 			live += _liveIns[_successor.value] - m_cfg.block(_successor).phis;
 	});
 	_liveOuts[blockId.value] = live;
-	for(auto const& op : block.operations | ranges::views::reverse)
+	for (auto const& op: block.operations | ranges::views::reverse)
 	{
 		live -= op.outputs;
 		live += op.inputs;
@@ -276,7 +272,7 @@ SSACFGLiveness::ReducedReachableNodes SSACFGLiveness::computeReducedReachableNod
 		for (auto it = order.sortedBlocks().begin(); it != order.sortedBlocks().end()-1; ++it)
 			for (auto it2 = it + 1; it2 != order.sortedBlocks().end(); ++it2)
 				if (order.ancestor(*it, *it2))  // isConnectedInReducedGraph(*it, *it2, _cfg, edgeClassification.backEdges)
-					result[*it].push_back(*it2);		
+					result[*it].push_back(*it2);
 	}*/
 
 	return result;
