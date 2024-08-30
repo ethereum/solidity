@@ -20,6 +20,7 @@
 
 
 #include <libyul/backends/evm/SSACFGLiveness.h>
+#include <range/v3/range/conversion.hpp>
 #include <range/v3/view/reverse.hpp>
 #include <stack>
 
@@ -150,9 +151,43 @@ SSACFGEdgeClassification::SSACFGEdgeClassification(SSACFG const& _cfg)
 
 SSACFGLiveness::SSACFGLiveness(SSACFG const& _cfg):
 	m_cfg(_cfg),
-	m_reducedReachableNodes(computeReducedReachableNodes(_cfg)),
-	m_edgeClassification(_cfg)
-{ }
+	m_edgeClassification(_cfg),
+	m_reducedReachableNodes(computeReducedReachableNodes(_cfg))
+{
+	std::vector<char> processed(_cfg.numBlocks(), false);
+	std::vector<std::set<SSACFG::ValueId>> liveIns (_cfg.numBlocks());
+	std::vector<std::set<SSACFG::ValueId>> liveOuts (_cfg.numBlocks());
+
+	runDagDfs(_cfg.entry, processed, liveIns, liveOuts);
+
+	std::set<SSACFG::BlockId> loopNestingForestRootNodes = m_edgeClassification.backEdges
+		| ranges::views::transform([](auto const& edge) { return std::get<1>(edge); })
+		| ranges::to<std::set>();
+
+	for (auto const& rootNode : loopNestingForestRootNodes)
+		runLoopTreeDfs(SSACFG::BlockId{rootNode}, liveIns, liveOuts, loopNestingForestRootNodes);
+}
+
+void SSACFGLiveness::runLoopTreeDfs
+(
+	SSACFG::BlockId v,
+	std::vector<std::set<SSACFG::ValueId>>& _liveIns,
+	std::vector<std::set<SSACFG::ValueId>>& _liveOuts,
+	std::set<SSACFG::BlockId> const& _loopNodes
+)
+{
+	if (_loopNodes.count(v) > 0)
+	{
+		auto const& block = m_cfg.block(v);
+		auto liveLoop = _liveIns[v.value] - block.phis;
+		block.forEachExit([&](auto const& _exitBlockId) {
+			_liveIns[_exitBlockId.value] += liveLoop;
+			_liveOuts[_exitBlockId.value] += liveLoop;
+			runLoopTreeDfs(_exitBlockId, _liveIns, _liveOuts, _loopNodes);
+		});
+	}
+}
+
 
 bool SSACFGLiveness::isConnectedInReducedGraph(SSACFG::BlockId v, SSACFG::BlockId w, SSACFG const& _cfg, std::set<SSACFGEdgeClassification::Edge> const& _backEdges)
 {

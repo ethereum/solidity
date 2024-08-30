@@ -57,6 +57,13 @@ private:
 		std::vector<std::set<SSACFG::ValueId>>& _liveOuts
 	);
 
+	void runLoopTreeDfs(
+		SSACFG::BlockId v,
+		std::vector<std::set<SSACFG::ValueId>>& _liveIns,
+		std::vector<std::set<SSACFG::ValueId>>& _liveOuts,
+		std::set<SSACFG::BlockId> const& _loopNodes
+	);
+
 	SSACFG const& m_cfg;
 	SSACFGEdgeClassification m_edgeClassification;
 	ReducedReachableNodes m_reducedReachableNodes;
