@@ -100,6 +100,9 @@ Solidity Tools
 * `Doxity <https://github.com/DigixGlobal/doxity>`_
     Documentation Generator for Solidity.
 
+* `ethdebug <https://github.com/ethdebug/format>`_
+    A standard debugging data format for smart contracts on Ethereum-compatible networks.
+
 * `Ethlint <https://github.com/duaraghav8/Ethlint>`_
     Linter to identify and fix style and security issues in Solidity.
 
@@ -144,9 +147,6 @@ Solidity Tools
 
 * `Universal Mutator <https://github.com/agroce/universalmutator>`_
     A tool for mutation generation, with configurable rules and support for Solidity and Vyper.
-
-* `ethdebug <https://github.com/ethdebug/format>`_
-    A standard debugging data format for smart contracts on Ethereum-compatible networks.
 
 Third-Party Solidity Parsers and Grammars
 =========================================
