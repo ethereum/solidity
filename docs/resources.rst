@@ -114,7 +114,7 @@ Solidity Tools
     EVM Disassembler that performs static analysis on the bytecode to provide a higher level of abstraction than raw EVM operations.
 
 * `EVM Lab <https://github.com/ethereum/evmlab/>`_
-    Rich tool package to interact with the EVM. Includes a VM, Etherchain API, and a trace-viewer with gas cost display.
+    A collection of tools to interact with the EVM. The package includes a VM, Etherchain API, and a trace-viewer with gas cost display.
 
 * `hevm <https://github.com/dapphub/dapptools/tree/master/src/hevm#readme>`_
     EVM debugger and symbolic execution engine.
