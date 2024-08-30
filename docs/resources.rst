@@ -5,16 +5,16 @@ Resources
 General Resources
 =================
 
-* `Ethereum.org Developer Portal <https://ethereum.org/en/developers/>`_
+* `Ethereum.org Developers page <https://ethereum.org/en/developers/>`_
 * `Ethereum StackExchange <https://ethereum.stackexchange.com/>`_
-* `Solidity Portal <https://soliditylang.org/>`_
-* `Solidity Changelog <https://github.com/ethereum/solidity/blob/develop/Changelog.md>`_
-* `Solidity Source Code on GitHub <https://github.com/ethereum/solidity/>`_
-* `Solidity Language Users Chat <https://matrix.to/#/#ethereum_solidity:gitter.im>`_
-* `Solidity Compiler Developers Chat <https://matrix.to/#/#ethereum_solidity-dev:gitter.im>`_
-* `Awesome Solidity <https://github.com/bkrem/awesome-solidity>`_
+* `Solidity website <https://soliditylang.org/>`_
+* `Solidity changelog <https://github.com/ethereum/solidity/blob/develop/Changelog.md>`_
+* `Solidity codebase on GitHub <https://github.com/ethereum/solidity/>`_
+* `Solidity language users chat <https://matrix.to/#/#ethereum_solidity:gitter.im>`_
+* `Solidity compiler developers chat <https://matrix.to/#/#ethereum_solidity-dev:gitter.im>`_
+* `awesome-solidity <https://github.com/bkrem/awesome-solidity>`_
 * `Solidity by Example <https://solidity-by-example.org/>`_
-* `Solidity Documentation Community Translations <https://github.com/solidity-docs>`_
+* `Solidity documentation community translations <https://github.com/solidity-docs>`_
 
 Integrated (Ethereum) Development Environments
 ==============================================
@@ -38,7 +38,7 @@ Integrated (Ethereum) Development Environments
         Ethereum development environment with local Ethereum network, debugging features and plugin ecosystem.
 
     * `Remix <https://remix.ethereum.org/>`_
-        Browser-based IDE with integrated compiler and Solidity runtime environment without server-side components.    
+        Browser-based IDE with integrated compiler and Solidity runtime environment without server-side components.
 
     * `Truffle <https://trufflesuite.com/truffle/>`_
         Ethereum development framework.
