@@ -121,6 +121,7 @@ SSACFGEdgeClassification::SSACFGEdgeClassification(SSACFG const& _cfg)
 
 		std::vector<Vertex> toVisit{};
 		toVisit.emplace_back(blockId);
+		std::vector<Vertex> path{};
 
 		while(!toVisit.empty())
 		{
@@ -128,9 +129,10 @@ SSACFGEdgeClassification::SSACFGEdgeClassification(SSACFG const& _cfg)
 			toVisit.pop_back();
 			auto const& block = _cfg.block(id);
 
+			path.emplace_back(id);
 			block.forEachExit([&](Vertex const& _exitBlock){
 				ancestors[_exitBlock].insert(id);
-				bool const isBackEdge = std::find(toVisit.begin(), toVisit.end(), _exitBlock) != toVisit.end();
+				bool const isBackEdge = std::find(path.begin(), path.end(), _exitBlock) != path.end();
 				if (isBackEdge)
 					backEdges.emplace(id, _exitBlock);
 				if (explored.find(_exitBlock) == explored.end())
@@ -140,10 +142,13 @@ SSACFGEdgeClassification::SSACFGEdgeClassification(SSACFG const& _cfg)
 					treeEdges.emplace(id, _exitBlock);
 				}
 				else
+				{
 					if(!isBackEdge)
 						forwardEdges.emplace(id, _exitBlock);
 					else
 						crossEdges.emplace(id, _exitBlock);
+					path.clear();
+				}
 			});
 		}
 	}
