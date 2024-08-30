@@ -50,6 +50,15 @@ private:
 	static ReducedReachableNodes computeReducedReachableNodes(SSACFG const& _cfg);
 	static bool isConnectedInReducedGraph(SSACFG::BlockId v, SSACFG::BlockId w, SSACFG const& _cfg, std::set<SSACFGEdgeClassification::Edge> const& _backEdges);
 
+	void runDagDfs(
+		SSACFG::BlockId v,
+		std::vector<char>& _processed,
+		std::vector<std::set<SSACFG::ValueId>>& _liveIns,
+		std::vector<std::set<SSACFG::ValueId>>& _liveOuts
+	);
+
+	SSACFG const& m_cfg;
+	SSACFGEdgeClassification m_edgeClassification;
 	ReducedReachableNodes m_reducedReachableNodes;
 };
 
