@@ -1,5 +1,5 @@
 macro(initialize_submodule SUBMODULE_PATH)
-	if(NOT USE_SYSTEM_LIBRARIES)
+	if(NOT IGNORE_VENDORED_DEPENDENCIES)
 		file(GLOB submodule_contents "${CMAKE_SOURCE_DIR}/deps/${SUBMODULE_PATH}/*")
 
 		if(submodule_contents)

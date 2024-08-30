@@ -37,10 +37,19 @@ option(SOLC_STATIC_STDLIBS "Link solc against static versions of libgcc and libs
 option(STRICT_Z3_VERSION "Use the latest version of Z3" ON)
 option(PEDANTIC "Enable extra warnings and pedantic build flags. Treat all warnings as errors." ON)
 option(PROFILE_OPTIMIZER_STEPS "Output performance metrics for the optimiser steps." OFF)
-option(USE_SYSTEM_LIBRARIES "Use system libraries" OFF)
-option(ONLY_BUILD_SOLIDITY_LIBRARIES "Only build solidity libraries" OFF)
+option(
+	IGNORE_VENDORED_DEPENDENCIES
+	"Ignore libraries provided as submodules of the repository and allow CMake to look for \
+them in the typical locations, including system-wide dirs."
+	OFF
+)
+option(
+	ONLY_BUILD_SOLIDITY_LIBRARIES
+	"Only build library targets that can be statically linked against. Do not build executables or tests."
+	OFF
+)
 mark_as_advanced(PROFILE_OPTIMIZER_STEPS)
-mark_as_advanced(USE_SYSTEM_LIBRARIES)
+mark_as_advanced(IGNORE_VENDORED_DEPENDENCIES)
 mark_as_advanced(ONLY_BUILD_SOLIDITY_LIBRARIES)
 
 # Setup cccache.
@@ -48,7 +57,7 @@ include(EthCcache)
 
 # Let's find our dependencies
 include(EthDependencies)
-if (NOT USE_SYSTEM_LIBRARIES)
+if (NOT IGNORE_VENDORED_DEPENDENCIES)
   include(fmtlib)
   include(nlohmann-json)
   include(range-v3)
