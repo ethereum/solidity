@@ -19,28 +19,32 @@ General Resources
 Integrated (Ethereum) Development Environments
 ==============================================
 
-    * `Hardhat <https://hardhat.org/>`_
-        Ethereum development environment with local Ethereum network, debugging features and plugin ecosystem.
+    * `Ape <https://docs.apeworx.io/ape/stable/az>`_
+        Python-based web3 development tool for compiling, testing, and interacting with smart contracts.
 
-    * `Foundry <https://github.com/foundry-rs/foundry>`_
-        Fast, portable and modular toolkit for Ethereum application development written in Rust.
-
-    * `Remix <https://remix.ethereum.org/>`_
-        Browser-based IDE with integrated compiler and Solidity runtime environment without server-side components.
+    * `Brownie <https://eth-brownie.readthedocs.io/en/stable/>`_
+        Python-based development and testing framework for smart contracts targeting the Ethereum Virtual Machine.
+        💡 Note: As per the official docs, Brownie is no longer actively maintained.
+        Future releases may come sporadically - or never at all.
+        Check out Ape Framework (first in list) for all your python Ethereum development needs.
 
     * `Dapp <https://dapp.tools/>`_
         Tool for building, testing and deploying smart contracts from the command-line.
 
-    * `Brownie <https://eth-brownie.readthedocs.io/en/stable/>`_
-        Python-based development and testing framework for smart contracts targeting the Ethereum Virtual Machine.
+    * `Foundry <https://github.com/foundry-rs/foundry>`_
+        Fast, portable and modular toolkit for Ethereum application development written in Rust.
 
-    * `Ape <https://docs.apeworx.io/ape/stable/az>`_
-        Python-based web3 development tool for compiling, testing, and interacting with smart contracts.
+    * `Hardhat <https://hardhat.org/>`_
+        Ethereum development environment with local Ethereum network, debugging features and plugin ecosystem.
+
+    * `Remix <https://remix.ethereum.org/>`_
+        Browser-based IDE with integrated compiler and Solidity runtime environment without server-side components.    
 
     * `Truffle <https://trufflesuite.com/truffle/>`_
         Ethereum development framework.
         💡 Note: Consensys announced the sunset of Truffle on September 21, 2023.
-        Current users may check out the migration path and available product support `here. <https://consensys.io/blog/consensys-announces-the-sunset-of-truffle-and-ganache-and-new-hardhat>`_
+        Current users may check out the migration path and available product support `here:
+        <https://consensys.io/blog/consensys-announces-the-sunset-of-truffle-and-ganache-and-new-hardhat>`_
 
 Editor Integrations
 ===================
