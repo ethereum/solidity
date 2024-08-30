@@ -370,6 +370,8 @@ Module M.
       end in
     LowM.Loop loop_body break_with LowM.Pure.
 
+  Parameter for_unit : t U256.t -> t unit -> t unit -> t unit.
+
   Definition break : t BlockUnit.t :=
     pure BlockUnit.Break.
 

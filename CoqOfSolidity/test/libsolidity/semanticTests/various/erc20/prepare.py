@@ -13,9 +13,11 @@ def variable_name_to_coq(name: str) -> str:
         "end",
         "return",
     ]
+
     if name in reserved_names:
         return name + "_"
-    return name
+
+    return name.replace("$", "'dollar'")
 
 def variables_names_to_coq(as_pattern: bool, variable_names) -> str:
     if len(variable_names) == 1:
@@ -30,11 +32,17 @@ def node_in_block_to_coq(local_functions: list[str], level: int, node):
     if node_type in ['YulVariableDeclaration', 'YulAssignment']:
         return node_to_coq(local_functions, level, node)
 
-    elif node_type in ['YulBlock', 'YulIf', 'YulSwitch']:
+    elif node_type in ['YulIf', 'YulSwitch']:
         return \
             "do~ [[\n" + \
             indent(level + 1) + node_to_coq(local_functions, level + 1, node) + "\n" + \
             indent(level) + "]] in"
+
+    elif node_type in ['YulBlock', 'YulForLoop']:
+        return \
+            "do~\n" + \
+            indent(level + 1) + node_to_coq(local_functions, level + 1, node) + "\n" + \
+            indent(level) + "in"
 
     return \
         "do~ [[ " + node_to_coq(local_functions, level, node) + " ]] in"
@@ -47,10 +55,8 @@ def block_to_coq(local_functions: list[str], level: int, node, result: str) -> s
             node_in_block_to_coq(local_functions, level, stmt)
             for stmt in node.get('statements', [])
             if stmt.get('nodeType') != 'YulFunctionDefinition'
-        ]
-        return \
-            ("\n" + indent(level)).join(statements) + "\n" + \
-            indent(level) + result
+        ] + [result]
+        return ("\n" + indent(level)).join(statements)
 
     return "(* Unsupported block node type: {node_type} *)"
 
@@ -166,6 +172,30 @@ def node_to_coq(local_functions: list[str], level: int, node) -> str:
         elif node_type == 'YulLeave':
             return "M.leave"
 
+        elif node_type == 'YulBreak':
+            return "M.break"
+
+        elif node_type == 'YulContinue':
+            return "M.continue"
+
+        elif node_type == 'YulForLoop':
+            pre = node_in_block_to_coq(local_functions, level, node.get('pre'))
+            condition = node_to_coq(local_functions, level + 1, node.get('condition'))
+            post = node_to_coq(local_functions, level + 1, node.get('post'))
+            body = node_to_coq(local_functions, level + 1, node.get('body'))
+
+            return \
+                "(* for loop *)\n" + \
+                indent(level) + "(* pre *)\n" + \
+                indent(level) + pre + "\n" + \
+                indent(level) + "M.for_unit\n" + \
+                indent(level + 1) + "(* condition *)\n" + \
+                indent(level + 1) + "[[ " + condition + " ]]\n" + \
+                indent(level + 1) + "(* body *)\n" + \
+                indent(level + 1) + "(" + body + ")\n" + \
+                indent(level + 1) + "(* post *)\n" + \
+                indent(level + 1) + "(" + post + ")"
+
         else:
             return f"(* Unsupported node type: {node_type} *)"
 
@@ -188,7 +218,7 @@ def function_result_type(arity: int) -> str:
     return "(" + " * ".join(["U256.t"] * arity) + ")"
 
 def function_definition_to_coq(local_functions: list[str], level: int, node) -> str:
-    name = node.get('name')
+    name = variable_name_to_coq(node.get('name'))
     params = ''.join([
         " (" + variable_name_to_coq(p['name']) + " : U256.t)"
         for p in node.get('parameters', [])
