@@ -39,11 +39,9 @@ option(PEDANTIC "Enable extra warnings and pedantic build flags. Treat all warni
 option(PROFILE_OPTIMIZER_STEPS "Output performance metrics for the optimiser steps." OFF)
 option(USE_SYSTEM_LIBRARIES "Use system libraries" OFF)
 option(ONLY_BUILD_SOLIDITY_LIBRARIES "Only build solidity libraries" OFF)
-option(STRICT_NLOHMANN_JSON_VERSION "Strictly check installed nlohmann json version" ON)
 mark_as_advanced(PROFILE_OPTIMIZER_STEPS)
 mark_as_advanced(USE_SYSTEM_LIBRARIES)
 mark_as_advanced(ONLY_BUILD_SOLIDITY_LIBRARIES)
-mark_as_advanced(STRICT_NLOHMANN_JSON_VERSION)
 
 # Setup cccache.
 include(EthCcache)
