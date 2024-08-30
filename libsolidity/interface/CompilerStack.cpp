@@ -1348,9 +1348,9 @@ void CompilerStack::assembleYul(
 		// Assemble deployment (incl. runtime)  object.
 		compiledContract.object = compiledContract.evmAssembly->assemble();
 	}
-	catch (evmasm::AssemblyException const&)
+	catch (evmasm::AssemblyException const& error)
 	{
-		solAssert(false, "Assembly exception for bytecode");
+		solAssert(false, "Assembly exception for bytecode: "s + error.what());
 	}
 	solAssert(compiledContract.object.immutableReferences.empty(), "Leftover immutables.");
 
@@ -1361,9 +1361,9 @@ void CompilerStack::assembleYul(
 		// Assemble runtime object.
 		compiledContract.runtimeObject = compiledContract.evmRuntimeAssembly->assemble();
 	}
-	catch (evmasm::AssemblyException const&)
+	catch (evmasm::AssemblyException const& error)
 	{
-		solAssert(false, "Assembly exception for deployed bytecode");
+		solAssert(false, "Assembly exception for deployed bytecode"s + error.what());
 	}
 
 	// Throw a warning if EIP-170 limits are exceeded:
