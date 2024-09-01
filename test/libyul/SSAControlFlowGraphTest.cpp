@@ -22,6 +22,7 @@
 
 #include <libyul/backends/evm/SSAControlFlowGraphBuilder.h>
 #include <libyul/backends/evm/StackHelpers.h>
+#include <libyul/backends/evm/SSACFGLiveness.h>
 
 #include <libyul/AsmAnalysis.h>
 #include <libyul/Object.h>
@@ -273,6 +274,23 @@ TestCase::TestResult SSAControlFlowGraphTest::run(std::ostream& _stream, std::st
 		*m_dialect,
 		object->code()->root()
 	);
+
+	SSACFGLiveness livenessMain(*controlFlow->mainGraph);
+	for (size_t blockId = 0; blockId < livenessMain.liveIns().size(); ++blockId)
+	{
+		fmt::print("Live ins for Block {}:\n", blockId);
+		auto const& liveIns = livenessMain.liveIns()[blockId];
+		for (auto const& liveIn : liveIns)
+		{
+			auto const& valInfo = controlFlow->mainGraph->valueInfo(liveIn);
+			std::visit(GenericVisitor{
+				[&](SSACFG::UnreachableValue const&) {},
+				[&](SSACFG::VariableValue const& var) { fmt::print("\tv{} (defining block {})\n", liveIn.value, var.definingBlock.value); },
+				[&](SSACFG::LiteralValue const&) { fmt::print("\tv{} (literal)\n", liveIn.value); },
+				[&](SSACFG::PhiValue const&) { fmt::print("\tv{} (phi)\n", liveIn.value); }
+			}, valInfo);
+		}
+	}
 
 	output << "digraph SSACFG {\nnodesep=0.7;\ngraph[fontname=\"DejaVu Sans\"]\nnode[shape=box,fontname=\"DejaVu Sans\"];\n\n";
 	output << SSACFGPrinter(*controlFlow->mainGraph, SSACFG::BlockId{0});

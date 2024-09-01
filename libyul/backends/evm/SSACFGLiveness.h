@@ -34,8 +34,32 @@ struct SSACFGEdgeClassification
 	std::set<Edge> backEdges;
 	std::set<Edge> forwardEdges;
 	std::set<Edge> crossEdges;
+};
 
-	std::map<Vertex, std::set<Vertex>> ancestors;
+class ReducedTopologicalSort
+{
+public:
+	static ReducedTopologicalSort run(SSACFG const& _cfg);
+
+	std::vector<SSACFG::BlockId> const& sortedBlocks() const { return m_reversedPostOrder; }
+	std::vector<SSACFG::BlockId> const& preOrder() const { return m_preOrder; }
+	std::set<SSACFG::BlockId> const& backEdgeTargets() const { return m_backEdgeTargets; }
+	bool ancestor(SSACFG::BlockId const& _block1, SSACFG::BlockId const& _block2, bool checked=true) const;
+	bool backEdge(SSACFG::BlockId const& _block1, SSACFG::BlockId const& _block2) const { return ancestor(_block2, _block1); }
+
+private:
+	explicit ReducedTopologicalSort(SSACFG const& _cfg);
+	void perform();
+	size_t dfs(SSACFG::BlockId _vertex);
+
+	SSACFG const& m_cfg;
+
+	size_t m_currentNode {0};
+	std::set<SSACFG::BlockId> m_explored{};
+	std::vector<SSACFG::BlockId> m_reversedPostOrder{};
+	std::vector<SSACFG::BlockId> m_preOrder{};
+	std::vector<size_t> m_maxSubtreePreOrder{};
+	std::set<SSACFG::BlockId> m_backEdgeTargets{};
 };
 
 class SSACFGLiveness
@@ -43,7 +67,11 @@ class SSACFGLiveness
 public:
 	using ReducedReachableNodes = std::map<SSACFG::BlockId, std::vector<SSACFG::BlockId>>;
 
-	SSACFGLiveness(SSACFG const& _cfg);
+	explicit SSACFGLiveness(SSACFG const& _cfg);
+
+	std::vector<std::set<SSACFG::ValueId>> const& liveIns() const { return m_liveIns; }
+	std::vector<std::set<SSACFG::ValueId>> const& liveOuts() const { return m_liveOuts; }
+	SSACFGEdgeClassification const& edgeClassification() const { return m_edgeClassification; }
 
 private:
 
@@ -67,6 +95,9 @@ private:
 	SSACFG const& m_cfg;
 	SSACFGEdgeClassification m_edgeClassification;
 	ReducedReachableNodes m_reducedReachableNodes;
+	ReducedTopologicalSort m_topologicalSort;
+	std::vector<std::set<SSACFG::ValueId>> m_liveIns;
+	std::vector<std::set<SSACFG::ValueId>> m_liveOuts;
 };
 
 }

@@ -24,149 +24,132 @@ using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::yul;
 
-namespace
+ReducedTopologicalSort ReducedTopologicalSort::run(SSACFG const& _cfg)
 {
+	ReducedTopologicalSort sort(_cfg);
+	sort.perform();
+	return sort;
+}
 
-class ReducedTopologicalSort
+bool ReducedTopologicalSort::ancestor(SSACFG::BlockId const& _block1, SSACFG::BlockId const& _block2, bool checked) const
 {
-public:
-	static ReducedTopologicalSort run(SSACFG const& _cfg, SSACFGEdgeClassification const& _edgeClassification)
+	// todo if we assume iota block indices we can reduce this to just size_t everywhere
+	//		or we remap it to iota before doing anything further; then no find lookup is required
+	auto it1 = std::find(m_preOrder.begin(), m_preOrder.end(), _block1);
+	yulAssert(!checked || it1 != m_preOrder.end(), "Preorder didn't contain block");
+	if (it1 == m_preOrder.end()) return false;
+	auto it2 = std::find(m_preOrder.begin(), m_preOrder.end(), _block2);
+	yulAssert(!checked || it2 != m_preOrder.end(), "Preorder didn't contain block");
+	if (it2 == m_preOrder.end()) return false;
+
+	auto preOrderIndex1 = static_cast<size_t>(std::distance(m_preOrder.begin(), it1));
+	auto preOrderIndex2 = static_cast<size_t>(std::distance(m_preOrder.begin(), it2));
+
+	bool node1VisitedBeforeNode2 = preOrderIndex1 <= preOrderIndex2;
+	bool node2InSubtreeOfNode1 = preOrderIndex2 <= m_maxSubtreePreOrder[preOrderIndex1];
+	return node1VisitedBeforeNode2 && node2InSubtreeOfNode1;
+}
+
+ReducedTopologicalSort::ReducedTopologicalSort(SSACFG const& _cfg): m_cfg(_cfg)
+{
+	m_reversedPostOrder.reserve(m_cfg.numBlocks());
+	m_preOrder.reserve(m_cfg.numBlocks());
+	m_maxSubtreePreOrder.reserve(m_cfg.numBlocks());
+}
+
+void ReducedTopologicalSort::perform()
+{
+	for (size_t id = 0; id < m_cfg.numBlocks(); ++id)
 	{
-		ReducedTopologicalSort sort(_cfg, _edgeClassification);
-		sort.perform();
-		return sort;
+		SSACFG::BlockId blockId{id};
+		if (m_explored.find(blockId) == m_explored.end())
+			dfs(blockId);
 	}
+	std::reverse(m_reversedPostOrder.begin(), m_reversedPostOrder.end());
+}
 
-	std::vector<SSACFG::BlockId> const& sortedBlocks() const { return m_reversedPostOrder; }
-	std::vector<SSACFG::BlockId> const& preOrder() const { return m_preOrder; }
+size_t ReducedTopologicalSort::dfs(SSACFG::BlockId _vertex)
+{
+	m_preOrder.emplace_back(_vertex);
+	size_t preOrderNumber = m_currentNode;
+	++m_currentNode;
+	m_explored.insert(_vertex);
+	auto const& block = m_cfg.block(_vertex);
 
-	bool ancestor(SSACFG::BlockId const& _block1, SSACFG::BlockId const& _block2) const
-	{
-		// todo if we assume iota block indices we can reduce this to just size_t everywhere
-		//		or we remap it to iota before doing anything further; then no find lookup is required
-		auto it1 = std::find(m_preOrder.begin(), m_preOrder.end(), _block1);
-		yulAssert(it1 != m_preOrder.end(), "Preorder didn't contain block");
-		auto it2 = std::find(m_preOrder.begin(), m_preOrder.end(), _block2);
-		yulAssert(it2 != m_preOrder.end(), "Preorder didn't contain block");
-
-		auto preOrderIndex1 = static_cast<size_t>(std::distance(m_preOrder.begin(), it1));
-		auto preOrderIndex2 = static_cast<size_t>(std::distance(m_preOrder.begin(), it2));
-
-		bool node1VisitedBeforeNode2 = preOrderIndex1 <= preOrderIndex2;
-		bool node2InSubtreeOfNode1 = preOrderIndex2 <= m_maxSubtreePreOrder[preOrderIndex1];
-		return node1VisitedBeforeNode2 && node2InSubtreeOfNode1;
-	}
-private:
-	ReducedTopologicalSort(SSACFG const& _cfg, SSACFGEdgeClassification const& _edgeClassification): m_cfg(_cfg), m_edgeClassification(_edgeClassification)
-	{
-		m_reversedPostOrder.reserve(m_cfg.numBlocks());
-		m_preOrder.reserve(m_cfg.numBlocks());
-		m_maxSubtreePreOrder.reserve(m_cfg.numBlocks());
-	}
-
-	void perform()
-	{
-		for (size_t id = 0; id < m_cfg.numBlocks(); ++id)
-		{
-			SSACFG::BlockId blockId{id};
-			if (m_explored.find(blockId) == m_explored.end())
-				dfs(blockId);
-		}
-		std::reverse(m_reversedPostOrder.begin(), m_reversedPostOrder.end());
-	}
-
-	size_t dfs(SSACFG::BlockId _vertex)
-	{
-		m_preOrder.emplace_back(_vertex);
-		size_t preOrderNumber = m_currentNode;
-		++m_currentNode;
-		m_explored.insert(_vertex);
-		auto const& block = m_cfg.block(_vertex);
-
-		block.forEachExit([&](SSACFG::BlockId const& _exitBlock){
-			// we have an edge e = id -> _exitBlock
-			// check if it's an back-edge, ie, _exitBlock is in the toVisit block
-			if (m_edgeClassification.backEdges.find(std::make_tuple(_vertex, _exitBlock)) == m_edgeClassification.backEdges.end())
-			{
-				preOrderNumber = std::max(preOrderNumber, dfs(_exitBlock));
-			}
-		});
-		m_reversedPostOrder.push_back(_vertex);
-		m_maxSubtreePreOrder.emplace_back(preOrderNumber);
-		return preOrderNumber;
-	}
-
-	SSACFG const& m_cfg;
-	SSACFGEdgeClassification const& m_edgeClassification;
-
-	size_t m_currentNode {0};
-	std::set<SSACFG::BlockId> m_explored{};
-	std::vector<SSACFG::BlockId> m_reversedPostOrder{};
-	std::vector<SSACFG::BlockId> m_preOrder{};
-	std::vector<size_t> m_maxSubtreePreOrder{};
-};
+	block.forEachExit([&](SSACFG::BlockId const& _exitBlock){
+		// we have an edge e = id -> _exitBlock
+		// check if it's an back-edge, ie, _exitBlock is in the toVisit block
+		//if (m_edgeClassification.backEdges.find(std::make_tuple(_vertex, _exitBlock)) == m_edgeClassification.backEdges.end())
+		bool const isBackEdge = ancestor(_exitBlock, _vertex, false);
+		if (!isBackEdge)
+			preOrderNumber = std::max(preOrderNumber, dfs(_exitBlock));
+		else
+			m_backEdgeTargets.emplace(_vertex);
+	});
+	m_reversedPostOrder.push_back(_vertex);
+	m_maxSubtreePreOrder.emplace_back(preOrderNumber);
+	return preOrderNumber;
 }
 
 SSACFGEdgeClassification::SSACFGEdgeClassification(SSACFG const& _cfg)
 {
 	std::set<Vertex> explored{};
 	Vertex blockId = _cfg.entry;
-	if (explored.find(blockId) == explored.end())
+	explored.insert(blockId);
+
+	std::vector<Vertex> toVisit{};
+	toVisit.emplace_back(blockId);
+	std::vector<Vertex> path{};
+
+	while (!toVisit.empty())
 	{
-		explored.insert(blockId);
+		auto const id = toVisit.back();
+		toVisit.pop_back();
+		auto const& block = _cfg.block(id);
 
-		std::vector<Vertex> toVisit{};
-		toVisit.emplace_back(blockId);
-		std::vector<Vertex> path{};
-
-		while (!toVisit.empty())
-		{
-			auto const id = toVisit.back();
-			toVisit.pop_back();
-			auto const& block = _cfg.block(id);
-
-			path.emplace_back(id);
-			block.forEachExit([&](Vertex const& _exitBlock){
-				ancestors[_exitBlock].insert(id);
+		path.emplace_back(id);
+		block.forEachExit([&](Vertex const& _exitBlock){
+			if (explored.find(_exitBlock) == explored.end())
+			{
+				explored.insert(_exitBlock);
+				toVisit.emplace_back(_exitBlock);
+				treeEdges.emplace(id, _exitBlock);
+			}
+			else
+			{
+				// todo we have to checkpoint the path or maybe not. let's try with topological sort
 				bool const isBackEdge = std::find(path.begin(), path.end(), _exitBlock) != path.end();
 				if (isBackEdge)
 					backEdges.emplace(id, _exitBlock);
-				if (explored.find(_exitBlock) == explored.end())
-				{
-					explored.insert(_exitBlock);
-					toVisit.emplace_back(_exitBlock);
-					treeEdges.emplace(id, _exitBlock);
-				}
+				if (!isBackEdge)
+					forwardEdges.emplace(id, _exitBlock);
 				else
-				{
-					if (!isBackEdge)
-						forwardEdges.emplace(id, _exitBlock);
-					else
-						crossEdges.emplace(id, _exitBlock);
-					path.clear();
-				}
-			});
-		}
+					crossEdges.emplace(id, _exitBlock);
+				path.clear();
+			}
+		});
 	}
 }
 
 SSACFGLiveness::SSACFGLiveness(SSACFG const& _cfg):
 	m_cfg(_cfg),
 	m_edgeClassification(_cfg),
-	m_reducedReachableNodes(computeReducedReachableNodes(_cfg))
+	m_reducedReachableNodes(computeReducedReachableNodes(_cfg)),
+	m_topologicalSort(ReducedTopologicalSort::run(_cfg)),
+	m_liveIns(_cfg.numBlocks()),
+	m_liveOuts(_cfg.numBlocks())
 {
 	std::vector<char> processed(_cfg.numBlocks(), false);
-	std::vector<std::set<SSACFG::ValueId>> liveIns (_cfg.numBlocks());
-	std::vector<std::set<SSACFG::ValueId>> liveOuts (_cfg.numBlocks());
 
-	runDagDfs(_cfg.entry, processed, liveIns, liveOuts);
+	runDagDfs(_cfg.entry, processed, m_liveIns, m_liveOuts);
 
-	std::set<SSACFG::BlockId> loopNestingForestRootNodes = m_edgeClassification.backEdges
-		| ranges::views::transform([](auto const& edge) { return std::get<1>(edge); })
-		| ranges::to<std::set>();
+	// m_edgeClassification.backEdges
+	// 	| ranges::views::transform([](auto const& edge) { return std::get<1>(edge); })
+	// 	| ranges::to<std::set>();
+	std::set<SSACFG::BlockId> loopNestingForestRootNodes = m_topologicalSort.backEdgeTargets();
 
 	for (auto const& rootNode: loopNestingForestRootNodes)
-		runLoopTreeDfs(SSACFG::BlockId{rootNode}, liveIns, liveOuts, loopNestingForestRootNodes);
+		runLoopTreeDfs(SSACFG::BlockId{rootNode}, m_liveIns, m_liveOuts, loopNestingForestRootNodes);
 }
 
 void SSACFGLiveness::runLoopTreeDfs
@@ -193,7 +176,7 @@ void SSACFGLiveness::runLoopTreeDfs
 bool SSACFGLiveness::isConnectedInReducedGraph(SSACFG::BlockId v, SSACFG::BlockId w, SSACFG const& _cfg, std::set<SSACFGEdgeClassification::Edge> const& _backEdges)
 {
 	std::set<SSACFG::BlockId> explored{};
-	SSACFG::BlockId blockId = v;;
+	SSACFG::BlockId blockId = v;
 	if (explored.find(blockId) == explored.end())
 	{
 		explored.insert(blockId);
@@ -235,13 +218,19 @@ void SSACFGLiveness::runDagDfs(SSACFG::BlockId blockId, std::vector<char>& _proc
 			yulAssert(std::holds_alternative<SSACFG::PhiValue>(info), "value info of phi wasn't PhiValue");
 			live += std::get<SSACFG::PhiValue>(info).arguments;
 		}
-		if (m_edgeClassification.backEdges.find(std::make_tuple(blockId, _successor)) == m_edgeClassification.backEdges.end())
+		//if (m_edgeClassification.backEdges.find(std::make_tuple(blockId, _successor)) == m_edgeClassification.backEdges.end())
+		if (!m_topologicalSort.backEdge(blockId, _successor))
 			if (!_processed[_successor.value])
 				runDagDfs(_successor, _processed, _liveIns, _liveOuts);
+
+		yulAssert(!m_topologicalSort.backEdge(blockId, _successor));
 	});
 	block.forEachExit([&](SSACFG::BlockId const& _successor){
-		if (m_edgeClassification.backEdges.find(std::make_tuple(blockId, _successor)) == m_edgeClassification.backEdges.end())
+		// if (m_edgeClassification.backEdges.find(std::make_tuple(blockId, _successor)) == m_edgeClassification.backEdges.end())
+		if (!m_topologicalSort.backEdge(blockId, _successor))
 			live += _liveIns[_successor.value] - m_cfg.block(_successor).phis;
+		else
+			yulAssert(false);
 	});
 	_liveOuts[blockId.value] = live;
 	for (auto const& op: block.operations | ranges::views::reverse)
