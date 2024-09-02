@@ -34,7 +34,7 @@ endif()
 
 option(SOLC_LINK_STATIC "Link solc executable statically on supported platforms" OFF)
 option(SOLC_STATIC_STDLIBS "Link solc against static versions of libgcc and libstdc++ on supported platforms" OFF)
-option(STRICT_Z3_VERSION "Use the latest version of Z3" ON)
+option(STRICT_Z3_VERSION "Require the exact version of Z3 solver expected by our test suite." ON)
 option(PEDANTIC "Enable extra warnings and pedantic build flags. Treat all warnings as errors." ON)
 option(PROFILE_OPTIMIZER_STEPS "Output performance metrics for the optimiser steps." OFF)
 option(
@@ -94,15 +94,15 @@ configure_file("${PROJECT_SOURCE_DIR}/cmake/templates/license.h.in" include/lice
 
 include(EthOptions)
 configure_project(TESTS)
-set(LATEST_Z3_VERSION "4.12.1")
+set(TESTED_Z3_VERSION "4.12.1")
 set(MINIMUM_Z3_VERSION "4.8.16")
 find_package(Z3)
 if (${Z3_FOUND})
   if (${STRICT_Z3_VERSION})
-    if (NOT ("${Z3_VERSION_STRING}" VERSION_EQUAL ${LATEST_Z3_VERSION}))
+    if (NOT ("${Z3_VERSION_STRING}" VERSION_EQUAL ${TESTED_Z3_VERSION}))
       message(
         FATAL_ERROR
-        "SMTChecker tests require Z3 ${LATEST_Z3_VERSION} for all tests to pass.\n\
+        "SMTChecker tests require Z3 ${TESTED_Z3_VERSION} for all tests to pass.\n\
 Build with -DSTRICT_Z3_VERSION=OFF if you want to use a different version. \
 You can also use -DUSE_Z3=OFF to build without Z3. In both cases use --no-smt when running tests."
       )
