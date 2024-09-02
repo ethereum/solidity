@@ -112,7 +112,6 @@ void ConstantFunctionEvaluator::operator()(FunctionDefinition& _function)
 		Literal val;
 		val.debugData = literalDebugData;
 		val.kind = LiteralKind::Number;
-		val.type = retVar.type;
 		val.value = LiteralValue(interpreter.valueOfVariable(retVar.name));
 
 		Assignment assignment;
