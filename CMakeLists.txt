@@ -34,22 +34,30 @@ endif()
 
 option(SOLC_LINK_STATIC "Link solc executable statically on supported platforms" OFF)
 option(SOLC_STATIC_STDLIBS "Link solc against static versions of libgcc and libstdc++ on supported platforms" OFF)
-option(STRICT_Z3_VERSION "Use the latest version of Z3" ON)
+option(STRICT_Z3_VERSION "Require the exact version of Z3 solver expected by our test suite." ON)
 option(PEDANTIC "Enable extra warnings and pedantic build flags. Treat all warnings as errors." ON)
 option(PROFILE_OPTIMIZER_STEPS "Output performance metrics for the optimiser steps." OFF)
-option(USE_SYSTEM_LIBRARIES "Use system libraries" OFF)
-option(ONLY_BUILD_SOLIDITY_LIBRARIES "Only build solidity libraries" OFF)
-option(STRICT_NLOHMANN_JSON_VERSION "Strictly check installed nlohmann json version" ON)
-mark_as_advanced(USE_SYSTEM_LIBRARIES)
+option(
+	IGNORE_VENDORED_DEPENDENCIES
+	"Ignore libraries provided as submodules of the repository and allow CMake to look for \
+them in the typical locations, including system-wide dirs."
+	OFF
+)
+option(
+	ONLY_BUILD_SOLIDITY_LIBRARIES
+	"Only build library targets that can be statically linked against. Do not build executables or tests."
+	OFF
+)
+mark_as_advanced(PROFILE_OPTIMIZER_STEPS)
+mark_as_advanced(IGNORE_VENDORED_DEPENDENCIES)
 mark_as_advanced(ONLY_BUILD_SOLIDITY_LIBRARIES)
-mark_as_advanced(STRICT_NLOHMANN_JSON_VERSION)
 
 # Setup cccache.
 include(EthCcache)
 
 # Let's find our dependencies
 include(EthDependencies)
-if (NOT USE_SYSTEM_LIBRARIES)
+if (NOT IGNORE_VENDORED_DEPENDENCIES)
   include(fmtlib)
   include(nlohmann-json)
   include(range-v3)
@@ -86,15 +94,15 @@ configure_file("${PROJECT_SOURCE_DIR}/cmake/templates/license.h.in" include/lice
 
 include(EthOptions)
 configure_project(TESTS)
-set(LATEST_Z3_VERSION "4.12.1")
+set(TESTED_Z3_VERSION "4.12.1")
 set(MINIMUM_Z3_VERSION "4.8.16")
 find_package(Z3)
 if (${Z3_FOUND})
   if (${STRICT_Z3_VERSION})
-    if (NOT ("${Z3_VERSION_STRING}" VERSION_EQUAL ${LATEST_Z3_VERSION}))
+    if (NOT ("${Z3_VERSION_STRING}" VERSION_EQUAL ${TESTED_Z3_VERSION}))
       message(
         FATAL_ERROR
-        "SMTChecker tests require Z3 ${LATEST_Z3_VERSION} for all tests to pass.\n\
+        "SMTChecker tests require Z3 ${TESTED_Z3_VERSION} for all tests to pass.\n\
 Build with -DSTRICT_Z3_VERSION=OFF if you want to use a different version. \
 You can also use -DUSE_Z3=OFF to build without Z3. In both cases use --no-smt when running tests."
       )
