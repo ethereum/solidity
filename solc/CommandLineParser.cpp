@@ -756,7 +756,6 @@ General Information)").c_str(),
 		(CompilerOutputs::componentName(&CompilerOutputs::irAstJson).c_str(), "AST of Intermediate Representation (IR) of all contracts in a compact JSON format.")
 		(CompilerOutputs::componentName(&CompilerOutputs::irOptimized).c_str(), "Optimized Intermediate Representation (IR) of all contracts.")
 		(CompilerOutputs::componentName(&CompilerOutputs::irOptimizedAstJson).c_str(), "AST of optimized Intermediate Representation (IR) of all contracts in a compact JSON format.")
-		(CompilerOutputs::componentName(&CompilerOutputs::yulCFGJson).c_str(), "Control Flow Graph (CFG) of Yul code in JSON format.")
 		(CompilerOutputs::componentName(&CompilerOutputs::signatureHashes).c_str(), "Function signature hashes of the contracts.")
 		(CompilerOutputs::componentName(&CompilerOutputs::natspecUser).c_str(), "Natspec user documentation of all contracts.")
 		(CompilerOutputs::componentName(&CompilerOutputs::natspecDev).c_str(), "Natspec developer documentation of all contracts.")
@@ -764,6 +763,10 @@ General Information)").c_str(),
 		(CompilerOutputs::componentName(&CompilerOutputs::storageLayout).c_str(), "Slots, offsets and types of the contract's state variables located in storage.")
 		(CompilerOutputs::componentName(&CompilerOutputs::transientStorageLayout).c_str(), "Slots, offsets and types of the contract's state variables located in transient storage.")
 	;
+	if (!_forHelp) // Note: We intentionally keep this undocumented for now.
+		outputComponents.add_options()
+			(CompilerOutputs::componentName(&CompilerOutputs::yulCFGJson).c_str(), "Control Flow Graph (CFG) of Yul code in JSON format.")
+		;
 	desc.add(outputComponents);
 
 	po::options_description extraOutput("Extra Output");
