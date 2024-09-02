@@ -60,7 +60,7 @@ void ExpressionSimplifier::visit(Expression& _expression)
 						!knownToBeZero(startArgument) &&
 						!std::holds_alternative<FunctionCall>(startArgument)
 					)
-						startArgument = Literal{debugDataOf(startArgument), LiteralKind::Number, LiteralValue{0, "0"}, {}};
+						startArgument = Literal{debugDataOf(startArgument), LiteralKind::Number, LiteralValue{0, std::nullopt}};
 				}
 }
 

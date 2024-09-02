@@ -924,6 +924,16 @@ Json const& CompilerStack::yulIRAst(std::string const& _contractName) const
 	return contract(_contractName).yulIRAst;
 }
 
+Json const& CompilerStack::yulCFGJson(std::string const& _contractName) const
+{
+	if (m_stackState != CompilationSuccessful)
+		solThrow(CompilerError, "Compilation was not successful.");
+
+	solUnimplementedAssert(!isExperimentalSolidity());
+
+	return contract(_contractName).yulCFGJson;
+}
+
 std::string const& CompilerStack::yulIROptimized(std::string const& _contractName) const
 {
 	solAssert(m_stackState == CompilationSuccessful, "Compilation was not successful.");
@@ -1338,9 +1348,9 @@ void CompilerStack::assembleYul(
 		// Assemble deployment (incl. runtime)  object.
 		compiledContract.object = compiledContract.evmAssembly->assemble();
 	}
-	catch (evmasm::AssemblyException const&)
+	catch (evmasm::AssemblyException const& error)
 	{
-		solAssert(false, "Assembly exception for bytecode");
+		solAssert(false, "Assembly exception for bytecode: "s + error.what());
 	}
 	solAssert(compiledContract.object.immutableReferences.empty(), "Leftover immutables.");
 
@@ -1351,9 +1361,9 @@ void CompilerStack::assembleYul(
 		// Assemble runtime object.
 		compiledContract.runtimeObject = compiledContract.evmRuntimeAssembly->assemble();
 	}
-	catch (evmasm::AssemblyException const&)
+	catch (evmasm::AssemblyException const& error)
 	{
-		solAssert(false, "Assembly exception for deployed bytecode");
+		solAssert(false, "Assembly exception for deployed bytecode"s + error.what());
 	}
 
 	// Throw a warning if EIP-170 limits are exceeded:
@@ -1506,6 +1516,7 @@ void CompilerStack::generateIR(ContractDefinition const& _contract, bool _unopti
 	);
 
 	compiledContract.yulIRAst = stack.astJson();
+	compiledContract.yulCFGJson = stack.cfgJson();
 	if (!_unoptimizedOnly)
 	{
 		stack.optimize();

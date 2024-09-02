@@ -488,8 +488,8 @@ Proved Targets
 
 If there are any proved targets, the SMTChecker issues one warning per engine stating
 how many targets were proved. If the user wishes to see all the specific
-proved targets, the CLI option ``--model-checker-show-proved`` and
-the JSON option ``settings.modelChecker.showProved = true`` can be used.
+proved targets, the CLI option ``--model-checker-show-proved-safe`` and
+the JSON option ``settings.modelChecker.showProvedSafe = true`` can be used.
 
 Unproved Targets
 ================

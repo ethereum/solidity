@@ -77,7 +77,7 @@ struct MemoryOffsetAllocator
 					size_t totalArgCount = functionDefinition->returnVariables.size() + functionDefinition->parameters.size();
 					totalArgCount > 16
 				)
-					for (TypedName const& var: ranges::concat_view(
+					for (NameWithDebugData const& var: ranges::concat_view(
 						functionDefinition->parameters,
 						functionDefinition->returnVariables
 					) | ranges::views::take(totalArgCount - 16))

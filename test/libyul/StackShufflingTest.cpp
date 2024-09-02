@@ -102,7 +102,7 @@ bool StackShufflingTest::parse(std::string const& _source)
 				expectToken(Token::LBrack);
 				scanner.next(); // read number of ghost variables as ghostVariableId
 				std::string ghostVariableId = scanner.currentLiteral();
-				Scope::Variable ghostVar = Scope::Variable{""_yulname, YulName(literal + "[" + ghostVariableId + "]")};
+				Scope::Variable ghostVar = Scope::Variable{YulName(literal + "[" + ghostVariableId + "]")};
 				stack.emplace_back(VariableSlot{
 					m_variables.insert(std::make_pair(ghostVar.name, ghostVar)).first->second
 				});
@@ -110,7 +110,7 @@ bool StackShufflingTest::parse(std::string const& _source)
 			}
 			else
 			{
-				Scope::Variable var = Scope::Variable{""_yulname, YulName(literal)};
+				Scope::Variable var = Scope::Variable{YulName(literal)};
 				stack.emplace_back(VariableSlot{
 					m_variables.insert(
 						make_pair(literal, var)

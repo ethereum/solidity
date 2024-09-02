@@ -36,31 +36,19 @@
 
 namespace solidity::yul
 {
-struct Dialect;
 
 /**
  * Converts a parsed Yul AST into readable string representation.
  * Ignores source locations.
- * If a dialect is provided, the dialect's default type is omitted.
  */
 class AsmPrinter
 {
 public:
-	enum class TypePrinting
-	{
-		OmitDefault,
-		Full
-	};
-
 	explicit AsmPrinter(
-		TypePrinting const _typePrintingMode,
-		Dialect const& _dialect,
 		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceIndexToName = {},
 		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
 		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
 	):
-		m_typePrintingMode(_typePrintingMode),
-		m_dialect(_dialect),
 		m_debugInfoSelection(_debugInfoSelection),
 		m_soliditySourceProvider(_soliditySourceProvider)
 	{
@@ -92,8 +80,7 @@ public:
 	);
 
 private:
-	std::string formatTypedName(TypedName _variable);
-	std::string appendTypeName(YulName _type, bool _isBoolLiteral = false) const;
+	std::string formatNameWithDebugData(NameWithDebugData _variable);
 	std::string formatDebugData(langutil::DebugData::ConstPtr const& _debugData, bool _statement);
 	template <class T>
 	std::string formatDebugData(T const& _node)
@@ -102,8 +89,6 @@ private:
 		return formatDebugData(_node.debugData, !isExpression);
 	}
 
-	TypePrinting const m_typePrintingMode{};
-	Dialect const& m_dialect;
 	std::map<std::string, unsigned> m_nameToSourceIndex;
 	langutil::SourceLocation m_lastLocation = {};
 	langutil::DebugInfoSelection m_debugInfoSelection = {};

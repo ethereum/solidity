@@ -109,9 +109,8 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(
 	return analysisInfo;
 }
 
-std::vector<YulName> AsmAnalyzer::operator()(Literal const& _literal)
+size_t AsmAnalyzer::operator()(Literal const& _literal)
 {
-	expectValidType(_literal.type, nativeLocationOf(_literal));
 	bool erroneousLiteralValue = false;
 	if (_literal.kind == LiteralKind::String && !_literal.value.unlimited() && _literal.value.hint() && _literal.value.hint()->size() > 32)
 	{
@@ -128,24 +127,14 @@ std::vector<YulName> AsmAnalyzer::operator()(Literal const& _literal)
 		m_errorReporter.typeError(6708_error, nativeLocationOf(_literal), "Number literal too large (> 256 bits)");
 	}
 
-	if (!m_dialect.validTypeForLiteral(_literal.kind, _literal.value, _literal.type))
-	{
-		m_errorReporter.typeError(
-			5170_error,
-			nativeLocationOf(_literal),
-			"Invalid type \"" + _literal.type.str() + "\" for literal \"" + formatLiteral(_literal) + "\"."
-		);
-	}
-
 	yulAssert(erroneousLiteralValue ^ validLiteral(_literal), "Invalid literal after validating it through AsmAnalyzer.");
-	return {_literal.type};
+	return 1;
 }
 
-std::vector<YulName> AsmAnalyzer::operator()(Identifier const& _identifier)
+size_t AsmAnalyzer::operator()(Identifier const& _identifier)
 {
 	yulAssert(!_identifier.name.empty(), "");
 	auto watcher = m_errorReporter.errorWatcher();
-	YulName type = m_dialect.defaultType;
 
 	if (m_currentScope->lookup(_identifier.name, GenericVisitor{
 		[&](Scope::Variable const& _var)
@@ -156,7 +145,6 @@ std::vector<YulName> AsmAnalyzer::operator()(Identifier const& _identifier)
 					nativeLocationOf(_identifier),
 					"Variable " + _identifier.name.str() + " used before it was declared."
 				);
-			type = _var.type;
 		},
 		[&](Scope::Function const&)
 		{
@@ -193,21 +181,21 @@ std::vector<YulName> AsmAnalyzer::operator()(Identifier const& _identifier)
 
 	}
 
-	return {type};
+	return 1;
 }
 
 void AsmAnalyzer::operator()(ExpressionStatement const& _statement)
 {
 	auto watcher = m_errorReporter.errorWatcher();
-	std::vector<YulName> types = std::visit(*this, _statement.expression);
-	if (watcher.ok() && !types.empty())
+	size_t numReturns = std::visit(*this, _statement.expression);
+	if (watcher.ok() && numReturns > 0)
 		m_errorReporter.typeError(
 			3083_error,
 			nativeLocationOf(_statement),
 			"Top-level expressions are not supposed to return values (this expression returns " +
-			std::to_string(types.size()) +
+			std::to_string(numReturns) +
 			" value" +
-			(types.size() == 1 ? "" : "s") +
+			(numReturns == 1 ? "" : "s") +
 			"). Use ``pop()`` or assign them."
 		);
 }
@@ -229,9 +217,9 @@ void AsmAnalyzer::operator()(Assignment const& _assignment)
 				" occurs multiple times on the left-hand side of the assignment."
 			);
 
-	std::vector<YulName> types = std::visit(*this, *_assignment.value);
+	size_t numRhsValues = std::visit(*this, *_assignment.value);
 
-	if (types.size() != numVariables)
+	if (numRhsValues != numVariables)
 		m_errorReporter.declarationError(
 			8678_error,
 			nativeLocationOf(_assignment),
@@ -240,13 +228,12 @@ void AsmAnalyzer::operator()(Assignment const& _assignment)
 			"\" does not match number of values (" +
 			std::to_string(numVariables) +
 			" vs. " +
-			std::to_string(types.size()) +
+			std::to_string(numRhsValues) +
 			")"
 		);
 
 	for (size_t i = 0; i < numVariables; ++i)
-		if (i < types.size())
-			checkAssignment(_assignment.variableNames[i], types[i]);
+		checkAssignment(_assignment.variableNames[i]);
 }
 
 void AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
@@ -263,13 +250,12 @@ void AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
 	for (auto const& variable: _varDecl.variables)
 	{
 		expectValidIdentifier(variable.name, nativeLocationOf(variable));
-		expectValidType(variable.type, nativeLocationOf(variable));
 	}
 
 	if (_varDecl.value)
 	{
-		std::vector<YulName> types = std::visit(*this, *_varDecl.value);
-		if (types.size() != numVariables)
+		size_t numValues = std::visit(*this, *_varDecl.value);
+		if (numValues != numVariables)
 			m_errorReporter.declarationError(
 				3812_error,
 				nativeLocationOf(_varDecl),
@@ -278,26 +264,12 @@ void AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
 				+ "\": " +
 				std::to_string(numVariables) +
 				" variables and " +
-				std::to_string(types.size()) +
+				std::to_string(numValues) +
 				" values."
 			);
-
-		for (size_t i = 0; i < _varDecl.variables.size(); ++i)
-		{
-			YulName givenType = m_dialect.defaultType;
-			if (i < types.size())
-				givenType = types[i];
-			TypedName const& variable = _varDecl.variables[i];
-			if (variable.type != givenType)
-				m_errorReporter.typeError(
-					3947_error,
-					nativeLocationOf(variable),
-					"Assigning value of type \"" + givenType.str() + "\" to variable of type \"" + variable.type.str() + "\"."
-				);
-		}
 	}
 
-	for (TypedName const& variable: _varDecl.variables)
+	for (NameWithDebugData const& variable: _varDecl.variables)
 		m_activeVariables.insert(&std::get<Scope::Variable>(
 			m_currentScope->identifiers.at(variable.name))
 		);
@@ -313,19 +285,18 @@ void AsmAnalyzer::operator()(FunctionDefinition const& _funDef)
 	for (auto const& var: _funDef.parameters + _funDef.returnVariables)
 	{
 		expectValidIdentifier(var.name, nativeLocationOf(var));
-		expectValidType(var.type, nativeLocationOf(var));
 		m_activeVariables.insert(&std::get<Scope::Variable>(varScope.identifiers.at(var.name)));
 	}
 
 	(*this)(_funDef.body);
 }
 
-std::vector<YulName> AsmAnalyzer::operator()(FunctionCall const& _funCall)
+size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 {
 	yulAssert(!_funCall.functionName.name.empty(), "");
 	auto watcher = m_errorReporter.errorWatcher();
-	std::vector<YulName> const* parameterTypes = nullptr;
-	std::vector<YulName> const* returnTypes = nullptr;
+	std::optional<size_t> numParameters;
+	std::optional<size_t> numReturns;
 	std::vector<std::optional<LiteralKind>> const* literalArguments = nullptr;
 
 	if (BuiltinFunction const* f = m_dialect.builtin(_funCall.functionName.name))
@@ -356,8 +327,8 @@ std::vector<YulName> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 				"The use of transient storage for reentrancy guards that are cleared at the end of the call is safe."
 			);
 
-		parameterTypes = &f->parameters;
-		returnTypes = &f->returns;
+		numParameters = f->numParameters;
+		numReturns = f->numReturns;
 		if (!f->literalArguments.empty())
 			literalArguments = &f->literalArguments;
 
@@ -375,8 +346,8 @@ std::vector<YulName> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		},
 		[&](Scope::Function const& _fun)
 		{
-			parameterTypes = &_fun.arguments;
-			returnTypes = &_fun.returns;
+			numParameters = _fun.numArguments;
+			numReturns = _fun.numReturns;
 		}
 	}))
 	{
@@ -399,17 +370,16 @@ std::vector<YulName> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		yulAssert(!watcher.ok(), "Expected a reported error.");
 	}
 
-	if (parameterTypes && _funCall.arguments.size() != parameterTypes->size())
+	if (numParameters && _funCall.arguments.size() != *numParameters)
 		m_errorReporter.typeError(
 			7000_error,
 			nativeLocationOf(_funCall.functionName),
 			"Function \"" + _funCall.functionName.name.str() + "\" expects " +
-			std::to_string(parameterTypes->size()) +
+			std::to_string(*numParameters) +
 			" arguments but got " +
 			std::to_string(_funCall.arguments.size()) + "."
 		);
 
-	std::vector<YulName> argTypes;
 	for (size_t i = _funCall.arguments.size(); i > 0; i--)
 	{
 		Expression const& arg = _funCall.arguments[i - 1];
@@ -455,33 +425,28 @@ std::vector<YulName> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 							"The \"verbatim_*\" builtins cannot be used with empty bytecode."
 						);
 				}
-				argTypes.emplace_back(expectUnlimitedStringLiteral(std::get<Literal>(arg)));
+				expectUnlimitedStringLiteral(std::get<Literal>(arg));
 				continue;
 			}
 		}
-		argTypes.emplace_back(expectExpression(arg));
+		expectExpression(arg);
 	}
-	std::reverse(argTypes.begin(), argTypes.end());
-
-	if (parameterTypes && parameterTypes->size() == argTypes.size())
-		for (size_t i = 0; i < parameterTypes->size(); ++i)
-			expectType((*parameterTypes)[i], argTypes[i], nativeLocationOf(_funCall.arguments[i]));
 
 	if (watcher.ok())
 	{
-		yulAssert(parameterTypes && parameterTypes->size() == argTypes.size(), "");
-		yulAssert(returnTypes, "");
-		return *returnTypes;
+		yulAssert(numParameters && numParameters == _funCall.arguments.size());
+		yulAssert(numReturns);
+		return *numReturns;
 	}
-	else if (returnTypes)
-		return std::vector<YulName>(returnTypes->size(), m_dialect.defaultType);
+	else if (numReturns)
+		return *numReturns;
 	else
 		return {};
 }
 
 void AsmAnalyzer::operator()(If const& _if)
 {
-	expectBoolExpression(*_if.condition);
+	expectExpression(*_if.condition);
 
 	(*this)(_if.body);
 }
@@ -497,7 +462,7 @@ void AsmAnalyzer::operator()(Switch const& _switch)
 			"\"switch\" statement with only a default case."
 		);
 
-	YulName valueType = expectExpression(*_switch.expression);
+	expectExpression(*_switch.expression);
 
 	std::set<u256> cases;
 	for (auto const& _case: _switch.cases)
@@ -505,8 +470,6 @@ void AsmAnalyzer::operator()(Switch const& _switch)
 		if (_case.value)
 		{
 			auto watcher = m_errorReporter.errorWatcher();
-
-			expectType(valueType, _case.value->type, nativeLocationOf(*_case.value));
 
 			// We cannot use "expectExpression" here because *_case.value is not an
 			// Expression and would be converted to an Expression otherwise.
@@ -539,7 +502,7 @@ void AsmAnalyzer::operator()(ForLoop const& _for)
 	// condition, the body and the post part inside.
 	m_currentScope = &scope(&_for.pre);
 
-	expectBoolExpression(*_for.condition);
+	expectExpression(*_for.condition);
 	// backup outer for-loop & create new state
 	auto outerForLoop = m_currentForLoop;
 	m_currentForLoop = &_for;
@@ -562,49 +525,30 @@ void AsmAnalyzer::operator()(Block const& _block)
 	m_currentScope = previousScope;
 }
 
-YulName AsmAnalyzer::expectExpression(Expression const& _expr)
+void AsmAnalyzer::expectExpression(Expression const& _expr)
 {
-	std::vector<YulName> types = std::visit(*this, _expr);
-	if (types.size() != 1)
+	size_t numValues = std::visit(*this, _expr);
+	if (numValues != 1)
 		m_errorReporter.typeError(
 			3950_error,
 			nativeLocationOf(_expr),
 			"Expected expression to evaluate to one value, but got " +
-			std::to_string(types.size()) +
+			std::to_string(numValues) +
 			" values instead."
 		);
-	return types.empty() ? m_dialect.defaultType : types.front();
 }
 
-YulName AsmAnalyzer::expectUnlimitedStringLiteral(Literal const& _literal)
+void AsmAnalyzer::expectUnlimitedStringLiteral(Literal const& _literal)
 {
 	yulAssert(_literal.kind == LiteralKind::String);
-	yulAssert(m_dialect.validTypeForLiteral(LiteralKind::String, _literal.value, _literal.type));
 	yulAssert(_literal.value.unlimited());
-
-	return {_literal.type};
 }
 
-void AsmAnalyzer::expectBoolExpression(Expression const& _expr)
-{
-	YulName type = expectExpression(_expr);
-	if (type != m_dialect.boolType)
-		m_errorReporter.typeError(
-			1733_error,
-			nativeLocationOf(_expr),
-			"Expected a value of boolean type \"" +
-			m_dialect.boolType.str() +
-			"\" but got \"" +
-			type.str() +
-			"\""
-		);
-}
-
-void AsmAnalyzer::checkAssignment(Identifier const& _variable, YulName _valueType)
+void AsmAnalyzer::checkAssignment(Identifier const& _variable)
 {
 	yulAssert(!_variable.name.empty(), "");
 	auto watcher = m_errorReporter.errorWatcher();
-	YulName const* variableType = nullptr;
+	bool hasVariable = false;
 	bool found = false;
 	if (Scope::Identifier const* var = m_currentScope->lookup(_variable.name))
 	{
@@ -625,7 +569,7 @@ void AsmAnalyzer::checkAssignment(Identifier const& _variable, YulName _valueTyp
 				"Variable " + _variable.name.str() + " used before it was declared."
 			);
 		else
-			variableType = &std::get<Scope::Variable>(*var).type;
+			hasVariable = true;
 		found = true;
 	}
 	else if (m_resolver)
@@ -634,25 +578,15 @@ void AsmAnalyzer::checkAssignment(Identifier const& _variable, YulName _valueTyp
 		if (m_resolver(_variable, yul::IdentifierContext::LValue, insideFunction))
 		{
 			found = true;
-			variableType = &m_dialect.defaultType;
+			hasVariable = true;
 		}
 	}
 
 	if (!found && watcher.ok())
 		// Only add message if the callback did not.
 		m_errorReporter.declarationError(4634_error, nativeLocationOf(_variable), "Variable not found or variable not lvalue.");
-	if (variableType && *variableType != _valueType)
-		m_errorReporter.typeError(
-			9547_error,
-			nativeLocationOf(_variable),
-			"Assigning a value of type \"" +
-			_valueType.str() +
-			"\" to a variable of type \"" +
-			variableType->str() +
-			"\"."
-		);
 
-	yulAssert(!watcher.ok() || variableType, "");
+	yulAssert(!watcher.ok() || hasVariable, "");
 }
 
 Scope& AsmAnalyzer::scope(Block const* _block)
@@ -685,26 +619,6 @@ void AsmAnalyzer::expectValidIdentifier(YulName _identifier, SourceLocation cons
 			5017_error,
 			_location,
 			"The identifier \"" + _identifier.str() + "\" is reserved and can not be used."
-		);
-}
-
-void AsmAnalyzer::expectValidType(YulName _type, SourceLocation const& _location)
-{
-	if (!m_dialect.types.count(_type))
-		m_errorReporter.typeError(
-			5473_error,
-			_location,
-			fmt::format("\"{}\" is not a valid type (user defined types are not yet supported).", _type.str())
-		);
-}
-
-void AsmAnalyzer::expectType(YulName _expectedType, YulName _givenType, SourceLocation const& _location)
-{
-	if (_expectedType != _givenType)
-		m_errorReporter.typeError(
-			3781_error,
-			_location,
-			fmt::format("Expected a value of type \"{}\" but got \"{}\".", _expectedType.str(), _givenType.str())
 		);
 }
 

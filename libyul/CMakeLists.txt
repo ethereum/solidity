@@ -39,6 +39,8 @@ add_library(yul
 	ScopeFiller.h
 	Utilities.cpp
 	Utilities.h
+	YulControlFlowGraphExporter.h
+	YulControlFlowGraphExporter.cpp
 	YulName.h
 	YulString.h
 	backends/evm/AbstractAssembly.h
@@ -63,6 +65,9 @@ add_library(yul
 	backends/evm/NoOutputAssembly.cpp
 	backends/evm/OptimizedEVMCodeTransform.cpp
 	backends/evm/OptimizedEVMCodeTransform.h
+	backends/evm/SSAControlFlowGraph.h
+	backends/evm/SSAControlFlowGraphBuilder.cpp
+	backends/evm/SSAControlFlowGraphBuilder.h
 	backends/evm/StackHelpers.h
 	backends/evm/StackLayoutGenerator.cpp
 	backends/evm/StackLayoutGenerator.h
@@ -179,8 +184,6 @@ add_library(yul
 	optimiser/Suite.h
 	optimiser/SyntacticalEquality.cpp
 	optimiser/SyntacticalEquality.h
-	optimiser/TypeInfo.cpp
-	optimiser/TypeInfo.h
 	optimiser/UnusedFunctionParameterPruner.cpp
 	optimiser/UnusedFunctionParameterPruner.h
 	optimiser/UnusedFunctionsCommon.h

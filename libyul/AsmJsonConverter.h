@@ -44,7 +44,7 @@ public:
 	explicit AsmJsonConverter(std::optional<size_t> _sourceIndex): m_sourceIndex(_sourceIndex) {}
 
 	Json operator()(Block const& _node) const;
-	Json operator()(TypedName const& _node) const;
+	Json operator()(NameWithDebugData const& _node) const;
 	Json operator()(Literal const& _node) const;
 	Json operator()(Identifier const& _node) const;
 	Json operator()(Assignment const& _node) const;

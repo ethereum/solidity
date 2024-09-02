@@ -33,7 +33,7 @@ void NameDisplacer::operator()(Identifier& _identifier)
 
 void NameDisplacer::operator()(VariableDeclaration& _varDecl)
 {
-	for (TypedName& var: _varDecl.variables)
+	for (NameWithDebugData& var: _varDecl.variables)
 		checkAndReplaceNew(var.name);
 
 	ASTModifier::operator()(_varDecl);

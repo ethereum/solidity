@@ -81,9 +81,9 @@ TestCase::TestResult YulOptimizerTest::run(std::ostream& _stream, std::string co
 	auto optimizedObject = tester.optimizedObject();
 	std::string printedOptimizedObject;
 	if (optimizedObject->subObjects.empty())
-		printedOptimizedObject = AsmPrinter{AsmPrinter::TypePrinting::OmitDefault, *m_dialect}(optimizedObject->code()->root());
+		printedOptimizedObject = AsmPrinter{}(optimizedObject->code()->root());
 	else
-		printedOptimizedObject = optimizedObject->toString(*m_dialect);
+		printedOptimizedObject = optimizedObject->toString();
 
 	// Re-parse new code for compilability
 	if (!std::get<0>(parse(_stream, _linePrefix, _formatted, printedOptimizedObject)))

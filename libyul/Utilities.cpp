@@ -219,8 +219,8 @@ bool solidity::yul::validBoolLiteral(solidity::yul::Literal const& _literal)
 template<>
 bool Less<Literal>::operator()(Literal const& _lhs, Literal const& _rhs) const
 {
-	if (std::make_tuple(_lhs.kind, _lhs.type) != std::make_tuple(_rhs.kind, _rhs.type))
-		return std::make_tuple(_lhs.kind, _lhs.type) < std::make_tuple(_rhs.kind, _rhs.type);
+	if (_lhs.kind != _rhs.kind)
+		return _lhs.kind < _rhs.kind;
 
 	if (_lhs.value.unlimited() && _rhs.value.unlimited())
 		yulAssert(

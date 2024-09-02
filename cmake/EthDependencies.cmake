@@ -37,7 +37,8 @@ if (WIN32)
 	find_package(Boost 1.77.0 QUIET REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 else()
 	# Boost 1.65 is the first to also provide boost::get for rvalue-references (#5787).
-	find_package(Boost 1.65.0 QUIET REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+	# Boost 1.67 moved container_hash into is own module.
+	find_package(Boost 1.67.0 QUIET REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 endif()
 
 # If cmake is older than boost and boost is older than 1.70,

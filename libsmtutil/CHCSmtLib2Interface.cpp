@@ -90,13 +90,15 @@ void CHCSmtLib2Interface::addRule(Expression const& _expr, std::string const& /*
 	m_commands.assertion("(forall" + forall(_expr) + '\n' + m_context.toSExpr(_expr) + ")\n");
 }
 
-std::tuple<CheckResult, Expression, CHCSolverInterface::CexGraph> CHCSmtLib2Interface::query(Expression const& _block)
+CHCSolverInterface::QueryResult CHCSmtLib2Interface::query(Expression const& _block)
 {
 	std::string query = dumpQuery(_block);
 	std::string response = querySolver(query);
 
 	CheckResult result;
-	// TODO proper parsing
+	// NOTE: Our internal semantics is UNSAT -> SAFE and SAT -> UNSAFE, which corresponds to usual SMT-based model checking
+	// However, with CHC solvers, the meaning is flipped, UNSAT -> UNSAFE and SAT -> SAFE.
+	// So we have to flip the answer.
 	if (boost::starts_with(response, "sat"))
 	{
 		auto maybeInvariants = invariantsFromSolverResponse(response);

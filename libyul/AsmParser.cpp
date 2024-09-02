@@ -567,18 +567,20 @@ std::variant<Literal, Identifier> Parser::parseLiteralOrIdentifier(bool _unlimit
 			break;
 		}
 
+		auto const literalLocation = currentLocation();
 		Literal literal{
 			createDebugData(),
 			kind,
-			valueOfLiteral(currentLiteral(), kind, _unlimitedLiteralArgument && kind == LiteralKind::String),
-			kind == LiteralKind::Boolean ? m_dialect.boolType : m_dialect.defaultType
+			valueOfLiteral(currentLiteral(), kind, _unlimitedLiteralArgument && kind == LiteralKind::String)
 		};
 		advance();
 		if (currentToken() == Token::Colon)
 		{
 			expectToken(Token::Colon);
 			updateLocationEndFrom(literal.debugData, currentLocation());
-			literal.type = expectAsmIdentifier();
+			auto const typedLiteralLocation = SourceLocation::smallestCovering(literalLocation, currentLocation());
+			std::ignore = expectAsmIdentifier();
+			raiseUnsupportedTypesError(typedLiteralLocation);
 		}
 
 		return literal;
@@ -599,7 +601,7 @@ VariableDeclaration Parser::parseVariableDeclaration()
 	expectToken(Token::Let);
 	while (true)
 	{
-		varDecl.variables.emplace_back(parseTypedName());
+		varDecl.variables.emplace_back(parseNameWithDebugData());
 		if (currentToken() == Token::Comma)
 			expectToken(Token::Comma);
 		else
@@ -637,7 +639,7 @@ FunctionDefinition Parser::parseFunctionDefinition()
 	expectToken(Token::LParen);
 	while (currentToken() != Token::RParen)
 	{
-		funDef.parameters.emplace_back(parseTypedName());
+		funDef.parameters.emplace_back(parseNameWithDebugData());
 		if (currentToken() == Token::RParen)
 			break;
 		expectToken(Token::Comma);
@@ -648,7 +650,7 @@ FunctionDefinition Parser::parseFunctionDefinition()
 		expectToken(Token::RightArrow);
 		while (true)
 		{
-			funDef.returnVariables.emplace_back(parseTypedName());
+			funDef.returnVariables.emplace_back(parseNameWithDebugData());
 			if (currentToken() == Token::LBrace)
 				break;
 			expectToken(Token::Comma);
@@ -695,19 +697,20 @@ FunctionCall Parser::parseCall(std::variant<Literal, Identifier>&& _initialOp)
 	return ret;
 }
 
-TypedName Parser::parseTypedName()
+NameWithDebugData Parser::parseNameWithDebugData()
 {
 	RecursionGuard recursionGuard(*this);
-	TypedName typedName = createWithDebugData<TypedName>();
+	NameWithDebugData typedName = createWithDebugData<NameWithDebugData>();
+	auto const nameLocation = currentLocation();
 	typedName.name = expectAsmIdentifier();
 	if (currentToken() == Token::Colon)
 	{
 		expectToken(Token::Colon);
 		updateLocationEndFrom(typedName.debugData, currentLocation());
-		typedName.type = expectAsmIdentifier();
+		auto const typedNameLocation = SourceLocation::smallestCovering(nameLocation, currentLocation());
+		std::ignore = expectAsmIdentifier();
+		raiseUnsupportedTypesError(typedNameLocation);
 	}
-	else
-		typedName.type = m_dialect.defaultType;
 
 	return typedName;
 }
@@ -755,4 +758,9 @@ bool Parser::isValidNumberLiteral(std::string const& _literal)
 		return true;
 	else
 		return _literal.find_first_not_of("0123456789") == std::string::npos;
+}
+
+void Parser::raiseUnsupportedTypesError(SourceLocation const& _location) const
+{
+	m_errorReporter.parserError(5473_error, _location, "Types are not supported in untyped Yul.");
 }

@@ -62,7 +62,7 @@ void LoadResolver::visit(Expression& _e)
 			tryResolve(_e, StoreLoadLocation::Memory, funCall->arguments);
 		else if (funCall->functionName.name == m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Storage)])
 			tryResolve(_e, StoreLoadLocation::Storage, funCall->arguments);
-		else if (!m_containsMSize && funCall->functionName.name == m_dialect.hashFunction({}))
+		else if (!m_containsMSize && funCall->functionName.name == m_dialect.hashFunction())
 		{
 			Identifier const* start = std::get_if<Identifier>(&funCall->arguments.at(0));
 			Identifier const* length = std::get_if<Identifier>(&funCall->arguments.at(1));
@@ -125,8 +125,7 @@ void LoadResolver::tryEvaluateKeccak(
 			{},
 			LiteralKind::Number,
 			// a dummy 256-bit number to represent the Keccak256 hash.
-			LiteralValue{std::numeric_limits<u256>::max()},
-			{}
+			LiteralValue{std::numeric_limits<u256>::max()}
 		}
 	);
 
@@ -150,8 +149,7 @@ void LoadResolver::tryEvaluateKeccak(
 			_e = Literal{
 				debugDataOf(_e),
 				LiteralKind::Number,
-				LiteralValue{contentHash},
-				m_dialect.defaultType
+				LiteralValue{contentHash}
 			};
 		}
 	}

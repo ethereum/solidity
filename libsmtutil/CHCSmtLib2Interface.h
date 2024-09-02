@@ -47,7 +47,7 @@ public:
 
 	/// Takes a function application _expr and checks for reachability.
 	/// @returns solving result, an invariant, and counterexample graph, if possible.
-	std::tuple<CheckResult, Expression, CexGraph> query(Expression const& _expr) override;
+	QueryResult query(Expression const& _expr) override;
 
 	void declareVariable(std::string const& _name, SortPointer const& _sort) override;
 

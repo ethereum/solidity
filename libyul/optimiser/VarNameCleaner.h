@@ -68,7 +68,7 @@ private:
 	);
 
 	/// Tries to rename a list of variables.
-	void renameVariables(std::vector<TypedName>& _variables);
+	void renameVariables(std::vector<NameWithDebugData>& _variables);
 
 	/// @returns suffix-stripped name, if a suffix was detected, none otherwise.
 	YulName stripSuffix(YulName const& _name) const;
