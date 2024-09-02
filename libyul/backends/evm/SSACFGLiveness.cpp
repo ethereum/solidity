@@ -218,19 +218,13 @@ void SSACFGLiveness::runDagDfs(SSACFG::BlockId blockId, std::vector<char>& _proc
 			yulAssert(std::holds_alternative<SSACFG::PhiValue>(info), "value info of phi wasn't PhiValue");
 			live += std::get<SSACFG::PhiValue>(info).arguments;
 		}
-		//if (m_edgeClassification.backEdges.find(std::make_tuple(blockId, _successor)) == m_edgeClassification.backEdges.end())
 		if (!m_topologicalSort.backEdge(blockId, _successor))
 			if (!_processed[_successor.value])
 				runDagDfs(_successor, _processed, _liveIns, _liveOuts);
-
-		yulAssert(!m_topologicalSort.backEdge(blockId, _successor));
 	});
 	block.forEachExit([&](SSACFG::BlockId const& _successor){
-		// if (m_edgeClassification.backEdges.find(std::make_tuple(blockId, _successor)) == m_edgeClassification.backEdges.end())
 		if (!m_topologicalSort.backEdge(blockId, _successor))
 			live += _liveIns[_successor.value] - m_cfg.block(_successor).phis;
-		else
-			yulAssert(false);
 	});
 	_liveOuts[blockId.value] = live;
 	for (auto const& op: block.operations | ranges::views::reverse)
