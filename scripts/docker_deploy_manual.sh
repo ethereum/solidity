@@ -28,7 +28,7 @@ DIR=$(mktemp -d)
 (
 cd "$DIR"
 
-git clone --recursive --depth 2 "$repo_url" -b "$branch"
+git clone --recursive --depth 2 "$repo_url" -b "$branch" solidity
 cd solidity
 commithash=$(git rev-parse --short=8 HEAD)
 echo -n "$commithash" > commit_hash.txt
