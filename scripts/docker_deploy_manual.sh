@@ -21,7 +21,7 @@ cd solidity
 commithash=$(git rev-parse --short=8 HEAD)
 echo -n "$commithash" > commit_hash.txt
 version=$("$(dirname "$0")/get_version.sh")
-if [ "$branch" = "release" ] || [ "$branch" = v"$version" ]
+if [ "$branch" = v"$version" ]
 then
     echo -n > prerelease.txt
 else
