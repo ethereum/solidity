@@ -377,3 +377,24 @@ of Solidity, you can use a special comment to annotate an assembly block as memo
 
 Note that we will disallow the annotation via comment in a future breaking release; so, if you are not concerned with
 backward-compatibility with older compiler versions, prefer using the dialect string.
+
+Advanced Safe Use of Memory
+---------------------------
+
+Beyond the strict definition of memory-safety given above, there are cases in which you may want to use more than 64 bytes
+of scratch space starting at memory offset ``0``. If you are careful, it can be admissible to use memory up to (and not
+including) offset ``0x80`` and still safely declare the assembly block as ``memory-safe``.
+This is admissible under either of the following conditions:
+
+- By the end of the assembly block, the free memory pointer at offset ``0x40`` is restored to a sane value (i.e. it is either
+  restored to its original value or an increment of it due to a manual memory allocation), and the memory word at offset ``0x60``
+  is restored to a value of zero.
+
+- The assembly block terminates, i.e. execution can never return to high-level Solidity code. This is the case, for example,
+  if your assembly block unconditionally ends in calling the ``revert`` opcode.
+
+Furthermore, you need to be aware that the default-value of dynamic arrays in Solidity point to memory offset ``0x60``, so
+for the duration of temporarily changing the value at memory offset ``0x60``, you can no longer rely on getting accurate
+length values when reading dynamic arrays, until you restore the zero value at ``0x60``. To be more precise, we only guarantee
+safety when overwriting the zero pointer, if the remainder of the assembly snippet does not interact with the memory of
+high-level Solidity objects (including by reading from offsets previously stored in variables).
