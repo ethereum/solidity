@@ -145,6 +145,27 @@ Definition fun_transfer (var_from : U256.t) (var_to : U256.t) (var_value : U256.
 
 The Coq output is based on the Yul compilation of the above Solidity code. It is a **shallow embedding** when we can, as in this example, and a **deep embedding** otherwise.
 
+We have proven the code above to be equivalent to the high-level Coq version:
+```coq
+Definition _transfer (from to : Address.t) (value : U256.t) (s : Storage.t) : Result.t Storage.t :=
+  if to =? 0 then
+    revert_address_null
+  else if balanceOf s from <? value then
+    revert_arithmetic
+  else
+    let s :=
+      s <| Storage.balances :=
+        Dict.declare_or_assign s.(Storage.balances) from (balanceOf s from - value)
+      |> in
+    if balanceOf s to + value >=? 2 ^ 256 then
+      revert_arithmetic
+    else
+      Result.Success s <| Storage.balances :=
+        Dict.declare_or_assign s.(Storage.balances) to (balanceOf s to + value)
+      |>.
+```
+In the high-level version we make explicit all the overflow checks and use real maps instead of Keccak-encoded keys.
+
 ## 📝 License
 
 The code of the translation is under the GPL-3.0 license as this is a fork of the Solidity compiler. The code of the Coq semantics is under the MIT license.
