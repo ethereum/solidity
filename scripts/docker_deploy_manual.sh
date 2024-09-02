@@ -2,13 +2,25 @@
 
 set -e
 
-if [ -z "$1" ]
-then
-    echo "Usage: $0 <tag/branch>"
-    exit 1
-fi
+REPO_ROOT="$(dirname "$0")/.."
+# shellcheck source=scripts/common.sh
+source "${REPO_ROOT}/scripts/common.sh"
+
 image="ethereum/solc"
+
+if (( $# < 1 || $# > 3 )); then
+    fail "Usage: $0 <tag/branch> [repo URL] [--no-push]"
+fi
+
 branch="$1"
+repo_url="${2:-https://github.com/ethereum/solidity.git}"
+
+if (( $# >= 3 )); then
+    [[ $3 == --no-push ]] || fail "Invalid flag: $3. Expected --no-push."
+    publish=false
+else
+    publish=true
+fi
 
 #docker login
 
@@ -16,7 +28,7 @@ DIR=$(mktemp -d)
 (
 cd "$DIR"
 
-git clone --recursive --depth 2 https://github.com/ethereum/solidity.git -b "$branch"
+git clone --recursive --depth 2 "$repo_url" -b "$branch"
 cd solidity
 commithash=$(git rev-parse --short=8 HEAD)
 echo -n "$commithash" > commit_hash.txt
@@ -31,7 +43,7 @@ fi
 function tag_and_push
 {
     docker tag "$image:$1" "$image:$2"
-    docker push "$image:$2"
+    [[ $publish == false ]] || docker push "$image:$2"
 }
 
 rm -rf .git
