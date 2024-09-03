@@ -549,7 +549,7 @@ std::pair<std::shared_ptr<Assembly>, std::vector<std::string>> Assembly::fromJSO
 			"Member 'sourceList' may only be present in the root JSON object."
 		);
 
-	auto result = std::make_shared<Assembly>(EVMVersion{}, _level == 0 /* _creation */, "" /* _name */);
+	auto result = std::make_shared<Assembly>(EVMVersion{}, _level == 0 /* _creation */, std::nullopt, "" /* _name */);
 	std::vector<std::string> parsedSourceList;
 	if (_json.contains("sourceList"))
 	{
@@ -735,7 +735,7 @@ std::map<u256, u256> const& Assembly::optimiseInternal(
 	{
 		count = 0;
 
-		if (_settings.runInliner)
+		if (_settings.runInliner && !m_eofVersion.has_value())
 			Inliner{
 				m_items,
 				_tagsReferencedFromOutside,
@@ -762,7 +762,7 @@ std::map<u256, u256> const& Assembly::optimiseInternal(
 		}
 
 		// This only modifies PushTags, we have to run again to actually remove code.
-		if (_settings.runDeduplicate)
+		if (_settings.runDeduplicate && !m_eofVersion.has_value())
 		{
 			BlockDeduplicator deduplicator{m_items};
 			if (deduplicator.deduplicate())
@@ -787,7 +787,8 @@ std::map<u256, u256> const& Assembly::optimiseInternal(
 			}
 		}
 
-		if (_settings.runCSE)
+		// TODO: investigate for EOF
+		if (_settings.runCSE && !m_eofVersion.has_value())
 		{
 			// Control flow graph optimization has been here before but is disabled because it
 			// assumes we only jump to tags that are pushed. This is not the case anymore with
@@ -839,7 +840,8 @@ std::map<u256, u256> const& Assembly::optimiseInternal(
 		}
 	}
 
-	if (_settings.runConstantOptimiser)
+	// TODO: investigate for EOF
+	if (_settings.runConstantOptimiser && !m_eofVersion.has_value())
 		ConstantOptimisationMethod::optimiseConstants(
 			isCreation(),
 			isCreation() ? 1 : _settings.expectedExecutionsPerDeployment,
@@ -861,6 +863,9 @@ LinkerObject const& Assembly::assemble() const
 	assertThrow(m_assembledObject.linkReferences.empty(), AssemblyException, "Unexpected link references.");
 
 	LinkerObject& ret = m_assembledObject;
+
+	bool const eof = m_eofVersion.has_value();
+	solAssert(!eof || m_eofVersion == 1, "Invalid EOF version.");
 
 	size_t subTagSize = 1;
 	std::map<u256, std::pair<std::string, std::vector<size_t>>> immutableReferencesBySub;
@@ -957,6 +962,7 @@ LinkerObject const& Assembly::assemble() const
 		}
 		case PushTag:
 		{
+			assertThrow(!eof, AssemblyException, "PushTag in EOF code");
 			ret.bytecode.push_back(tagPush);
 			tagRef[ret.bytecode.size()] = i.splitForeignPushTag();
 			ret.bytecode.resize(ret.bytecode.size() + bytesPerTag);
@@ -968,6 +974,7 @@ LinkerObject const& Assembly::assemble() const
 			ret.bytecode.resize(ret.bytecode.size() + bytesPerDataRef);
 			break;
 		case PushSub:
+			assertThrow(!eof, AssemblyException, "PushSub in EOF code");
 			assertThrow(i.data() <= std::numeric_limits<size_t>::max(), AssemblyException, "");
 			ret.bytecode.push_back(dataRefPush);
 			subRef.insert(std::make_pair(static_cast<size_t>(i.data()), ret.bytecode.size()));
@@ -975,6 +982,7 @@ LinkerObject const& Assembly::assemble() const
 			break;
 		case PushSubSize:
 		{
+			assertThrow(!eof, AssemblyException, "PushSubSize in EOF code");
 			assertThrow(i.data() <= std::numeric_limits<size_t>::max(), AssemblyException, "");
 			auto s = subAssemblyById(static_cast<size_t>(i.data()))->assemble().bytecode.size();
 			i.setPushedValue(u256(s));
@@ -987,6 +995,7 @@ LinkerObject const& Assembly::assemble() const
 		}
 		case PushProgramSize:
 		{
+			assertThrow(!eof, AssemblyException, "PushProgramSize in EOF code");
 			ret.bytecode.push_back(dataRefPush);
 			sizeRef.push_back(static_cast<unsigned>(ret.bytecode.size()));
 			ret.bytecode.resize(ret.bytecode.size() + bytesPerDataRef);
@@ -998,6 +1007,7 @@ LinkerObject const& Assembly::assemble() const
 			ret.bytecode.resize(ret.bytecode.size() + 20);
 			break;
 		case PushImmutable:
+			assertThrow(!eof, AssemblyException, "PushImmutable in EOF code");
 			ret.bytecode.push_back(static_cast<uint8_t>(Instruction::PUSH32));
 			// Maps keccak back to the "identifier" std::string of that immutable.
 			ret.immutableReferences[i.data()].first = m_immutables.at(i.data());
@@ -1011,6 +1021,7 @@ LinkerObject const& Assembly::assemble() const
 			break;
 		case AssignImmutable:
 		{
+			assertThrow(!eof, AssemblyException, "AssignImmutable in EOF code");
 			// Expect 2 elements on stack (source, dest_base)
 			auto const& offsets = immutableReferencesBySub[i.data()].second;
 			for (size_t i = 0; i < offsets.size(); ++i)
@@ -1063,7 +1074,7 @@ LinkerObject const& Assembly::assemble() const
 				"Some immutables were read from but never assigned, possibly because of optimization."
 			);
 
-	if (!m_subs.empty() || !m_data.empty() || !m_auxiliaryData.empty())
+	if (!eof && (!m_subs.empty() || !m_data.empty() || !m_auxiliaryData.empty()))
 		// Append an INVALID here to help tests find miscompilation.
 		ret.bytecode.push_back(static_cast<uint8_t>(Instruction::INVALID));
 

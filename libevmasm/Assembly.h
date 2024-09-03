@@ -48,8 +48,14 @@ using AssemblyPointer = std::shared_ptr<Assembly>;
 class Assembly
 {
 public:
-	Assembly(langutil::EVMVersion _evmVersion, bool _creation, std::string _name): m_evmVersion(_evmVersion), m_creation(_creation), m_name(std::move(_name)) { }
+	Assembly(langutil::EVMVersion _evmVersion, bool _creation, std::optional<uint8_t> _eofVersion, std::string _name):
+	m_evmVersion(_evmVersion),
+	m_creation(_creation),
+	m_eofVersion(_eofVersion),
+	m_name(std::move(_name))
+	{}
 
+	std::optional<uint8_t> eofVersion() const { return m_eofVersion; }
 	AssemblyItem newTag() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(Tag, m_usedTags++); }
 	AssemblyItem newPushTag() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(PushTag, m_usedTags++); }
 	/// Returns a tag identified by the given name. Creates it if it does not yet exist.
@@ -242,6 +248,7 @@ protected:
 	int m_deposit = 0;
 	/// True, if the assembly contains contract creation code.
 	bool const m_creation = false;
+	std::optional<uint8_t> m_eofVersion;
 	/// Internal name of the assembly object, only used with the Yul backend
 	/// currently
 	std::string m_name;

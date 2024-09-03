@@ -297,7 +297,7 @@ YulStack::assembleEVMWithDeployed(std::optional<std::string_view> _deployName)
 	yulAssert(m_parserResult->hasCode(), "");
 	yulAssert(m_parserResult->analysisInfo, "");
 
-	evmasm::Assembly assembly(m_evmVersion, true, {});
+	evmasm::Assembly assembly(m_evmVersion, true, m_eofVersion, {});
 	EthAssemblyAdapter adapter(assembly);
 
 	// NOTE: We always need stack optimization when Yul optimizer is disabled (unless code contains

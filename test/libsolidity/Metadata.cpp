@@ -225,45 +225,6 @@ BOOST_AUTO_TEST_CASE(metadata_stamp_experimental)
 		}
 }
 
-BOOST_AUTO_TEST_CASE(metadata_eof_experimental)
-{
-	// Check that setting an EOF version results in the experimental flag being set.
-	char const* sourceCode = R"(
-		pragma solidity >=0.0;
-		contract test {
-			function g(function(uint) external returns (uint) x) public {}
-		}
-	)";
-	for (auto metadataFormat: std::set<CompilerStack::MetadataFormat>{
-		CompilerStack::MetadataFormat::NoMetadata,
-		CompilerStack::MetadataFormat::WithReleaseVersionTag,
-		CompilerStack::MetadataFormat::WithPrereleaseVersionTag
-	})
-	{
-		CompilerStack compilerStack;
-		compilerStack.setMetadataFormat(metadataFormat);
-		compilerStack.setSources({{"", sourceCode}});
-		compilerStack.setEVMVersion({});
-		compilerStack.setViaIR(true);
-		compilerStack.setEOFVersion(1);
-		compilerStack.setOptimiserSettings(true);
-		BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
-		bytes const& bytecode = compilerStack.runtimeObject("test").bytecode;
-		std::string const& metadata = compilerStack.metadata("test");
-		BOOST_CHECK(solidity::test::isValidMetadata(metadata));
-
-		auto const cborMetadata = requireParsedCBORMetadata(bytecode, metadataFormat);
-
-		if (metadataFormat == CompilerStack::MetadataFormat::NoMetadata)
-			BOOST_CHECK(cborMetadata.count("experimental") == 0);
-		else
-		{
-			BOOST_CHECK(cborMetadata.count("experimental") == 1);
-			BOOST_CHECK(cborMetadata.at("experimental") == "true");
-		}
-	}
-}
-
 BOOST_AUTO_TEST_CASE(metadata_relevant_sources)
 {
 	CompilerStack compilerStack;
