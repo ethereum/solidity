@@ -18,6 +18,7 @@
 
 #include <libyul/backends/evm/SSACFGLiveness.h>
 #include <range/v3/range/conversion.hpp>
+#include <range/v3/view/filter.hpp>
 #include <range/v3/view/reverse.hpp>
 
 using namespace solidity;
@@ -150,10 +151,13 @@ void SSACFGLiveness::runDagDfs(SSACFG::BlockId blockId, std::vector<char>& _proc
 			live += _liveIns[_successor.value] - m_cfg.block(_successor).phis;
 	});
 	_liveOuts[blockId.value] = live;
+	auto const filterLiterals = [this](auto const& valueId) {
+		return !std::holds_alternative<SSACFG::LiteralValue>(m_cfg.valueInfo(valueId));
+	};
 	for (auto const& op: block.operations | ranges::views::reverse)
 	{
-		live -= op.outputs;
-		live += op.inputs;
+		live -= op.outputs | ranges::views::filter(filterLiterals) | ranges::to<std::vector>;
+		live += op.inputs | ranges::views::filter(filterLiterals) | ranges::to<std::vector>;
 	}
 	_liveIns[blockId.value] = live + block.phis;
 	_processed[blockId.value] = true;
