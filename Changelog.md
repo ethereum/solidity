@@ -7,22 +7,22 @@ Language Features:
 
 
 Compiler Features:
- * Command Line Interface: Do not perform IR optimization when only unoptimized IR is requested.
  * Commandline Interface: Add ``--transient-storage-layout`` output.
+ * Commandline Interface: Allow the use of ``--asm-json`` output option in assembler mode to export EVM assembly of the contracts in JSON format.
+ * Commandline Interface: Do not perform IR optimization when only unoptimized IR is requested.
  * Constant Optimizer: Uses ``PUSH0`` if supported by the selected evm version.
  * Error Reporting: Unimplemented features are now properly reported as errors instead of being handled as if they were bugs.
  * EVM: Support for the EVM version "Prague".
  * Peephole Optimizer: ``PUSH0``, when supported, is duplicated explicitly instead of using ``DUP1``.
- * Peephole optimizer: Remove identical code snippets that terminate the control flow if they occur one after another.
+ * Peephole Optimizer: Remove identical code snippets that terminate the control flow if they occur one after another.
  * SMTChecker: Add CHC engine check for underflow and overflow in unary minus operation.
  * SMTChecker: Replace CVC4 as a possible BMC backend with cvc5.
- * Standard JSON Interface: Do not perform IR optimization when only unoptimized IR is requested.
  * Standard JSON Interface: Add ``transientStorageLayout`` output.
+ * Standard JSON Interface: Do not perform IR optimization when only unoptimized IR is requested.
  * Yul: Drop the deprecated typed Yul dialect that was only accessible via ``--yul`` in the CLI.
  * Yul: The presence of types in untyped Yul dialects is now a parser error.
  * Yul Optimizer: Caching of optimized IR to speed up optimization of contracts with bytecode dependencies.
  * Yul Optimizer: The optimizer now treats some previously unrecognized identical literals as identical.
- * Commandline Interface: Allow the use of ``--asm-json`` output option in assembler mode to export EVM assembly of the contracts in JSON format.
 
 
 Bugfixes:
