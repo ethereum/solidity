@@ -1620,7 +1620,7 @@ Json StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 	std::string const& sourceContents = _inputsAndSettings.sources.begin()->second;
 
 	// Inconsistent state - stop here to receive error reports from users
-	if (!stack.parseAndAnalyze(sourceName, sourceContents) && stack.errors().empty())
+	if (!stack.parseAndAnalyze(sourceName, sourceContents) && !stack.hasErrors())
 	{
 		output["errors"].emplace_back(formatError(
 			Error::Type::InternalCompilerError,
@@ -1630,22 +1630,20 @@ Json StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 		return output;
 	}
 
-	if (!stack.errors().empty())
+	for (auto const& error: stack.errors())
 	{
-		for (auto const& error: stack.errors())
-		{
-			auto err = std::dynamic_pointer_cast<Error const>(error);
+		auto err = std::dynamic_pointer_cast<Error const>(error);
 
-			output["errors"].emplace_back(formatErrorWithException(
-				stack,
-				*error,
-				err->type(),
-				"general",
-				""
-			));
-		}
-		return output;
+		output["errors"].emplace_back(formatErrorWithException(
+			stack,
+			*error,
+			err->type(),
+			"general",
+			""
+		));
 	}
+	if (stack.hasErrors())
+		return output;
 
 	std::string contractName = stack.parserResult()->name;
 
