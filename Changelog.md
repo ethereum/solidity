@@ -32,6 +32,7 @@ Bugfixes:
  * SMTChecker: Fix formatting of unary minus expressions in invariants.
  * SMTChecker: Fix internal compiler error when reporting proved targets for BMC engine.
  * SMTChecker: Fix SMT logic error when assigning to an array of contracts or functions.
+ * Standard JSON Interface: For Yul input, properly produce output artifacts in case of warnings.
  * TypeChecker: Fix segfault when assigning nested tuple to tuple.
  * Yul IR Code Generation: Deterministic order of Yul subobjects.
  * Yul Optimizer: Fix Yul source locations always referring to unoptimized source, even in optimized outputs.

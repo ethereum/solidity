@@ -1,0 +1,20 @@
+{
+	"language": "Yul",
+	"sources":
+	{
+		"C":
+		{
+			"content": "{ let x := tload(0) tstore(add(x, 1), 0) }"
+		}
+	},
+	"settings":
+	{
+		"outputSelection":
+		{
+			"*": {
+				"*": ["evm.bytecode", "evm.assembly", "irOptimized"],
+				"": [ "*" ]
+			}
+		}
+	}
+}
