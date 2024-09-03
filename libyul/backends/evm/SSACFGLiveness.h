@@ -41,25 +41,27 @@ class ReducedTopologicalSort
 public:
 	static ReducedTopologicalSort run(SSACFG const& _cfg);
 
-	std::vector<SSACFG::BlockId> const& sortedBlocks() const { return m_reversedPostOrder; }
-	std::vector<SSACFG::BlockId> const& preOrder() const { return m_preOrder; }
-	std::set<SSACFG::BlockId> const& backEdgeTargets() const { return m_backEdgeTargets; }
-	bool ancestor(SSACFG::BlockId const& _block1, SSACFG::BlockId const& _block2, bool checked=true) const;
-	bool backEdge(SSACFG::BlockId const& _block1, SSACFG::BlockId const& _block2) const { return ancestor(_block2, _block1); }
+	std::vector<size_t> const& sortedBlocks() const { return m_reversedPostOrder; }
+	std::vector<size_t> const& preOrder() const { return m_preOrder; }
+	std::vector<size_t> const& maxSubtreePreOrder() const { return m_maxSubtreePreOrder; }
+	std::set<size_t> const& backEdgeTargets() const { return m_backEdgeTargets; }
+	bool ancestor(size_t _block1, size_t _block2) const;
+	bool backEdge(SSACFG::BlockId const& _block1, SSACFG::BlockId const& _block2) const { return ancestor(_block2.value, _block1.value); }
 
 private:
 	explicit ReducedTopologicalSort(SSACFG const& _cfg);
 	void perform();
-	size_t dfs(SSACFG::BlockId _vertex);
+	void dfs(size_t _vertex);
 
 	SSACFG const& m_cfg;
 
 	size_t m_currentNode {0};
-	std::set<SSACFG::BlockId> m_explored{};
-	std::vector<SSACFG::BlockId> m_reversedPostOrder{};
-	std::vector<SSACFG::BlockId> m_preOrder{};
+	std::vector<char> m_explored{};
+	std::vector<size_t> m_reversedPostOrder{};
+	std::vector<size_t> m_preOrder{};
 	std::vector<size_t> m_maxSubtreePreOrder{};
-	std::set<SSACFG::BlockId> m_backEdgeTargets{};
+	std::vector<std::tuple<size_t, size_t>> m_potentialBackEdges{};
+	std::set<size_t> m_backEdgeTargets{};
 };
 
 class SSACFGLiveness
