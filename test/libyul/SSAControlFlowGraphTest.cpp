@@ -62,11 +62,11 @@ SSAControlFlowGraphTest::SSAControlFlowGraphTest(std::string const& _filename): 
 class SSACFGPrinter
 {
 public:
-	SSACFGPrinter(SSACFG const& _cfg, SSACFG::BlockId _blockId): m_cfg(_cfg), m_functionIndex(0), m_sort(ReducedTopologicalSort::run(_cfg))
+	SSACFGPrinter(SSACFG const& _cfg, SSACFG::BlockId _blockId): m_cfg(_cfg), m_functionIndex(0), m_sort(ReducedTopologicalSort::run(_cfg)), m_liveness(_cfg)
 	{
 		printBlock(_blockId);
 	}
-	SSACFGPrinter(SSACFG const& _cfg, size_t _functionIndex, Scope::Function const& _function): m_cfg(_cfg), m_functionIndex(_functionIndex), m_sort(ReducedTopologicalSort::run(_cfg))
+	SSACFGPrinter(SSACFG const& _cfg, size_t _functionIndex, Scope::Function const& _function): m_cfg(_cfg), m_functionIndex(_functionIndex), m_sort(ReducedTopologicalSort::run(_cfg)), m_liveness(_cfg)
 	{
 		printFunction(_function);
 	}
@@ -135,6 +135,8 @@ private:
 		}
 		{
 			m_result << fmt::format("{} [label=\"\\\nBlock {}; ({}, max {})\\n", formatBlockHandle(_id), _id.value, m_sort.preOrder()[_id.value], m_sort.maxSubtreePreOrder()[_id.value]);
+			m_result << fmt::format("LiveIn: {}\\l\\\n", fmt::join(m_liveness.liveIns()[_id.value] | ranges::views::transform([](SSACFG::ValueId const& valId) { return "v" + std::to_string(valId.value); }), ","));
+			m_result << fmt::format("LiveOut: {}\\l\\n", fmt::join(m_liveness.liveOuts()[_id.value] | ranges::views::transform([](SSACFG::ValueId const& valId) { return "v" + std::to_string(valId.value); }), ","));
 			for (auto const& phi : _block.phis)
 			{
 				auto const* phiValue = std::get_if<SSACFG::PhiValue>(&m_cfg.valueInfo(phi));
@@ -177,7 +179,6 @@ private:
 				   m_result << fmt::format("{} -> {}Exit [arrowhead=none];\n", formatBlockHandle(_id), formatBlockHandle(_id));
 				   m_result << fmt::format("{}Exit [label=\"Jump\" shape=oval];\n", formatBlockHandle(_id));
 				   m_result << formatEdge(_id, _jump.target);
-				   // m_result << fmt::format("{}Exit -> {};\n", formatBlockHandle(_id), formatBlockHandle(_jump.target));
 			   },
 			   [&](SSACFG::BasicBlock::ConditionalJump const& _conditionalJump)
 			   {
@@ -268,6 +269,7 @@ private:
 	SSACFG const& m_cfg;
 	size_t const m_functionIndex;
 	ReducedTopologicalSort const m_sort;
+	SSACFGLiveness const m_liveness;
 	std::stringstream m_result{};
 };
 
