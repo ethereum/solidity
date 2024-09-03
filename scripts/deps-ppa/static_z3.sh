@@ -41,7 +41,7 @@ sourcePPAConfig
 # Sanity check
 checkDputEntries "\[cpp-build-deps\]"
 
-DISTRIBUTIONS="focal jammy mantic noble"
+DISTRIBUTIONS="focal jammy noble oracular"
 
 for distribution in $DISTRIBUTIONS
 do
