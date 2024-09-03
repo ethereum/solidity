@@ -23,19 +23,6 @@
 namespace solidity::yul
 {
 
-struct SSACFGEdgeClassification
-{
-	SSACFGEdgeClassification(SSACFG const& _cfg);
-
-	using Vertex = SSACFG::BlockId;
-	using Edge = std::tuple<Vertex, Vertex>;
-
-	std::set<Edge> treeEdges;
-	std::set<Edge> backEdges;
-	std::set<Edge> forwardEdges;
-	std::set<Edge> crossEdges;
-};
-
 class ReducedTopologicalSort
 {
 public:
@@ -73,12 +60,10 @@ public:
 
 	std::vector<std::set<SSACFG::ValueId>> const& liveIns() const { return m_liveIns; }
 	std::vector<std::set<SSACFG::ValueId>> const& liveOuts() const { return m_liveOuts; }
-	SSACFGEdgeClassification const& edgeClassification() const { return m_edgeClassification; }
 
 private:
 
 	static ReducedReachableNodes computeReducedReachableNodes(SSACFG const& _cfg);
-	static bool isConnectedInReducedGraph(SSACFG::BlockId v, SSACFG::BlockId w, SSACFG const& _cfg, std::set<SSACFGEdgeClassification::Edge> const& _backEdges);
 
 	void runDagDfs(
 		SSACFG::BlockId v,
@@ -95,7 +80,6 @@ private:
 	);
 
 	SSACFG const& m_cfg;
-	SSACFGEdgeClassification m_edgeClassification;
 	ReducedReachableNodes m_reducedReachableNodes;
 	ReducedTopologicalSort m_topologicalSort;
 	std::vector<std::set<SSACFG::ValueId>> m_liveIns;

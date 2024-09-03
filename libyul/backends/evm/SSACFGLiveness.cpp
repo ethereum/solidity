@@ -91,49 +91,8 @@ void ReducedTopologicalSort::dfs(size_t _vertex)
 	m_reversedPostOrder[m_preOrder[_vertex]] = _vertex; // todo maybe not needed
 }
 
-SSACFGEdgeClassification::SSACFGEdgeClassification(SSACFG const& _cfg)
-{
-	std::set<Vertex> explored{};
-	Vertex blockId = _cfg.entry;
-	explored.insert(blockId);
-
-	std::vector<Vertex> toVisit{};
-	toVisit.emplace_back(blockId);
-	std::vector<Vertex> path{};
-
-	while (!toVisit.empty())
-	{
-		auto const id = toVisit.back();
-		toVisit.pop_back();
-		auto const& block = _cfg.block(id);
-
-		path.emplace_back(id);
-		block.forEachExit([&](Vertex const& _exitBlock){
-			if (explored.find(_exitBlock) == explored.end())
-			{
-				explored.insert(_exitBlock);
-				toVisit.emplace_back(_exitBlock);
-				treeEdges.emplace(id, _exitBlock);
-			}
-			else
-			{
-				// todo we have to checkpoint the path or maybe not. let's try with topological sort
-				bool const isBackEdge = std::find(path.begin(), path.end(), _exitBlock) != path.end();
-				if (isBackEdge)
-					backEdges.emplace(id, _exitBlock);
-				if (!isBackEdge)
-					forwardEdges.emplace(id, _exitBlock);
-				else
-					crossEdges.emplace(id, _exitBlock);
-				path.clear();
-			}
-		});
-	}
-}
-
 SSACFGLiveness::SSACFGLiveness(SSACFG const& _cfg):
 	m_cfg(_cfg),
-	m_edgeClassification(_cfg),
 	m_reducedReachableNodes(computeReducedReachableNodes(_cfg)),
 	m_topologicalSort(ReducedTopologicalSort::run(_cfg)),
 	m_liveIns(_cfg.numBlocks()),
@@ -143,9 +102,6 @@ SSACFGLiveness::SSACFGLiveness(SSACFG const& _cfg):
 
 	runDagDfs(_cfg.entry, processed, m_liveIns, m_liveOuts);
 
-	// m_edgeClassification.backEdges
-	// 	| ranges::views::transform([](auto const& edge) { return std::get<1>(edge); })
-	// 	| ranges::to<std::set>();
 	std::set<size_t> loopNestingForestRootNodes = m_topologicalSort.backEdgeTargets();
 
 	for (auto const& rootNode: loopNestingForestRootNodes)
@@ -172,39 +128,6 @@ void SSACFGLiveness::runLoopTreeDfs
 	}
 }
 
-
-bool SSACFGLiveness::isConnectedInReducedGraph(SSACFG::BlockId v, SSACFG::BlockId w, SSACFG const& _cfg, std::set<SSACFGEdgeClassification::Edge> const& _backEdges)
-{
-	std::set<SSACFG::BlockId> explored{};
-	SSACFG::BlockId blockId = v;
-	if (explored.find(blockId) == explored.end())
-	{
-		explored.insert(blockId);
-
-		std::vector<SSACFG::BlockId> toVisit{};
-		toVisit.emplace_back(blockId);
-
-		while (!toVisit.empty())
-		{
-			auto const id = toVisit.back();
-			if (id == w)
-				return true;
-			toVisit.pop_back();
-			auto const& block = _cfg.block(id);
-
-			block.forEachExit([&](SSACFG::BlockId const& _exitBlock){
-				// we have an edge e = id -> _exitBlock
-				// check if it's an back-edge, ie, _exitBlock is in the toVisit block
-				if (_backEdges.find(std::make_tuple(id, _exitBlock)) == _backEdges.end())
-				{
-					explored.insert(_exitBlock);
-					toVisit.emplace_back(_exitBlock);
-				}
-			});
-		}
-	}
-	return false;
-}
 
 void SSACFGLiveness::runDagDfs(SSACFG::BlockId blockId, std::vector<char>& _processed, std::vector<std::set<SSACFG::ValueId>>& _liveIns, std::vector<std::set<SSACFG::ValueId>>& _liveOuts)
 {
