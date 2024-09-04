@@ -67,7 +67,7 @@ FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser, Dialect const& 
 
 	// Store size of global statements.
 	m_functionSizes[YulName{}] = CodeSize::codeSize(_ast);
-	std::map<YulName, size_t> references = ReferencesCounter::countReferences(m_ast);
+	std::map<FunctionNameIdentifier, size_t> references = ReferencesCounter::countReferences(m_ast);
 	for (auto& statement: m_ast.statements)
 	{
 		if (!std::holds_alternative<FunctionDefinition>(statement))
@@ -255,7 +255,7 @@ void FullInliner::handleBlock(YulName _currentFunctionName, Block& _block)
 
 bool FullInliner::recursive(FunctionDefinition const& _fun) const
 {
-	std::map<YulName, size_t> references = ReferencesCounter::countReferences(_fun);
+	std::map<FunctionNameIdentifier, size_t> references = ReferencesCounter::countReferences(_fun);
 	return references[_fun.name] > 0;
 }
 

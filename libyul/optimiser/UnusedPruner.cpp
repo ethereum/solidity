@@ -183,7 +183,7 @@ bool UnusedPruner::used(YulName _name) const
 	return m_references.count(_name) && m_references.at(_name) > 0;
 }
 
-void UnusedPruner::subtractReferences(std::map<YulName, size_t> const& _subtrahend)
+void UnusedPruner::subtractReferences(std::map<FunctionNameIdentifier, size_t> const& _subtrahend)
 {
 	for (auto const& ref: _subtrahend)
 	{

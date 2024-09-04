@@ -24,6 +24,8 @@
 #include <libyul/AST.h>
 #include <libyul/Utilities.h>
 
+#include <libsolutil/Visitor.h>
+
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
@@ -56,26 +58,30 @@ void ReferencesCounter::operator()(Identifier const& _identifier)
 
 void ReferencesCounter::operator()(FunctionCall const& _funCall)
 {
-	if (std::holds_alternative<Identifier>(_funCall.functionName))
-		++m_references[std::get<Identifier>(_funCall.functionName).name];
+	auto const handle = std::visit(util::GenericVisitor{
+		[&](Identifier const& _identifier) -> FunctionNameIdentifier { return _identifier.name; },
+		[&](Builtin const& _builtin) -> FunctionNameIdentifier { return _builtin.handle; },
+		[&](Verbatim const& _verbatim) -> FunctionNameIdentifier { return _verbatim.handle; }
+	}, _funCall.functionName);
+	++m_references[handle];
 	ASTWalker::operator()(_funCall);
 }
 
-std::map<YulName, size_t> ReferencesCounter::countReferences(Block const& _block)
+std::map<FunctionNameIdentifier, size_t> ReferencesCounter::countReferences(Block const& _block)
 {
 	ReferencesCounter counter;
 	counter(_block);
 	return std::move(counter.m_references);
 }
 
-std::map<YulName, size_t> ReferencesCounter::countReferences(FunctionDefinition const& _function)
+std::map<FunctionNameIdentifier, size_t> ReferencesCounter::countReferences(FunctionDefinition const& _function)
 {
 	ReferencesCounter counter;
 	counter(_function);
 	return std::move(counter.m_references);
 }
 
-std::map<YulName, size_t> ReferencesCounter::countReferences(Expression const& _expression)
+std::map<FunctionNameIdentifier, size_t> ReferencesCounter::countReferences(Expression const& _expression)
 {
 	ReferencesCounter counter;
 	counter.visit(_expression);

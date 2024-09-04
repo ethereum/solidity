@@ -116,13 +116,13 @@ private:
 	);
 
 	bool used(YulName _name) const;
-	void subtractReferences(std::map<YulName, size_t> const& _subtrahend);
+	void subtractReferences(std::map<FunctionNameIdentifier, size_t> const& _subtrahend);
 
 	Dialect const& m_dialect;
 	bool m_allowMSizeOptimization = false;
 	std::map<FunctionNameIdentifier, SideEffects> const* m_functionSideEffects = nullptr;
 	bool m_shouldRunAgain = false;
-	std::map<YulName, size_t> m_references;
+	std::map<FunctionNameIdentifier, size_t> m_references;
 };
 
 }
