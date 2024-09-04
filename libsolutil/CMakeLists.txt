@@ -2,6 +2,7 @@ set(sources
 	Algorithms.h
 	AnsiColorized.h
 	Assertions.h
+	Cache.h
 	Common.h
 	CommonData.cpp
 	CommonData.h

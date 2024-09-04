@@ -55,7 +55,7 @@ bool YulStack::parse(std::string const& _sourceName, std::string const& _source)
 	{
 		m_charStream = std::make_unique<CharStream>(_source, _sourceName);
 		std::shared_ptr<Scanner> scanner = std::make_shared<Scanner>(*m_charStream);
-		m_parserResult = ObjectParser(m_errorReporter, languageToDialect(m_language, m_evmVersion)).parse(scanner, false);
+		m_parserResult = ObjectParser(m_errorReporter, languageToDialect(m_language, m_evmVersion), m_cache).parse(scanner, false);
 	}
 	catch (UnimplementedFeatureError const& _error)
 	{

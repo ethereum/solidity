@@ -19,6 +19,9 @@
  * Common functions the Yul tests.
  */
 
+#include "libyul/AsmParser.h"
+
+
 #include <test/libyul/Common.h>
 
 #include <test/Common.h>
@@ -36,6 +39,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <utility>
 #include <variant>
 
 using namespace solidity;
@@ -50,7 +54,7 @@ Dialect const& defaultDialect()
 }
 }
 
-std::pair<std::shared_ptr<AST const>, std::shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(std::string const& _source)
+std::pair<std::shared_ptr<AST const>, std::shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(std::string const& _source, Parser::DebugAttributeCache::Ptr _cache)
 {
 	YulStack stack(
 		solidity::test::CommonOptions::get().evmVersion(),
@@ -59,7 +63,9 @@ std::pair<std::shared_ptr<AST const>, std::shared_ptr<yul::AsmAnalysisInfo>> yul
 		solidity::test::CommonOptions::get().optimize ?
 			solidity::frontend::OptimiserSettings::standard() :
 			solidity::frontend::OptimiserSettings::minimal(),
-		DebugInfoSelection::ExceptExperimental()
+		DebugInfoSelection::ExceptExperimental(),
+		nullptr,
+		std::move(_cache)
 	);
 	if (!stack.parseAndAnalyze("", _source) || !stack.errors().empty())
 		BOOST_FAIL("Invalid source.");
@@ -69,13 +75,14 @@ std::pair<std::shared_ptr<AST const>, std::shared_ptr<yul::AsmAnalysisInfo>> yul
 std::pair<std::shared_ptr<Object>, std::shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(
 	std::string const& _source,
 	Dialect const& _dialect,
-	ErrorList& _errors
+	ErrorList& _errors,
+	Parser::DebugAttributeCache::Ptr _cache
 )
 {
 	ErrorReporter errorReporter(_errors);
 	CharStream stream(_source, "");
 	std::shared_ptr<Scanner> scanner = std::make_shared<Scanner>(stream);
-	std::shared_ptr<Object> parserResult = yul::ObjectParser(errorReporter, _dialect).parse(scanner, false);
+	std::shared_ptr<Object> parserResult = yul::ObjectParser(errorReporter, _dialect, std::move(_cache)).parse(scanner, false);
 	if (!parserResult)
 		return {};
 	if (!parserResult->hasCode() || errorReporter.hasErrors())

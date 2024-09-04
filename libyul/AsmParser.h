@@ -31,10 +31,12 @@
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ParserBase.h>
 
+#include <libsolutil/Cache.h>
+
 #include <map>
 #include <memory>
+#include <utility>
 #include <variant>
-#include <vector>
 #include <string_view>
 
 namespace solidity::yul
@@ -43,6 +45,8 @@ namespace solidity::yul
 class Parser: public langutil::ParserBase
 {
 public:
+	typedef util::Cache<util::h256, Json> DebugAttributeCache;
+
 	enum class ForLoopComponent
 	{
 		None, ForLoopPre, ForLoopPost, ForLoopBody
@@ -56,7 +60,8 @@ public:
 	explicit Parser(
 		langutil::ErrorReporter& _errorReporter,
 		Dialect const& _dialect,
-		std::optional<langutil::SourceLocation> _locationOverride = {}
+		std::optional<langutil::SourceLocation> _locationOverride = {},
+		DebugAttributeCache::Ptr _debugAttributesCache = {}
 	):
 		ParserBase(_errorReporter),
 		m_dialect(_dialect),
@@ -65,7 +70,8 @@ public:
 			_locationOverride ?
 			UseSourceLocationFrom::LocationOverride :
 			UseSourceLocationFrom::Scanner
-		}
+		},
+		m_debugAttributeCache(std::move(_debugAttributesCache))
 	{}
 
 	/// Constructs a Yul parser that is using the debug data
@@ -73,7 +79,8 @@ public:
 	explicit Parser(
 		langutil::ErrorReporter& _errorReporter,
 		Dialect const& _dialect,
-		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceNames
+		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceNames,
+		DebugAttributeCache::Ptr debugAttributesCache = {}
 	):
 		ParserBase(_errorReporter),
 		m_dialect(_dialect),
@@ -82,7 +89,8 @@ public:
 			m_sourceNames.has_value() ?
 			UseSourceLocationFrom::Comments :
 			UseSourceLocationFrom::Scanner
-		}
+		},
+		m_debugAttributeCache(std::move(debugAttributesCache))
 	{}
 
 	/// Parses an inline assembly block starting with `{` and ending with `}`.
@@ -116,6 +124,14 @@ protected:
 		std::string_view _arguments,
 		langutil::SourceLocation const& _commentLocation
 	);
+
+	std::optional<std::pair<std::string_view, std::optional<Json>>> parseDebugDataAttributeOperationComment(
+		std::string const& _command,
+		std::string_view _arguments,
+		langutil::SourceLocation const& _commentLocation
+	);
+
+	void applyDebugDataAttributePatch(Json const& _jsonPatch, langutil::SourceLocation const& _location);
 
 	/// Creates a DebugData object with the correct source location set.
 	langutil::DebugData::ConstPtr createDebugData() const;
@@ -154,6 +170,11 @@ protected:
 
 	static bool isValidNumberLiteral(std::string const& _literal);
 
+	DebugAttributeCache::Ptr debugAttributeCache() const
+	{
+		return m_debugAttributeCache;
+	}
+
 private:
 	Dialect const& m_dialect;
 
@@ -164,6 +185,8 @@ private:
 	UseSourceLocationFrom m_useSourceLocationFrom = UseSourceLocationFrom::Scanner;
 	ForLoopComponent m_currentForLoopComponent = ForLoopComponent::None;
 	bool m_insideFunction = false;
+	std::optional<Json> m_currentDebugAttributes;
+	mutable DebugAttributeCache::Ptr m_debugAttributeCache;
 };
 
 }

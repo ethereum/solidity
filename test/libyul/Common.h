@@ -23,6 +23,8 @@
 
 #include <liblangutil/EVMVersion.h>
 
+#include <libyul/AsmParser.h>
+
 #include <string>
 #include <vector>
 #include <memory>
@@ -46,10 +48,10 @@ namespace solidity::yul::test
 {
 
 std::pair<std::shared_ptr<AST const>, std::shared_ptr<AsmAnalysisInfo>>
-parse(std::string const& _source);
+parse(std::string const& _source, Parser::DebugAttributeCache::Ptr _cache = {});
 
 std::pair<std::shared_ptr<Object>, std::shared_ptr<AsmAnalysisInfo>>
-parse(std::string const& _source, Dialect const& _dialect, langutil::ErrorList& _errors);
+parse(std::string const& _source, Dialect const& _dialect, langutil::ErrorList& _errors, Parser::DebugAttributeCache::Ptr _cache = {});
 
 Block disambiguate(std::string const& _source);
 std::string format(std::string const& _source);
