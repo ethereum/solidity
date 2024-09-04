@@ -1,4 +1,4 @@
-### 0.8.27 (unreleased)
+### 0.8.27 (2024-09-04)
 
 Language Features:
  * Accept declarations of state variables with ``transient`` data location (parser support only, no code generation yet).
