@@ -42,7 +42,7 @@ struct ControlFlow
 	std::vector<std::unique_ptr<SSACFG>> functionGraphs{};
 	std::vector<std::tuple<Scope::Function const*, SSACFG const*>> functionGraphMapping{};
 
-	SSACFG const* functionGraph(Scope::Function const* _function)
+	SSACFG const* functionGraph(Scope::Function const* _function) const
 	{
 		auto it = std::find_if(functionGraphMapping.begin(), functionGraphMapping.end(), [_function](auto const& tup) { return _function == std::get<0>(tup); });
 		if (it != functionGraphMapping.end())
