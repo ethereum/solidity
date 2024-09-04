@@ -63,12 +63,21 @@ private:
 	SSACFG::BasicBlock::ConditionalJump const& expectConditionalJump() const;
 	SSACFG::BasicBlock::Jump const& expectUnconditionalJump() const;
 	/// Applys the phi functions of @a _target assuming an entry from @a _source.
-	void applyPhis(SSACFG::BlockId _source, SSACFG::BlockId _target);
+	std::map<Scope::Variable const*, SSACFG::ValueId> applyPhis(SSACFG::BlockId _source, SSACFG::BlockId _target);
 
 	Context const& m_context;
 	Scope* m_scope = nullptr;
     SSACFG::BlockId m_currentBlock;
 	size_t m_currentOperation = std::numeric_limits<size_t>::max();
 	std::map<Scope::Variable const*, SSACFG::ValueId> m_currentVariableValues;
+	struct LoopInfo
+	{
+		std::set<Scope::Variable const*> loopVariables;
+		std::map<Scope::Variable const*, SSACFG::ValueId> loopExitVariableValues;
+		SSACFG::BlockId exitBlock;
+		std::optional<std::map<Scope::Variable const*, SSACFG::ValueId>> loopPostVariableValues;
+		std::optional<SSACFG::BlockId> postBlock;
+	};
+	std::unique_ptr<LoopInfo> m_currentLoopInfo;
 };
 }

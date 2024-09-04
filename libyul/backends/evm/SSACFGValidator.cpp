@@ -19,6 +19,7 @@
 #include <libyul/backends/evm/SSACFGValidator.h>
 
 #include <libsolutil/Visitor.h>
+#include <range/v3/to_container.hpp>
 #include <range/v3/view/reverse.hpp>
 #include <range/v3/view/zip.hpp>
 
@@ -76,8 +77,16 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 			}
 			return false;
 		},
-		[&](FunctionDefinition const&) {
-			// TODO
+		[&](FunctionDefinition const& _function) {
+			auto* function = resolveFunction(_function.name);
+			auto const* functionGraph = m_context.controlFlow.functionGraph(function);
+			yulAssert(functionGraph);
+			Context nestedContext{m_context.analysisInfo, m_context.dialect, m_context.controlFlow, *functionGraph};
+			SSACFGValidator nestedValidator(nestedContext);
+			nestedValidator.m_currentBlock = functionGraph->entry;
+			nestedValidator.m_currentOperation = 0;
+			// TODO: handle arguments/results
+			nestedValidator.consumeBlock(_function.body);
 			return true;
 		},
 		[&](If const& _if) {
@@ -85,24 +94,23 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 			{
 				auto const& exit = expectConditionalJump();
 				yulAssert(exit.condition == *cond);
-				// transform via the zero-exit phis already
-				applyPhis(m_currentBlock, exit.zero);
-				auto zeroValues = m_currentVariableValues;
+				auto zeroBranchVariableValues = applyPhis(m_currentBlock, exit.zero);
 
 				m_currentBlock = exit.nonZero;
 				m_currentOperation = 0;
-				// TODO: process phi functions
 				if (consumeBlock(_if.body))
 				{
 					auto const& jumpBack = expectUnconditionalJump();
 					yulAssert(exit.zero == jumpBack.target);
-					// TODO: consolidate m_currentVariableValues and previousValues - resp. consolidate current scope
+					auto nonZeroBranchVariableValues = applyPhis(m_currentBlock, jumpBack.target);
+					// consolidate the values in the zero branch with the values in the non-zero branch
+					for (auto&& [var, value]: zeroBranchVariableValues)
+						yulAssert(nonZeroBranchVariableValues.at(var) == value);
 				}
 
 				m_currentBlock = exit.zero;
 				m_currentOperation = 0;
-				m_currentVariableValues = zeroValues;
-				// TODO: process phi functions
+				m_currentVariableValues = zeroBranchVariableValues;
 				return true;
 			}
 			return false;
@@ -113,24 +121,89 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 		},
 		[&](ForLoop const& _loop)
 		{
+			// TODO: try to clean up and simplify especially the "continue" validation
         	ScopedSaveAndRestore scopeRestore(m_scope, m_context.analysisInfo.scopes.at(&_loop.pre).get());
 			consumeBlock(_loop.pre);
-			// TODO: store/restore continue/break targets
+			auto const& entryJump = expectUnconditionalJump();
+
+			auto entryVariableValues = applyPhis(m_currentBlock, entryJump.target);
+			m_currentBlock = entryJump.target;
+			m_currentOperation = 0;
+			m_currentVariableValues = entryVariableValues;
+
 			if (auto cond = consumeUnaryExpression(*_loop.condition))
 			{
 				auto const& exit = expectConditionalJump();
 				yulAssert(exit.condition == cond);
-				// TODO
+				auto loopExitVariableValues = applyPhis(m_currentBlock, exit.zero);
+
+				std::unique_ptr<LoopInfo> loopInfo = std::make_unique<LoopInfo>(LoopInfo{
+					entryVariableValues | ranges::view::keys | ranges::to<std::set<Scope::Variable const*>>,
+						loopExitVariableValues,
+						exit.zero,
+						std::nullopt,
+						std::nullopt
+				});
+				std::swap(m_currentLoopInfo, loopInfo);
+				m_currentBlock = exit.nonZero;
+				m_currentOperation = 0;
+				if (consumeBlock(_loop.body))
+				{
+					std::swap(m_currentLoopInfo, loopInfo);
+
+					auto const& jumpToPost = expectUnconditionalJump();
+					m_currentVariableValues = applyPhis(m_currentBlock, jumpToPost.target);
+					if (loopInfo->postBlock)
+						yulAssert(loopInfo->postBlock == jumpToPost.target);
+					if (loopInfo->loopPostVariableValues)
+						for (auto var: entryVariableValues | ranges::view::keys)
+							yulAssert(loopInfo->loopPostVariableValues->at(var) == m_currentVariableValues.at(var));
+					m_currentBlock = jumpToPost.target;
+					m_currentOperation = 0;
+					if (consumeBlock(_loop.post))
+					{
+						auto const& jumpBackToCondition = expectUnconditionalJump();
+						m_currentVariableValues = applyPhis(m_currentBlock, jumpBackToCondition.target);
+						m_currentBlock = jumpBackToCondition.target;
+						m_currentOperation = 0;
+						yulAssert(m_currentBlock == entryJump.target);
+						for (auto&& [var, value]: entryVariableValues)
+							yulAssert(m_currentVariableValues.at(var) == value);
+
+					}
+				}
+				else
+					std::swap(m_currentLoopInfo, loopInfo);
+				m_currentBlock = exit.zero;
+				m_currentOperation = 0;
+				m_currentVariableValues = loopExitVariableValues;
 				return true;
 			}
 			return false;
 		},
 		[&](Break const&) {
-			// TODO: expect unconditional jump and consolidate state
+			yulAssert(m_currentLoopInfo);
+			auto const& breakJump = expectUnconditionalJump();
+			yulAssert(breakJump.target == m_currentLoopInfo->exitBlock);
+			m_currentVariableValues = applyPhis(m_currentBlock, breakJump.target);
+			for (auto&& [var, value]: m_currentLoopInfo->loopExitVariableValues)
+				yulAssert(m_currentVariableValues.at(var) == value);
 			return false;
 		},
 		[&](Continue const&) {
-			// TODO: expect unconditional jump and consolidate state
+			// TODO: check if this can be simplified
+			yulAssert(m_currentLoopInfo);
+			auto const& continueJump = expectUnconditionalJump();
+			if (m_currentLoopInfo->postBlock)
+				yulAssert(continueJump.target == *m_currentLoopInfo->postBlock);
+			else
+				m_currentLoopInfo->postBlock = continueJump.target;
+			m_currentVariableValues = applyPhis(m_currentBlock, continueJump.target);
+			if (m_currentLoopInfo->loopPostVariableValues)
+				for (auto const* var: m_currentLoopInfo->loopVariables)
+					yulAssert(m_currentVariableValues.at(var) == m_currentLoopInfo->loopPostVariableValues->at(var));
+			else
+				m_currentLoopInfo->loopPostVariableValues = m_currentVariableValues;
 			return false;
 		},
 		[&](Leave const&) {
@@ -152,15 +225,12 @@ std::optional<std::vector<SSACFG::ValueId>> SSACFGValidator::consumeExpression(E
 			for(auto& _arg: _call.arguments | ranges::view::reverse)
 			{
 				if (auto arg = consumeExpression(_arg))
-
 					arguments += *arg;
 				else
 					return std::nullopt;
 			}
 			auto const& currentOp = currentBlock().operations.at(m_currentOperation++);
-			yulAssert(currentOp.inputs.size() == arguments.size());
-			for (auto&& [input, arg]: ranges::zip_view(currentOp.inputs, arguments | ranges::view::reverse))
-				yulAssert(input == arg);
+			yulAssert(currentOp.inputs == arguments);
 			if (validateCall(currentOp.kind, _call.functionName, currentOp.outputs.size()))
 				return currentOp.outputs;
 			else
@@ -244,7 +314,6 @@ Scope::Function const* SSACFGValidator::resolveFunction(YulName _name) const
 	return function;
 }
 
-
 SSACFG::ValueId SSACFGValidator::lookupIdentifier(Identifier const& _identifier) const
 {
 	auto const* var = resolveVariable(_identifier.name);
@@ -256,22 +325,20 @@ SSACFG::ValueId SSACFGValidator::lookupLiteral(Literal const& _literal) const
 	return m_context.cfg.getLiteral(_literal.value.value());
 }
 
-void SSACFGValidator::applyPhis(SSACFG::BlockId _source, SSACFG::BlockId _target)
+std::map<Scope::Variable const*, SSACFG::ValueId> SSACFGValidator::applyPhis(SSACFG::BlockId _source, SSACFG::BlockId _target)
 {
 	auto const& targetBlock = m_context.cfg.block(_target);
 	auto entryOffset = util::findOffset(targetBlock.entries, _source);
 	yulAssert(entryOffset);
+	std::map<SSACFG::ValueId, SSACFG::ValueId> phiMap;
 	for (auto phi: targetBlock.phis)
 	{
 		auto const* phiInfo = std::get_if<SSACFG::PhiValue>(&m_context.cfg.valueInfo(phi));
 		yulAssert(phiInfo);
-		// TODO: horrible complexity
-		for (auto&& [var, value]: m_currentVariableValues)
-		{
-			if (value == phiInfo->arguments.at(*entryOffset))
-			{
-				value = phi;
-			}
-		}
+		phiMap[phiInfo->arguments.at(*entryOffset)] = phi;
 	}
+	std::map<Scope::Variable const*, SSACFG::ValueId> result;
+	for (auto& [var, value]: m_currentVariableValues)
+		result[var] = util::valueOrDefault(phiMap, value, value);
+	return result;
 }
