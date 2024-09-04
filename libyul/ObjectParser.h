@@ -21,8 +21,9 @@
 
 #pragma once
 
-#include <libyul/Object.h>
 #include <libyul/Dialect.h>
+#include <libyul/AsmParser.h>
+#include <libyul/Object.h>
 
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/ParserBase.h>
@@ -45,8 +46,8 @@ namespace solidity::yul
 class ObjectParser: public langutil::ParserBase
 {
 public:
-	explicit ObjectParser(langutil::ErrorReporter& _errorReporter, Dialect const& _dialect):
-		ParserBase(_errorReporter), m_dialect(_dialect) {}
+	explicit ObjectParser(langutil::ErrorReporter& _errorReporter, Dialect const& _dialect, Parser::DebugAttributeCache::Ptr _cache = {}):
+		ParserBase(_errorReporter), m_dialect(_dialect), m_cache(std::move(_cache)) {}
 
 	/// Parses a Yul object.
 	/// Falls back to code-only parsing if the source starts with `{`.
@@ -66,6 +67,7 @@ private:
 	void addNamedSubObject(Object& _container, std::string_view _name, std::shared_ptr<ObjectNode> _subObject);
 
 	Dialect const& m_dialect;
+	Parser::DebugAttributeCache::Ptr m_cache;
 };
 
 }

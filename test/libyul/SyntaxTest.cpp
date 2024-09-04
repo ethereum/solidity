@@ -46,8 +46,10 @@ void SyntaxTest::parseAndAnalyze()
 
 	ErrorList errorList{};
 	soltestAssert(m_dialect, "");
+	if (m_debugAttributesEnabled && m_debugAttributesCache == nullptr)
+		m_debugAttributesCache = std::make_shared<Parser::DebugAttributeCache>();
 	// Silently ignoring the results.
-	yul::test::parse(source, *m_dialect, errorList);
+	yul::test::parse(source, *m_dialect, errorList, m_debugAttributesCache);
 	for (auto const& error: errorList)
 	{
 		int locationStart = -1;
@@ -75,5 +77,6 @@ SyntaxTest::SyntaxTest(std::string const& _filename, langutil::EVMVersion _evmVe
 	CommonSyntaxTest(_filename, _evmVersion)
 {
 	std::string dialectName = m_reader.stringSetting("dialect", "evm");
+	m_debugAttributesEnabled = m_reader.boolSetting("enableDebugAttributes", false);
 	m_dialect = &dialect(dialectName, solidity::test::CommonOptions::get().evmVersion());
 }

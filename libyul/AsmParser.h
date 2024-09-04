@@ -35,6 +35,7 @@
 
 #include <map>
 #include <memory>
+#include <utility>
 #include <variant>
 #include <string_view>
 
@@ -60,7 +61,7 @@ public:
 		langutil::ErrorReporter& _errorReporter,
 		Dialect const& _dialect,
 		std::optional<langutil::SourceLocation> _locationOverride = {},
-		DebugAttributeCache::Ptr debugAttributesCache = {}
+		DebugAttributeCache::Ptr _debugAttributesCache = {}
 	):
 		ParserBase(_errorReporter),
 		m_dialect(_dialect),
@@ -70,7 +71,7 @@ public:
 			UseSourceLocationFrom::LocationOverride :
 			UseSourceLocationFrom::Scanner
 		},
-		m_debugAttributeCache(debugAttributesCache == nullptr ? std::make_shared<DebugAttributeCache>() : debugAttributesCache)
+		m_debugAttributeCache(std::move(_debugAttributesCache))
 	{}
 
 	/// Constructs a Yul parser that is using the debug data
@@ -89,7 +90,7 @@ public:
 			UseSourceLocationFrom::Comments :
 			UseSourceLocationFrom::Scanner
 		},
-		m_debugAttributeCache(debugAttributesCache == nullptr ? std::make_shared<DebugAttributeCache>() : debugAttributesCache)
+		m_debugAttributeCache(std::move(debugAttributesCache))
 	{}
 
 	/// Parses an inline assembly block starting with `{` and ending with `}`.

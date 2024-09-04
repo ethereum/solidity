@@ -18,8 +18,12 @@
 
 #pragma once
 
-#include <test/CommonSyntaxTest.h>
+#include "libyul/AsmParser.h"
+#include "libyul/optimiser/SimplificationRules.h"
+
+
 #include <libyul/Dialect.h>
+#include <test/CommonSyntaxTest.h>
 
 namespace solidity::yul::test
 {
@@ -40,6 +44,8 @@ protected:
 
 private:
 	Dialect const* m_dialect = nullptr;
+	bool m_debugAttributesEnabled = false;
+	Parser::DebugAttributeCache::Ptr m_debugAttributesCache;
 };
 
 }

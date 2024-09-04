@@ -62,7 +62,6 @@ std::optional<int> toInt(std::string const& _value)
 
 langutil::DebugData::ConstPtr Parser::createDebugData() const
 {
-	solAssert(m_debugAttributeCache);
 	switch (m_useSourceLocationFrom)
 	{
 	case UseSourceLocationFrom::Scanner:
@@ -70,27 +69,27 @@ langutil::DebugData::ConstPtr Parser::createDebugData() const
 			ParserBase::currentLocation(),
 			ParserBase::currentLocation(),
 			{},
-			m_currentDebugAttributes.has_value()
-				? DebugData::Attributes({m_debugAttributeCache->set(*m_currentDebugAttributes)})
-				: DebugData::Attributes({})
+			m_debugAttributeCache
+				? m_currentDebugAttributes.has_value() ? DebugData::Attributes({m_debugAttributeCache->set(*m_currentDebugAttributes)}) : DebugData::Attributes({})
+				: std::nullopt
 		);
 	case UseSourceLocationFrom::LocationOverride:
 		return DebugData::create(
 			m_locationOverride,
 			m_locationOverride,
 			{},
-			m_currentDebugAttributes.has_value()
-				? DebugData::Attributes({m_debugAttributeCache->set(*m_currentDebugAttributes)})
-				: DebugData::Attributes({})
+			m_debugAttributeCache
+				? m_currentDebugAttributes.has_value() ? DebugData::Attributes({m_debugAttributeCache->set(*m_currentDebugAttributes)}) : DebugData::Attributes({})
+				: std::nullopt
 		);
 	case UseSourceLocationFrom::Comments:
 		return DebugData::create(
 			ParserBase::currentLocation(),
 			m_locationFromComment,
 			m_astIDFromComment,
-			m_currentDebugAttributes.has_value()
-				? DebugData::Attributes({m_debugAttributeCache->set(*m_currentDebugAttributes)})
-				: DebugData::Attributes({})
+			m_debugAttributeCache
+				? m_currentDebugAttributes.has_value() ? DebugData::Attributes({m_debugAttributeCache->set(*m_currentDebugAttributes)}) : DebugData::Attributes({})
+				: std::nullopt
 		);
 	}
 	solAssert(false, "");
@@ -200,7 +199,7 @@ void Parser::fetchDebugDataFromComment()
 			else
 				break;
 		}
-		else if (match[1] == "@debug.set")
+		else if (match[1] == "@debug.set" && m_debugAttributeCache)
 		{
 			if (auto parseResult = parseDebugDataAttributeOperationComment(match[1], commentLiteral, m_scanner->currentCommentLocation()))
 			{
@@ -211,7 +210,7 @@ void Parser::fetchDebugDataFromComment()
 			else
 				break;
 		}
-		else if (match[1] == "@debug.merge")
+		else if (match[1] == "@debug.merge" && m_debugAttributeCache)
 		{
 			if (auto parseResult = parseDebugDataAttributeOperationComment(match[1], commentLiteral, m_scanner->currentCommentLocation()))
 			{
@@ -226,7 +225,7 @@ void Parser::fetchDebugDataFromComment()
 			else
 				break;
 		}
-		else if (match[1] == "@debug.patch")
+		else if (match[1] == "@debug.patch" && m_debugAttributeCache)
 		{
 			if (auto parseResult = parseDebugDataAttributeOperationComment(match[1], commentLiteral, m_scanner->currentCommentLocation()))
 			{
@@ -251,6 +250,7 @@ std::optional<std::pair<std::string_view, std::optional<Json>>> Parser::parseDeb
 	langutil::SourceLocation const& _location
 )
 {
+	solAssert(m_debugAttributeCache, "debug attributes can only be used with valid debug attribute cache");
 	std::optional<Json> jsonData;
 	try
 	{
@@ -278,6 +278,7 @@ std::optional<std::pair<std::string_view, std::optional<Json>>> Parser::parseDeb
 
 void Parser::applyDebugDataAttributePatch(Json const& _jsonPatch, langutil::SourceLocation const& _location)
 {
+	solAssert(m_debugAttributeCache, "debug attributes can only be used with valid debug attribute cache");
 	try
 	{
 		if (!m_currentDebugAttributes.has_value())
