@@ -39,6 +39,7 @@ At least a day before the release:
 
 ### Blog Post
  - [ ] Create a post on [solidity-website](https://github.com/ethereum/solidity-website/tree/main/src/posts) in the ``Releases`` category and explain some of the new features or concepts.
+       **Note**: This should include the update of ``index.tsx`` to update the release version and description blurb.
  - [ ] Create a post on [solidity-website](https://github.com/ethereum/solidity-website/tree/main/src/posts) in the ``Security Alerts`` category in case of important bug(s).
  - [ ] Get the posts reviewed and approved **before the release starts**.
 
