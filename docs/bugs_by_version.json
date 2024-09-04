@@ -1898,6 +1898,10 @@
         "bugs": [],
         "released": "2024-05-21"
     },
+    "0.8.27": {
+        "bugs": [],
+        "released": "2024-09-04"
+    },
     "0.8.3": {
         "bugs": [
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
