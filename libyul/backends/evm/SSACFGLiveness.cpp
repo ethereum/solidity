@@ -102,7 +102,14 @@ void TarjansLoopNestingForest::build()
 
 	for (auto const& blockId : dfsOrder)
 		findLoop(blockId);
-	m_loopNodes.insert(std::numeric_limits<size_t>::max());
+
+	// get the root nodes
+	for (auto loopHeader : m_loopNodes)
+	{
+		while (m_loopParents[loopHeader] != std::numeric_limits<size_t>::max())
+			loopHeader = m_loopParents[loopHeader];
+		m_loopRootNodes.insert(loopHeader);
+	}
 }
 
 TarjansLoopNestingForest::TarjansLoopNestingForest(SSACFG const& _cfg, ReducedTopologicalSort const& _sort):
@@ -112,10 +119,6 @@ TarjansLoopNestingForest::TarjansLoopNestingForest(SSACFG const& _cfg, ReducedTo
 	m_loopParents(m_cfg.numBlocks(), std::numeric_limits<size_t>::max())
 {
 	build();
-	for (size_t i = 0; i < m_loopParents.size(); ++i)
-	{
-		fmt::print("Block {} has loop parent {}\n", i, m_loopParents[i]);
-	}
 }
 
 void TarjansLoopNestingForest::collapse(std::set<size_t> const& _loopBody, size_t _loopHeader)
@@ -173,7 +176,8 @@ SSACFGLiveness::SSACFGLiveness(SSACFG const& _cfg):
 	std::vector<char> processed(_cfg.numBlocks(), false);
 
 	runDagDfs(_cfg.entry, processed, m_liveIns, m_liveOuts);
-	runLoopTreeDfs(std::numeric_limits<size_t>::max(), m_liveIns, m_liveOuts);
+	for (auto const loopRootNode : m_loopNestingForest.loopRootNodes())
+		runLoopTreeDfs(loopRootNode, m_liveIns, m_liveOuts);
 }
 
 void SSACFGLiveness::runLoopTreeDfs
