@@ -60,7 +60,7 @@ public:
 		return rootElement;
 	}
 
-	bool merge(value_type x, value_type y)
+	bool merge(value_type x, value_type y, bool mergeBySize=true)
 	{
 		solAssert(x < m_parents.size() && y < m_parents.size());
 		auto xRoot = find(x);
@@ -70,7 +70,7 @@ public:
 			return false;  // we're done, nothing to merge here
 
 		// merge smaller (yRoot) into larger (xRoot) subset
-		if (m_sizes[xRoot] < m_sizes[yRoot])
+		if (mergeBySize && m_sizes[xRoot] < m_sizes[yRoot])
 			std::swap(xRoot, yRoot);
 
 		m_parents[yRoot] = xRoot;

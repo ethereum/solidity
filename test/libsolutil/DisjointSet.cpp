@@ -79,6 +79,22 @@ BOOST_AUTO_TEST_CASE(pairs)
 	BOOST_CHECK_EQUAL_COLLECTIONS(subset.begin(), subset.end(), subsetRef.begin(), subsetRef.end());
 }
 
+BOOST_AUTO_TEST_CASE(merge_with_fixed_representative)
+{
+	ContiguousDisjointSet ds(10);
+	ds.merge(5, 3, false);
+	BOOST_CHECK_EQUAL(ds.find(5), 5);
+	ds.merge(1, 2);
+	ds.merge(7, 8);
+	ds.merge(0, 9);
+	ds.merge(5, 1, false);
+	BOOST_CHECK_EQUAL(ds.find(5), 5);
+	ds.merge(5, 0, false);
+	BOOST_CHECK_EQUAL(ds.find(5), 5);
+	ds.merge(5, 7, false);
+	BOOST_CHECK_EQUAL(ds.find(5), 5);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

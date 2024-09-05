@@ -91,21 +91,30 @@ void ReducedTopologicalSort::dfs(size_t _vertex)
 			m_potentialBackEdges.emplace_back(_vertex, _exitBlock.value);
 	});
 
-	m_reversedPostOrder[m_preOrder[_vertex]] = _vertex; // todo maybe not needed
+	m_reversedPostOrder[m_preOrder[_vertex]] = _vertex;
 }
 
 void TarjansLoopNestingForest::build()
 {
-	auto dfsOrder = m_sort.preOrder();
+	auto dfsOrder = m_sort.reversedPostOrder();
+	// we go from inner-most to outer-most
 	std::reverse(dfsOrder.begin(), dfsOrder.end());
 
 	for (auto const& blockId : dfsOrder)
 		findLoop(blockId);
 }
 
-size_t TarjansLoopNestingForest::loopHeader(size_t vertex) const
+TarjansLoopNestingForest::TarjansLoopNestingForest(SSACFG const& _cfg, ReducedTopologicalSort const& _sort):
+	m_cfg(_cfg),
+	m_sort(_sort),
+	m_vertexPartition(m_cfg.numBlocks()),
+	m_loopParents(m_cfg.numBlocks(), std::numeric_limits<size_t>::max())
 {
-	return m_loopHeader[m_vertexPartition.find(vertex)];
+	build();
+	for (size_t i = 0; i < m_loopParents.size(); ++i)
+	{
+		fmt::print("Block {} has loop parent {}\n", i, m_loopParents[i] ? m_loopParents[i].value() : 10000);
+	}
 }
 
 void TarjansLoopNestingForest::collapse(std::set<size_t> const& _loopBody, size_t _loopHeader)
@@ -113,10 +122,9 @@ void TarjansLoopNestingForest::collapse(std::set<size_t> const& _loopBody, size_
 	for (auto const z : _loopBody)
 	{
 		m_loopParents[z] = _loopHeader;
-		m_vertexPartition.merge(z, _loopHeader);
-		auto const representative = m_vertexPartition.find(z);
-		m_loopHeader[representative] = _loopHeader;
+		m_vertexPartition.merge(_loopHeader, z, false);  // don't merge by size, loop header should be representative
 	}
+	yulAssert(m_vertexPartition.find(_loopHeader) == _loopHeader);  // representative was preserved
 }
 
 void TarjansLoopNestingForest::findLoop(size_t potentialHeader)
@@ -125,11 +133,10 @@ void TarjansLoopNestingForest::findLoop(size_t potentialHeader)
 	{
 		std::set<size_t> loopBody;
 		std::set<size_t> workList;
-		auto const potentialHeaderRepresentative = loopHeader(potentialHeader);
-		for (size_t vertexId = 0; vertexId < m_cfg.numBlocks(); ++vertexId)
+		for (auto const pred : m_sort.predecessors()[potentialHeader])
 		{
-			auto const representative = loopHeader(vertexId);
-			if (representative != potentialHeaderRepresentative && m_sort.backEdge(SSACFG::BlockId{representative}, SSACFG::BlockId{potentialHeaderRepresentative}))
+			auto const representative = m_vertexPartition.find(pred);
+			if (representative != potentialHeader && m_sort.backEdge(SSACFG::BlockId{pred}, SSACFG::BlockId{potentialHeader}))
 				workList.insert(representative);
 		}
 
@@ -142,15 +149,15 @@ void TarjansLoopNestingForest::findLoop(size_t potentialHeader)
 			{
 				if (!m_sort.backEdge(SSACFG::BlockId{predecessor}, SSACFG::BlockId{y}))
 				{
-					auto const predecessorHeader = loopHeader(predecessor);
-					if (predecessorHeader != potentialHeaderRepresentative && workList.count(predecessorHeader) == 0)
-						loopBody.insert(predecessorHeader);
+					auto const predecessorHeader = m_vertexPartition.find(predecessor);
+					if (predecessorHeader != potentialHeader && loopBody.count(predecessorHeader) == 0)
+						workList.insert(predecessorHeader);
 				}
 			}
 		}
 
 		if (!loopBody.empty())
-			collapse(loopBody, potentialHeaderRepresentative);
+			collapse(loopBody, potentialHeader);
 	}
 }
 

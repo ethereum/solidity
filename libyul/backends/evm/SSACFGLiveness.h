@@ -32,11 +32,22 @@ public:
 
 	std::vector<size_t> const& sortedBlocks() const { return m_reversedPostOrder; }
 	std::vector<size_t> const& preOrder() const { return m_preOrder; }
+	std::vector<size_t> const& reversedPostOrder() const { return m_reversedPostOrder; }
 	std::vector<size_t> const& maxSubtreePreOrder() const { return m_maxSubtreePreOrder; }
 	std::set<size_t> const& backEdgeTargets() const { return m_backEdgeTargets; }
 	std::vector<std::set<size_t>> const& predecessors() const { return m_predecessors; }
 	bool ancestor(size_t _block1, size_t _block2) const;
-	bool backEdge(SSACFG::BlockId const& _block1, SSACFG::BlockId const& _block2) const { return ancestor(_block2.value, _block1.value); }
+	bool backEdge(SSACFG::BlockId const& _block1, SSACFG::BlockId const& _block2) const {
+		if (ancestor(_block2.value, _block1.value))
+		{
+			// check that block1 -> block2 is indeed an edge in the cfg
+			bool isEdge = false;
+			m_cfg.block(_block1).forEachExit([&_block2, &isEdge](SSACFG::BlockId const& _exit) { isEdge |= _block2 == _exit; });
+			return isEdge;
+		}
+
+		return false;
+	}
 
 private:
 	explicit ReducedTopologicalSort(SSACFG const& _cfg);
@@ -61,29 +72,20 @@ class TarjansLoopNestingForest
 	// Ramalingam, Ganesan. "Identifying loops in almost linear time."
 	// ACM Transactions on Programming Languages and Systems (TOPLAS) 21.2 (1999): 175-188.
 public:
-	TarjansLoopNestingForest(SSACFG const& _cfg, ReducedTopologicalSort const& _sort):
- 		m_cfg(_cfg),
-		m_sort(_sort),
-		m_vertexPartition(m_cfg.numBlocks()),
-		m_loopParents(m_cfg.numBlocks(), std::nullopt),
-		m_loopHeader(m_cfg.numBlocks())
-	{
-		std::iota(m_loopHeader.begin(), m_loopHeader.end(), 0);
-		build();
-	}
+	TarjansLoopNestingForest(SSACFG const& _cfg, ReducedTopologicalSort const& _sort);
 
+	/// blocks which are not contained in a loop get assigned the loop parent numeric_limit<size_t>::max()
+	std::vector<size_t> const& loopParents() const { return m_loopParents; }
 private:
 	void build();
 	void findLoop(size_t blockId);
 	void collapse(std::set<size_t> const& _loopBody, size_t _loopHeader);
-	size_t loopHeader(size_t vertex) const;
 
 	SSACFG const& m_cfg;
 	ReducedTopologicalSort const& m_sort;
 
 	util::ContiguousDisjointSet m_vertexPartition;
-	std::vector<std::optional<size_t>> m_loopParents;
-	std::vector<size_t> m_loopHeader;
+	std::vector<size_t> m_loopParents;
 };
 
 class SSACFGLiveness
