@@ -102,6 +102,7 @@ void TarjansLoopNestingForest::build()
 
 	for (auto const& blockId : dfsOrder)
 		findLoop(blockId);
+	m_loopNodes.insert(std::numeric_limits<size_t>::max());
 }
 
 TarjansLoopNestingForest::TarjansLoopNestingForest(SSACFG const& _cfg, ReducedTopologicalSort const& _sort):
@@ -125,6 +126,7 @@ void TarjansLoopNestingForest::collapse(std::set<size_t> const& _loopBody, size_
 		m_vertexPartition.merge(_loopHeader, z, false);  // don't merge by size, loop header should be representative
 	}
 	yulAssert(m_vertexPartition.find(_loopHeader) == _loopHeader);  // representative was preserved
+	m_loopNodes.insert(_loopHeader);
 }
 
 void TarjansLoopNestingForest::findLoop(size_t potentialHeader)
@@ -173,29 +175,31 @@ SSACFGLiveness::SSACFGLiveness(SSACFG const& _cfg):
 
 	runDagDfs(_cfg.entry, processed, m_liveIns, m_liveOuts);
 
-	std::set<size_t> loopNestingForestRootNodes = m_topologicalSort.backEdgeTargets();
-
-	for (auto const& rootNode: loopNestingForestRootNodes)
-		runLoopTreeDfs(SSACFG::BlockId{rootNode}, m_liveIns, m_liveOuts, {} /* todo loopNestingForestRootNodes */);
+	runLoopTreeDfs(std::numeric_limits<size_t>::max(), m_liveIns, m_liveOuts);
 }
 
 void SSACFGLiveness::runLoopTreeDfs
 (
-	SSACFG::BlockId v,
+	size_t v,
 	std::vector<std::set<SSACFG::ValueId>>& _liveIns,
-	std::vector<std::set<SSACFG::ValueId>>& _liveOuts,
-	std::set<SSACFG::BlockId> const& _loopNodes
+	std::vector<std::set<SSACFG::ValueId>>& _liveOuts
 )
 {
-	if (_loopNodes.count(v) > 0)
+	if (m_loopNestingForest.loopNodes().count(v) > 0)
 	{
-		auto const& block = m_cfg.block(v);
-		auto liveLoop = _liveIns[v.value] - block.phis;
-		block.forEachExit([&](auto const& _exitBlockId) {
-			_liveIns[_exitBlockId.value] += liveLoop;
-			_liveOuts[_exitBlockId.value] += liveLoop;
-			runLoopTreeDfs(_exitBlockId, _liveIns, _liveOuts, _loopNodes);
-		});
+		// loop header block
+		auto const& block = v != std::numeric_limits<size_t>::max() ? m_cfg.block(SSACFG::BlockId{v}) : m_cfg.block(m_cfg.entry);
+		auto liveLoop = _liveIns[v] - block.phis;
+		// todo this could be done smarter
+		for (size_t blockId = 0; blockId < m_cfg.numBlocks(); ++blockId)
+		{
+			if (m_loopNestingForest.loopParents()[blockId] == v)
+			{
+				_liveIns[blockId] += liveLoop;
+				_liveOuts[blockId] += liveLoop;
+				runLoopTreeDfs(blockId, _liveIns, _liveOuts);
+			}
+		}
 	}
 }
 

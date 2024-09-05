@@ -76,6 +76,7 @@ public:
 
 	/// blocks which are not contained in a loop get assigned the loop parent numeric_limit<size_t>::max()
 	std::vector<size_t> const& loopParents() const { return m_loopParents; }
+	std::set<size_t> const& loopNodes() const { return m_loopNodes; }
 private:
 	void build();
 	void findLoop(size_t blockId);
@@ -86,6 +87,7 @@ private:
 
 	util::ContiguousDisjointSet m_vertexPartition;
 	std::vector<size_t> m_loopParents;
+	std::set<size_t> m_loopNodes;
 };
 
 class SSACFGLiveness
@@ -110,10 +112,9 @@ private:
 	);
 
 	void runLoopTreeDfs(
-		SSACFG::BlockId v,
+		size_t v,
 		std::vector<std::set<SSACFG::ValueId>>& _liveIns,
-		std::vector<std::set<SSACFG::ValueId>>& _liveOuts,
-		std::set<SSACFG::BlockId> const& _loopNodes
+		std::vector<std::set<SSACFG::ValueId>>& _liveOuts
 	);
 
 	SSACFG const& m_cfg;
