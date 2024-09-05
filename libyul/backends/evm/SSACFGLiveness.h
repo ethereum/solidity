@@ -20,6 +20,8 @@
 
 #include <libyul/backends/evm/ControlFlow.h>
 
+#include <libsolutil/DisjointSet.h>
+
 namespace solidity::yul
 {
 
@@ -32,6 +34,7 @@ public:
 	std::vector<size_t> const& preOrder() const { return m_preOrder; }
 	std::vector<size_t> const& maxSubtreePreOrder() const { return m_maxSubtreePreOrder; }
 	std::set<size_t> const& backEdgeTargets() const { return m_backEdgeTargets; }
+	std::vector<std::set<size_t>> const& predecessors() const { return m_predecessors; }
 	bool ancestor(size_t _block1, size_t _block2) const;
 	bool backEdge(SSACFG::BlockId const& _block1, SSACFG::BlockId const& _block2) const { return ancestor(_block2.value, _block1.value); }
 
@@ -49,6 +52,38 @@ private:
 	std::vector<size_t> m_maxSubtreePreOrder{};
 	std::vector<std::tuple<size_t, size_t>> m_potentialBackEdges{};
 	std::set<size_t> m_backEdgeTargets{};
+	std::vector<std::set<size_t>> m_predecessors{};
+};
+
+class TarjansLoopNestingForest
+{
+	// Implementation according to
+	// Ramalingam, Ganesan. "Identifying loops in almost linear time."
+	// ACM Transactions on Programming Languages and Systems (TOPLAS) 21.2 (1999): 175-188.
+public:
+	TarjansLoopNestingForest(SSACFG const& _cfg, ReducedTopologicalSort const& _sort):
+ 		m_cfg(_cfg),
+		m_sort(_sort),
+		m_vertexPartition(m_cfg.numBlocks()),
+		m_loopParents(m_cfg.numBlocks(), std::nullopt),
+		m_loopHeader(m_cfg.numBlocks())
+	{
+		std::iota(m_loopHeader.begin(), m_loopHeader.end(), 0);
+		build();
+	}
+
+private:
+	void build();
+	void findLoop(size_t blockId);
+	void collapse(std::set<size_t> const& _loopBody, size_t _loopHeader);
+	size_t loopHeader(size_t vertex) const;
+
+	SSACFG const& m_cfg;
+	ReducedTopologicalSort const& m_sort;
+
+	util::ContiguousDisjointSet m_vertexPartition;
+	std::vector<std::optional<size_t>> m_loopParents;
+	std::vector<size_t> m_loopHeader;
 };
 
 class SSACFGLiveness
@@ -82,6 +117,7 @@ private:
 	SSACFG const& m_cfg;
 	ReducedReachableNodes m_reducedReachableNodes;
 	ReducedTopologicalSort m_topologicalSort;
+	TarjansLoopNestingForest m_loopNestingForest;
 	std::vector<std::set<SSACFG::ValueId>> m_liveIns;
 	std::vector<std::set<SSACFG::ValueId>> m_liveOuts;
 };

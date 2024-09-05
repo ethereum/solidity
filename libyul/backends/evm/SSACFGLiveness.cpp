@@ -50,7 +50,8 @@ ReducedTopologicalSort::ReducedTopologicalSort(SSACFG const& _cfg):
 	m_explored(m_cfg.numBlocks(), false),
 	m_reversedPostOrder(m_cfg.numBlocks(), std::numeric_limits<size_t>::max()),
 	m_preOrder(m_cfg.numBlocks(), std::numeric_limits<size_t>::max()),
-	m_maxSubtreePreOrder(m_cfg.numBlocks(), 0)
+	m_maxSubtreePreOrder(m_cfg.numBlocks(), 0),
+	m_predecessors(m_cfg.numBlocks())
 {
 	perform();
 }
@@ -77,6 +78,7 @@ void ReducedTopologicalSort::dfs(size_t _vertex)
 	m_maxSubtreePreOrder[_vertex] = m_preOrder[_vertex];
 
 	m_cfg.block(SSACFG::BlockId{_vertex}).forEachExit([&](SSACFG::BlockId const& _exitBlock){
+		m_predecessors[_exitBlock.value].insert(_vertex);
 		// we have an edge e = id -> _exitBlock
 		// check if it's an back-edge, ie, _exitBlock is in the toVisit block
 		//if (m_edgeClassification.backEdges.find(std::make_tuple(_vertex, _exitBlock)) == m_edgeClassification.backEdges.end())
@@ -92,10 +94,71 @@ void ReducedTopologicalSort::dfs(size_t _vertex)
 	m_reversedPostOrder[m_preOrder[_vertex]] = _vertex; // todo maybe not needed
 }
 
+void TarjansLoopNestingForest::build()
+{
+	auto dfsOrder = m_sort.preOrder();
+	std::reverse(dfsOrder.begin(), dfsOrder.end());
+
+	for (auto const& blockId : dfsOrder)
+		findLoop(blockId);
+}
+
+size_t TarjansLoopNestingForest::loopHeader(size_t vertex) const
+{
+	return m_loopHeader[m_vertexPartition.find(vertex)];
+}
+
+void TarjansLoopNestingForest::collapse(std::set<size_t> const& _loopBody, size_t _loopHeader)
+{
+	for (auto const z : _loopBody)
+	{
+		m_loopParents[z] = _loopHeader;
+		m_vertexPartition.merge(z, _loopHeader);
+		auto const representative = m_vertexPartition.find(z);
+		m_loopHeader[representative] = _loopHeader;
+	}
+}
+
+void TarjansLoopNestingForest::findLoop(size_t potentialHeader)
+{
+	if(m_sort.backEdgeTargets().count(potentialHeader) > 0)
+	{
+		std::set<size_t> loopBody;
+		std::set<size_t> workList;
+		auto const potentialHeaderRepresentative = loopHeader(potentialHeader);
+		for (size_t vertexId = 0; vertexId < m_cfg.numBlocks(); ++vertexId)
+		{
+			auto const representative = loopHeader(vertexId);
+			if (representative != potentialHeaderRepresentative && m_sort.backEdge(SSACFG::BlockId{representative}, SSACFG::BlockId{potentialHeaderRepresentative}))
+				workList.insert(representative);
+		}
+
+		while (!workList.empty())
+		{
+			auto const y = workList.extract(workList.begin()).value();
+			loopBody.insert(y);
+
+			for (auto const& predecessor : m_sort.predecessors()[y])
+			{
+				if (!m_sort.backEdge(SSACFG::BlockId{predecessor}, SSACFG::BlockId{y}))
+				{
+					auto const predecessorHeader = loopHeader(predecessor);
+					if (predecessorHeader != potentialHeaderRepresentative && workList.count(predecessorHeader) == 0)
+						loopBody.insert(predecessorHeader);
+				}
+			}
+		}
+
+		if (!loopBody.empty())
+			collapse(loopBody, potentialHeaderRepresentative);
+	}
+}
+
 SSACFGLiveness::SSACFGLiveness(SSACFG const& _cfg):
 	m_cfg(_cfg),
 	m_reducedReachableNodes(computeReducedReachableNodes(_cfg)),
 	m_topologicalSort(ReducedTopologicalSort::run(_cfg)),
+	m_loopNestingForest(_cfg, m_topologicalSort),
 	m_liveIns(_cfg.numBlocks()),
 	m_liveOuts(_cfg.numBlocks())
 {
