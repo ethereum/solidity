@@ -113,7 +113,7 @@ TarjansLoopNestingForest::TarjansLoopNestingForest(SSACFG const& _cfg, ReducedTo
 	build();
 	for (size_t i = 0; i < m_loopParents.size(); ++i)
 	{
-		fmt::print("Block {} has loop parent {}\n", i, m_loopParents[i] ? m_loopParents[i].value() : 10000);
+		fmt::print("Block {} has loop parent {}\n", i, m_loopParents[i]);
 	}
 }
 
