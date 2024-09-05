@@ -102,8 +102,6 @@ public:
 
 private:
 
-	static ReducedReachableNodes computeReducedReachableNodes(SSACFG const& _cfg);
-
 	void runDagDfs(
 		SSACFG::BlockId v,
 		std::vector<char>& _processed,

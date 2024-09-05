@@ -165,7 +165,6 @@ void TarjansLoopNestingForest::findLoop(size_t potentialHeader)
 
 SSACFGLiveness::SSACFGLiveness(SSACFG const& _cfg):
 	m_cfg(_cfg),
-	m_reducedReachableNodes(computeReducedReachableNodes(_cfg)),
 	m_topologicalSort(ReducedTopologicalSort::run(_cfg)),
 	m_loopNestingForest(_cfg, m_topologicalSort),
 	m_liveIns(_cfg.numBlocks()),
@@ -174,7 +173,6 @@ SSACFGLiveness::SSACFGLiveness(SSACFG const& _cfg):
 	std::vector<char> processed(_cfg.numBlocks(), false);
 
 	runDagDfs(_cfg.entry, processed, m_liveIns, m_liveOuts);
-
 	runLoopTreeDfs(std::numeric_limits<size_t>::max(), m_liveIns, m_liveOuts);
 }
 
@@ -185,12 +183,15 @@ void SSACFGLiveness::runLoopTreeDfs
 	std::vector<std::set<SSACFG::ValueId>>& _liveOuts
 )
 {
+	// if v is a loop node of the nesting forest (or the very root, ie max(size_t))
 	if (m_loopNestingForest.loopNodes().count(v) > 0)
 	{
-		// loop header block
-		auto const& block = v != std::numeric_limits<size_t>::max() ? m_cfg.block(SSACFG::BlockId{v}) : m_cfg.block(m_cfg.entry);
-		auto liveLoop = _liveIns[v] - block.phis;
-		// todo this could be done smarter
+		// the loop header block id
+		size_t loopHeader = v == std::numeric_limits<size_t>::max() ? 0 : v;
+		auto const& block = m_cfg.block(SSACFG::BlockId{loopHeader});
+		// LiveLoop <- LiveIn(B_N) - PhiDefs(B_N)
+		auto liveLoop = _liveIns[loopHeader] - block.phis;
+		// todo this could be done smarter by doing the mapping first
 		for (size_t blockId = 0; blockId < m_cfg.numBlocks(); ++blockId)
 		{
 			if (m_loopNestingForest.loopParents()[blockId] == v)
@@ -207,57 +208,59 @@ void SSACFGLiveness::runLoopTreeDfs
 void SSACFGLiveness::runDagDfs(SSACFG::BlockId blockId, std::vector<char>& _processed, std::vector<std::set<SSACFG::ValueId>>& _liveIns, std::vector<std::set<SSACFG::ValueId>>& _liveOuts)
 {
 	// SSA Book, Algorithm 9.2
+	auto const filterLiterals = [this](auto const& valueId) {
+		return !std::holds_alternative<SSACFG::LiteralValue>(m_cfg.valueInfo(valueId));
+	};
 	auto const& block = m_cfg.block(blockId);
-	std::set<SSACFG::ValueId> live{};
+	// for each S \in succs(B) s.t. (B, S) not back edge and S unprocessed: DAG_DFS(S)
+	// todo functionreturn has to be respected still
 	block.forEachExit([&](SSACFG::BlockId const& _successor){
-		for (auto const& phi: m_cfg.block(_successor).phis)
-		{
-			auto const& info = m_cfg.valueInfo(phi);
-			yulAssert(std::holds_alternative<SSACFG::PhiValue>(info), "value info of phi wasn't PhiValue");
-			live += std::get<SSACFG::PhiValue>(info).arguments;
-		}
 		if (!m_topologicalSort.backEdge(blockId, _successor))
 			if (!_processed[_successor.value])
 				runDagDfs(_successor, _processed, _liveIns, _liveOuts);
 	});
+
+	// live <- PhiUses(B)
+	std::set<SSACFG::ValueId> live{};
+	block.forEachExit([&](SSACFG::BlockId const& _successor)
+	{
+		for (auto const& phi: m_cfg.block(_successor).phis)
+		{
+			auto const& info = m_cfg.valueInfo(phi);
+			yulAssert(std::holds_alternative<SSACFG::PhiValue>(info), "value info of phi wasn't PhiValue");
+			auto const& entries = m_cfg.block(std::get<SSACFG::PhiValue>(info).block).entries;
+			// this is getting the argument index of the phi function corresponding to the path going
+			// through "blockId", ie, the currently handled block
+			auto const it = entries.find(blockId);
+			yulAssert(it != entries.end());
+			auto const argIndex = static_cast<size_t>(std::distance(entries.begin(), it));
+			auto const arg = std::get<SSACFG::PhiValue>(info).arguments.at(argIndex);
+			if (!std::holds_alternative<SSACFG::LiteralValue>(m_cfg.valueInfo(arg)))
+				live.insert(arg);
+		}
+	});
+
+	// for each S \in succs(B) s.t. (B, S) not a back edge: live <- live \cup (LiveIn(S) - PhiDefs(S))
 	block.forEachExit([&](SSACFG::BlockId const& _successor){
 		if (!m_topologicalSort.backEdge(blockId, _successor))
 			live += _liveIns[_successor.value] - m_cfg.block(_successor).phis;
 	});
+
+	// LiveOut(B) <- live
 	_liveOuts[blockId.value] = live;
-	auto const filterLiterals = [this](auto const& valueId) {
-		return !std::holds_alternative<SSACFG::LiteralValue>(m_cfg.valueInfo(valueId));
-	};
+
+	// for each program point p in B, backwards, do:
 	for (auto const& op: block.operations | ranges::views::reverse)
 	{
+		// remove variables defined at p from live
 		live -= op.outputs | ranges::views::filter(filterLiterals) | ranges::to<std::vector>;
+		// add uses at p to live
 		live += op.inputs | ranges::views::filter(filterLiterals) | ranges::to<std::vector>;
 	}
+
+	// livein(b) <- live \cup PhiDefs(B)
 	_liveIns[blockId.value] = live + block.phis;
+
+	// mark processed
 	_processed[blockId.value] = true;
-}
-
-
-SSACFGLiveness::ReducedReachableNodes SSACFGLiveness::computeReducedReachableNodes(SSACFG const& _cfg)
-{
-	ReducedReachableNodes result;
-
-	std::vector<char> processed(_cfg.numBlocks(), false);
-	std::vector<std::set<SSACFG::ValueId>> liveIns (_cfg.numBlocks());
-	std::vector<std::set<SSACFG::ValueId>> liveOuts (_cfg.numBlocks());
-
-	/*if (_cfg.numBlocks() > 1)
-	{
-		SSACFGEdgeClassification edgeClassification(_cfg);
-		auto const order = ReducedTopologicalSort::run(_cfg, edgeClassification);
-		yulAssert(order.sortedBlocks().size() == _cfg.numBlocks(), "Invalid number of nodes in sort");
-		// todo this can very likely be done more smartly by using bfs and marking on the way!
-		// there can only be a path between v and w if v < w in topological sort
-		for (auto it = order.sortedBlocks().begin(); it != order.sortedBlocks().end()-1; ++it)
-			for (auto it2 = it + 1; it2 != order.sortedBlocks().end(); ++it2)
-				if (order.ancestor(*it, *it2))  // isConnectedInReducedGraph(*it, *it2, _cfg, edgeClassification.backEdges)
-					result[*it].push_back(*it2);
-	}*/
-
-	return result;
 }
