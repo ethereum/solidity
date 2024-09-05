@@ -25,6 +25,7 @@ along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 namespace solidity::yul
 {
 struct Dialect;
+class SSACFG;
 
 namespace test
 {
@@ -36,6 +37,7 @@ public:
 	explicit SSAControlFlowGraphTest(std::string const& _filename);
 	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
 private:
+	void printLiveness(SSACFG const& _cfg) const;
 	Dialect const* m_dialect = nullptr;
 };
 }
