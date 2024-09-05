@@ -163,7 +163,7 @@ their calldata offset (in bytes) and length (number of elements) using ``x.offse
 Both expressions can also be assigned to, but as for the static case, no validation will be performed
 to ensure that the resulting data area is within the bounds of ``calldatasize()``.
 
-For local storage variables or state variables, a single Yul identifier
+For local storage variables or state variables (including transient storage) a single Yul identifier
 is not sufficient, since they do not necessarily occupy a single full storage slot.
 Therefore, their "address" is composed of a slot and a byte-offset
 inside that slot. To retrieve the slot pointed to by the variable ``x``, you
@@ -181,15 +181,18 @@ Local Solidity variables are available for assignments, for example:
     :force:
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.7.0 <0.9.0;
+    pragma solidity >=0.8.28 <0.9.0;
 
+    // This will report a warning
     contract C {
+        bool transient a;
         uint b;
-        function f(uint x) public view returns (uint r) {
+        function f(uint x) public returns (uint r) {
             assembly {
                 // We ignore the storage slot offset, we know it is zero
                 // in this special case.
                 r := mul(x, sload(b.slot))
+                tstore(a.slot, true)
             }
         }
     }

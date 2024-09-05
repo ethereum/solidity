@@ -174,7 +174,7 @@ Functions can be declared ``view`` in which case they promise not to modify the 
 
 The following statements are considered modifying the state:
 
-#. Writing to state variables.
+#. Writing to state variables (storage and transient storage).
 #. :ref:`Emitting events <events>`.
 #. :ref:`Creating other contracts <creating-contracts>`.
 #. Using ``selfdestruct``.
@@ -226,7 +226,7 @@ This means that reading from ``immutable`` variables can be a non-pure operation
 
 In addition to the list of state modifying statements explained above, the following are considered reading from the state:
 
-#. Reading from state variables.
+#. Reading from state variables (storage and transient storage).
 #. Accessing ``address(this).balance`` or ``<address>.balance``.
 #. Accessing any of the members of ``block``, ``tx``, ``msg`` (with the exception of ``msg.sig`` and ``msg.data``).
 #. Calling any function not marked ``pure``.
