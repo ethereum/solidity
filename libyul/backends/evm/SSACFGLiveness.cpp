@@ -213,7 +213,6 @@ void SSACFGLiveness::runDagDfs(SSACFG::BlockId blockId, std::vector<char>& _proc
 	};
 	auto const& block = m_cfg.block(blockId);
 	// for each S \in succs(B) s.t. (B, S) not back edge and S unprocessed: DAG_DFS(S)
-	// todo functionreturn has to be respected still
 	block.forEachExit([&](SSACFG::BlockId const& _successor){
 		if (!m_topologicalSort.backEdge(blockId, _successor))
 			if (!_processed[_successor.value])
@@ -245,6 +244,8 @@ void SSACFGLiveness::runDagDfs(SSACFG::BlockId blockId, std::vector<char>& _proc
 		if (!m_topologicalSort.backEdge(blockId, _successor))
 			live += _liveIns[_successor.value] - m_cfg.block(_successor).phis;
 	});
+	if (std::holds_alternative<SSACFG::BasicBlock::FunctionReturn>(block.exit))
+		live += std::get<SSACFG::BasicBlock::FunctionReturn>(block.exit).returnValues | ranges::view::filter(filterLiterals);
 
 	// LiveOut(B) <- live
 	_liveOuts[blockId.value] = live;
