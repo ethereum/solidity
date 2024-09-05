@@ -8,6 +8,8 @@ set(sources
 	CommonIO.cpp
 	CommonIO.h
 	cxx20.h
+	DisjointSet.cpp
+	DisjointSet.h
 	DominatorFinder.h
 	Exceptions.cpp
 	Exceptions.h
