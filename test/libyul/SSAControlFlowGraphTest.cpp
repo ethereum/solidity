@@ -328,7 +328,9 @@ TestCase::TestResult SSAControlFlowGraphTest::run(std::ostream& _stream, std::st
 		object->code()->root()
 	);
 
-	printLiveness(*controlFlow->functionGraphs[0]);
+	printLiveness(*controlFlow->mainGraph);
+	for (auto const& functionGraph : controlFlow->functionGraphs)
+		printLiveness(*functionGraph);
 
 	output << "digraph SSACFG {\nnodesep=0.7;\ngraph[fontname=\"DejaVu Sans\"]\nnode[shape=box,fontname=\"DejaVu Sans\"];\n\n";
 	output << SSACFGPrinter(*controlFlow->mainGraph, SSACFG::BlockId{0});
