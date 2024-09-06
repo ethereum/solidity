@@ -182,23 +182,23 @@ SSACFGLiveness::SSACFGLiveness(SSACFG const& _cfg):
 
 void SSACFGLiveness::runLoopTreeDfs
 (
-	size_t v,
+	size_t _loopHeader,
 	std::vector<std::set<SSACFG::ValueId>>& _liveIns,
 	std::vector<std::set<SSACFG::ValueId>>& _liveOuts
 )
 {
 	// if v is a loop node of the nesting forest (or the very root, ie max(size_t))
-	if (m_loopNestingForest.loopNodes().count(v) > 0)
+	if (m_loopNestingForest.loopNodes().count(_loopHeader) > 0)
 	{
 		// the loop header block id
-		size_t loopHeader = v == std::numeric_limits<size_t>::max() ? 0 : v;
-		auto const& block = m_cfg.block(SSACFG::BlockId{loopHeader});
+		auto const& block = m_cfg.block(SSACFG::BlockId{_loopHeader});
 		// LiveLoop <- LiveIn(B_N) - PhiDefs(B_N)
-		auto liveLoop = _liveIns[loopHeader] - block.phis;
+		auto liveLoop = _liveIns[_loopHeader] - block.phis;
+		// for each blockId \in children(loopHeader)
 		// todo this could be done smarter by doing the mapping first
 		for (size_t blockId = 0; blockId < m_cfg.numBlocks(); ++blockId)
 		{
-			if (m_loopNestingForest.loopParents()[blockId] == v)
+			if (m_loopNestingForest.loopParents()[blockId] == _loopHeader)
 			{
 				_liveIns[blockId] += liveLoop;
 				_liveOuts[blockId] += liveLoop;
@@ -209,7 +209,12 @@ void SSACFGLiveness::runLoopTreeDfs
 }
 
 
-void SSACFGLiveness::runDagDfs(SSACFG::BlockId blockId, std::vector<char>& _processed, std::vector<std::set<SSACFG::ValueId>>& _liveIns, std::vector<std::set<SSACFG::ValueId>>& _liveOuts)
+void SSACFGLiveness::runDagDfs(
+	SSACFG::BlockId blockId,
+	std::vector<char>& _processed,
+	std::vector<std::set<SSACFG::ValueId>>& _liveIns,
+	std::vector<std::set<SSACFG::ValueId>>& _liveOuts
+)
 {
 	// SSA Book, Algorithm 9.2
 	auto const filterLiterals = [this](auto const& valueId) {
@@ -237,9 +242,15 @@ void SSACFGLiveness::runDagDfs(SSACFG::BlockId blockId, std::vector<char>& _proc
 			auto const it = entries.find(blockId);
 			yulAssert(it != entries.end());
 			auto const argIndex = static_cast<size_t>(std::distance(entries.begin(), it));
-			auto const arg = std::get<SSACFG::PhiValue>(info).arguments.at(argIndex);
-			if (!std::holds_alternative<SSACFG::LiteralValue>(m_cfg.valueInfo(arg)))
-				live.insert(arg);
+			if (argIndex < std::get<SSACFG::PhiValue>(info).arguments.size())
+			{
+				// todo not sure why arg index would exceed phi arg length but it does happen
+				auto const arg = std::get<SSACFG::PhiValue>(info).arguments.at(argIndex);
+				if (!std::holds_alternative<SSACFG::LiteralValue>(m_cfg.valueInfo(arg)))
+					live.insert(arg);
+			}
+			else
+				yulAssert(false);
 		}
 	});
 
@@ -250,6 +261,9 @@ void SSACFGLiveness::runDagDfs(SSACFG::BlockId blockId, std::vector<char>& _proc
 	});
 	if (std::holds_alternative<SSACFG::BasicBlock::FunctionReturn>(block.exit))
 		live += std::get<SSACFG::BasicBlock::FunctionReturn>(block.exit).returnValues | ranges::view::filter(filterLiterals);
+
+	// clean out unreachables
+	live = live | ranges::view::filter([&](auto const& valueId) { return !std::holds_alternative<SSACFG::UnreachableValue>(m_cfg.valueInfo(valueId)); } ) | ranges::to<std::set>;
 
 	// LiveOut(B) <- live
 	_liveOuts[blockId.value] = live;

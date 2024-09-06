@@ -76,7 +76,9 @@ public:
 
 	/// blocks which are not contained in a loop get assigned the loop parent numeric_limit<size_t>::max()
 	std::vector<size_t> const& loopParents() const { return m_loopParents; }
+	// all loop nodes (entry blocks for loops), also nested ones
 	std::set<size_t> const& loopNodes() const { return m_loopNodes; }
+	// root loop nodes in the forest for outer-most loops
 	std::set<size_t> const& loopRootNodes() const { return m_loopRootNodes; }
 private:
 	void build();
@@ -95,8 +97,6 @@ private:
 class SSACFGLiveness
 {
 public:
-	using ReducedReachableNodes = std::map<SSACFG::BlockId, std::vector<SSACFG::BlockId>>;
-
 	explicit SSACFGLiveness(SSACFG const& _cfg);
 
 	std::vector<std::set<SSACFG::ValueId>> const& liveIns() const { return m_liveIns; }
@@ -112,13 +112,12 @@ private:
 	);
 
 	void runLoopTreeDfs(
-		size_t v,
+		size_t _loopHeader,
 		std::vector<std::set<SSACFG::ValueId>>& _liveIns,
 		std::vector<std::set<SSACFG::ValueId>>& _liveOuts
 	);
 
 	SSACFG const& m_cfg;
-	ReducedReachableNodes m_reducedReachableNodes;
 	ReducedTopologicalSort m_topologicalSort;
 	TarjansLoopNestingForest m_loopNestingForest;
 	std::vector<std::set<SSACFG::ValueId>> m_liveIns;
