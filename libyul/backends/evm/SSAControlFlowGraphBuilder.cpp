@@ -635,7 +635,10 @@ SSACFG::ValueId SSAControlFlowGraphBuilder::addPhiOperands(Scope::Variable const
 	auto& phi = std::get<SSACFG::PhiValue>(m_graph.valueInfo(_phi));
 	for (auto pred: m_graph.block(phi.block).entries)
 		phi.arguments.emplace_back(readVariable(_variable, pred));
-	return tryRemoveTrivialPhi(m_graph, _phi);
+	// todo: this breaks things as the graph isn't finished yet
+	//  and we're potentially replacing variables in it that then still get inserted later on
+	//  might need some additional bookkeeping in the builder as well to get it right
+	return _phi; // tryRemoveTrivialPhi(m_graph, _phi)
 }
 
 void SSAControlFlowGraphBuilder::writeVariable(Scope::Variable const& _variable, SSACFG::BlockId _block, SSACFG::ValueId _value)
