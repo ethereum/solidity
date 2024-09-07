@@ -88,7 +88,7 @@ RUN set -ex; \
 
 # Z3
 RUN set -ex; \
-    git clone --depth 1 -b z3-4.12.1 https://github.com/Z3Prover/z3.git \
+    git clone --depth 1 -b z3-4.13.0 https://github.com/Z3Prover/z3.git \
     /usr/src/z3; \
     cd /usr/src/z3; \
     mkdir build; \

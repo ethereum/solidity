@@ -49,7 +49,7 @@ RUN set -ex && \
 # Install Z3
 RUN set -ex && \
 	cd /usr/src && \
-	git clone https://github.com/Z3Prover/z3.git -b z3-4.12.1 --depth 1 && \
+	git clone https://github.com/Z3Prover/z3.git -b z3-4.13.0 --depth 1 && \
 	cd z3 && \
 	mkdir build && \
 	cd build && \

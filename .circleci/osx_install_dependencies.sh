@@ -95,7 +95,7 @@ then
   rm -rf /tmp/{cvc5-macOS-arm64-static,cvc5.zip}
 
   # z3
-  z3_version="4.12.1"
+  z3_version="4.13.0"
   z3_dir="z3-z3-$z3_version"
   z3_package="z3-$z3_version.tar.gz"
   wget "https://github.com/Z3Prover/z3/archive/refs/tags/$z3_package"
