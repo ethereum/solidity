@@ -33,28 +33,24 @@ class ForwardSSACFGTopologicalSort
 public:
 	explicit ForwardSSACFGTopologicalSort(SSACFG const& _cfg);
 
-	std::vector<size_t> const& sortedBlocks() const;
-	std::vector<size_t> const& preOrder() const;
-	std::vector<size_t> const& reversedPostOrder() const;
-	std::vector<size_t> const& maxSubtreePreOrder() const;
-	std::set<size_t> const& backEdgeTargets() const;
-	std::vector<std::set<size_t>> const& predecessors() const;
-	SSACFG const& cfg() const;
-	bool ancestor(size_t _block1, size_t _block2) const;
+	std::vector<size_t> const& preOrder() const { return m_preOrder; }
+	std::vector<size_t> const& postOrder() const { return m_postOrder; }
+	std::set<size_t> const& backEdgeTargets() const { return m_backEdgeTargets; }
+	SSACFG const& cfg() const { return m_cfg; }
 	bool backEdge(SSACFG::BlockId const& _block1, SSACFG::BlockId const& _block2) const;
 
 private:
 	void dfs(size_t _vertex);
+	/// Checks if block1 is an ancestor of block2, ie there's a path from block1 to block2 in the dfs tree
+	bool ancestor(size_t _block1, size_t _block2) const;
 
 	SSACFG const& m_cfg;
-
-	size_t m_currentNode {0};
 	std::vector<char> m_explored{};
-	std::vector<size_t> m_reversedPostOrder{};
+	std::vector<size_t> m_postOrder{};
 	std::vector<size_t> m_preOrder{};
-	std::vector<size_t> m_maxSubtreePreOrder{};
+	std::vector<size_t> m_blockWisePreOrder{};
+	std::vector<size_t> m_blockWiseMaxSubtreePreOrder{};
 	std::vector<std::tuple<size_t, size_t>> m_potentialBackEdges{};
 	std::set<size_t> m_backEdgeTargets{};
-	std::vector<std::set<size_t>> m_predecessors{};
 };
 }
