@@ -256,6 +256,11 @@ public:
 		return false;
 	}
 
+	static bool hasErrorsWarningsOrInfos(ErrorList const& _list)
+	{
+		return !_list.empty();
+	}
+
 	static std::string formatErrorSeverity(Severity _severity)
 	{
 		switch (_severity)
