@@ -1293,7 +1293,7 @@ jobs:
       - matrix_notify_failure_unless_pr
 
   t_ubu_soltest_all: &t_ubu_soltest_all
-    <<: *base_ubuntu2204_large
+    <<: *base_ubuntu2404_large
     parallelism: 50
     steps:
       - soltest_all
@@ -1335,10 +1335,10 @@ jobs:
       - soltest
 
   t_ubu_clang_soltest: &t_ubu_clang_soltest
-    <<: *base_ubuntu2204_clang
+    <<: *base_ubuntu2404_clang
     parallelism: 20
     environment:
-      <<: *base_ubuntu2204_clang_env
+      <<: *base_ubuntu2404_clang_env
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
       # The high parallelism in this job is causing the SMT tests to run out of memory,
@@ -1353,7 +1353,7 @@ jobs:
     <<: *t_ubu_soltest_all
 
   t_ubu_cli: &t_ubu_cli
-    <<: *base_ubuntu2204_small
+    <<: *base_ubuntu2404_small
     parallelism: 8 # Should match number of tests in .circleci/parallel_cli_tests.py
     steps:
       - cmdline_tests
