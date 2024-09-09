@@ -6,7 +6,7 @@
 ## You can pass a branch name as argument to this script (which, if no argument is given,
 ## will default to "develop").
 ##
-## If the given branch is "release", the resulting package will be uploaded to
+## If the given branch matches a release version tag, the resulting package will be uploaded to
 ## ethereum/ethereum PPA, or ethereum/ethereum-dev PPA otherwise.
 ##
 ## It will clone the Solidity git from github, determine the version,

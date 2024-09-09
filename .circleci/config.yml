@@ -1830,6 +1830,22 @@ jobs:
       - matrix_notify_failure_unless_pr
       - matrix_notify_release_unless_pr
 
+  b_alpine_docker:
+    <<: *base_cimg_small
+    steps:
+      - setup_remote_docker:
+          # Always build from scratch to use current packages.
+          # This job is only meant to run nightly so build time is not an issue.
+          docker_layer_caching: false
+      - checkout
+      - run:
+          name: Build and tag the container
+          command: scripts/docker_deploy_manual.sh develop "file://$PWD" --no-push
+      - run:
+          name: Smoke test
+          command: docker run --pull=never ethereum/solc:build-alpine --version
+      - matrix_notify_failure_unless_pr
+
 workflows:
   version: 2
 
@@ -2008,6 +2024,9 @@ workflows:
       # Deprecated EVM versions tests
       - b_ubu: *requires_nothing
       - t_ubu_soltest_deprecated_evm_versions: *requires_b_ubu
+
+      # Build in a Docker container (on Alpine Linux)
+      - b_alpine_docker: *requires_nothing
 
   nightly-ossfuzz:
 
