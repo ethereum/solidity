@@ -83,10 +83,10 @@ void SSACFGLiveness::runDagDfs(SSACFG::BlockId const _blockId, std::vector<std::
 		live += m_liveIns[_successor.value] - m_cfg.block(_successor).phis;
 	});
 	if (std::holds_alternative<SSACFG::BasicBlock::FunctionReturn>(block.exit))
-		live += std::get<SSACFG::BasicBlock::FunctionReturn>(block.exit).returnValues | ranges::view::filter(filterLiterals);
+		live += std::get<SSACFG::BasicBlock::FunctionReturn>(block.exit).returnValues | ranges::views::filter(filterLiterals);
 
 	// clean out unreachables
-	live = live | ranges::view::filter([&](auto const& valueId) { return !std::holds_alternative<SSACFG::UnreachableValue>(m_cfg.valueInfo(valueId)); } ) | ranges::to<std::set>;
+	live = live | ranges::views::filter([&](auto const& valueId) { return !std::holds_alternative<SSACFG::UnreachableValue>(m_cfg.valueInfo(valueId)); } ) | ranges::to<std::set>;
 
 	// LiveOut(B) <- live
 	m_liveOuts[_blockId.value] = live;
