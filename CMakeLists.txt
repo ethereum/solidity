@@ -73,10 +73,6 @@ if (PROFILE_OPTIMIZER_STEPS)
     add_definitions(-DPROFILE_OPTIMIZER_STEPS)
 endif()
 
-if (STRICT_NLOHMANN_JSON_VERSION)
-	add_definitions(-DSTRICT_NLOHMANN_JSON_VERSION_CHECK)
-endif()
-
 # Figure out what compiler and system are we using
 include(EthCompilerSettings)
 
