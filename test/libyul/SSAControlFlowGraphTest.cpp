@@ -274,42 +274,6 @@ private:
 	std::stringstream m_result{};
 };
 
-void SSAControlFlowGraphTest::printLiveness(SSACFG const& _cfg) const
-{
-	SSACFGLiveness livenessMain(_cfg);
-	for (size_t blockId = 0; blockId < livenessMain.liveIns().size(); ++blockId)
-	{
-		fmt::print("Live ins for Block {}:\n", blockId);
-		auto const& liveIns = livenessMain.liveIns()[blockId];
-		for (auto const& liveIn : liveIns)
-		{
-			auto const& valInfo = _cfg.valueInfo(liveIn);
-			std::visit(GenericVisitor{
-						   [&](SSACFG::UnreachableValue const&) {},
-						   [&](SSACFG::VariableValue const& var) { fmt::print("\tv{} (defining block {})\n", liveIn.value, var.definingBlock.value); },
-						   [&](SSACFG::LiteralValue const&) { fmt::print("\tv{} (literal)\n", liveIn.value); },
-						   [&](SSACFG::PhiValue const& phi) { fmt::print("\tv{} (phi from block {})\n", liveIn.value, phi.block.value); }
-					   }, valInfo);
-		}
-	}
-
-	for (size_t blockId = 0; blockId < livenessMain.liveOuts().size(); ++blockId)
-	{
-		fmt::print("Live outs for Block {}:\n", blockId);
-		auto const& liveIns = livenessMain.liveOuts()[blockId];
-		for (auto const& liveIn : liveIns)
-		{
-			auto const& valInfo = _cfg.valueInfo(liveIn);
-			std::visit(GenericVisitor{
-						   [&](SSACFG::UnreachableValue const&) {},
-						   [&](SSACFG::VariableValue const& var) { fmt::print("\tv{} (defining block {})\n", liveIn.value, var.definingBlock.value); },
-						   [&](SSACFG::LiteralValue const&) { fmt::print("\tv{} (literal)\n", liveIn.value); },
-						   [&](SSACFG::PhiValue const&) { fmt::print("\tv{} (phi)\n", liveIn.value); }
-					   }, valInfo);
-		}
-	}
-}
-
 TestCase::TestResult SSAControlFlowGraphTest::run(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted)
 {
 	ErrorList errors;
@@ -328,10 +292,6 @@ TestCase::TestResult SSAControlFlowGraphTest::run(std::ostream& _stream, std::st
 		*m_dialect,
 		object->code()->root()
 	);
-
-	printLiveness(*controlFlow->mainGraph);
-	for (auto const& functionGraph : controlFlow->functionGraphs)
-		printLiveness(*functionGraph);
 
 	output << "digraph SSACFG {\nnodesep=0.7;\ngraph[fontname=\"DejaVu Sans\"]\nnode[shape=box,fontname=\"DejaVu Sans\"];\n\n";
 	output << SSACFGPrinter(*controlFlow->mainGraph, SSACFG::BlockId{0});
