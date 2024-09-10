@@ -7,7 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
-
+ * SMTChecker: Fix SMT logic error when assigning to an array of addresses.
 
 ### 0.8.27 (2024-09-04)
 
