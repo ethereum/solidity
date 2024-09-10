@@ -35,7 +35,7 @@ namespace solidity::frontend::test
 
 using StringPair = std::pair<std::string, std::string>;
 
-class ASTPropertyTest: public TestCase
+class ASTPropertyTest: public EVMVersionRestrictedTestCase
 {
 public:
 	static std::unique_ptr<TestCase> create(Config const& _config)

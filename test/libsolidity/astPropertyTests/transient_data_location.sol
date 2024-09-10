@@ -7,6 +7,8 @@ contract C {
     uint y;
 
 }
+// ====
+// EVMVersion: >=cancun
 // ----
 // TransientDataLocation: transient
 // TransientVarName: x

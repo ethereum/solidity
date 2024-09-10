@@ -398,6 +398,13 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 	Location varLoc = _variable.referenceLocation();
 	DataLocation typeLoc = DataLocation::Memory;
 
+	if (varLoc == VariableDeclaration::Location::Transient && !m_evmVersion.supportsTransientStorage())
+		m_errorReporter.declarationError(
+			7985_error,
+			_variable.location(),
+			"Transient storage is not supported by EVM versions older than cancun."
+		);
+
 	std::set<Location> allowedDataLocations = _variable.allowedDataLocations();
 	if (!allowedDataLocations.count(varLoc))
 	{

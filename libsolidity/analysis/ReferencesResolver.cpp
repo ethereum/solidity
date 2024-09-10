@@ -370,7 +370,7 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 			m_errorReporter.declarationError(
 				9467_error,
 				nativeLocationOf(_identifier),
-				"Identifier not found. Use \".slot\" and \".offset\" to access storage variables."
+				"Identifier not found. Use \".slot\" and \".offset\" to access storage or transient storage variables."
 			);
 		return;
 	}
