@@ -1,4 +1,8 @@
 set(sources
+	EVMInstructionInterpreter.h
+	EVMInstructionInterpreter.cpp
+	Interpreter.h
+	Interpreter.cpp
 	Inspector.h
 	Inspector.cpp
 )

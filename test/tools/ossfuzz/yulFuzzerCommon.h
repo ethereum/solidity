@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 // SPDX-License-Identifier: GPL-3.0
-#include <libyul/tools/interpreter/Interpreter.h>
+#include <test/tools/yulInterpreter/Interpreter.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
 namespace solidity::yul::test::yul_fuzzer

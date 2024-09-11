@@ -18,7 +18,7 @@
 
 #include <test/libyul/YulInterpreterTest.h>
 
-#include <test/tools/yulInterpreter/forward.h>
+#include <test/tools/yulInterpreter/Interpreter.h>
 
 #include <test/Common.h>
 
@@ -94,7 +94,6 @@ std::string YulInterpreterTest::interpret()
 	state.maxTraceSize = 32;
 	state.maxSteps = 512;
 	state.maxExprNesting = 64;
-	state.maxRecursionDepth = 200;
 	try
 	{
 		Interpreter::run(

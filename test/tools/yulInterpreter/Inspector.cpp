@@ -53,15 +53,7 @@ void InspectedInterpreter::run(
 )
 {
 	Scope scope;
-	InspectedInterpreter{
-		_inspector,
-			_state,
-			_dialect,
-			scope,
-			_disableExternalCalls,
-			_disableMemoryTrace,
-			/* _callerRecursionDepth= */ 0
-	}(_ast);
+	InspectedInterpreter{_inspector, _state, _dialect, scope, _disableExternalCalls, _disableMemoryTrace}(_ast);
 }
 
 Inspector::NodeAction Inspector::queryUser(langutil::DebugData const& _data, std::map<YulString, u256> const& _variables)
@@ -149,14 +141,14 @@ std::string Inspector::currentSource(langutil::DebugData const& _data) const
 
 u256 InspectedInterpreter::evaluate(Expression const& _expression)
 {
-	InspectedExpressionEvaluator ev(m_inspector, m_state, m_dialect, *m_scope, m_variables, m_disableExternalCalls, m_disableMemoryTrace, m_recursionDepth);
+	InspectedExpressionEvaluator ev(m_inspector, m_state, m_dialect, *m_scope, m_variables, m_disableExternalCalls, m_disableMemoryTrace);
 	ev.visit(_expression);
 	return ev.value();
 }
 
 std::vector<u256> InspectedInterpreter::evaluateMulti(Expression const& _expression)
 {
-	InspectedExpressionEvaluator ev(m_inspector, m_state, m_dialect, *m_scope, m_variables, m_disableExternalCalls, m_disableMemoryTrace, m_recursionDepth);
+	InspectedExpressionEvaluator ev(m_inspector, m_state, m_dialect, *m_scope, m_variables, m_disableExternalCalls, m_disableMemoryTrace);
 	ev.visit(_expression);
 	return ev.values();
 }

@@ -6,7 +6,7 @@
 }
 // ----
 // Trace:
-//   Interpreter recursion depth exceeded
+//   Interpreter execution step limit reached.
 // Memory dump:
 // Storage dump:
 // Transient storage dump:
