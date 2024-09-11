@@ -19,6 +19,14 @@ parameters:
     type: string
     # solbuildpackpusher/solidity-buildpack-deps:ubuntu2204.clang-8
     default: "solbuildpackpusher/solidity-buildpack-deps@sha256:2662376fe0e1ec2d346495a19a6d64508c1048d5a7325d8600c33c343fa64a0f"
+  ubuntu-2404-docker-image:
+    type: string
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2404-1
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:5d6d27551104321a30326d6024bd4e96d9d899a97a78eb9feea364996f1d18b5"
+  ubuntu-2404-clang-docker-image:
+    type: string
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2404.clang-1
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:8df0086907cc1e57068ad48841f2284a87bfbd0a95006286a19a7132d84bb861"
   ubuntu-clang-ossfuzz-docker-image:
     type: string
     # solbuildpackpusher/solidity-buildpack-deps:ubuntu.clang.ossfuzz-6
@@ -599,6 +607,56 @@ defaults:
       resource_class: xlarge
       environment: &base_ubuntu2204_xlarge_env
         <<: *base_ubuntu2204_env
+        MAKEFLAGS: -j 10
+        CPUs: 10
+
+  - base_ubuntu2404: &base_ubuntu2404
+      docker:
+        - image: << pipeline.parameters.ubuntu-2404-docker-image >>
+      environment: &base_ubuntu2404_env
+        TERM: xterm
+        MAKEFLAGS: -j 3
+        CPUs: 3
+
+  - base_ubuntu2404_clang: &base_ubuntu2404_clang
+      docker:
+        - image: << pipeline.parameters.ubuntu-2404-clang-docker-image >>
+      environment: &base_ubuntu2404_clang_env
+        TERM: xterm
+        CC: clang
+        CXX: clang++
+        MAKEFLAGS: -j 3
+        CPUs: 3
+
+  - base_ubuntu2404_clang_large: &base_ubuntu2404_clang_large
+      <<: *base_ubuntu2404_clang
+      resource_class: large
+      environment: &base_ubuntu2404_clang_large_env
+        <<: *base_ubuntu2404_clang_env
+        MAKEFLAGS: -j 5
+        CPUs: 5
+
+  - base_ubuntu2404_small: &base_ubuntu2404_small
+      <<: *base_ubuntu2404
+      resource_class: small
+      environment: &base_ubuntu2404_small_env
+        <<: *base_ubuntu2404_env
+        MAKEFLAGS: -j 2
+        CPUs: 2
+
+  - base_ubuntu2404_large: &base_ubuntu2404_large
+      <<: *base_ubuntu2404
+      resource_class: large
+      environment: &base_ubuntu2404_large_env
+        <<: *base_ubuntu2404_env
+        MAKEFLAGS: -j 5
+        CPUs: 5
+
+  - base_ubuntu2404_xlarge: &base_ubuntu2404_xlarge
+      <<: *base_ubuntu2404
+      resource_class: xlarge
+      environment: &base_ubuntu2404_xlarge_env
+        <<: *base_ubuntu2404_env
         MAKEFLAGS: -j 10
         CPUs: 10
 
