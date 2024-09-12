@@ -20,6 +20,7 @@
 
 #include <libsolutil/Visitor.h>
 #include <range/v3/to_container.hpp>
+#include <range/v3/view/drop_last.hpp>
 #include <range/v3/view/reverse.hpp>
 #include <range/v3/view/zip.hpp>
 
@@ -115,9 +116,87 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 			}
 			return false;
 		},
-		[&](Switch const&) {
-			// TODO
-			return true;
+		[&](Switch const& _switch) {
+			// todo this will be different for EOF
+			if(auto cond = consumeUnaryExpression(*_switch.expression))
+			{
+				auto const validateGhostEq = [this, cond](SSACFG::Operation const& _operation) {
+					yulAssert(std::holds_alternative<SSACFG::BuiltinCall>(_operation.kind));
+					yulAssert(&std::get<SSACFG::BuiltinCall>(_operation.kind).builtin.get() == m_context.dialect.equalityFunction());
+					yulAssert(_operation.inputs.size() == 2);
+					yulAssert(_operation.inputs.back() == *cond);
+					yulAssert(_operation.outputs.size() == 1);
+				};
+				yulAssert(currentBlock().operations.size() >= 2, "switch at least has the expression and ghost eq");
+				yulAssert(m_currentOperation == currentBlock().operations.size() - 1);
+				auto const& ghostEq = currentBlock().operations.back();
+				validateGhostEq(ghostEq);
+				m_currentOperation = currentBlock().operations.size();
+				std::reference_wrapper<const SSACFG::BasicBlock::ConditionalJump> exit = expectConditionalJump();
+				yulAssert(exit.get().condition == ghostEq.outputs[0]);
+				// auto zeroBranchVariableValues = applyPhis(m_currentBlock, exit.zero);
+				std::optional<SSACFG::BlockId> afterSwitch{std::nullopt};
+				m_currentBlock = exit.get().nonZero;
+				m_currentOperation = 0;
+				for (auto const& switchCase: _switch.cases | ranges::views::drop_last(2))
+				{
+					if (consumeBlock(switchCase.body))
+					{
+						auto const& jumpBack = expectUnconditionalJump();
+						yulAssert(!afterSwitch || *afterSwitch == jumpBack.target);
+						afterSwitch = jumpBack.target;
+						auto nonZeroBranchVariableValues = applyPhis(m_currentBlock, *afterSwitch);
+						for (auto&& [var, value]: nonZeroBranchVariableValues)
+							yulAssert(nonZeroBranchVariableValues.at(var) == value);
+					}
+					m_currentBlock = exit.get().zero;
+					m_currentOperation = 0;
+					yulAssert(currentBlock().operations.size() == 1);
+					validateGhostEq(currentBlock().operations.front());
+					m_currentOperation = 1;
+					auto const& jumpDeeper = expectConditionalJump();
+					yulAssert(jumpDeeper.condition == currentBlock().operations.front().outputs[0]);
+					exit = jumpDeeper;
+					m_currentBlock = jumpDeeper.nonZero;
+					m_currentOperation = 0;
+				}
+
+				m_currentBlock = exit.get().nonZero;
+				m_currentOperation = 0;
+				if (_switch.cases.size() >= 2 && consumeBlock(_switch.cases.at(_switch.cases.size() - 2).body))
+				{
+					auto const& jumpBack = expectUnconditionalJump();
+					yulAssert(!afterSwitch || *afterSwitch == jumpBack.target);
+					afterSwitch = jumpBack.target;
+					auto nonZeroBranchVariableValues = applyPhis(m_currentBlock, *afterSwitch);
+					for (auto&& [var, value]: nonZeroBranchVariableValues)
+						yulAssert(nonZeroBranchVariableValues.at(var) == value);
+				}
+
+				m_currentBlock = exit.get().zero;
+				m_currentOperation = 0;
+				if (!_switch.cases.empty() && consumeBlock(_switch.cases.at(_switch.cases.size() - 1).body))
+				{
+					auto const& jumpBack = expectUnconditionalJump();
+					yulAssert(!afterSwitch || *afterSwitch == jumpBack.target);
+					afterSwitch = jumpBack.target;
+					auto zeroBranchVariableValues = applyPhis(m_currentBlock, *afterSwitch);
+					m_currentVariableValues = zeroBranchVariableValues;
+					// consolidate the values in the zero branch with the values in the non-zero branch
+					for (auto&& [var, value]: zeroBranchVariableValues)
+						yulAssert(zeroBranchVariableValues.at(var) == value);
+				}
+				else
+					yulAssert(!_switch.cases.empty(), "empty switch is forbidden, we need at least the default case");
+
+				// todo double check that this is actually sane and we always have an
+				//  after switch (consuming body of a case returning false could be a weird case)
+				yulAssert(afterSwitch);
+				m_currentBlock = *afterSwitch;
+				m_currentOperation = 0;
+				return true;
+			}
+			return false;
 		},
 		[&](ForLoop const& _loop)
 		{
@@ -322,7 +401,9 @@ SSACFG::ValueId SSACFGValidator::lookupIdentifier(Identifier const& _identifier)
 
 SSACFG::ValueId SSACFGValidator::lookupLiteral(Literal const& _literal) const
 {
-	return m_context.cfg.getLiteral(_literal.value.value());
+	auto valueId = m_context.cfg.lookupLiteral(_literal.value);
+	yulAssert(valueId.hasValue());
+	return valueId;
 }
 
 std::map<Scope::Variable const*, SSACFG::ValueId> SSACFGValidator::applyPhis(SSACFG::BlockId _source, SSACFG::BlockId _target)

@@ -390,7 +390,7 @@ Json YulStack::cfgJson() const
 			languageToDialect(m_language, m_evmVersion, m_eofVersion),
 			_object.code()->root()
 		);
-		SSACFGValidator::validate(*controlFlow, _object.code()->root(), *_object.analysisInfo.get(), languageToDialect(m_language, m_evmVersion, m_eofVersion));
+		SSACFGValidator::validate(*controlFlow, _object.code()->root(), *_object.analysisInfo, languageToDialect(m_language, m_evmVersion, m_eofVersion));
 		YulControlFlowGraphExporter exporter(*controlFlow);
 		return exporter.run();
 	};

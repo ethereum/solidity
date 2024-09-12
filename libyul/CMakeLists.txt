@@ -74,6 +74,8 @@ add_library(yul
 	backends/evm/SSACFGLoopNestingForest.h
 	backends/evm/SSACFGTopologicalSort.cpp
 	backends/evm/SSACFGTopologicalSort.h
+	backends/evm/SSACFGValidator.cpp
+	backends/evm/SSACFGValidator.h
 	backends/evm/SSAControlFlowGraph.cpp
 	backends/evm/SSAControlFlowGraph.h
 	backends/evm/SSAControlFlowGraphBuilder.cpp

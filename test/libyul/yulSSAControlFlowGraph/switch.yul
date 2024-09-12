@@ -8,6 +8,9 @@
     case 1 {
         x := calldataload(88)
     }
+    case 2 {
+        x := calldataload(123)
+    }
     default {
         x := calldataload(99)
     }
