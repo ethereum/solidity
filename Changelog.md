@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * SMTChecker: Z3 is now a runtime dependency, not a build dependency (except for emscripten build).
 
 
 Bugfixes:
