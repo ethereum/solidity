@@ -73,6 +73,8 @@ public:
 	SSACFG::ValueId operator()(Literal const& _literal);
 
 private:
+	void cleanUnreachable();
+	SSACFG::ValueId tryRemoveTrivialPhi(SSACFG::ValueId _phi);
 	void assign(std::vector<std::reference_wrapper<Scope::Variable const>> _variables, Expression const* _expression);
 	std::vector<SSACFG::ValueId> visitFunctionCall(FunctionCall const& _call);
 
@@ -80,7 +82,6 @@ private:
 	SSACFG::ValueId readVariable(Scope::Variable const& _variable, SSACFG::BlockId _block);
 	SSACFG::ValueId readVariableRecursive(Scope::Variable const& _variable, SSACFG::BlockId _block);
 	SSACFG::ValueId addPhiOperands(Scope::Variable const& _variable, SSACFG::ValueId _phi);
-	SSACFG::ValueId tryRemoveTrivialPhi(SSACFG::ValueId _phi);
 	void writeVariable(Scope::Variable const& _variable, SSACFG::BlockId _block, SSACFG::ValueId _value);
 
 	SSACFG& m_graph;

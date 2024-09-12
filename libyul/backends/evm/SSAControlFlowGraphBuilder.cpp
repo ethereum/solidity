@@ -33,173 +33,12 @@
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/drop_last.hpp>
 #include <range/v3/view/enumerate.hpp>
-#include <range/v3/view/iota.hpp>
 #include <range/v3/view/reverse.hpp>
 #include <range/v3/view/transform.hpp>
 #include <range/v3/view/zip.hpp>
-#include <range/v3/view/drop_last.hpp>
 
 using namespace solidity;
 using namespace solidity::yul;
-
-namespace
-{
-SSACFG::ValueId tryRemoveTrivialPhi(SSACFG& _cfg, SSACFG::ValueId _phi)
-{
-	// TODO: double-check if this is sane
-	auto* phiInfo = std::get_if<SSACFG::PhiValue>(&_cfg.valueInfo(_phi));
-	yulAssert(phiInfo);
-
-	SSACFG::ValueId same;
-	for (SSACFG::ValueId arg: phiInfo->arguments)
-	{
-		if (arg == same || arg == _phi)
-			continue;
-		if (same.hasValue())
-			return _phi;
-		same = arg;
-	}
-
-	struct Use {
-		std::reference_wrapper<SSACFG::Operation> operation;
-		size_t inputIndex = std::numeric_limits<size_t>::max();
-	};
-	std::vector<Use> uses;
-	std::vector<bool> visited;
-	std::vector<SSACFG::ValueId> phiUses;
-	auto isVisited = [&](SSACFG::BlockId _block) -> bool {
-		if (_block.value < visited.size())
-			return visited.at(_block.value);
-		else
-			return false;
-	};
-	auto markVisited = [&](SSACFG::BlockId _block) {
-		if (visited.size() <= _block.value)
-			visited.resize(_block.value + 1);
-		visited[_block.value] = true;
-	};
-	// does this even need to be recursive? or can uses only be in the same or neighbouring blocks?
-	auto findUses = [&](SSACFG::BlockId _blockId, auto _recurse) -> void {
-		if (isVisited(_blockId))
-			return;
-		markVisited(_blockId);
-		auto& block = _cfg.block(_blockId);
-		for (auto blockPhi: block.phis)
-		{
-			if (blockPhi == _phi)
-				continue;
-			auto const* blockPhiInfo = std::get_if<SSACFG::PhiValue>(&_cfg.valueInfo(blockPhi));
-			yulAssert(blockPhiInfo);
-			bool usedInPhi = false;
-			for (auto input: blockPhiInfo->arguments)
-			{
-				if (input == _phi)
-					usedInPhi = true;
-			}
-			if (usedInPhi)
-				phiUses.emplace_back(blockPhi);
-		}
-		for (auto& op: block.operations)
-		{
-			// TODO: double check when phiVar occurs in outputs here and what to do about it.
-			if (op.outputs.size() == 1 && op.outputs.front() == _phi)
-				continue;
-			// TODO: check if this always hold - and if so if the assertion is really valuable.
-			for (auto& output: op.outputs)
-				yulAssert(output != _phi);
-
-			for (auto&& [n, input]: op.inputs | ranges::views::enumerate)
-				if (input == _phi)
-					uses.emplace_back(Use{std::ref(op), n});
-		}
-		block.forEachExit([&](SSACFG::BlockId _block) {
-			_recurse(_block, _recurse);
-		});
-	};
-	auto phiBlock = phiInfo->block;
-	_cfg.block(phiBlock).phis.erase(_phi);
-	findUses(phiBlock, findUses);
-
-	if (!same.hasValue())
-	{
-		// This will happen for unreachable paths.
-		// TODO: check how best to deal with this
-		same = _cfg.unreachableValue();
-	}
-
-	for (auto& use: uses)
-		use.operation.get().inputs.at(use.inputIndex) = same;
-	for (auto phiUse: phiUses)
-	{
-		auto* blockPhiInfo = std::get_if<SSACFG::PhiValue>(&_cfg.valueInfo(phiUse));
-		yulAssert(blockPhiInfo);
-		for (auto& arg: blockPhiInfo->arguments)
-			if (arg == _phi)
-				arg = same;
-	}
-
-	for (auto phiUse: phiUses)
-		tryRemoveTrivialPhi(_cfg, phiUse);
-
-	return same;
-}
-
-/// Removes edges to blocks that are not reachable.
-void cleanUnreachable(SSACFG& _cfg)
-{
-	// Determine which blocks are reachable from the entry.
-	util::BreadthFirstSearch<SSACFG::BlockId> reachabilityCheck{{_cfg.entry}};
-	reachabilityCheck.run([&](SSACFG::BlockId _blockId, auto&& _addChild) {
-		auto const& block = _cfg.block(_blockId);
-		visit(util::GenericVisitor{
-				[&](SSACFG::BasicBlock::Jump const& _jump) {
-					_addChild(_jump.target);
-				},
-				[&](SSACFG::BasicBlock::ConditionalJump const& _jump) {
-					_addChild(_jump.zero);
-					_addChild(_jump.nonZero);
-				},
-				[](SSACFG::BasicBlock::JumpTable const&) { yulAssert(false); },
-				[](SSACFG::BasicBlock::FunctionReturn const&) {},
-				[](SSACFG::BasicBlock::Terminated const&) {},
-				[](SSACFG::BasicBlock::MainExit const&) {}
-			}, block.exit);
-	});
-
-	auto isUnreachableValue = [&](SSACFG::ValueId const& _value) -> bool {
-		auto* valueInfo = std::get_if<SSACFG::UnreachableValue>(&_cfg.valueInfo(_value));
-		return (valueInfo) ? true : false;
-	};
-
-	// Remove all entries from unreachable nodes from the graph.
-	for (SSACFG::BlockId blockId: reachabilityCheck.visited)
-	{
-		auto& block = _cfg.block(blockId);
-
-		std::set<SSACFG::ValueId> maybeTrivialPhi;
-		for (auto it = block.entries.begin(); it != block.entries.end();)
-			if (reachabilityCheck.visited.count(*it))
-				it++;
-			else
-				it = block.entries.erase(it);
-		for (auto phi: block.phis)
-			if (auto* phiInfo = std::get_if<SSACFG::PhiValue>(&_cfg.valueInfo(phi)))
-				cxx20::erase_if(phiInfo->arguments, [&](SSACFG::ValueId _arg) {
-					if (isUnreachableValue(_arg))
-					{
-						maybeTrivialPhi.insert(phi);
-						return true;
-					}
-					return false;
-				});
-
-		// After removing a phi argument, we might end up with a trivial phi that can be removed.
-		for (auto phi: maybeTrivialPhi)
-			tryRemoveTrivialPhi(_cfg, phi);
-	}
-}
-
-}
 
 namespace solidity::yul
 {
@@ -226,11 +65,158 @@ std::unique_ptr<ControlFlow> SSAControlFlowGraphBuilder::build(
 	auto result = std::make_unique<ControlFlow>();
 	auto functions = buildMainGraph(*result->mainGraph, _analysisInfo, _dialect, _block);
 	buildFunctionGraphs(*result, _analysisInfo, sideEffects, _dialect, functions);
-
-	cleanUnreachable(*result->mainGraph);
-	for (auto& functionGraph: result->functionGraphs)
-		cleanUnreachable(*functionGraph);
 	return result;
+}
+
+SSACFG::ValueId SSAControlFlowGraphBuilder::tryRemoveTrivialPhi(SSACFG::ValueId _phi)
+{
+	// TODO: double-check if this is sane
+	auto const* phiInfo = std::get_if<SSACFG::PhiValue>(&m_graph.valueInfo(_phi));
+	yulAssert(phiInfo);
+
+	SSACFG::ValueId same;
+	for (SSACFG::ValueId arg: phiInfo->arguments)
+	{
+		if (arg == same || arg == _phi)
+			continue;  // unique value or self-reference
+		if (same.hasValue())
+			return _phi;  // phi merges at least two distinct values -> not trivial
+		same = arg;
+	}
+
+	struct Use {
+		std::reference_wrapper<SSACFG::Operation> operation;
+		size_t inputIndex = std::numeric_limits<size_t>::max();
+	};
+	std::vector<Use> uses;
+	std::vector<SSACFG::ValueId> phiUses;
+
+	if (!same.hasValue())
+	{
+		// This will happen for unreachable paths.
+		// TODO: check how best to deal with this
+		same = m_graph.unreachableValue();
+	}
+
+	auto phiBlock = phiInfo->block;
+	m_graph.block(phiBlock).phis.erase(_phi);
+
+	for (size_t blockIdValue = 0; blockIdValue < m_graph.numBlocks(); ++blockIdValue)
+	{
+		auto& block = m_graph.block(SSACFG::BlockId{blockIdValue});
+		for (auto blockPhi: block.phis)
+		{
+			if (blockPhi == _phi)
+				continue;
+			auto const* blockPhiInfo = std::get_if<SSACFG::PhiValue>(&m_graph.valueInfo(blockPhi));
+			yulAssert(blockPhiInfo);
+			bool usedInPhi = false;
+			for (auto input: blockPhiInfo->arguments)
+			{
+				if (input == _phi)
+					usedInPhi = true;
+			}
+			if (usedInPhi)
+				phiUses.emplace_back(blockPhi);
+		}
+		for (auto& op: block.operations)
+		{
+			// TODO: double check when phiVar occurs in outputs here and what to do about it.
+			if (op.outputs.size() == 1 && op.outputs.front() == _phi)
+				continue;
+			// TODO: check if this always hold - and if so if the assertion is really valuable.
+			for (auto& output: op.outputs)
+				yulAssert(output != _phi);
+
+			for (auto&& [n, input]: op.inputs | ranges::views::enumerate)
+				if (input == _phi)
+					uses.emplace_back(Use{std::ref(op), n});
+		}
+		// todo check if it is sound to set "unreachable" return values to literal 0
+		if (auto* functionReturn = std::get_if<SSACFG::BasicBlock::FunctionReturn>(&block.exit))
+			std::replace(
+				functionReturn->returnValues.begin(),
+				functionReturn->returnValues.end(),
+				_phi,
+				same == m_graph.unreachableValue() ? m_graph.newLiteral(block.debugData, 0) : same
+			);
+	}
+	for (auto& use: uses)
+		use.operation.get().inputs.at(use.inputIndex) = same;
+	for (auto phiUse: phiUses)
+	{
+		auto* blockPhiInfo = std::get_if<SSACFG::PhiValue>(&m_graph.valueInfo(phiUse));
+		yulAssert(blockPhiInfo);
+		for (auto& arg: blockPhiInfo->arguments)
+			if (arg == _phi)
+				arg = same;
+	}
+	for (auto& [_, currentVariableDefs]: m_currentDef)
+	{
+		for (auto& def: currentVariableDefs)
+			if (def && *def == _phi)
+				def = same;
+	}
+
+	for (auto phiUse: phiUses)
+		tryRemoveTrivialPhi(phiUse);
+
+	return same;
+}
+
+/// Removes edges to blocks that are not reachable.
+void SSAControlFlowGraphBuilder::cleanUnreachable()
+{
+	// Determine which blocks are reachable from the entry.
+	util::BreadthFirstSearch<SSACFG::BlockId> reachabilityCheck{{m_graph.entry}};
+	reachabilityCheck.run([&](SSACFG::BlockId _blockId, auto&& _addChild) {
+		auto const& block = m_graph.block(_blockId);
+		visit(util::GenericVisitor{
+				[&](SSACFG::BasicBlock::Jump const& _jump) {
+					_addChild(_jump.target);
+				},
+				[&](SSACFG::BasicBlock::ConditionalJump const& _jump) {
+					_addChild(_jump.zero);
+					_addChild(_jump.nonZero);
+				},
+				[](SSACFG::BasicBlock::JumpTable const&) { yulAssert(false); },
+				[](SSACFG::BasicBlock::FunctionReturn const&) {},
+				[](SSACFG::BasicBlock::Terminated const&) {},
+				[](SSACFG::BasicBlock::MainExit const&) {}
+			}, block.exit);
+	});
+
+	auto isUnreachableValue = [&](SSACFG::ValueId const& _value) -> bool {
+		auto* valueInfo = std::get_if<SSACFG::UnreachableValue>(&m_graph.valueInfo(_value));
+		return (valueInfo) ? true : false;
+	};
+
+	// Remove all entries from unreachable nodes from the graph.
+	for (SSACFG::BlockId blockId: reachabilityCheck.visited)
+	{
+		auto& block = m_graph.block(blockId);
+
+		std::set<SSACFG::ValueId> maybeTrivialPhi;
+		for (auto it = block.entries.begin(); it != block.entries.end();)
+			if (reachabilityCheck.visited.count(*it))
+				it++;
+			else
+				it = block.entries.erase(it);
+		for (auto phi: block.phis)
+			if (auto* phiInfo = std::get_if<SSACFG::PhiValue>(&m_graph.valueInfo(phi)))
+				cxx20::erase_if(phiInfo->arguments, [&](SSACFG::ValueId _arg) {
+					if (isUnreachableValue(_arg))
+					{
+						maybeTrivialPhi.insert(phi);
+						return true;
+					}
+					return false;
+				});
+
+		// After removing a phi argument, we might end up with a trivial phi that can be removed.
+		for (auto phi: maybeTrivialPhi)
+			tryRemoveTrivialPhi(phi);
+	}
 }
 
 void SSAControlFlowGraphBuilder::buildFunctionGraphs(
@@ -276,6 +262,7 @@ void SSAControlFlowGraphBuilder::buildFunctionGraphs(
 		cfg.exits.insert(builder.m_currentBlock);
 		// Artificial explicit function exit (`leave`) at the end of the body.
 		builder(Leave{debugDataOf(*functionDefinition)});
+		builder.cleanUnreachable();
 	}
 }
 
@@ -293,7 +280,7 @@ std::vector<std::tuple<Scope::Function const*, FunctionDefinition const*>> SSACo
 	if (!builder.blockInfo(builder.m_currentBlock).sealed)
 		builder.sealBlock(builder.m_currentBlock);
 	_cfg.block(builder.m_currentBlock).exit = SSACFG::BasicBlock::MainExit{};
-
+	builder.cleanUnreachable();
 	return builder.m_functionDefinitions;
 }
 
@@ -626,22 +613,27 @@ SSACFG::ValueId SSAControlFlowGraphBuilder::readVariableRecursive(Scope::Variabl
 	auto& block = m_graph.block(_block);
 	auto& info = blockInfo(_block);
 
-	if (info.sealed && block.entries.size() == 1)
-		return readVariable(_variable, *block.entries.begin());
-
-	SSACFG::ValueId phi = m_graph.newPhi(_block);
-	block.phis.insert(phi);
-	if (info.sealed)
+	SSACFG::ValueId val;
+	if (!info.sealed)
 	{
-		writeVariable(_variable, _block, phi);
-		phi = addPhiOperands(_variable, phi);
+		// incomplete block
+		val = m_graph.newPhi(_block);
+		block.phis.insert(val);
+		info.incompletePhis.emplace_back(val, std::ref(_variable));
 	}
+	else if (block.entries.size() == 1)
+		// one predecessor: no phi needed
+		val = readVariable(_variable, *block.entries.begin());
 	else
 	{
-		info.incompletePhis.emplace_back(phi, std::ref(_variable));
+		// Break potential cycles with operandless phi
+		val = m_graph.newPhi(_block);
+		block.phis.insert(val);
+		writeVariable(_variable, _block, val);
+		val = addPhiOperands(_variable, val);
 	}
-	writeVariable(_variable, _block, phi);
-	return phi;
+	writeVariable(_variable, _block, val);
+	return val;
 }
 
 SSACFG::ValueId SSAControlFlowGraphBuilder::addPhiOperands(Scope::Variable const& _variable, SSACFG::ValueId _phi)
@@ -651,104 +643,6 @@ SSACFG::ValueId SSAControlFlowGraphBuilder::addPhiOperands(Scope::Variable const
 	for (auto pred: m_graph.block(phi.block).entries)
 		phi.arguments.emplace_back(readVariable(_variable, pred));
 	return tryRemoveTrivialPhi(_phi);
-}
-
-SSACFG::ValueId SSAControlFlowGraphBuilder::tryRemoveTrivialPhi(SSACFG::ValueId _phi)
-{
-	// TODO: double-check if this is sane
-	yulAssert(std::holds_alternative<SSACFG::PhiValue>(m_graph.valueInfo(_phi)));
-	auto& phiInfo = std::get<SSACFG::PhiValue>(m_graph.valueInfo(_phi));
-
-	SSACFG::ValueId same;
-	for (SSACFG::ValueId arg: phiInfo.arguments)
-	{
-		if (arg == same || arg == _phi)
-			continue;
-		if (same.hasValue())
-			return _phi;
-		same = arg;
-	}
-
-	struct Use {
-		std::reference_wrapper<SSACFG::Operation> operation;
-		size_t inputIndex = std::numeric_limits<size_t>::max();
-	};
-	std::vector<Use> uses;
-	std::vector<bool> visited;
-	std::vector<SSACFG::ValueId> phiUses;
-	auto isVisited = [&](SSACFG::BlockId _block) -> bool {
-		if (_block.value < visited.size())
-			return visited.at(_block.value);
-		else
-			return false;
-	};
-	auto markVisited = [&](SSACFG::BlockId _block) {
-		if (visited.size() <= _block.value)
-			visited.resize(_block.value + 1);
-		visited[_block.value] = true;
-	};
-	// does this even need to be recursive? or can uses only be in the same or neighbouring blocks?
-	auto findUses = [&](SSACFG::BlockId _blockId, auto _recurse) -> void {
-		if (isVisited(_blockId))
-			return;
-		markVisited(_blockId);
-		auto& block = m_graph.block(_blockId);
-		for (auto blockPhi: block.phis)
-		{
-			if (blockPhi == _phi)
-				continue;
-			auto const* blockPhiInfo = std::get_if<SSACFG::PhiValue>(&m_graph.valueInfo(blockPhi));
-			yulAssert(blockPhiInfo);
-			bool usedInPhi = false;
-			for (auto input: blockPhiInfo->arguments)
-			{
-				if (input == _phi)
-					usedInPhi = true;
-			}
-			if (usedInPhi)
-				phiUses.emplace_back(blockPhi);
-		}
-		for (auto& op: block.operations)
-		{
-			// TODO: double check when phiVar occurs in outputs here and what to do about it.
-			if (op.outputs.size() == 1 && op.outputs.front() == _phi)
-				continue;
-			// TODO: check if this always hold - and if so if the assertion is really valuable.
-			for (auto& output: op.outputs)
-				yulAssert(output != _phi);
-
-			for (auto&& [n, input]: op.inputs | ranges::views::enumerate)
-				if (input == _phi)
-					uses.emplace_back(Use{std::ref(op), n});
-		}
-		block.forEachExit([&](SSACFG::BlockId _block) {
-			_recurse(_block, _recurse);
-		});
-	};
-	auto phiBlock = phiInfo.block;
-	m_graph.block(phiBlock).phis.erase(_phi);
-	findUses(phiBlock, findUses);
-
-	if (!same.hasValue())
-		// This will happen for unreachable paths.
-		// TODO: check how best to deal with this
-		same = m_graph.unreachableValue();
-
-	for (auto& use: uses)
-		use.operation.get().inputs.at(use.inputIndex) = same;
-	for (auto phiUse: phiUses)
-	{
-		auto* blockPhiInfo = std::get_if<SSACFG::PhiValue>(&m_graph.valueInfo(phiUse));
-		yulAssert(blockPhiInfo);
-		for (auto& arg: blockPhiInfo->arguments)
-			if (arg == _phi)
-				arg = same;
-	}
-
-	for (auto phiUse: phiUses)
-		tryRemoveTrivialPhi(phiUse);
-
-	return same;
 }
 
 void SSAControlFlowGraphBuilder::writeVariable(Scope::Variable const& _variable, SSACFG::BlockId _block, SSACFG::ValueId _value)

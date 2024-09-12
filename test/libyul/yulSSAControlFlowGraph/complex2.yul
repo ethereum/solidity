@@ -121,7 +121,7 @@
 // Block1_9 [label="\
 // Block 9\nsstore(1028, 4)\l\
 // "];
-// Block1_9Exit [label="FunctionReturn[v17]"];
+// Block1_9Exit [label="FunctionReturn[0]"];
 // Block1_9 -> Block1_9Exit;
 // Block1_10 [label="\
 // Block 10\nv20 := eq(2, v6)\l\
@@ -184,7 +184,7 @@
 // Block1_20 [label="\
 // Block 20\nsstore(v43, 0)\l\
 // "];
-// Block1_20Exit [label="FunctionReturn[v45]"];
+// Block1_20Exit [label="FunctionReturn[0]"];
 // Block1_20 -> Block1_20Exit;
 // Block1_21 [label="\
 // Block 21\nsstore(65535, 255)\l\
