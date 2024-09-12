@@ -21,6 +21,7 @@
 #include <libsolutil/Visitor.h>
 #include <range/v3/to_container.hpp>
 #include <range/v3/view/drop_last.hpp>
+#include <range/v3/view/filter.hpp>
 #include <range/v3/view/reverse.hpp>
 #include <range/v3/view/zip.hpp>
 
@@ -39,7 +40,10 @@ bool SSACFGValidator::consumeBlock(Block const& _block)
 {
 	ScopedSaveAndRestore saveScope(m_scope, m_context.analysisInfo.scopes.at(&_block).get());
 	for (auto const& stmt: _block.statements)
-		if (!consumeStatement(stmt))
+		if (std::holds_alternative<FunctionDefinition>(stmt) && !consumeStatement(stmt))
+			return false;
+	for (auto const& stmt: _block.statements)
+		if (!std::holds_alternative<FunctionDefinition>(stmt) && !consumeStatement(stmt))
 			return false;
 	return true;
 }
@@ -86,8 +90,16 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 			SSACFGValidator nestedValidator(nestedContext);
 			nestedValidator.m_currentBlock = functionGraph->entry;
 			nestedValidator.m_currentOperation = 0;
-			// TODO: handle arguments/results
+			yulAssert(_function.parameters.size() == functionGraph->arguments.size());
+			yulAssert(_function.returnVariables.size() == functionGraph->returns.size());
+			nestedValidator.m_currentVariableValues = functionGraph->arguments
+				| ranges::views::transform([](auto const& tup) { return std::make_pair(&std::get<0>(tup).get(), std::get<1>(tup)); })
+				| ranges::to<std::map>;
+			for (auto const& returnVar: functionGraph->returns)
+				nestedValidator.m_currentVariableValues[&returnVar.get()] = {0};
 			nestedValidator.consumeBlock(_function.body);
+			for (auto const& returnVar: functionGraph->returns)
+				yulAssert(nestedValidator.m_currentVariableValues.at(&returnVar.get()).hasValue());
 			return true;
 		},
 		[&](If const& _if) {
@@ -117,7 +129,7 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 			return false;
 		},
 		[&](Switch const& _switch) {
-			// todo this will be different for EOF
+			// todo this will be different for EOF and can probably be simplified
 			if(auto cond = consumeUnaryExpression(*_switch.expression))
 			{
 				auto const validateGhostEq = [this, cond](SSACFG::Operation const& _operation) {
@@ -286,7 +298,13 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 			return false;
 		},
 		[&](Leave const&) {
-			// TODO: expect function exit and consolidate state
+			auto const& functionReturn = expectFunctionReturn();
+			yulAssert(functionReturn.returnValues.size() == m_context.cfg.returns.size());
+			for(auto&& [variable, value]: ranges::zip_view(m_context.cfg.returns, functionReturn.returnValues))
+			{
+				yulAssert(m_currentVariableValues.count(&variable.get()));
+				m_currentVariableValues[&variable.get()] = value;
+			}
 			return false;
 		},
 		[&](Block const& _nestedBlock) {
@@ -340,6 +358,14 @@ SSACFG::BasicBlock::Jump const& SSACFGValidator::expectUnconditionalJump() const
 	auto const* exit = std::get_if<SSACFG::BasicBlock::Jump>(&currentBlock().exit);
 	yulAssert(exit);
 	return *exit;
+}
+
+SSACFG::BasicBlock::FunctionReturn const& SSACFGValidator::expectFunctionReturn() const
+{
+	yulAssert(m_currentOperation == currentBlock().operations.size());
+	auto const* functionReturn = std::get_if<SSACFG::BasicBlock::FunctionReturn>(&currentBlock().exit);
+	yulAssert(functionReturn);
+	return *functionReturn;
 }
 
 bool SSACFGValidator::validateCall(std::variant<SSACFG::BuiltinCall, SSACFG::Call> const& _kind, Identifier const& _functionName, size_t _numOutputs) const

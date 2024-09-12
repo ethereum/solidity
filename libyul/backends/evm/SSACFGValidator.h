@@ -62,6 +62,7 @@ private:
 
 	SSACFG::BasicBlock::ConditionalJump const& expectConditionalJump() const;
 	SSACFG::BasicBlock::Jump const& expectUnconditionalJump() const;
+	SSACFG::BasicBlock::FunctionReturn const& expectFunctionReturn() const;
 	/// Applys the phi functions of @a _target assuming an entry from @a _source.
 	std::map<Scope::Variable const*, SSACFG::ValueId> applyPhis(SSACFG::BlockId _source, SSACFG::BlockId _target);
 
