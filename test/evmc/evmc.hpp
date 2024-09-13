@@ -20,9 +20,6 @@ static_assert(EVMC_LATEST_STABLE_REVISION <= EVMC_MAX_REVISION,
 /// @ingroup cpp
 namespace evmc
 {
-/// String view of uint8_t chars.
-using bytes_view = std::basic_string_view<uint8_t>;
-
 /// The big-endian 160-bit hash suitable for keeping an Ethereum address.
 ///
 /// This type wraps C ::evmc_address to make sure objects of this type are always initialized.

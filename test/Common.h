@@ -34,13 +34,13 @@ namespace solidity::test
 
 #ifdef _WIN32
 static constexpr auto evmoneFilename = "evmone.dll";
-static constexpr auto evmoneDownloadLink = "https://github.com/ethereum/evmone/releases/download/v0.11.0/evmone-0.11.0-windows-amd64.zip";
+static constexpr auto evmoneDownloadLink = "https://github.com/ethereum/evmone/releases/download/v0.12.0/evmone-0.12.0-windows-amd64.zip";
 #elif defined(__APPLE__)
 static constexpr auto evmoneFilename = "libevmone.dylib";
-static constexpr auto evmoneDownloadLink = "https://github.com/ethereum/evmone/releases/download/v0.11.0/evmone-0.11.0-darwin-x86_64.tar.gz";
+static constexpr auto evmoneDownloadLink = "https://github.com/ethereum/evmone/releases/download/v0.12.0/evmone-0.12.0-darwin-x86_64.tar.gz";
 #else
 static constexpr auto evmoneFilename = "libevmone.so";
-static constexpr auto evmoneDownloadLink = "https://github.com/ethereum/evmone/releases/download/v0.11.0/evmone-0.11.0-linux-x86_64.tar.gz";
+static constexpr auto evmoneDownloadLink = "https://github.com/ethereum/evmone/releases/download/v0.12.0/evmone-0.12.0-linux-x86_64.tar.gz";
 #endif
 
 struct ConfigException: public util::Exception {};

@@ -9,16 +9,16 @@ version: 2.1
 parameters:
   ubuntu-2004-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-24
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:b8b645fa7ab40d55f2d16eac295d16ca01ec51d32be7d668ae6eaecd47dbd763"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-25
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:b3f321fb2d8e7a41ca9328672061c1840e5cd3fb5be503aa158d1c508deacf0a"
   ubuntu-2204-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2204-9
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:80247de9655b1f39afd4ac22b14266bc9b9a0d64b283ae8fb9cb5b8250e4e77d"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2204-10
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:ba2d878c26d681a7d6c1922258b47c2e5dd61d0e46ab4c6a4862b473e61997b6"
   ubuntu-2204-clang-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2204.clang-8
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:2662376fe0e1ec2d346495a19a6d64508c1048d5a7325d8600c33c343fa64a0f"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2204.clang-9
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:703cdad5fa5c8686a3080ebb1aea1485ded2446561bf56e2945a87f2fa20a446"
   ubuntu-2404-docker-image:
     type: string
     # solbuildpackpusher/solidity-buildpack-deps:ubuntu2404-1

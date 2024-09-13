@@ -1,6 +1,6 @@
 # EVMC
 
-This is an import of [EVMC](https://github.com/ethereum/evmc) version [11.0.0](https://github.com/ethereum/evmc/releases/tag/v11.0.0).
+This is an import of [EVMC](https://github.com/ethereum/evmc) version [12.0.0](https://github.com/ethereum/evmc/releases/tag/v12.0.0).
 
 Steps when upgrading:
 - Copy all from [include/evmc](https://github.com/ethereum/evmc/tree/master/include/evmc) to [test/evmc](https://github.com/ethereum/solidity/tree/develop/test/evmc)
