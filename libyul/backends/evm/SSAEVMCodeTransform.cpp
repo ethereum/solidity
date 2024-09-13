@@ -43,7 +43,8 @@
 using namespace solidity;
 using namespace solidity::yul;
 
-namespace {
+namespace
+{
 
 std::string ssaCfgVarToString(SSACFG const& _ssacfg, SSACFG::ValueId _var)
 {
@@ -238,9 +239,8 @@ void SSAEVMCodeTransform::operator()(SSACFG::BlockId _block)
 			if (!((m_stack | ranges::to<std::set<StackSlot>>) == (originalLiveOut | ranges::to<std::set<StackSlot>>)))
 				same = false;
 		}
-		if (!same) {
+		if (!same)
 			std::cout << "CLEAN UP STACK " << stackToString(m_stack) << " <=> " << stackToString(originalLiveOut | ranges::to<std::vector<StackSlot>>) <<  " (current block: " << m_currentBlock.value << ")" << std::endl;
-		}
 		yulAssert(same);
 		yulAssert(originalLiveOut.size() == m_stack.size());
 		yulAssert((m_stack | ranges::to<std::set<StackSlot>>) == (originalLiveOut | ranges::to<std::set<StackSlot>>));
@@ -332,7 +332,7 @@ void SSAEVMCodeTransform::operator()(SSACFG::BlockId _block)
 				{
 					auto const& phiInfo = std::get<SSACFG::PhiValue>(m_cfg.valueInfo(phi));
 
-					if(*value == phiInfo.arguments.at(phiArgumentIndex))
+					if (*value == phiInfo.arguments.at(phiArgumentIndex))
 					{
 						skip = false;
 						break;
@@ -479,7 +479,7 @@ void SSAEVMCodeTransform::operator()(SSACFG::Operation const& _operation, std::s
 			);
 			if (returnLabel)
 				m_assembly.appendLabel(*returnLabel);
-	   },
+		},
 	}, _operation.kind);
 
 	for (size_t i = 0; i < _operation.inputs.size() + (returnLabel ? 1 : 0); ++i)
@@ -617,7 +617,7 @@ void SSAEVMCodeTransform::createExactStack(std::vector<StackSlot> const& _target
 	auto swapTopToTargetOrPop = [&]() {
 		auto top = m_stack.back();
 		// Check if the top should be somewhere else where it not already is.
-		for(auto targetPos: targetPositions[top])
+		for (auto targetPos: targetPositions[top])
 			if (targetPos < m_stack.size() - 1 && m_stack[targetPos] != top)
 			{
 				// If so swap it there.
@@ -645,7 +645,7 @@ void SSAEVMCodeTransform::createExactStack(std::vector<StackSlot> const& _target
 	do
 	{
 		// As long as stack top isn't final
-		while(m_stack.size() > _target.size() || (!m_stack.empty() && _target[m_stack.size() - 1] != m_stack.back()))
+		while (m_stack.size() > _target.size() || (!m_stack.empty() && _target[m_stack.size() - 1] != m_stack.back()))
 		{
 			std::cout << "  ..." << stackToString(m_stack) << std::endl;
 
@@ -655,7 +655,7 @@ void SSAEVMCodeTransform::createExactStack(std::vector<StackSlot> const& _target
 
 		// Stack top is final. If everything else is good, terminate - otherwise bring up one of the slots that are still needed in the target and continue.
 	} while ([&](){
-		 std::cout << "  ...(2)..." << stackToString(m_stack) << std::endl;
+		std::cout << "  ...(2)..." << stackToString(m_stack) << std::endl;
 		for (auto [pos, slots]: ranges::zip_view(m_stack, _target) | ranges::views::enumerate)
 		{
 			auto [stack, target] = slots;
@@ -667,7 +667,7 @@ void SSAEVMCodeTransform::createExactStack(std::vector<StackSlot> const& _target
 		}
 		return false;
 	}());
-	while(m_stack.size() < _target.size())
+	while (m_stack.size() < _target.size())
 		bringUpSlot(_target[m_stack.size()]);
 
 	yulAssert(m_stack.size() == _target.size());
