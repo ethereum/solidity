@@ -23,13 +23,13 @@
 
 #include <libyul/AST.h>
 #include <libyul/backends/evm/EVMDialect.h>
-#include <libyul/backends/evm/ControlFlowGraph.h>
+#include <libyul/backends/evm/ControlFlow.h>
+#include <libyul/backends/evm/SSACFGLiveness.h>
 #include <libyul/backends/evm/SSAControlFlowGraph.h>
 #include <libyul/Exceptions.h>
 #include <libyul/Scope.h>
 
 #include <optional>
-#include <stack>
 
 namespace solidity::langutil
 {
@@ -39,12 +39,6 @@ class ErrorReporter;
 namespace solidity::yul
 {
 struct AsmAnalysisInfo;
-
-struct BlockLivenessData {
-	std::set<SSACFG::ValueId> liveIn;
-	std::list<std::set<SSACFG::ValueId>> operationLiveOuts;
-	std::set<SSACFG::ValueId> liveOut;
-};
 
 template<typename T, typename IdType>
 class IdContainer
@@ -72,8 +66,6 @@ private:
 	std::vector<T> m_data;
 };
 
-using LivenessData = IdContainer<BlockLivenessData, SSACFG::BlockId>;
-
 class SSAEVMCodeTransform
 {
 public:
@@ -91,30 +83,23 @@ public:
 	);
 
 	/// Generate code for the function call @a _call. Only public for using with std::visit.
-	void operator()(CFG::FunctionCall const& _call);
+	void operator()(SSACFG::Call const& _call);
 	/// Generate code for the builtin call @a _call. Only public for using with std::visit.
-	void operator()(CFG::BuiltinCall const& _call);
-	/// Generate code for the assignment @a _assignment. Only public for using with std::visit.
-	void operator()(CFG::Assignment const& _assignment);
+	void operator()(SSACFG::BuiltinCall const& _call);
 private:
 	SSAEVMCodeTransform(
 		AbstractAssembly& _assembly,
 		BuiltinContext& _builtinContext,
 		UseNamedLabels _useNamedLabelsForFunctions,
-		SSACFG const& _ssacfg,
-		LivenessData const& _livenessData
+		SSACFG const& _cfg,
+		SSACFGLiveness const& _liveness
 	);
 
 	AbstractAssembly::LabelID getFunctionLabel(Scope::Function const& _function);
 
 	void operator()(SSACFG::BlockId _block);
 	void operator()(SSACFG::Operation const& _operation, std::set<SSACFG::ValueId> const& _liveOut);
-
-	void operator()(SSACFG::FunctionInfo const& _functionInfo);
-
-	BlockLivenessData const& liveness(SSACFG::BlockId _block) const {
-		return m_livenessData[_block];
-	}
+	void operator()(Scope::Function const& _function, SSACFG const& _functionGraph);
 
 	using StackSlot = std::variant<SSACFG::ValueId, AbstractAssembly::LabelID>;
 	struct BlockData {
@@ -137,9 +122,9 @@ private:
 	AbstractAssembly& m_assembly;
 	BuiltinContext& m_builtinContext;
 	SSACFG const& m_cfg;
-	LivenessData const& m_livenessData;
+	SSACFGLiveness const& m_liveness;
 	std::vector<StackTooDeepError> m_stackErrors;
-	std::map<SSACFG::FunctionInfo const*, AbstractAssembly::LabelID> const m_functionLabels;
+	std::map<Scope::Function const*, AbstractAssembly::LabelID> const m_functionLabels;
 	std::vector<StackSlot> m_stack;
 	IdContainer<BlockData, SSACFG::BlockId> m_blockData;
 

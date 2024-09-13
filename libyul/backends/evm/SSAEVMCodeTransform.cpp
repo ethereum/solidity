@@ -18,6 +18,7 @@
 #include <libyul/backends/evm/SSAEVMCodeTransform.h>
 
 #include <libyul/backends/evm/ControlFlowGraphBuilder.h>
+#include <libyul/backends/evm/SSACFGLiveness.h>
 #include <libyul/backends/evm/SSAControlFlowGraphBuilder.h>
 #include <libyul/backends/evm/StackHelpers.h>
 #include <libyul/backends/evm/StackLayoutGenerator.h>
@@ -67,219 +68,6 @@ std::string ssaCfgVarToString(SSACFG const& _ssacfg, SSACFG::ValueId _var)
 	);
 }
 
-void debugPrintCFG(SSACFG const& _ssacfg, LivenessData const& _liveness) {
-		auto varToString = [&](SSACFG::ValueId _var) {
-			return ssaCfgVarToString(_ssacfg, _var);
-		};
-		auto printGraph = [&](SSACFG::BlockId _root) {
-			util::BreadthFirstSearch<SSACFG::BlockId> bfs{{{_root}}};
-			bfs.run([&](SSACFG::BlockId _blockId, auto _addChild) {
-						//yulAssert(builder.blockInfo(_blockId).sealed, "Some block isn't sealed.");
-						auto const& block = _ssacfg.block(_blockId);
-						std::cout << "Block b" << _blockId.value << ":" << std::endl;
-						std::cout << "[ " << util::joinHumanReadable(_liveness[_blockId].liveIn | ranges::view::transform(varToString)) << " ] => [ "
-								  <<  util::joinHumanReadable(_liveness[_blockId].liveOut | ranges::view::transform(varToString)) << " ]" << std::endl;
-						for(auto phi: block.phis)
-						{
-							auto* phiInfo = std::get_if<SSACFG::PhiValue>(&_ssacfg.valueInfo(phi));
-							yulAssert(phiInfo);
-							std::cout << "  " << varToString(phi) << " := phi(" << std::endl;
-							yulAssert(_ssacfg.block(phiInfo->block).entries.size() == phiInfo->arguments.size());
-							for (auto&& [entry, input]: ranges::zip_view(_ssacfg.block(phiInfo->block).entries, phiInfo->arguments))
-								std::cout << "    b" << entry.value << " => " << varToString(input) << std::endl;
-							std::cout << "  )" << std::endl;
-						}
-						yulAssert(block.operations.size() == _liveness[_blockId].operationLiveOuts.size());
-						for (auto&& [op, liveOut]: ranges::zip_view(block.operations, _liveness[_blockId].operationLiveOuts))
-						{
-							std::cout << "  ";
-							if (!op.outputs.empty())
-								std::cout << util::joinHumanReadable(op.outputs | ranges::view::transform(varToString)) << " := ";
-
-							std::visit(util::GenericVisitor{
-										   [&](SSACFG::Call const& _call) {
-											   std::cout << _call.function.get().name.str();
-											   std::cout << "(";
-											   std::cout << util::joinHumanReadable(op.inputs | ranges::view::reverse | ranges::view::transform(varToString));
-											   std::cout << ")";
-										   },
-										   [&](SSACFG::BuiltinCall const& _call) {
-											   std::cout << _call.builtin.get().name.str();
-											   std::cout << "(";
-											   std::cout << util::joinHumanReadable(op.inputs | ranges::view::reverse | ranges::view::transform(varToString));
-											   std::cout << ")";
-										   }
-									   }, op.kind);
-							std::cout << "    [LIVEOUT: " << util::joinHumanReadable(liveOut | ranges::view::transform(varToString)) << "]";
-							std::cout << std::endl;
-						}
-						std::visit(util::GenericVisitor{
-									   [&](SSACFG::BasicBlock::MainExit const&)
-									   {
-										   std::cout << "  [MAIN EXIT]" << std::endl;
-									   },
-									   [&](SSACFG::BasicBlock::Jump const& _jump)
-									   {
-										   std::cout << "  jump(b" << _jump.target.value << ")" << std::endl;
-										   _addChild(_jump.target);
-									   },
-									   [&](SSACFG::BasicBlock::ConditionalJump const& _conditionalJump)
-									   {
-										   std::cout << "  jumpif(" << varToString(_conditionalJump.condition) << ":" << std::endl;
-										   std::cout << "    true => b" << _conditionalJump.nonZero.value << std::endl;
-										   std::cout << "    false => b" <<  _conditionalJump.zero.value << std::endl;
-										   std::cout << "  )" << std::endl;
-										   _addChild(_conditionalJump.nonZero);
-										   _addChild(_conditionalJump.zero);
-									   },
-									   [&](SSACFG::BasicBlock::JumpTable const& _jumpTable)
-									   {
-										   std::cout << "  jumpv(" << varToString(_jumpTable.value) << ":" << std::endl;
-										   for (auto [v, b]: _jumpTable.cases)
-										   {
-											   std::cout << "    " << v << " => b" << b.value << std::endl;
-											   _addChild(b);
-										   }
-										   _addChild(_jumpTable.defaultCase);
-										   std::cout << "    _ => b" << _jumpTable.defaultCase.value << std::endl;
-										   std::cout << "  )" << std::endl;
-									   },
-									   [&](SSACFG::BasicBlock::FunctionReturn const& _return)
-									   {
-										   std::cout << "  leave(" << util::joinHumanReadable(_return.returnValues | ranges::view::transform(varToString)) << ")" << std::endl;
-									   },
-									   [&](SSACFG::BasicBlock::Terminated const&) { std::cout << "  [TERMINATED]" << std::endl; }
-								   }, block.exit);
-
-						std::cout << std::endl;
-					});
-		};
-		printGraph(SSACFG::BlockId{0});
-		for (auto function: _ssacfg.functions)
-		{
-			auto& info = _ssacfg.functionInfos.at(&function.get());
-			std::cout << "FUNCTION " << function.get().name.str() << std::endl;
-			printGraph(info.entry);
-		}
-}
-
-// TODO: note: this is a naive calculation with very bad complexity that
-// should be replaced by a proper algorithm exploiting the SSA properties.
-// There are linear-time algorithms for this.
-LivenessData calculateLiveness(SSACFG& _ssacfg)
-{
-	LivenessData blockData(_ssacfg.numBlocks());
-	auto analyze = [&](SSACFG::BlockId _root) {
-		while(true)
-		{
-			bool allSame = true;
-
-			std::set<SSACFG::BlockId> visited;
-			std::list<SSACFG::BlockId> toVisit{{_root}};
-
-			std::vector<SSACFG::BlockId> dfsOrder;
-			auto dfs = [&, visited = std::set<SSACFG::BlockId>{}](SSACFG::BlockId _block, auto& _recurse) mutable -> void {
-				if (visited.count(_block))
-					return;
-				visited.emplace(_block);
-				dfsOrder.emplace_back(_block);
-				_ssacfg.block(_block).forEachExit([&](SSACFG::BlockId _exit) { return _recurse(_exit, _recurse); });
-			};
-			dfs(_root, dfs);
-
-			for (SSACFG::BlockId block: dfsOrder | ranges::view::reverse)
-			{
-				auto previousLiveOut = blockData[block].liveOut;
-				auto previousLiveIn = blockData[block].liveIn;
-				std::set<SSACFG::ValueId> innerBlockLive;
-				std::visit(util::GenericVisitor{
-							   [&](SSACFG::BasicBlock::MainExit const&) {
-							   },
-							   [&](SSACFG::BasicBlock::Jump const&) {},
-							   [&](SSACFG::BasicBlock::ConditionalJump const& _jump) { innerBlockLive.emplace(_jump.condition); },
-							   [&](SSACFG::BasicBlock::JumpTable const& _jump) { innerBlockLive.emplace(_jump.value); },
-							   [&](SSACFG::BasicBlock::FunctionReturn const& _return)
-							   {
-								   blockData[block].liveOut += _return.returnValues | ranges::to<std::set>;
-							   },
-							   [&](SSACFG::BasicBlock::Terminated const&)
-							   {
-							   },
-						   }, _ssacfg.block(block).exit);
-				_ssacfg.block(block).forEachExit([&](SSACFG::BlockId _exit) {
-					std::optional<size_t> entryIndex;
-					for (auto&& [i, exitEntries]: _ssacfg.block(_exit).entries | ranges::view::enumerate)
-						if (exitEntries == block)
-						{
-							yulAssert(!entryIndex.has_value());
-							entryIndex = i;
-						}
-					yulAssert(entryIndex.has_value());
-					blockData[block].liveOut += blockData[_exit].liveIn;
-					for (auto phi: _ssacfg.block(_exit).phis)
-					{
-						auto const* phiInfo = std::get_if<SSACFG::PhiValue>(&_ssacfg.valueInfo(phi));
-						yulAssert(phiInfo);
-						blockData[block].liveOut.insert(phiInfo->arguments.at(*entryIndex));
-					}
-				});
-
-				std::set<SSACFG::ValueId> invars = blockData[block].liveOut;
-				invars += innerBlockLive;
-				blockData[block].operationLiveOuts.resize(_ssacfg.block(block).operations.size());
-				for(auto&& [op, opLiveOut]: ranges::zip_view(_ssacfg.block(block).operations, blockData[block].operationLiveOuts) | ranges::view::reverse)
-				{
-					opLiveOut = invars;
-					invars -= op.outputs;
-					invars += op.inputs;
-				}
-				for (auto phi: _ssacfg.block(block).phis)
-				{
-					auto* phiInfo = std::get_if<SSACFG::PhiValue>(&_ssacfg.valueInfo(phi));
-					yulAssert(phiInfo);
-					invars.erase(phi);
-				}
-				// TODO: don't add them in the first place
-				for (auto it = invars.begin(); it != invars.end();)
-				{
-					if (std::holds_alternative<SSACFG::LiteralValue>(_ssacfg.valueInfo(*it)))
-						it = invars.erase(it);
-					else
-						++it;
-				}
-				// TODO: don't add them in the first place
-				{
-					auto& liveOut = blockData[block].liveOut;
-					for (auto it = liveOut.begin(); it != liveOut.end();)
-					{
-						if (std::holds_alternative<SSACFG::LiteralValue>(_ssacfg.valueInfo(*it)))
-							it = liveOut.erase(it);
-						else
-							++it;
-					}
-				}
-				blockData[block].liveIn += invars;
-
-				if (blockData[block].liveOut != previousLiveOut || blockData[block].liveIn != previousLiveIn)
-					allSame = false;
-			}
-
-			// Continue until the sets all saturate. Horrible runtime
-			// TODO: replace by proper SSA-based liveness analysis.
-			if (allSame)
-				break;
-		}
-	};
-
-	analyze({SSACFG::BlockId{0}});
-	for (auto function: _ssacfg.functions)
-	{
-		auto const& info = _ssacfg.functionInfos.at(&function.get());
-		analyze(info.entry);
-	}
-	return blockData;
-}
-
 }
 
 std::vector<StackTooDeepError> SSAEVMCodeTransform::run(
@@ -291,23 +79,41 @@ std::vector<StackTooDeepError> SSAEVMCodeTransform::run(
 	UseNamedLabels _useNamedLabelsForFunctions
 )
 {
-	std::unique_ptr<SSACFG> ssacfg = SSAControlFlowGraphBuilder::build(_analysisInfo, _dialect, _block);
-	auto const liveness = calculateLiveness(*ssacfg);
-	debugPrintCFG(*ssacfg, liveness);
+	std::unique_ptr<ControlFlow> controlFlow = SSAControlFlowGraphBuilder::build(_analysisInfo, _dialect, _block);
 
-	SSAEVMCodeTransform optimizedCodeTransform(
+	SSACFGLiveness liveness(*controlFlow->mainGraph);
+	SSAEVMCodeTransform mainCodeTransform(
 		_assembly,
 		_builtinContext,
 		_useNamedLabelsForFunctions,
-		*ssacfg,
+		*controlFlow->mainGraph,
 		liveness
 	);
+
 	// Force main entry block to start from an empty stack.
-	optimizedCodeTransform.blockData(SSACFG::BlockId{0}).stackIn = std::make_optional(std::vector<StackSlot>{});
-	optimizedCodeTransform(SSACFG::BlockId{0});
-	for (auto function: ssacfg->functions)
-		optimizedCodeTransform(ssacfg->functionInfos.at(&function.get()));
-	return std::move(optimizedCodeTransform.m_stackErrors);
+	mainCodeTransform.blockData(SSACFG::BlockId{0}).stackIn = std::make_optional(std::vector<StackSlot>{});
+	mainCodeTransform(SSACFG::BlockId{0});
+
+	std::vector<StackTooDeepError> stackErrors;
+	if (!mainCodeTransform.m_stackErrors.empty())
+		stackErrors = std::move(mainCodeTransform.m_stackErrors);
+
+	for (auto const& [function, functionGraph]: controlFlow->functionGraphMapping)
+	{
+		SSACFGLiveness functionLiveness(*functionGraph);
+		SSAEVMCodeTransform functionCodeTransform(
+			_assembly,
+			_builtinContext,
+			_useNamedLabelsForFunctions,
+			*functionGraph,
+			functionLiveness
+		);
+		functionCodeTransform(*function, *functionGraph);
+		if (!functionCodeTransform.m_stackErrors.empty())
+			stackErrors.insert(stackErrors.end(), functionCodeTransform.m_stackErrors.begin(), functionCodeTransform.m_stackErrors.end());
+	}
+
+	return stackErrors;
 }
 
 SSAEVMCodeTransform::SSAEVMCodeTransform(
@@ -315,28 +121,28 @@ SSAEVMCodeTransform::SSAEVMCodeTransform(
 	BuiltinContext& _builtinContext,
 	UseNamedLabels _useNamedLabelsForFunctions,
 	SSACFG const& _cfg,
-	LivenessData const& _livenessData
+	SSACFGLiveness const& _liveness
 ):
 	m_assembly(_assembly),
 	m_builtinContext(_builtinContext),
 	m_cfg(_cfg),
-	m_livenessData(_livenessData),
+	m_liveness(_liveness),
 	m_functionLabels([&](){
-		std::map<SSACFG::FunctionInfo const*, AbstractAssembly::LabelID> functionLabels;
-		std::set<YulString> assignedFunctionNames;
-		for (auto function: m_cfg.functions)
+		std::map<Scope::Function const*, AbstractAssembly::LabelID> functionLabels;
+
+		if (_cfg.function)
 		{
-			auto const& functionInfo = m_cfg.functionInfos.at(&function.get());
-			bool nameAlreadySeen = !assignedFunctionNames.insert(function.get().name).second;
+			std::set<YulString> assignedFunctionNames;
+			bool nameAlreadySeen = !assignedFunctionNames.insert(_cfg.function->name).second;
 			if (_useNamedLabelsForFunctions == UseNamedLabels::YesAndForceUnique)
 				yulAssert(!nameAlreadySeen);
 			bool useNamedLabel = _useNamedLabelsForFunctions != UseNamedLabels::Never && !nameAlreadySeen;
-			functionLabels[&functionInfo] = useNamedLabel ?
+			functionLabels[_cfg.function] = useNamedLabel ?
 				m_assembly.namedLabel(
-					function.get().name.str(),
-					function.get().arguments.size(),
-					function.get().returns.size(),
-					functionInfo.debugData ? functionInfo.debugData->astID : std::nullopt
+					_cfg.function->name.str(),
+					_cfg.arguments.size(),
+					_cfg.returns.size(),
+					_cfg.debugData ? _cfg.debugData->astID : std::nullopt
 				) :
 				m_assembly.newLabelId();
 		}
@@ -348,7 +154,7 @@ SSAEVMCodeTransform::SSAEVMCodeTransform(
 
 AbstractAssembly::LabelID SSAEVMCodeTransform::getFunctionLabel(Scope::Function const& _function)
 {
-	return m_functionLabels.at(&m_cfg.functionInfos.at(&_function));
+	return m_functionLabels.at(&_function);
 }
 
 void SSAEVMCodeTransform::pop()
@@ -395,14 +201,14 @@ void SSAEVMCodeTransform::operator()(SSACFG::BlockId _block)
 	m_assembly.setStackHeight(static_cast<int>(m_stack.size()));
 	std::cout << "Generate block b" << _block.value << ": " << stackToString(m_stack) << std::endl;
 
-	yulAssert(m_cfg.block(_block).operations.size() == liveness(_block).operationLiveOuts.size());
-	for (auto&& [op, liveOut]: ranges::zip_view(m_cfg.block(_block).operations, liveness(_block).operationLiveOuts))
+	yulAssert(m_cfg.block(_block).operations.size() == m_liveness.liveOuts().at(_block.value).size());
+	for (auto&& [op, liveOut]: ranges::zip_view(m_cfg.block(_block).operations, m_liveness.liveOuts()))
 		(*this)(op, liveOut);
 
 	auto restrictStackToSet = [&](std::set<SSACFG::ValueId> liveOut) {
 		auto originalLiveOut = liveOut;
 		std::vector<size_t> freeSlots;
-		for (auto&& [pos, slot]: m_stack | ranges::view::enumerate)
+		for (auto&& [pos, slot]: m_stack | ranges::views::enumerate)
 		{
 			if (std::holds_alternative<AbstractAssembly::LabelID>(slot))
 				freeSlots.emplace_back(pos);
@@ -441,7 +247,7 @@ void SSAEVMCodeTransform::operator()(SSACFG::BlockId _block)
 	};
 	auto cleanUpStack = [&](std::optional<SSACFG::ValueId> _additional = std::nullopt)
 	{
-		auto liveOut = liveness(_block).liveOut;
+		auto liveOut = m_liveness.liveOuts().at(_block.value);
 		if (_additional)
 			liveOut.emplace(*_additional);
 		restrictStackToSet(liveOut);
@@ -464,7 +270,7 @@ void SSAEVMCodeTransform::operator()(SSACFG::BlockId _block)
 				translation[phi] = phiInfo->arguments.at(phiArgumentIndex);
 		}
 
-		return _stack | ranges::view::transform([&](StackSlot const& _slot) {
+		return _stack | ranges::views::transform([&](StackSlot const& _slot) {
 			return util::valueOrDefault(translation, _slot, _slot);
 		}) | ranges::to<std::vector>;
 	};
@@ -490,7 +296,7 @@ void SSAEVMCodeTransform::operator()(SSACFG::BlockId _block)
 		return result;
 	};
 	auto inSetOfBlock = [&](SSACFG::BlockId _target) {
-		std::set<SSACFG::ValueId> result = liveness(_target).liveIn;
+		std::set<SSACFG::ValueId> result = m_liveness.liveIns().at(_target.value);
 		auto const& targetInfo = m_cfg.block(_target);
 		size_t phiArgumentIndex = [&]() {
 			auto idx = util::findOffset(targetInfo.entries, _block);
@@ -519,7 +325,7 @@ void SSAEVMCodeTransform::operator()(SSACFG::BlockId _block)
 		for (auto& slot: stack)
 		{
 			auto* value = std::get_if<SSACFG::ValueId>(&slot);
-			if (!liveness(_target).liveIn.count(*value))
+			if (!m_liveness.liveIns().at(_target.value).count(*value))
 			{
 				bool skip = true;
 				for (auto phi: m_cfg.block(_target).phis)
@@ -580,7 +386,7 @@ void SSAEVMCodeTransform::operator()(SSACFG::BlockId _block)
 			else
 			{
 				cleanUpStack(_conditionalJump.condition);
-				createStackTop({_conditionalJump.condition}, liveness(_block).liveOut);
+				createStackTop({_conditionalJump.condition}, m_liveness.liveOuts().at(_block.value));
 				m_stack.pop_back();
 				nonZeroLayout = currentStackToTargetStack(_conditionalJump.nonZero);
 			}
@@ -613,7 +419,7 @@ void SSAEVMCodeTransform::operator()(SSACFG::BlockId _block)
 					pop();
 			else
 			{
-				auto targetStack = _return.returnValues | ranges::view::drop_exactly(1) | ranges::to<std::vector<StackSlot>>;
+				auto targetStack = _return.returnValues | ranges::views::drop_exactly(1) | ranges::to<std::vector<StackSlot>>;
 				targetStack.emplace_back(_return.returnValues.front());
 				createExactStack(targetStack);
 				// Swap up return label.
@@ -668,7 +474,7 @@ void SSAEVMCodeTransform::operator()(SSACFG::Operation const& _operation, std::s
 			m_assembly.setSourceLocation(originLocationOf(_call));
 			m_assembly.appendJumpTo(
 				getFunctionLabel(_call.function),
-				static_cast<int>(_call.function.get().returns.size() - _call.function.get().arguments.size()) - (_call.canContinue ? 1 : 0),
+				static_cast<int>(_call.function.get().numReturns - _call.function.get().numArguments) - (_call.canContinue ? 1 : 0),
 				AbstractAssembly::JumpType::IntoFunction
 			);
 			if (returnLabel)
@@ -680,15 +486,16 @@ void SSAEVMCodeTransform::operator()(SSACFG::Operation const& _operation, std::s
 		m_stack.pop_back();
 	for (auto value: _operation.outputs)
 		m_stack.push_back(value);
-
 }
 
-void SSAEVMCodeTransform::operator()(SSACFG::FunctionInfo const& _functionInfo)
+void SSAEVMCodeTransform::operator()(Scope::Function const& _function, SSACFG const& _functionGraph)
 {
-	m_assembly.appendLabel(getFunctionLabel(_functionInfo.function));
+	m_assembly.appendLabel(getFunctionLabel(_function));
 	// Force function entry block to start from initial function layout.
-	blockData(_functionInfo.entry).stackIn = _functionInfo.arguments | ranges::view::transform([](auto&& _tuple) { return std::get<1>(_tuple); }) | ranges::to<std::vector<StackSlot>>;
-	(*this)(_functionInfo.entry);
+	blockData(_functionGraph.entry).stackIn = _functionGraph.arguments
+		| ranges::views::transform([](auto&& _tuple) { return std::get<1>(_tuple); })
+		| ranges::to<std::vector<StackSlot>>;
+	(*this)(_functionGraph.entry);
 }
 
 void SSAEVMCodeTransform::createStackTop(
@@ -696,8 +503,6 @@ void SSAEVMCodeTransform::createStackTop(
 	std::set<SSACFG::ValueId> const& _liveOut
 )
 {
-
-
 	std::cout << "Create Stack Top " << stackToString(_targetTop) << " from " << stackToString(m_stack) << " (live out: " << stackToString(_liveOut|ranges::to<std::vector<StackSlot>>) << ")" << " (Current block: " << m_currentBlock.value << ")" << std::endl;
 	createExactStack((_liveOut | ranges::to<std::vector<StackSlot>>) + _targetTop);
 	return;
@@ -712,7 +517,7 @@ void SSAEVMCodeTransform::createStackTop(
 				liveOut.emplace(*value);
 		}
 		std::vector<size_t> freeSlots;
-		for (auto&& [pos, slot]: m_stack | ranges::view::enumerate)
+		for (auto&& [pos, slot]: m_stack | ranges::views::enumerate)
 		{
 			if (std::holds_alternative<AbstractAssembly::LabelID>(slot))
 				freeSlots.emplace_back(pos);
@@ -748,7 +553,7 @@ void SSAEVMCodeTransform::createStackTop(
 					auto const* literal = std::get_if<SSACFG::LiteralValue>(&m_cfg.valueInfo(_value));
 					!literal || literal->value != 0 || !m_assembly.evmVersion().hasPush0()
 				)
-					if (auto depth = util::findOffset(m_stack | ranges::view::reverse, _value))
+					if (auto depth = util::findOffset(m_stack | ranges::views::reverse, _value))
 					{
 						if (*depth < 16)
 						{
@@ -778,7 +583,7 @@ void SSAEVMCodeTransform::bringUpSlot(StackSlot const& _slot)
 {
 	std::visit(util::GenericVisitor{
 		[&](SSACFG::ValueId _value) {
-			if (auto depth = util::findOffset(m_stack | ranges::view::reverse, _slot))
+			if (auto depth = util::findOffset(m_stack | ranges::views::reverse, _slot))
 			{
 				m_assembly.appendInstruction(evmasm::dupInstruction(static_cast<unsigned>(*depth + 1)));
 				m_stack.emplace_back(_slot);
@@ -806,7 +611,7 @@ void SSAEVMCodeTransform::createExactStack(std::vector<StackSlot> const& _target
 	// TODO: again a rather quick and dirty algorithm to be refined to an optimal one.
 	std::map<StackSlot, std::set<size_t>> targetPositions;
 
-	for (auto&& [pos, slot]: _target | ranges::view::enumerate)
+	for (auto&& [pos, slot]: _target | ranges::views::enumerate)
 		targetPositions[slot].insert(pos);
 
 	auto swapTopToTargetOrPop = [&]() {
@@ -834,7 +639,7 @@ void SSAEVMCodeTransform::createExactStack(std::vector<StackSlot> const& _target
 	std::cout << "Create exact stack " + stackToString(_target) << " from " << stackToString(m_stack) << " (Current block: " << m_currentBlock.value << ")" << std::endl;
 	std::cout << "Target positions: {" << std::endl;
 	for (auto&& [key, values]: targetPositions)
-		std::cout << "  " << stackSlotToString(key) << " => " << util::joinHumanReadable(values | ranges::view::transform([](auto x) { return std::to_string(x); })	) << std::endl;
+		std::cout << "  " << stackSlotToString(key) << " => " << util::joinHumanReadable(values | ranges::views::transform([](auto x) { return std::to_string(x); })	) << std::endl;
 	std::cout << "}" << std::endl;
 
 	do
@@ -851,7 +656,7 @@ void SSAEVMCodeTransform::createExactStack(std::vector<StackSlot> const& _target
 		// Stack top is final. If everything else is good, terminate - otherwise bring up one of the slots that are still needed in the target and continue.
 	} while ([&](){
 		 std::cout << "  ...(2)..." << stackToString(m_stack) << std::endl;
-		for (auto [pos, slots]: ranges::zip_view(m_stack, _target) | ranges::view::enumerate)
+		for (auto [pos, slots]: ranges::zip_view(m_stack, _target) | ranges::views::enumerate)
 		{
 			auto [stack, target] = slots;
 			if (stack != target)
@@ -871,7 +676,7 @@ void SSAEVMCodeTransform::createExactStack(std::vector<StackSlot> const& _target
 
 std::string SSAEVMCodeTransform::stackToString(std::vector<StackSlot> const& _stack)
 {
-	return "[" + util::joinHumanReadable(_stack | ranges::view::transform([&](StackSlot const& _slot) { return stackSlotToString(_slot); })) + "]";
+	return "[" + util::joinHumanReadable(_stack | ranges::views::transform([&](StackSlot const& _slot) { return stackSlotToString(_slot); })) + "]";
 }
 
 std::string SSAEVMCodeTransform::stackSlotToString(StackSlot const& _slot)
