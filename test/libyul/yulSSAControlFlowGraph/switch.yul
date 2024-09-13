@@ -11,10 +11,46 @@
     case 2 {
         x := calldataload(123)
     }
+    case 3 {
+        x := calldataload(99)
+    }
+    switch sload(0)
+    case 0 {
+        x := calldataload(77)
+    }
+    case 1 {
+        x := calldataload(88)
+    }
+    case 2 {
+        x := calldataload(123)
+    }
     default {
         x := calldataload(99)
     }
     sstore(x, 0)
+
+    switch sload(1)
+    default {
+        x := calldataload(4242)
+    }
+    sstore(x, 1)
+
+    switch sload(1)
+    case 55 {
+        revert(0, 0)
+    }
+    sstore(x, 1)
+
+    switch sload(1)
+    case 55 {
+        revert(0, 0)
+    }
+
+    switch sload(123)
+    case 1 { revert(0, 0) }
+    case 2 { revert(0, 0) }
+    case 3 { revert(0, 0) }
+    default { revert(0, 0) }
 }
 // ----
 // digraph SSACFG {

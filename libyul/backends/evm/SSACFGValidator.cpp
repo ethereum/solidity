@@ -19,9 +19,10 @@
 #include <libyul/backends/evm/SSACFGValidator.h>
 
 #include <libsolutil/Visitor.h>
+
+#include <range/v3/algorithm/all_of.hpp>
 #include <range/v3/to_container.hpp>
 #include <range/v3/view/drop_last.hpp>
-#include <range/v3/view/filter.hpp>
 #include <range/v3/view/reverse.hpp>
 #include <range/v3/view/zip.hpp>
 
@@ -48,6 +49,20 @@ bool SSACFGValidator::consumeBlock(Block const& _block)
 	return true;
 }
 
+void SSACFGValidator::consolidateVariables(VariableMapping const& _variables, std::vector<VariableMapping> const& _toBeConsolidated)
+{
+	for (auto const& [var, valueId]: _variables)
+	{
+		for (auto const& parent: _toBeConsolidated)
+		{
+			yulAssert(parent.count(var));
+			if (valueId != parent.at(var))
+				// set to no value, should be asserted against if that variable is consumed (eg as function arg)
+				m_currentVariableValues[var] = {};
+		}
+	}
+}
+
 bool SSACFGValidator::consumeStatement(Statement const& _statement)
 {
 	return std::visit(util::GenericVisitor{
@@ -64,7 +79,10 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 			{
 				yulAssert(results->size() == _assignment.variableNames.size());
 				for(auto&& [variable, value]: ranges::zip_view(_assignment.variableNames, *results))
+				{
+					yulAssert(m_currentVariableValues.count(resolveVariable(variable.name)), "Could not find variable " + variable.name.str());
 					m_currentVariableValues.at(resolveVariable(variable.name)) = value;
+				}
 				return true;
 			}
 			return false;
@@ -116,9 +134,7 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 					auto const& jumpBack = expectUnconditionalJump();
 					yulAssert(exit.zero == jumpBack.target);
 					auto nonZeroBranchVariableValues = applyPhis(m_currentBlock, jumpBack.target);
-					// consolidate the values in the zero branch with the values in the non-zero branch
-					for (auto&& [var, value]: zeroBranchVariableValues)
-						yulAssert(nonZeroBranchVariableValues.at(var) == value);
+					consolidateVariables(zeroBranchVariableValues, std::vector{nonZeroBranchVariableValues});
 				}
 
 				m_currentBlock = exit.zero;
@@ -129,9 +145,10 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 			return false;
 		},
 		[&](Switch const& _switch) {
-			// todo this will be different for EOF and can probably be simplified
+			// todo this will be different for EOF and can hopefully be simplified
 			if(auto cond = consumeUnaryExpression(*_switch.expression))
 			{
+				yulAssert(!_switch.cases.empty());
 				auto const validateGhostEq = [this, cond](SSACFG::Operation const& _operation) {
 					yulAssert(std::holds_alternative<SSACFG::BuiltinCall>(_operation.kind));
 					yulAssert(&std::get<SSACFG::BuiltinCall>(_operation.kind).builtin.get() == m_context.dialect.equalityFunction());
@@ -140,70 +157,54 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 					yulAssert(_operation.outputs.size() == 1);
 				};
 				yulAssert(currentBlock().operations.size() >= 2, "switch at least has the expression and ghost eq");
-				yulAssert(m_currentOperation == currentBlock().operations.size() - 1);
-				auto const& ghostEq = currentBlock().operations.back();
-				validateGhostEq(ghostEq);
-				m_currentOperation = currentBlock().operations.size();
-				std::reference_wrapper<const SSACFG::BasicBlock::ConditionalJump> exit = expectConditionalJump();
-				yulAssert(exit.get().condition == ghostEq.outputs[0]);
-				// auto zeroBranchVariableValues = applyPhis(m_currentBlock, exit.zero);
 				std::optional<SSACFG::BlockId> afterSwitch{std::nullopt};
-				m_currentBlock = exit.get().nonZero;
-				m_currentOperation = 0;
-				for (auto const& switchCase: _switch.cases | ranges::views::drop_last(2))
+				SSACFG::BasicBlock::ConditionalJump const* exit{nullptr};
+				std::vector<VariableMapping> parentsOfJumpBackTarget;
+				for (auto const& switchCase: _switch.cases)
 				{
+					if (!switchCase.value)
+						break; // default case, always comes last, requires special handling
+					yulAssert(m_currentOperation == currentBlock().operations.size() - 1);
+					auto const& ghostEq = currentBlock().operations.back();
+					validateGhostEq(ghostEq);
+					m_currentOperation = currentBlock().operations.size();
+					exit = &expectConditionalJump();
+					yulAssert(exit->condition == ghostEq.outputs[0]);
+					auto zeroBranchVariableValues = applyPhis(m_currentBlock, exit->zero);
+					m_currentBlock = exit->nonZero;
+					m_currentOperation = 0;
 					if (consumeBlock(switchCase.body))
 					{
 						auto const& jumpBack = expectUnconditionalJump();
 						yulAssert(!afterSwitch || *afterSwitch == jumpBack.target);
 						afterSwitch = jumpBack.target;
-						auto nonZeroBranchVariableValues = applyPhis(m_currentBlock, *afterSwitch);
-						for (auto&& [var, value]: nonZeroBranchVariableValues)
-							yulAssert(nonZeroBranchVariableValues.at(var) == value);
+						parentsOfJumpBackTarget.push_back(applyPhis(m_currentBlock, jumpBack.target));
 					}
-					m_currentBlock = exit.get().zero;
-					m_currentOperation = 0;
-					yulAssert(currentBlock().operations.size() == 1);
-					validateGhostEq(currentBlock().operations.front());
-					m_currentOperation = 1;
-					auto const& jumpDeeper = expectConditionalJump();
-					yulAssert(jumpDeeper.condition == currentBlock().operations.front().outputs[0]);
-					exit = jumpDeeper;
-					m_currentBlock = jumpDeeper.nonZero;
+					m_currentVariableValues = zeroBranchVariableValues;
+					m_currentBlock = exit->zero;
 					m_currentOperation = 0;
 				}
 
-				m_currentBlock = exit.get().nonZero;
-				m_currentOperation = 0;
-				if (_switch.cases.size() >= 2 && consumeBlock(_switch.cases.at(_switch.cases.size() - 2).body))
+				// no default case, we're done
+				if (_switch.cases.back().value)
 				{
-					auto const& jumpBack = expectUnconditionalJump();
-					yulAssert(!afterSwitch || *afterSwitch == jumpBack.target);
-					afterSwitch = jumpBack.target;
-					auto nonZeroBranchVariableValues = applyPhis(m_currentBlock, *afterSwitch);
-					for (auto&& [var, value]: nonZeroBranchVariableValues)
-						yulAssert(nonZeroBranchVariableValues.at(var) == value);
+					consolidateVariables(m_currentVariableValues, parentsOfJumpBackTarget);
+					return true;
 				}
 
-				m_currentBlock = exit.get().zero;
-				m_currentOperation = 0;
-				if (!_switch.cases.empty() && consumeBlock(_switch.cases.at(_switch.cases.size() - 1).body))
+				if (consumeBlock(_switch.cases.back().body))
 				{
 					auto const& jumpBack = expectUnconditionalJump();
 					yulAssert(!afterSwitch || *afterSwitch == jumpBack.target);
 					afterSwitch = jumpBack.target;
 					auto zeroBranchVariableValues = applyPhis(m_currentBlock, *afterSwitch);
+					parentsOfJumpBackTarget.push_back(applyPhis(m_currentBlock, jumpBack.target));
 					m_currentVariableValues = zeroBranchVariableValues;
-					// consolidate the values in the zero branch with the values in the non-zero branch
-					for (auto&& [var, value]: zeroBranchVariableValues)
-						yulAssert(zeroBranchVariableValues.at(var) == value);
 				}
-				else
-					yulAssert(!_switch.cases.empty(), "empty switch is forbidden, we need at least the default case");
+				consolidateVariables(m_currentVariableValues, parentsOfJumpBackTarget);
 
-				// todo double check that this is actually sane and we always have an
-				//  after switch (consuming body of a case returning false could be a weird case)
-				yulAssert(afterSwitch);
+				if (!afterSwitch)
+					return false;
 				m_currentBlock = *afterSwitch;
 				m_currentOperation = 0;
 				return true;
@@ -277,8 +278,7 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 			auto const& breakJump = expectUnconditionalJump();
 			yulAssert(breakJump.target == m_currentLoopInfo->exitBlock);
 			m_currentVariableValues = applyPhis(m_currentBlock, breakJump.target);
-			for (auto&& [var, value]: m_currentLoopInfo->loopExitVariableValues)
-				yulAssert(m_currentVariableValues.at(var) == value);
+			consolidateVariables(m_currentVariableValues, std::vector{m_currentLoopInfo->loopExitVariableValues});
 			return false;
 		},
 		[&](Continue const&) {
@@ -291,8 +291,7 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 				m_currentLoopInfo->postBlock = continueJump.target;
 			m_currentVariableValues = applyPhis(m_currentBlock, continueJump.target);
 			if (m_currentLoopInfo->loopPostVariableValues)
-				for (auto const* var: m_currentLoopInfo->loopVariables)
-					yulAssert(m_currentVariableValues.at(var) == m_currentLoopInfo->loopPostVariableValues->at(var));
+				consolidateVariables(m_currentVariableValues, std::vector{*m_currentLoopInfo->loopPostVariableValues});
 			else
 				m_currentLoopInfo->loopPostVariableValues = m_currentVariableValues;
 			return false;
@@ -303,6 +302,7 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 			for(auto&& [variable, value]: ranges::zip_view(m_context.cfg.returns, functionReturn.returnValues))
 			{
 				yulAssert(m_currentVariableValues.count(&variable.get()));
+				yulAssert(value.hasValue());
 				m_currentVariableValues[&variable.get()] = value;
 			}
 			return false;
@@ -326,6 +326,7 @@ std::optional<std::vector<SSACFG::ValueId>> SSACFGValidator::consumeExpression(E
 				else
 					return std::nullopt;
 			}
+			yulAssert(ranges::all_of(arguments, [](SSACFG::ValueId const& _arg) { return _arg.hasValue(); }));
 			auto const& currentOp = currentBlock().operations.at(m_currentOperation++);
 			yulAssert(currentOp.inputs == arguments);
 			if (validateCall(currentOp.kind, _call.functionName, currentOp.outputs.size()))
@@ -432,7 +433,7 @@ SSACFG::ValueId SSACFGValidator::lookupLiteral(Literal const& _literal) const
 	return valueId;
 }
 
-std::map<Scope::Variable const*, SSACFG::ValueId> SSACFGValidator::applyPhis(SSACFG::BlockId _source, SSACFG::BlockId _target)
+SSACFGValidator::VariableMapping SSACFGValidator::applyPhis(SSACFG::BlockId _source, SSACFG::BlockId _target)
 {
 	auto const& targetBlock = m_context.cfg.block(_target);
 	auto entryOffset = util::findOffset(targetBlock.entries, _source);
@@ -440,11 +441,14 @@ std::map<Scope::Variable const*, SSACFG::ValueId> SSACFGValidator::applyPhis(SSA
 	std::map<SSACFG::ValueId, SSACFG::ValueId> phiMap;
 	for (auto phi: targetBlock.phis)
 	{
+		yulAssert(phi.hasValue());
 		auto const* phiInfo = std::get_if<SSACFG::PhiValue>(&m_context.cfg.valueInfo(phi));
 		yulAssert(phiInfo);
-		phiMap[phiInfo->arguments.at(*entryOffset)] = phi;
+		auto const argumentValueId = phiInfo->arguments.at(*entryOffset);
+		yulAssert(argumentValueId.hasValue());
+		phiMap[argumentValueId] = phi;
 	}
-	std::map<Scope::Variable const*, SSACFG::ValueId> result;
+	VariableMapping result;
 	for (auto& [var, value]: m_currentVariableValues)
 		result[var] = util::valueOrDefault(phiMap, value, value);
 	return result;

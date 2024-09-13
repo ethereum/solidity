@@ -28,6 +28,7 @@ class SSACFGValidator
 public:
 	static void validate(ControlFlow const& _controlFlow, Block const& _ast, AsmAnalysisInfo const& _analysisInfo, Dialect const& _dialect);
 private:
+	using VariableMapping = std::map<Scope::Variable const*, SSACFG::ValueId>;
     struct Context {
     	AsmAnalysisInfo const& analysisInfo;
 	    Dialect const& dialect;
@@ -64,19 +65,20 @@ private:
 	SSACFG::BasicBlock::Jump const& expectUnconditionalJump() const;
 	SSACFG::BasicBlock::FunctionReturn const& expectFunctionReturn() const;
 	/// Applys the phi functions of @a _target assuming an entry from @a _source.
-	std::map<Scope::Variable const*, SSACFG::ValueId> applyPhis(SSACFG::BlockId _source, SSACFG::BlockId _target);
+	VariableMapping applyPhis(SSACFG::BlockId _source, SSACFG::BlockId _target);
+	void consolidateVariables(VariableMapping const& _variables, std::vector<VariableMapping> const& _toBeConsolidated);
 
 	Context const& m_context;
 	Scope* m_scope = nullptr;
     SSACFG::BlockId m_currentBlock;
 	size_t m_currentOperation = std::numeric_limits<size_t>::max();
-	std::map<Scope::Variable const*, SSACFG::ValueId> m_currentVariableValues;
+	VariableMapping m_currentVariableValues;
 	struct LoopInfo
 	{
 		std::set<Scope::Variable const*> loopVariables;
 		std::map<Scope::Variable const*, SSACFG::ValueId> loopExitVariableValues;
 		SSACFG::BlockId exitBlock;
-		std::optional<std::map<Scope::Variable const*, SSACFG::ValueId>> loopPostVariableValues;
+		std::optional<VariableMapping> loopPostVariableValues;
 		std::optional<SSACFG::BlockId> postBlock;
 	};
 	std::unique_ptr<LoopInfo> m_currentLoopInfo;
