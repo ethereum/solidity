@@ -1197,7 +1197,7 @@ void BMC::checkCondition(
 		m_errorReporter.warning(1584_error, _location, "BMC: At least two SMT solvers provided conflicting answers. Results might not be sound.");
 		break;
 	case smtutil::CheckResult::ERROR:
-		m_errorReporter.warning(1823_error, _location, "BMC: Error trying to invoke SMT solver.");
+		m_errorReporter.warning(1823_error, _location, "BMC: Error during interaction with the SMT solver.");
 		break;
 	}
 

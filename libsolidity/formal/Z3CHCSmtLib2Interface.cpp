@@ -62,48 +62,55 @@ CHCSolverInterface::QueryResult Z3CHCSmtLib2Interface::query(smtutil::Expression
 {
 	setupSmtCallback(true);
 	std::string query = dumpQuery(_block);
-#ifdef EMSCRIPTEN_BUILD
-	z3::set_param("fp.xform.slice", true);
-	z3::set_param("fp.xform.inline_linear", true);
-	z3::set_param("fp.xform.inline_eager", true);
-	std::string response = Z3_eval_smtlib2_string(z3::context{}, query.c_str());
-#else
-	std::string response = querySolver(query);
-#endif
-	// NOTE: Our internal semantics is UNSAT -> SAFE and SAT -> UNSAFE, which corresponds to usual SMT-based model checking
-	// However, with CHC solvers, the meaning is flipped, UNSAT -> UNSAFE and SAT -> SAFE.
-	// So we have to flip the answer.
-	if (boost::starts_with(response, "unsat"))
+	try
 	{
-		// Repeat the query with preprocessing disabled, to get the full proof
-		setupSmtCallback(false);
-		query = "(set-option :produce-proofs true)" + query + "\n(get-proof)";
 #ifdef EMSCRIPTEN_BUILD
-		z3::set_param("fp.xform.slice", false);
-		z3::set_param("fp.xform.inline_linear", false);
-		z3::set_param("fp.xform.inline_eager", false);
-		response = Z3_eval_smtlib2_string(z3::context{}, query.c_str());
+		z3::set_param("fp.xform.slice", true);
+		z3::set_param("fp.xform.inline_linear", true);
+		z3::set_param("fp.xform.inline_eager", true);
+		std::string response = Z3_eval_smtlib2_string(z3::context{}, query.c_str());
 #else
-		response = querySolver(query);
+		std::string response = querySolver(query);
 #endif
-		setupSmtCallback(true);
-		if (!boost::starts_with(response, "unsat"))
-			return {CheckResult::SATISFIABLE, Expression(true), {}};
-		return {CheckResult::SATISFIABLE, Expression(true), graphFromZ3Answer(response)};
-	}
+		// NOTE: Our internal semantics is UNSAT -> SAFE and SAT -> UNSAFE, which corresponds to usual SMT-based model checking
+		// However, with CHC solvers, the meaning is flipped, UNSAT -> UNSAFE and SAT -> SAFE.
+		// So we have to flip the answer.
+		if (boost::starts_with(response, "unsat"))
+		{
+			// Repeat the query with preprocessing disabled, to get the full proof
+			setupSmtCallback(false);
+			query = "(set-option :produce-proofs true)" + query + "\n(get-proof)";
+#ifdef EMSCRIPTEN_BUILD
+			z3::set_param("fp.xform.slice", false);
+			z3::set_param("fp.xform.inline_linear", false);
+			z3::set_param("fp.xform.inline_eager", false);
+			response = Z3_eval_smtlib2_string(z3::context{}, query.c_str());
+#else
+			response = querySolver(query);
+#endif
+			setupSmtCallback(true);
+			if (!boost::starts_with(response, "unsat"))
+				return {CheckResult::SATISFIABLE, Expression(true), {}};
+			return {CheckResult::SATISFIABLE, Expression(true), graphFromZ3Answer(response)};
+		}
 
-	CheckResult result;
-	if (boost::starts_with(response, "sat"))
+		CheckResult result;
+		if (boost::starts_with(response, "sat"))
+		{
+			auto maybeInvariants = invariantsFromSolverResponse(response);
+			return {CheckResult::UNSATISFIABLE, maybeInvariants.value_or(Expression(true)), {}};
+		}
+		else if (boost::starts_with(response, "unknown"))
+			result = CheckResult::UNKNOWN;
+		else
+			result = CheckResult::ERROR;
+
+		return {result, Expression(true), {}};
+	}
+	catch(smtutil::SMTSolverInteractionError const&)
 	{
-		auto maybeInvariants = invariantsFromSolverResponse(response);
-		return {CheckResult::UNSATISFIABLE, maybeInvariants.value_or(Expression(true)), {}};
+		return {CheckResult::ERROR, Expression(true), {}};
 	}
-	else if (boost::starts_with(response, "unknown"))
-		result = CheckResult::UNKNOWN;
-	else
-		result = CheckResult::ERROR;
-
-	return {result, Expression(true), {}};
 }
 
 
@@ -112,7 +119,7 @@ CHCSolverInterface::CexGraph Z3CHCSmtLib2Interface::graphFromZ3Answer(std::strin
 	std::stringstream ss(_proof);
 	std::string answer;
 	ss >> answer;
-	smtAssert(answer == "unsat");
+	smtSolverInteractionRequire(answer == "unsat", "Proof must follow an unsat answer");
 
 	SMTLib2Parser parser(ss);
 	if (parser.isEOF()) // No proof from Z3
@@ -125,10 +132,10 @@ CHCSolverInterface::CexGraph Z3CHCSmtLib2Interface::graphFromZ3Answer(std::strin
 	}
 	catch (SMTLib2Parser::ParsingException&)
 	{
-		return {};
+		smtSolverInteractionRequire(false, "Error during parsing Z3's proof");
 	}
-	solAssert(parser.isEOF());
-	solAssert(!isAtom(parsedOutput));
+	smtSolverInteractionRequire(parser.isEOF(), "Error during parsing Z3's proof");
+	smtSolverInteractionRequire(!isAtom(parsedOutput), "Encountered unexpected format of Z3's proof");
 	auto& commands = asSubExpressions(parsedOutput);
 	ScopedParser expressionParser(m_context);
 	for (auto& command: commands)
@@ -137,7 +144,7 @@ CHCSolverInterface::CexGraph Z3CHCSmtLib2Interface::graphFromZ3Answer(std::strin
 			continue;
 
 		auto const& args = asSubExpressions(command);
-		solAssert(args.size() > 0);
+		smtSolverInteractionRequire(args.size() > 0, "Encountered unexpected format of Z3's proof");
 		auto const& head = args[0];
 		if (!isAtom(head))
 			continue;
@@ -146,12 +153,12 @@ CHCSolverInterface::CexGraph Z3CHCSmtLib2Interface::graphFromZ3Answer(std::strin
 		// e.g., "(declare-fun query!0 (Bool Bool Bool Int Int Bool Bool Bool Bool Bool Bool Bool Int) Bool)"
 		if (asAtom(head) == "declare-fun")
 		{
-			solAssert(args.size() == 4);
+			smtSolverInteractionRequire(args.size() == 4, "Encountered unexpected format of Z3's proof");
 			auto const& name = args[1];
 			auto const& domainSorts = args[2];
 			auto const& codomainSort = args[3];
-			solAssert(isAtom(name));
-			solAssert(!isAtom(domainSorts));
+			smtSolverInteractionRequire(isAtom(name), "Encountered unexpected format of Z3's proof");
+			smtSolverInteractionRequire(!isAtom(domainSorts), "Encountered unexpected format of Z3's proof");
 			expressionParser.addVariableDeclaration(asAtom(name), expressionParser.toSort(codomainSort));
 		}
 		// The subexpression starting with "proof" contains the whole proof, which we need to transform to our internal
@@ -173,13 +180,13 @@ CHCSolverInterface::CexGraph Z3CHCSmtLib2Interface::graphFromSMTLib2Expression(
 	auto fact = [](SMTLib2Expression const& _node) -> SMTLib2Expression const& {
 		if (isAtom(_node))
 			return _node;
-		smtAssert(!asSubExpressions(_node).empty());
+		smtSolverInteractionRequire(!asSubExpressions(_node).empty(), "Encountered unexpected format of Z3's proof");
 		return asSubExpressions(_node).back();
 	};
-	smtAssert(!isAtom(_proof));
+	smtSolverInteractionRequire(!isAtom(_proof), "Encountered unexpected format of Z3's proof");
 	auto const& proofArgs = asSubExpressions(_proof);
-	smtAssert(proofArgs.size() == 2);
-	smtAssert(isAtom(proofArgs.at(0)) && asAtom(proofArgs.at(0)) == "proof");
+	smtSolverInteractionRequire(proofArgs.size() == 2, "Encountered unexpected format of Z3's proof");
+	smtSolverInteractionRequire(isAtom(proofArgs.at(0)) && asAtom(proofArgs.at(0)) == "proof", "Encountered unexpected format of Z3's proof");
 	auto const& proofNode = proofArgs.at(1);
 	auto const& derivedFact = fact(proofNode);
 	if (isAtom(proofNode) || !isAtom(derivedFact) || asAtom(derivedFact) != "false")
@@ -201,7 +208,7 @@ CHCSolverInterface::CexGraph Z3CHCSmtLib2Interface::graphFromSMTLib2Expression(
 	auto isHyperRes = [](SMTLib2Expression const& expr) {
 		if (isAtom(expr)) return false;
 		auto const& subExprs = asSubExpressions(expr);
-		smtAssert(!subExprs.empty());
+		smtSolverInteractionRequire(!subExprs.empty(), "Encountered unexpected format of Z3's proof");
 		auto const& op = subExprs.at(0);
 		if (isAtom(op)) return false;
 		auto const& opExprs = asSubExpressions(op);
@@ -213,15 +220,15 @@ CHCSolverInterface::CexGraph Z3CHCSmtLib2Interface::graphFromSMTLib2Expression(
 	while (!proofStack.empty())
 	{
 		auto const* currentNode = proofStack.top();
-		smtAssert(visitedIds.find(currentNode) != visitedIds.end());
+		smtSolverInteractionRequire(visitedIds.find(currentNode) != visitedIds.end(), "Error in processing Z3's proof");
 		auto id = visitedIds.at(currentNode);
-		smtAssert(graph.nodes.count(id));
+		smtSolverInteractionRequire(graph.nodes.count(id), "Error in processing Z3's proof");
 		proofStack.pop();
 
 		if (isHyperRes(*currentNode))
 		{
 			auto const& args = asSubExpressions(*currentNode);
-			smtAssert(args.size() > 1);
+			smtSolverInteractionRequire(args.size() > 1, "Unexpected format of hyper-resolution rule in Z3's proof");
 			// args[0] is the name of the rule
 			// args[1] is the clause used
 			// last argument is the derived fact
