@@ -6,6 +6,7 @@ Language Features:
 Compiler Features:
  * Code Generator: Transient storage value type state variables are now supported.
  * General: Generate JSON representations of Yul ASTs only on demand to reduce memory usage.
+ * Standard JSON Interface: Bytecode or IR can now be requested for a subset of all contracts without triggering unnecessary code generation for other contracts.
 
 
 Bugfixes:

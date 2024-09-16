@@ -889,14 +889,16 @@ void CommandLineInterface::compile()
 		if (m_options.output.debugInfoSelection.has_value())
 			m_compiler->selectDebugInfo(m_options.output.debugInfoSelection.value());
 
-		CompilerStack::IROutputSelection irOutputSelection = CompilerStack::IROutputSelection::None;
-		if (m_options.compiler.outputs.irOptimized || m_options.compiler.outputs.irOptimizedAstJson || m_options.compiler.outputs.yulCFGJson)
-			irOutputSelection = CompilerStack::IROutputSelection::UnoptimizedAndOptimized;
-		else if (m_options.compiler.outputs.ir || m_options.compiler.outputs.irAstJson)
-			irOutputSelection = CompilerStack::IROutputSelection::UnoptimizedOnly;
-
-		m_compiler->requestIROutputs(irOutputSelection);
-		m_compiler->enableEvmBytecodeGeneration(
+		CompilerStack::PipelineConfig pipelineConfig;
+		pipelineConfig.irOptimization =
+			m_options.compiler.outputs.irOptimized ||
+			m_options.compiler.outputs.irOptimizedAstJson ||
+			m_options.compiler.outputs.yulCFGJson;
+		pipelineConfig.irCodegen =
+			pipelineConfig.irOptimization ||
+			m_options.compiler.outputs.ir ||
+			m_options.compiler.outputs.irAstJson;
+		pipelineConfig.bytecode =
 			m_options.compiler.estimateGas ||
 			m_options.compiler.outputs.asm_ ||
 			m_options.compiler.outputs.asmJson ||
@@ -914,8 +916,9 @@ void CommandLineInterface::compile()
 				m_options.compiler.combinedJsonRequests->srcMapRuntime ||
 				m_options.compiler.combinedJsonRequests->funDebug ||
 				m_options.compiler.combinedJsonRequests->funDebugRuntime
-			))
-		);
+			));
+
+		m_compiler->selectContracts({{"", {{"", pipelineConfig}}}});
 
 		m_compiler->setOptimiserSettings(m_options.optimiserSettings());
 

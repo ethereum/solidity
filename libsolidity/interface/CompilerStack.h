@@ -133,11 +133,53 @@ public:
 		SolidityAST,
 	};
 
-	enum class IROutputSelection {
-		None,
-		UnoptimizedOnly,
-		UnoptimizedAndOptimized,
+	/// Indicates which stages of the compilation pipeline were explicitly requested and provides
+	/// logic to determine which ones are effectively needed to accomplish that.
+	/// Note that parsing and analysis are not selectable, since they cannot be skipped.
+	struct PipelineConfig
+	{
+		bool irCodegen = false;      ///< Want IR output straight from code generator.
+		bool irOptimization = false; ///< Want reparsed IR that went through YulStack. May be optimized or not, depending on settings.
+		bool bytecode = false;       ///< Want EVM-level outputs, especially EVM assembly and bytecode. May be optimized or not, depending on settings.
+
+		bool needIR(bool _viaIR) const
+		{
+			return
+				irCodegen ||
+				irOptimization ||
+				(bytecode && _viaIR);
+		}
+
+		bool needIRCodegenOnly(bool _viaIR) const
+		{
+			return !(bytecode && _viaIR) && !irOptimization;
+		}
+
+		bool needBytecode() const
+		{
+			return bytecode;
+		}
+
+		PipelineConfig operator|(PipelineConfig const& _other) const
+		{
+			return {
+				irCodegen || _other.irCodegen,
+				irOptimization || _other.irOptimization,
+				bytecode || _other.bytecode,
+			};
+		}
+
+		bool operator!=(PipelineConfig const& _other) const { return !(*this == _other); }
+		bool operator==(PipelineConfig const& _other) const
+		{
+			return
+				irCodegen == _other.irCodegen &&
+				irOptimization == _other.irOptimization &&
+				bytecode == _other.bytecode;
+		}
 	};
+
+	using ContractSelection = std::map<std::string, std::map<std::string, CompilerStack::PipelineConfig>>;
 
 	/// Creates a new compiler stack.
 	/// @param _readFile callback used to read files for import statements. Must return
@@ -193,26 +235,13 @@ public:
 	/// Set model checker settings.
 	void setModelCheckerSettings(ModelCheckerSettings _settings);
 
-	/// Sets the requested contract names by source.
-	/// If empty, no filtering is performed and every contract
-	/// found in the supplied sources is compiled.
-	/// Names are cleared iff @a _contractNames is missing.
-	void setRequestedContractNames(std::map<std::string, std::set<std::string>> const& _contractNames = std::map<std::string, std::set<std::string>>{})
-	{
-		m_requestedContractNames = _contractNames;
-	}
-
-	/// Enable EVM Bytecode generation. This is enabled by default.
-	void enableEvmBytecodeGeneration(bool _enable = true) { m_generateEvmBytecode = _enable; }
-
-	/// Enable generation of Yul IR code so that IR output can be safely requested for all contracts.
-	/// Note that IR may also be implicitly generated when not requested. In particular
-	/// @a setViaIR(true) requires access to the IR outputs for bytecode generation.
-	void requestIROutputs(IROutputSelection _selection = IROutputSelection::UnoptimizedAndOptimized)
-	{
-		solAssert(m_stackState < ParsedAndImported);
-		m_irOutputSelection = _selection;
-	}
+	/// Sets names of the contracts from each source that should be compiled.
+	/// If empty, no filtering is performed and every contract found in the supplied sources goes
+	/// through the default pipeline stages (bytecode-only, no IR).
+	/// Source/contract names are not validated - ones that do not exist are ignored.
+	/// The empty source/contract name can be used as a wildcard that matches all sources/contracts.
+	/// If a contract matches more than one entry, the pipeline selection from all matches is combined.
+	void selectContracts(ContractSelection const& _selectedContracts);
 
 	/// @arg _metadataLiteralSources When true, store sources as literals in the contract metadata.
 	/// Must be set before parsing.
@@ -450,6 +479,11 @@ private:
 	/// @returns true if the contract is requested to be compiled.
 	bool isRequestedContract(ContractDefinition const& _contract) const;
 
+	/// @returns The effective pipeline configuration for a given contract.
+	///     Applies defaults for contracts that were not explicitly selected and combines
+	///     multiple entries if the contact is matched by wildcards.
+	PipelineConfig requestedPipelineConfig(ContractDefinition const& _contract) const;
+
 	/// Perform the analysis steps of legacy language mode.
 	/// @returns false on error.
 	bool analyzeLegacy(bool _noErrorsSoFar);
@@ -554,9 +588,7 @@ private:
 	langutil::EVMVersion m_evmVersion;
 	std::optional<uint8_t> m_eofVersion;
 	ModelCheckerSettings m_modelCheckerSettings;
-	std::map<std::string, std::set<std::string>> m_requestedContractNames;
-	bool m_generateEvmBytecode = true;
-	IROutputSelection m_irOutputSelection = IROutputSelection::None;
+	ContractSelection m_selectedContracts;
 	std::map<std::string, util::h160> m_libraries;
 	ImportRemapper m_importRemapper;
 	std::map<std::string const, Source> m_sources;
