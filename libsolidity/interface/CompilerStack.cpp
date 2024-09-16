@@ -313,7 +313,9 @@ void CompilerStack::reset(bool _keepSettings)
 		m_libraries.clear();
 		m_viaIR = false;
 		m_evmVersion = langutil::EVMVersion();
+		m_eofVersion.reset();
 		m_modelCheckerSettings = ModelCheckerSettings{};
+		m_requestedContractNames.clear();
 		m_irOutputSelection = IROutputSelection::None;
 		m_revertStrings = RevertStrings::Default;
 		m_optimiserSettings = OptimiserSettings::minimal();
@@ -321,6 +323,7 @@ void CompilerStack::reset(bool _keepSettings)
 		m_metadataFormat = defaultMetadataFormat();
 		m_metadataHash = MetadataHash::IPFS;
 		m_stopAfter = State::CompilationSuccessful;
+		m_compilationSourceType = CompilationSourceType::Solidity;
 	}
 	m_experimentalAnalysis.reset();
 	m_globalContext.reset();
