@@ -94,25 +94,32 @@ void CHCSmtLib2Interface::addRule(Expression const& _expr, std::string const& /*
 CHCSolverInterface::QueryResult CHCSmtLib2Interface::query(Expression const& _block)
 {
 	std::string query = dumpQuery(_block);
-	std::string response = querySolver(query);
-
-	CheckResult result;
-	// NOTE: Our internal semantics is UNSAT -> SAFE and SAT -> UNSAFE, which corresponds to usual SMT-based model checking
-	// However, with CHC solvers, the meaning is flipped, UNSAT -> UNSAFE and SAT -> SAFE.
-	// So we have to flip the answer.
-	if (boost::starts_with(response, "sat"))
+	try
 	{
-		auto maybeInvariants = invariantsFromSolverResponse(response);
-		return {CheckResult::UNSATISFIABLE, maybeInvariants.value_or(Expression(true)), {}};
-	}
-	else if (boost::starts_with(response, "unsat"))
-		result = CheckResult::SATISFIABLE;
-	else if (boost::starts_with(response, "unknown"))
-		result = CheckResult::UNKNOWN;
-	else
-		result = CheckResult::ERROR;
+		std::string response = querySolver(query);
 
-	return {result, Expression(true), {}};
+		CheckResult result;
+		// NOTE: Our internal semantics is UNSAT -> SAFE and SAT -> UNSAFE, which corresponds to usual SMT-based model checking
+		// However, with CHC solvers, the meaning is flipped, UNSAT -> UNSAFE and SAT -> SAFE.
+		// So we have to flip the answer.
+		if (boost::starts_with(response, "sat"))
+		{
+			auto maybeInvariants = invariantsFromSolverResponse(response);
+			return {CheckResult::UNSATISFIABLE, maybeInvariants.value_or(Expression(true)), {}};
+		}
+		else if (boost::starts_with(response, "unsat"))
+			result = CheckResult::SATISFIABLE;
+		else if (boost::starts_with(response, "unknown"))
+			result = CheckResult::UNKNOWN;
+		else
+			result = CheckResult::ERROR;
+		return {result, Expression(true), {}};
+	}
+	catch(smtutil::SMTSolverInteractionError const&)
+	{
+		return {CheckResult::ERROR, Expression(true), {}};
+	}
+
 }
 
 void CHCSmtLib2Interface::declareVariable(std::string const& _name, SortPointer const& _sort)
@@ -251,7 +258,7 @@ SortPointer CHCSmtLib2Interface::ScopedParser::toSort(SMTLib2Expression const& _
 		auto const& args = asSubExpressions(_expr);
 		if (asAtom(args[0]) == "Array")
 		{
-			smtAssert(args.size() == 3);
+			smtSolverInteractionAssert(args.size() == 3);
 			auto domainSort = toSort(args[1]);
 			auto codomainSort = toSort(args[2]);
 			return std::make_shared<ArraySort>(std::move(domainSort), std::move(codomainSort));
@@ -260,7 +267,7 @@ SortPointer CHCSmtLib2Interface::ScopedParser::toSort(SMTLib2Expression const& _
 			&& asAtom(args[1]) == "int2bv")
 			return std::make_shared<BitVectorSort>(std::stoul(asAtom(args[2])));
 	}
-	smtAssert(false, "Unknown sort encountered");
+	smtSolverInteractionAssert(false, "Unknown sort encountered");
 }
 
 smtutil::Expression CHCSmtLib2Interface::ScopedParser::parseQuantifier(
@@ -271,20 +278,20 @@ smtutil::Expression CHCSmtLib2Interface::ScopedParser::parseQuantifier(
 	std::vector<std::pair<std::string, SortPointer>> boundVariables;
 	for (auto const& sortedVar: _varList)
 	{
-		smtAssert(!isAtom(sortedVar));
+		smtSolverInteractionAssert(!isAtom(sortedVar));
 		auto varSortPair = asSubExpressions(sortedVar);
-		smtAssert(varSortPair.size() == 2);
+		smtSolverInteractionAssert(varSortPair.size() == 2);
 		boundVariables.emplace_back(asAtom(varSortPair[0]), toSort(varSortPair[1]));
 	}
 	for (auto const& [var, sort]: boundVariables)
 	{
-		smtAssert(m_localVariables.count(var) == 0); // TODO: deal with shadowing?
+		smtSolverInteractionAssert(m_localVariables.count(var) == 0); // TODO: deal with shadowing?
 		m_localVariables.emplace(var, sort);
 	}
 	auto core = toSMTUtilExpression(_coreExpression);
 	for (auto const& [var, sort]: boundVariables)
 	{
-		smtAssert(m_localVariables.count(var) != 0);
+		smtSolverInteractionAssert(m_localVariables.count(var) != 0);
 		m_localVariables.erase(var);
 	}
 	return Expression(_quantifierName, {core}, SortProvider::boolSort); // TODO: what about the bound variables?
@@ -314,7 +321,7 @@ smtutil::Expression CHCSmtLib2Interface::ScopedParser::toSMTUtilExpression(SMTLi
 					return smtutil::Expression(_atom, {}, std::make_shared<TupleSort>(_atom, std::vector<std::string>{}, std::vector<SortPointer>{}));
 				}
 				else
-					smtAssert(false, "Unhandled atomic SMT expression");
+					smtSolverInteractionAssert(false, "Unhandled atomic SMT expression");
 			},
 			[&](std::vector<SMTLib2Expression> const& _subExpr)
 			{
@@ -326,13 +333,13 @@ smtutil::Expression CHCSmtLib2Interface::ScopedParser::toSMTUtilExpression(SMTLi
 					if (op == "!")
 					{
 						// named term, we ignore the name
-						smtAssert(_subExpr.size() > 2);
+						smtSolverInteractionAssert(_subExpr.size() > 2);
 						return toSMTUtilExpression(_subExpr[1]);
 					}
 					if (op == "exists" || op == "forall")
 					{
-						smtAssert(_subExpr.size() == 3);
-						smtAssert(!isAtom(_subExpr[1]));
+						smtSolverInteractionAssert(_subExpr.size() == 3);
+						smtSolverInteractionAssert(!isAtom(_subExpr[1]));
 						return parseQuantifier(op, asSubExpressions(_subExpr[1]), _subExpr[2]);
 					}
 					for (size_t i = 1; i < _subExpr.size(); i++)
@@ -355,7 +362,7 @@ smtutil::Expression CHCSmtLib2Interface::ScopedParser::toSMTUtilExpression(SMTLi
 						sort = contains(boolOperators, op) ? SortProvider::boolSort : arguments.back().sort;
 						return smtutil::Expression(op, std::move(arguments), std::move(sort));
 					}
-					smtAssert(false, "Unhandled case in expression conversion");
+					smtSolverInteractionAssert(false, "Unhandled case in expression conversion");
 				}
 				else
 				{
@@ -375,7 +382,7 @@ smtutil::Expression CHCSmtLib2Interface::ScopedParser::toSMTUtilExpression(SMTLi
 							&& typeArgs[1].toString() == "int2bv")
 						{
 							auto bvSort = std::dynamic_pointer_cast<BitVectorSort>(toSort(_subExpr[0]));
-							smtAssert(bvSort);
+							smtSolverInteractionAssert(bvSort);
 							return smtutil::Expression::int2bv(toSMTUtilExpression(_subExpr[1]), bvSort->size);
 						}
 						if (typeArgs.size() == 4 && typeArgs[0].toString() == "_"
@@ -386,7 +393,7 @@ smtutil::Expression CHCSmtLib2Interface::ScopedParser::toSMTUtilExpression(SMTLi
 								SortProvider::bitVectorSort // TODO: Compute bit size properly?
 							);
 					}
-					smtAssert(false, "Unhandled case in expression conversion");
+					smtSolverInteractionAssert(false, "Unhandled case in expression conversion");
 				}
 			}
 		},
@@ -395,15 +402,15 @@ smtutil::Expression CHCSmtLib2Interface::ScopedParser::toSMTUtilExpression(SMTLi
 }
 
 
-#define precondition(CONDITION) if (!(CONDITION)) return {}
 std::optional<smtutil::Expression> CHCSmtLib2Interface::invariantsFromSolverResponse(std::string const& _response) const
 {
 	std::stringstream ss(_response);
 	std::string answer;
 	ss >> answer;
-	precondition(answer == "sat");
+	smtSolverInteractionAssert(answer == "sat");
 	SMTLib2Parser parser(ss);
-	precondition(!parser.isEOF()); // There has to be a model
+	if (parser.isEOF())
+		return {};
 	std::vector<SMTLib2Expression> parsedOutput;
 	try
 	{
@@ -412,25 +419,25 @@ std::optional<smtutil::Expression> CHCSmtLib2Interface::invariantsFromSolverResp
 	}
 	catch(SMTLib2Parser::ParsingException&)
 	{
-		return {};
+		smtSolverInteractionAssert(false);
 	}
-	smtAssert(parser.isEOF());
-	precondition(!parsedOutput.empty());
+	smtSolverInteractionAssert(parser.isEOF());
+	smtSolverInteractionAssert(!parsedOutput.empty());
 	auto& commands = parsedOutput.size() == 1 ? asSubExpressions(parsedOutput[0]) : parsedOutput;
 	std::vector<Expression> definitions;
 	for (auto& command: commands)
 	{
 		auto& args = asSubExpressions(command);
-		precondition(args.size() == 5);
+		smtSolverInteractionAssert(args.size() == 5);
 		// args[0] = "define-fun"
 		// args[1] = predicate name
 		// args[2] = formal arguments of the predicate
 		// args[3] = return sort
 		// args[4] = body of the predicate's interpretation
-		precondition(isAtom(args[0]) && asAtom(args[0]) == "define-fun");
-		precondition(isAtom(args[1]));
-		precondition(!isAtom(args[2]));
-		precondition(isAtom(args[3]) && asAtom(args[3]) == "Bool");
+		smtSolverInteractionAssert(isAtom(args[0]) && asAtom(args[0]) == "define-fun");
+		smtSolverInteractionAssert(isAtom(args[1]));
+		smtSolverInteractionAssert(!isAtom(args[2]));
+		smtSolverInteractionAssert(isAtom(args[3]) && asAtom(args[3]) == "Bool");
 		auto& interpretation = args[4];
 		inlineLetExpressions(interpretation);
 		ScopedParser scopedParser(m_context);
@@ -438,10 +445,10 @@ std::optional<smtutil::Expression> CHCSmtLib2Interface::invariantsFromSolverResp
 		std::vector<Expression> predicateArgs;
 		for (auto const& formalArgument: formalArguments)
 		{
-			precondition(!isAtom(formalArgument));
+			smtSolverInteractionAssert(!isAtom(formalArgument));
 			auto const& nameSortPair = asSubExpressions(formalArgument);
-			precondition(nameSortPair.size() == 2);
-			precondition(isAtom(nameSortPair[0]));
+			smtSolverInteractionAssert(nameSortPair.size() == 2);
+			smtSolverInteractionAssert(isAtom(nameSortPair[0]));
 			SortPointer varSort = scopedParser.toSort(nameSortPair[1]);
 			scopedParser.addVariableDeclaration(asAtom(nameSortPair[0]), varSort);
 			// FIXME: Why Expression here?
@@ -462,7 +469,6 @@ std::optional<smtutil::Expression> CHCSmtLib2Interface::invariantsFromSolverResp
 	}
 	return Expression::mkAnd(std::move(definitions));
 }
-#undef precondition
 
 namespace
 {
@@ -479,8 +485,8 @@ struct LetBindings
 	SMTLib2Expression& operator[](std::string const& varName)
 	{
 		auto it = bindings.find(varName);
-		smtAssert(it != bindings.end());
-		smtAssert(!it->second.empty());
+		smtSolverInteractionAssert(it != bindings.end());
+		smtSolverInteractionAssert(!it->second.empty());
 		return it->second.back();
 	}
 
@@ -488,13 +494,13 @@ struct LetBindings
 
 	void popScope()
 	{
-		smtAssert(!scopeBounds.empty());
+		smtSolverInteractionAssert(!scopeBounds.empty());
 		auto bound = scopeBounds.back();
 		while (varNames.size() > bound)
 		{
 			auto const& varName = varNames.back();
 			auto it = bindings.find(varName);
-			smtAssert(it != bindings.end());
+			smtSolverInteractionAssert(it != bindings.end());
 			auto& record = it->second;
 			record.pop_back();
 			if (record.empty())
@@ -525,21 +531,21 @@ void inlineLetExpressions(SMTLib2Expression& _expr, LetBindings& _bindings)
 		return;
 	}
 	auto& subexprs = asSubExpressions(_expr);
-	smtAssert(!subexprs.empty());
+	smtSolverInteractionAssert(!subexprs.empty());
 	auto const& first = subexprs.at(0);
 	if (isAtom(first) && asAtom(first) == "let")
 	{
-		smtAssert(subexprs.size() == 3);
-		smtAssert(!isAtom(subexprs[1]));
+		smtSolverInteractionAssert(subexprs.size() == 3);
+		smtSolverInteractionAssert(!isAtom(subexprs[1]));
 		auto& bindingExpressions = asSubExpressions(subexprs[1]);
 		// process new bindings
 		std::vector<std::pair<std::string, SMTLib2Expression>> newBindings;
 		for (auto& binding: bindingExpressions)
 		{
-			smtAssert(!isAtom(binding));
+			smtSolverInteractionAssert(!isAtom(binding));
 			auto& bindingPair = asSubExpressions(binding);
-			smtAssert(bindingPair.size() == 2);
-			smtAssert(isAtom(bindingPair.at(0)));
+			smtSolverInteractionAssert(bindingPair.size() == 2);
+			smtSolverInteractionAssert(isAtom(bindingPair.at(0)));
 			inlineLetExpressions(bindingPair.at(1), _bindings);
 			newBindings.emplace_back(asAtom(bindingPair.at(0)), bindingPair.at(1));
 		}
@@ -563,7 +569,7 @@ void inlineLetExpressions(SMTLib2Expression& _expr, LetBindings& _bindings)
 	{
 		// A little hack to ensure quantified variables are not substituted because of some outer let definition:
 		// We define the current binding of the variable to itself, before we recurse in to subterm
-		smtAssert(subexprs.size() == 3);
+		smtSolverInteractionAssert(subexprs.size() == 3);
 		_bindings.pushScope();
 		for (auto const& sortedVar: asSubExpressions(subexprs.at(1)))
 		{

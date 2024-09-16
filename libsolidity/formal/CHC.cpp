@@ -1919,7 +1919,7 @@ CHCSolverInterface::QueryResult CHC::query(smtutil::Expression const& _query, la
 		m_errorReporter.warning(1988_error, _location, "CHC: At least two SMT solvers provided conflicting answers. Results might not be sound.");
 		break;
 	case CheckResult::ERROR:
-		m_errorReporter.warning(1218_error, _location, "CHC: Error trying to invoke SMT solver.");
+		m_errorReporter.warning(1218_error, _location, "CHC: Error during interaction with the solver.");
 		break;
 	}
 	return result;

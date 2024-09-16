@@ -119,7 +119,7 @@ std::vector<std::string> parseValuesFromResponse(std::string const& _response)
 	std::stringstream ss(_response);
 	std::string answer;
 	ss >> answer;
-	smtAssert(answer == "sat");
+	smtSolverInteractionAssert(answer == "sat");
 
 	std::vector<SMTLib2Expression> parsedOutput;
 	SMTLib2Parser parser(ss);
@@ -130,16 +130,16 @@ std::vector<std::string> parseValuesFromResponse(std::string const& _response)
 	}
 	catch(SMTLib2Parser::ParsingException&)
 	{
-		return {};
+		smtSolverInteractionAssert(false);
 	}
-	smtAssert(parsedOutput.size() == 1, "SMT: Expected model values as a single s-expression");
+	smtSolverInteractionAssert(parsedOutput.size() == 1, "SMT: Expected model values as a single s-expression");
 	auto const& values = parsedOutput[0];
-	smtAssert(!isAtom(values));
+	smtSolverInteractionAssert(!isAtom(values));
 	std::vector<std::string> parsedValues;
 	for (auto const& nameValuePair: asSubExpressions(values))
 	{
-		smtAssert(!isAtom(nameValuePair));
-		smtAssert(asSubExpressions(nameValuePair).size() == 2);
+		smtSolverInteractionAssert(!isAtom(nameValuePair));
+		smtSolverInteractionAssert(asSubExpressions(nameValuePair).size() == 2);
 		auto const& value = asSubExpressions(nameValuePair)[1];
 		parsedValues.push_back(value.toString());
 	}
