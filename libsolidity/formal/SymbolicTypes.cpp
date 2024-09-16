@@ -118,6 +118,10 @@ SortPointer smtSort(frontend::Type const& _type)
 				// use a common sort for functions so pure and view modifier do not cause conflicting SMT types
 				// solc handles types mismtach
 				tupleName = "function";
+			else if (isAddress(*baseType))
+				// use a common sort for address and address payable so it does not cause conflicting SMT types
+				// solc handles types mismtach
+				tupleName = "address";
 			else if (
 				baseType->category() == frontend::Type::Category::Integer ||
 				baseType->category() == frontend::Type::Category::FixedPoint

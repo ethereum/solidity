@@ -122,7 +122,7 @@ std::variant<std::unique_ptr<AST>, ErrorList> Program::parseObject(Dialect const
 
 	ObjectParser parser(errorReporter, _dialect);
 	std::shared_ptr<Object> object = parser.parse(scanner, false);
-	if (object == nullptr || !errorReporter.errors().empty())
+	if (object == nullptr || errorReporter.hasErrors())
 		// NOTE: It's possible to get errors even if the returned object is non-null.
 		// For example when there are errors in a nested object.
 		return errors;
@@ -165,7 +165,7 @@ std::variant<std::unique_ptr<AsmAnalysisInfo>, ErrorList> Program::analyzeAST(Di
 	if (!analysisSuccessful)
 		return errors;
 
-	assert(errorReporter.errors().empty());
+	assert(!errorReporter.hasErrors());
 	return std::variant<std::unique_ptr<AsmAnalysisInfo>, ErrorList>(std::move(analysisInfo));
 }
 

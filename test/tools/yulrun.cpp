@@ -65,7 +65,7 @@ std::pair<std::shared_ptr<AST const>, std::shared_ptr<AsmAnalysisInfo>> parse(st
 	);
 	if (stack.parseAndAnalyze("--INPUT--", _source))
 	{
-		yulAssert(stack.errors().empty(), "Parsed successfully but had errors.");
+		yulAssert(!Error::hasErrorsWarningsOrInfos(stack.errors()), "Parsed successfully but had errors.");
 		return make_pair(stack.parserResult()->code(), stack.parserResult()->analysisInfo);
 	}
 	else

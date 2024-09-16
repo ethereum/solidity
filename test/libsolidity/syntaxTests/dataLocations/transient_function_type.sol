@@ -6,5 +6,6 @@ contract C {
     function () internal transient internal fiti;
     function () internal internal transient fiit;
 }
+// ====
+// EVMVersion: >=cancun
 // ----
-// UnimplementedFeatureError 1834: Transient storage variables are not supported.

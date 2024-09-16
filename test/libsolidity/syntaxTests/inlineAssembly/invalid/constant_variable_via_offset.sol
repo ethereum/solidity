@@ -7,4 +7,4 @@ contract test {
     }
 }
 // ----
-// TypeError 6617: (112-120): The suffixes .offset and .slot can only be used on non-constant storage variables.
+// TypeError 6617: (112-120): The suffixes .offset and .slot can only be used on non-constant storage or transient storage variables.

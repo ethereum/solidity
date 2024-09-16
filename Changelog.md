@@ -1,4 +1,16 @@
-### 0.8.27 (unreleased)
+### 0.8.28 (unreleased)
+
+Language Features:
+
+
+Compiler Features:
+ * Code Generator: Transient storage value type state variables are now supported by the legacy pipeline.
+
+
+Bugfixes:
+ * SMTChecker: Fix SMT logic error when assigning to an array of addresses.
+
+### 0.8.27 (2024-09-04)
 
 Language Features:
  * Accept declarations of state variables with ``transient`` data location (parser support only, no code generation yet).
@@ -7,22 +19,22 @@ Language Features:
 
 
 Compiler Features:
- * Command Line Interface: Do not perform IR optimization when only unoptimized IR is requested.
  * Commandline Interface: Add ``--transient-storage-layout`` output.
+ * Commandline Interface: Allow the use of ``--asm-json`` output option in assembler mode to export EVM assembly of the contracts in JSON format.
+ * Commandline Interface: Do not perform IR optimization when only unoptimized IR is requested.
  * Constant Optimizer: Uses ``PUSH0`` if supported by the selected evm version.
  * Error Reporting: Unimplemented features are now properly reported as errors instead of being handled as if they were bugs.
  * EVM: Support for the EVM version "Prague".
  * Peephole Optimizer: ``PUSH0``, when supported, is duplicated explicitly instead of using ``DUP1``.
- * Peephole optimizer: Remove identical code snippets that terminate the control flow if they occur one after another.
+ * Peephole Optimizer: Remove identical code snippets that terminate the control flow if they occur one after another.
  * SMTChecker: Add CHC engine check for underflow and overflow in unary minus operation.
  * SMTChecker: Replace CVC4 as a possible BMC backend with cvc5.
- * Standard JSON Interface: Do not perform IR optimization when only unoptimized IR is requested.
  * Standard JSON Interface: Add ``transientStorageLayout`` output.
+ * Standard JSON Interface: Do not perform IR optimization when only unoptimized IR is requested.
  * Yul: Drop the deprecated typed Yul dialect that was only accessible via ``--yul`` in the CLI.
  * Yul: The presence of types in untyped Yul dialects is now a parser error.
  * Yul Optimizer: Caching of optimized IR to speed up optimization of contracts with bytecode dependencies.
  * Yul Optimizer: The optimizer now treats some previously unrecognized identical literals as identical.
- * Commandline Interface: Allow the use of ``--asm-json`` output option in assembler mode to export EVM assembly of the contracts in JSON format.
 
 
 Bugfixes:
@@ -32,6 +44,7 @@ Bugfixes:
  * SMTChecker: Fix formatting of unary minus expressions in invariants.
  * SMTChecker: Fix internal compiler error when reporting proved targets for BMC engine.
  * SMTChecker: Fix SMT logic error when assigning to an array of contracts or functions.
+ * Standard JSON Interface: For Yul input, properly produce output artifacts in case of warnings.
  * TypeChecker: Fix segfault when assigning nested tuple to tuple.
  * Yul IR Code Generation: Deterministic order of Yul subobjects.
  * Yul Optimizer: Fix Yul source locations always referring to unoptimized source, even in optimized outputs.

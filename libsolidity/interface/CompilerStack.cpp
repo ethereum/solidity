@@ -864,6 +864,10 @@ std::string const* CompilerStack::sourceMapping(std::string const& _contractName
 {
 	solAssert(m_stackState == CompilationSuccessful, "Compilation was not successful.");
 
+	// TODO
+	if (m_eofVersion.has_value())
+		return nullptr;
+
 	Contract const& c = contract(_contractName);
 	if (!c.sourceMapping)
 	{
@@ -876,6 +880,10 @@ std::string const* CompilerStack::sourceMapping(std::string const& _contractName
 std::string const* CompilerStack::runtimeSourceMapping(std::string const& _contractName) const
 {
 	solAssert(m_stackState == CompilationSuccessful, "Compilation was not successful.");
+
+	// TODO
+	if (m_eofVersion.has_value())
+		return nullptr;
 
 	Contract const& c = contract(_contractName);
 	if (!c.runtimeSourceMapping)
@@ -1348,9 +1356,9 @@ void CompilerStack::assembleYul(
 		// Assemble deployment (incl. runtime)  object.
 		compiledContract.object = compiledContract.evmAssembly->assemble();
 	}
-	catch (evmasm::AssemblyException const&)
+	catch (evmasm::AssemblyException const& error)
 	{
-		solAssert(false, "Assembly exception for bytecode");
+		solAssert(false, "Assembly exception for bytecode: "s + error.what());
 	}
 	solAssert(compiledContract.object.immutableReferences.empty(), "Leftover immutables.");
 
@@ -1361,9 +1369,9 @@ void CompilerStack::assembleYul(
 		// Assemble runtime object.
 		compiledContract.runtimeObject = compiledContract.evmRuntimeAssembly->assemble();
 	}
-	catch (evmasm::AssemblyException const&)
+	catch (evmasm::AssemblyException const& error)
 	{
-		solAssert(false, "Assembly exception for deployed bytecode");
+		solAssert(false, "Assembly exception for deployed bytecode"s + error.what());
 	}
 
 	// Throw a warning if EIP-170 limits are exceeded:

@@ -329,7 +329,7 @@ void DeclarationTypeChecker::endVisit(ArrayTypeName const& _typeName)
 	Type const* baseType = _typeName.baseType().annotation().type;
 	if (!baseType)
 	{
-		solAssert(!m_errorReporter.errors().empty(), "");
+		solAssert(m_errorReporter.hasErrors(), "");
 		return;
 	}
 
@@ -397,6 +397,13 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 	using Location = VariableDeclaration::Location;
 	Location varLoc = _variable.referenceLocation();
 	DataLocation typeLoc = DataLocation::Memory;
+
+	if (varLoc == VariableDeclaration::Location::Transient && !m_evmVersion.supportsTransientStorage())
+		m_errorReporter.declarationError(
+			7985_error,
+			_variable.location(),
+			"Transient storage is not supported by EVM versions older than cancun."
+		);
 
 	std::set<Location> allowedDataLocations = _variable.allowedDataLocations();
 	if (!allowedDataLocations.count(varLoc))

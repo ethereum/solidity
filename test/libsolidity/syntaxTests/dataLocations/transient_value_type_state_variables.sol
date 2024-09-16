@@ -7,5 +7,6 @@ contract C {
 	uint transient x;
 	bytes32 transient y;
 }
+// ====
+// EVMVersion: >=cancun
 // ----
-// UnimplementedFeatureError 1834: Transient storage variables are not supported.

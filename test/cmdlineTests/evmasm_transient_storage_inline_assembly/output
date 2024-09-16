@@ -1,5 +1,5 @@
 
-======= evmasm_transient_storage_opcodes/input.sol:C =======
+======= evmasm_transient_storage_inline_assembly/input.sol:C =======
 EVM assembly:
   0x80
   dup1

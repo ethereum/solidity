@@ -103,7 +103,6 @@ protected:
 	void declareFunction(std::string const& _name, SortPointer const& _sort);
 
 	std::string checkSatAndGetValuesCommand(std::vector<Expression> const& _expressionsToEvaluate);
-	std::vector<std::string> parseValues(std::string::const_iterator _start, std::string::const_iterator _end);
 
 	/// Communicates with the solver via the callback. Throws SMTSolverError on error.
 	std::string querySolver(std::string const& _input);
