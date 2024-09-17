@@ -65,6 +65,10 @@ add_library(yul
 	backends/evm/NoOutputAssembly.cpp
 	backends/evm/OptimizedEVMCodeTransform.cpp
 	backends/evm/OptimizedEVMCodeTransform.h
+	backends/evm/SSACFGLoopNestingForest.cpp
+	backends/evm/SSACFGLoopNestingForest.h
+	backends/evm/SSACFGTopologicalSort.cpp
+	backends/evm/SSACFGTopologicalSort.h
 	backends/evm/SSAControlFlowGraph.h
 	backends/evm/SSAControlFlowGraphBuilder.cpp
 	backends/evm/SSAControlFlowGraphBuilder.h
