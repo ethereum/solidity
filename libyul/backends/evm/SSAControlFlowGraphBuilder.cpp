@@ -73,6 +73,7 @@ SSACFG::ValueId SSAControlFlowGraphBuilder::tryRemoveTrivialPhi(SSACFG::ValueId 
 	// TODO: double-check if this is sane
 	auto const* phiInfo = std::get_if<SSACFG::PhiValue>(&m_graph.valueInfo(_phi));
 	yulAssert(phiInfo);
+	yulAssert(blockInfo(phiInfo->block).sealed);
 
 	SSACFG::ValueId same;
 	for (SSACFG::ValueId arg: phiInfo->arguments)
@@ -132,14 +133,27 @@ SSACFG::ValueId SSAControlFlowGraphBuilder::tryRemoveTrivialPhi(SSACFG::ValueId 
 				if (input == _phi)
 					uses.emplace_back(Use{std::ref(op), n});
 		}
-		// todo check if it is sound to set "unreachable" return values to literal 0
-		if (auto* functionReturn = std::get_if<SSACFG::BasicBlock::FunctionReturn>(&block.exit))
-			std::replace(
-				functionReturn->returnValues.begin(),
-				functionReturn->returnValues.end(),
-				_phi,
-				same == m_graph.unreachableValue() ? m_graph.newLiteral(block.debugData, 0) : same
-			);
+		std::visit(util::GenericVisitor{
+			[_phi, same](SSACFG::BasicBlock::FunctionReturn& _functionReturn) {
+				std::replace(
+					_functionReturn.returnValues.begin(),
+					_functionReturn.returnValues.end(),
+					_phi,
+					same
+				);
+			},
+			[_phi, same](SSACFG::BasicBlock::ConditionalJump& _condJump) {
+				if (_condJump.condition == _phi)
+					_condJump.condition = same;
+			},
+			[_phi, same](SSACFG::BasicBlock::JumpTable& _jumpTable) {
+				if (_jumpTable.value == _phi)
+					_jumpTable.value = same;
+			},
+			[](SSACFG::BasicBlock::Jump&) {},
+			[](SSACFG::BasicBlock::MainExit&) {},
+			[](SSACFG::BasicBlock::Terminated&) {}
+		}, block.exit);
 	}
 	for (auto& use: uses)
 		use.operation.get().inputs.at(use.inputIndex) = same;
@@ -257,6 +271,8 @@ void SSAControlFlowGraphBuilder::buildFunctionGraphs(
 		builder.m_currentBlock = cfg.entry;
 		for (auto&& [var, varId]: cfg.arguments)
 			builder.currentDef(var, cfg.entry) = varId;
+		for (auto const& var: cfg.returns)
+			builder.currentDef(var.get(), cfg.entry) = builder.zero();
 		builder.sealBlock(cfg.entry);
 		builder(functionDefinition->body);
 		cfg.exits.insert(builder.m_currentBlock);
@@ -630,7 +646,9 @@ SSACFG::ValueId SSAControlFlowGraphBuilder::readVariableRecursive(Scope::Variabl
 		val = m_graph.newPhi(_block);
 		block.phis.insert(val);
 		writeVariable(_variable, _block, val);
-		val = addPhiOperands(_variable, val);
+		// we call tryRemoveTrivialPhi explicitly opposed to what is presented in Algorithm 2, as our implementation
+		// does not call it in addPhiOperands to avoid removing phis in unsealed blocks
+		val = tryRemoveTrivialPhi(addPhiOperands(_variable, val));
 	}
 	writeVariable(_variable, _block, val);
 	return val;
@@ -642,7 +660,8 @@ SSACFG::ValueId SSAControlFlowGraphBuilder::addPhiOperands(Scope::Variable const
 	auto& phi = std::get<SSACFG::PhiValue>(m_graph.valueInfo(_phi));
 	for (auto pred: m_graph.block(phi.block).entries)
 		phi.arguments.emplace_back(readVariable(_variable, pred));
-	return tryRemoveTrivialPhi(_phi);
+	// we call tryRemoveTrivialPhi explicitly to avoid removing trivial phis in unsealed blocks
+	return _phi;
 }
 
 void SSAControlFlowGraphBuilder::writeVariable(Scope::Variable const& _variable, SSACFG::BlockId _block, SSACFG::ValueId _value)
@@ -681,11 +700,15 @@ Scope::Variable const& SSAControlFlowGraphBuilder::lookupVariable(YulName _name)
 
 void SSAControlFlowGraphBuilder::sealBlock(SSACFG::BlockId _block)
 {
+	// this method deviates from Algorithm 4 in the reference paper,
+	// as it would lead to tryRemoveTrivialPhi being called on unsealed blocks
 	auto& info = blockInfo(_block);
 	yulAssert(!info.sealed, "Trying to seal already sealed block.");
 	for (auto&& [phi, variable] : info.incompletePhis)
 		addPhiOperands(variable, phi);
 	info.sealed = true;
+	for (auto& [phi, _]: info.incompletePhis)
+		phi = tryRemoveTrivialPhi(phi);
 }
 
 
