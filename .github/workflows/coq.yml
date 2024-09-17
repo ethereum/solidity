@@ -24,7 +24,7 @@ jobs:
         custom_script: |
           startGroup "Install dependencies"
             sudo apt-get update
-            sudo apt-get install -y cmake
+            sudo apt-get install -y cmake libboost-all-dev
             opam install -y --deps-only coq/CoqOfSolidity/coq-of-solidity.opam
           endGroup
           startGroup "Build"
