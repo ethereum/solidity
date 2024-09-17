@@ -1,0 +1,44 @@
+name: Coq
+
+on:
+  push:
+    branches: [ "develop" ]
+  pull_request:
+    branches: [ "develop" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Download Git submodules
+      run: git submodule update --init --recursive
+    - uses: coq-community/docker-coq-action@v1
+      with:
+        custom_image: coqorg/coq:8.17-ocaml-4.14-flambda
+        custom_script: |
+          startGroup "Install dependencies"
+            sudo apt-get update
+            sudo apt-get install -y cmake
+            opam install -y --deps-only coq/CoqOfSolidity/coq-of-solidity.opam
+          endGroup
+          startGroup "Build"
+            sudo chown -R $(whoami) .
+            mkdir build
+            cd build
+            cmake ..
+            make
+          endGroup
+          startGroup "Check that the diff is empty (excluding submodules)"
+            git -c color.ui=always diff --exit-code --ignore-submodules=dirty
+          endGroup
+          startGroup "Compile Coq translations"
+            cd coq/CoqOfSolidity
+            make
+            cd ..
+          endGroup

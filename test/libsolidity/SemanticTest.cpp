@@ -735,6 +735,13 @@ bool SemanticTest::deploy(
 
 	// Create the output file
 	std::ofstream outputFile(testCoqFilename());
+
+	// Check if the output file was created
+	if (!outputFile.is_open())
+	{
+		std::cerr << "Unable to create the output file: " << testCoqFilename() << std::endl;
+		return false;
+	}
 	// Write the contract name to the output file
 	outputFile << "(* Generated test file *)" << std::endl;
 	outputFile << "Require Import CoqOfSolidity.CoqOfSolidity." << std::endl;
@@ -813,14 +820,14 @@ bool SemanticTest::deploy(
 
 std::string SemanticTest::contractPathWithoutExtension() const
 {
-	std::string contractPath = fs::relative(m_reader.fileName(), fs::current_path()).generic_string();
+	std::string contractPath = fs::relative(m_reader.fileName(), fs::current_path() / "test" / "libsolidity").generic_string();
 
 	return contractPath.substr(0, contractPath.size() - 4);
 }
 
 std::string SemanticTest::testCoqFilename() const
 {
-	return "CoqOfSolidity/" + contractPathWithoutExtension() + "/GeneratedTest.v";
+	return "coq/CoqOfSolidityTests/" + contractPathWithoutExtension() + "/GeneratedTest.v";
 }
 
 std::string SemanticTest::requirePathPrefix() const

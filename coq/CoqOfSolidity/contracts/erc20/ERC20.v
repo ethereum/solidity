@@ -1,0 +1,1 @@
+../../../CoqOfSolidityTests/semanticTests/various/erc20/ERC20.v

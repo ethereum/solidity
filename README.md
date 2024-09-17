@@ -1,5 +1,5 @@
 # 🪨🐓 coq-of-solidity
-> A formal verification tool for [Solidity](https://soliditylang.org/) using the [Coq](https://coq.inria.fr/) proof system
+> A formal verification tool for [Solidity](https://soliditylang.org/) using the [Coq](https://coq.inria.fr/) proof system. Make smart contracts without bugs!
 
 The `coq-of-solidity` project is a tool to automatically translate Solidity smart contracts to the Coq proof system. This allows to formally verify the correctness of the smart contracts.
 
@@ -12,14 +12,13 @@ This project provides:
 
 The `coq-of-solidity` tool uses an interactive theorem prover (Coq) to check arbitrarily complex code properties and business rules for your smart contracts.
 
+## ✅ Audits
+
+To audit your smart contracts with `coq-of-solidity` contact us at [contact@formal.land](mailto:contact@formal.land). We provide formal verification services for [Solidity](https://soliditylang.org/), [Rust](https://www.rust-lang.org/), and we have already secured thousands of lines of code for the blockchain industry ([Tezos](https://tezos.com/), [Aleph Zero](https://alephzero.org/), [Sui](https://sui.io/)).
+
 ## 🙏 Thanks
 
 We thank the [AlephZero Foundation](https://alephzero.org/) for their support and funding of this project.
-
-<!-- contact -->
-## 📬 Contact
-
-If you have smart contracts that you wish to audit with a maximum level of security, or want to know more about this project, do not hesitate to contact us at [contact@formal.land](mailto:contact@formal.land). We provide formal verification services for [Solidity](https://soliditylang.org/), [Rust](https://www.rust-lang.org/), and [OCaml](https://ocaml.org/), and we already secured thousands of lines of code for the blockchain industry ([Tezos](https://tezos.com/), [Aleph Zero](https://alephzero.org/), [Sui](https://sui.io/)).
 
 ## 🚀 Quick start
 
