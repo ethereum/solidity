@@ -22,7 +22,8 @@
 #pragma once
 
 #include <libyul/ASTForward.h>
-#include <libyul/optimiser/ASTWalker.h>
+#include <libyul/YulName.h>
+#include <libyul/Exceptions.h>
 
 #include <libevmasm/Instruction.h>
 
@@ -154,7 +155,6 @@ struct InterpreterState
 	size_t maxSteps = 0;
 	size_t numSteps = 0;
 	size_t maxExprNesting = 0;
-	ControlFlowState controlFlowState = ControlFlowState::Default;
 
 	/// Number of the current state instance, used for recursion protection
 	size_t numInstance = 0;
@@ -198,7 +198,7 @@ struct Scope
 /**
  * Yul interpreter.
  */
-class Interpreter: public ASTWalker
+class Interpreter
 {
 public:
 	/// Executes the Yul interpreter. Flag @param _disableMemoryTracing if set ensures that
@@ -230,17 +230,19 @@ public:
 	{
 	}
 
-	void operator()(ExpressionStatement const& _statement) override;
-	void operator()(Assignment const& _assignment) override;
-	void operator()(VariableDeclaration const& _varDecl) override;
-	void operator()(If const& _if) override;
-	void operator()(Switch const& _switch) override;
-	void operator()(FunctionDefinition const&) override;
-	void operator()(ForLoop const&) override;
-	void operator()(Break const&) override;
-	void operator()(Continue const&) override;
-	void operator()(Leave const&) override;
-	void operator()(Block const& _block) override;
+	ExecutionResult operator()(ExpressionStatement const& _statement);
+	ExecutionResult operator()(Assignment const& _assignment);
+	ExecutionResult operator()(VariableDeclaration const& _varDecl);
+	ExecutionResult operator()(If const& _if);
+	ExecutionResult operator()(Switch const& _switch);
+	ExecutionResult operator()(FunctionDefinition const&);
+	ExecutionResult operator()(ForLoop const&);
+	ExecutionResult operator()(Break const&);
+	ExecutionResult operator()(Continue const&);
+	ExecutionResult operator()(Leave const&);
+	ExecutionResult operator()(Block const& _block);
+
+	ExecutionResult visit(Statement const& _st);
 
 	bytes returnData() const { return m_state.returndata; }
 	std::vector<std::string> const& trace() const { return m_state.trace; }
@@ -248,17 +250,15 @@ public:
 	u256 valueOfVariable(YulName _name) const { return m_variables.at(_name); }
 
 protected:
-	/// Asserts that the expression evaluates to exactly one value and returns it.
-	virtual u256 evaluate(Expression const& _expression);
-	/// Evaluates the expression and returns its value.
-	virtual std::vector<u256> evaluateMulti(Expression const& _expression);
+	// evaluate the expression and assert that the number of return variable is _numReturnVars
+	virtual EvaluationResult evaluate(Expression const& _expression, size_t _numReturnVars);
 
 	void enterScope(Block const& _block);
 	void leaveScope();
 
 	/// Increment interpreter step count, throwing exception if step limit
 	/// is reached.
-	void incrementStep();
+	std::optional<ExecutionTerminated> incrementStep();
 
 	Dialect const& m_dialect;
 	InterpreterState& m_state;
@@ -274,7 +274,7 @@ protected:
 /**
  * Yul expression evaluator.
  */
-class ExpressionEvaluator: public ASTWalker
+class ExpressionEvaluator
 {
 public:
 	ExpressionEvaluator(
@@ -293,14 +293,11 @@ public:
 		m_disableMemoryTrace(_disableMemoryTrace)
 	{}
 
-	void operator()(Literal const&) override;
-	void operator()(Identifier const&) override;
-	void operator()(FunctionCall const& _funCall) override;
+	EvaluationResult operator()(Literal const&);
+	EvaluationResult operator()(Identifier const&);
+	EvaluationResult operator()(FunctionCall const& _funCall);
 
-	/// Asserts that the expression has exactly one value and returns it.
-	u256 value() const;
-	/// Returns the list of values of the expression.
-	std::vector<u256> values() const { return m_values; }
+	EvaluationResult visit(Expression const& _st);
 
 protected:
 	void runExternalCall(evmasm::Instruction _instruction);
@@ -326,11 +323,9 @@ protected:
 		);
 	}
 
-	void setValue(u256 _value);
-
 	/// Evaluates the given expression from right to left and
 	/// stores it in m_value.
-	void evaluateArgs(
+	EvaluationResult evaluateArgs(
 		std::vector<Expression> const& _expr,
 		std::vector<std::optional<LiteralKind>> const* _literalArguments
 	);
@@ -338,15 +333,13 @@ protected:
 	/// Increment evaluation count, throwing exception if the
 	/// nesting level is beyond the upper bound configured in
 	/// the interpreter state.
-	void incrementStep();
+	std::optional<ExecutionTerminated> incrementStep();
 
 	InterpreterState& m_state;
 	Dialect const& m_dialect;
 	/// Values of variables.
 	std::map<YulName, u256> const& m_variables;
 	Scope& m_scope;
-	/// Current value of the expression
-	std::vector<u256> m_values;
 	/// Current expression nesting level
 	unsigned m_nestingLevel = 0;
 	bool m_disableExternalCalls;
