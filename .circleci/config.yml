@@ -973,7 +973,7 @@ jobs:
       - matrix_notify_failure_unless_pr
 
   chk_pylint:
-    <<: *base_ubuntu2204_small
+    <<: *base_ubuntu2404_small
     steps:
       - checkout
       - run: pylint --version
@@ -1012,21 +1012,21 @@ jobs:
       - matrix_notify_failure_unless_pr
 
   chk_proofs:
-    <<: *base_ubuntu2204_small
+    <<: *base_ubuntu2404_small
     steps:
       - checkout
       - run_proofs
       - matrix_notify_failure_unless_pr
 
   chk_docs_pragma_min_version:
-    <<: *base_ubuntu2204_small
+    <<: *base_ubuntu2404_small
     steps:
       - checkout
       - run_docs_pragma_min_version
       - matrix_notify_failure_unless_pr
 
   t_ubu_pyscripts:
-    <<: *base_ubuntu2204_small
+    <<: *base_ubuntu2404_small
     steps:
       - checkout
       - run:
@@ -1053,25 +1053,25 @@ jobs:
   b_ubu: &b_ubu
     # this runs 2x faster on xlarge but takes 4x more resources (compared to medium).
     # Enough other jobs depend on it that it's worth it though.
-    <<: *base_ubuntu2204_xlarge
+    <<: *base_ubuntu2404_xlarge
     steps:
       - build
 
   # x64 ASAN build, for testing for memory related bugs
   b_ubu_asan: &b_ubu_asan
     # Runs slightly faster on large and xlarge but we only run it nightly so efficiency matters more.
-    <<: *base_ubuntu2204
+    <<: *base_ubuntu2404
     environment:
-      <<: *base_ubuntu2204_env
+      <<: *base_ubuntu2404_env
       CMAKE_OPTIONS: -DSANITIZE=address
       CMAKE_BUILD_TYPE: Release
     steps:
       - build
 
   b_ubu_clang: &b_ubu_clang
-    <<: *base_ubuntu2204_clang_large
+    <<: *base_ubuntu2404_clang_large
     environment:
-      <<: *base_ubuntu2204_clang_large_env
+      <<: *base_ubuntu2404_clang_large_env
       MAKEFLAGS: -j 10
     steps:
       - build
@@ -1081,9 +1081,9 @@ jobs:
     parameters:
       cmake_options:
         type: string
-    <<: *base_ubuntu2204_clang
+    <<: *base_ubuntu2404_clang
     environment:
-      <<: *base_ubuntu2204_clang_env
+      <<: *base_ubuntu2404_clang_env
       CMAKE_OPTIONS: << parameters.cmake_options >>
     steps:
       - build
@@ -1091,7 +1091,7 @@ jobs:
   b_ubu_force_release: &b_ubu_force_release
     <<: *b_ubu
     environment:
-      <<: *base_ubuntu2204_xlarge_env
+      <<: *base_ubuntu2404_xlarge_env
       FORCE_RELEASE: ON
 
   b_ubu_static:
@@ -1101,7 +1101,7 @@ jobs:
     # On large runs 2x faster than on medium. 3x on xlarge.
     <<: *base_ubuntu2004_xlarge
     environment:
-      <<: *base_ubuntu2204_xlarge_env
+      <<: *base_ubuntu2004_xlarge_env
       CMAKE_OPTIONS: -DCMAKE_BUILD_TYPE=Release -DUSE_Z3_DLOPEN=ON -DSOLC_STATIC_STDLIBS=ON
     steps:
       - checkout
@@ -1121,9 +1121,9 @@ jobs:
 
   b_ubu_codecov:
     # Runs ~30% faster on large but we only run it nightly so efficiency matters more.
-    <<: *base_ubuntu2204
+    <<: *base_ubuntu2404
     environment:
-      <<: *base_ubuntu2204_env
+      <<: *base_ubuntu2404_env
       COVERAGE: ON
       CMAKE_BUILD_TYPE: Debug
     steps:
@@ -1133,9 +1133,9 @@ jobs:
       - matrix_notify_failure_unless_pr
 
   t_ubu_codecov:
-    <<: *base_ubuntu2204_large
+    <<: *base_ubuntu2404_large
     environment:
-      <<: *base_ubuntu2204_large_env
+      <<: *base_ubuntu2404_large_env
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 1
     steps:
@@ -1158,9 +1158,9 @@ jobs:
   # Builds in C++20 mode and uses debug build in order to speed up.
   # Do *NOT* store any artifacts or workspace as we don't run tests on this build.
   b_ubu_cxx20:
-    <<: *base_ubuntu2204_large
+    <<: *base_ubuntu2404_large
     environment:
-      <<: *base_ubuntu2204_large_env
+      <<: *base_ubuntu2404_large_env
       CMAKE_BUILD_TYPE: Debug
       CMAKE_OPTIONS: -DCMAKE_CXX_STANDARD=20
       MAKEFLAGS: -j 10
@@ -1280,7 +1280,7 @@ jobs:
       - matrix_notify_failure_unless_pr
 
   b_docs:
-    <<: *base_ubuntu2204_small
+    <<: *base_ubuntu2404_small
     steps:
       - checkout
       - setup_prerelease_commit_hash
@@ -1299,7 +1299,7 @@ jobs:
       - soltest_all
 
   t_ubu_soltest_deprecated_evm_versions: &t_ubu_soltest_deprecated_evm_versions
-    <<: *base_ubuntu2204_large
+    <<: *base_ubuntu2404_large
     parallelism: 50
     steps:
       - checkout
@@ -1313,7 +1313,7 @@ jobs:
       - matrix_notify_failure_unless_pr
 
   t_ubu_lsp: &t_ubu_lsp
-    <<: *base_ubuntu2204_small
+    <<: *base_ubuntu2404_small
     steps:
       - test_lsp
 
@@ -1362,7 +1362,7 @@ jobs:
     <<: *t_ubu_cli
 
   t_ubu_locale:
-    <<: *base_ubuntu2204_small
+    <<: *base_ubuntu2404_small
     steps:
       - checkout
       - attach_workspace:
@@ -1372,10 +1372,10 @@ jobs:
 
   t_ubu_asan_cli:
     # Runs slightly faster on medium but we only run it nightly so efficiency matters more.
-    <<: *base_ubuntu2204
+    <<: *base_ubuntu2404
     parallelism: 8 # Should match number of tests in .circleci/parallel_cli_tests.py
     environment:
-      <<: *base_ubuntu2204_env
+      <<: *base_ubuntu2404_env
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
       # Suppress CLN memory leak.
       # See: https://github.com/ethereum/solidity/issues/13891 for details.
@@ -1384,10 +1384,10 @@ jobs:
       - cmdline_tests
 
   t_ubu_asan_soltest:
-    <<: *base_ubuntu2204
+    <<: *base_ubuntu2404
     parallelism: 20
     environment:
-      <<: *base_ubuntu2204_env
+      <<: *base_ubuntu2404_env
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
       SOLTEST_FLAGS: --no-smt
@@ -1399,10 +1399,10 @@ jobs:
       - soltest
 
   t_ubu_asan_clang_soltest:
-    <<: *base_ubuntu2204_clang
+    <<: *base_ubuntu2404_clang
     parallelism: 20
     environment:
-      <<: *base_ubuntu2204_clang_env
+      <<: *base_ubuntu2404_clang_env
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
       SOLTEST_FLAGS: --no-smt
@@ -1411,24 +1411,24 @@ jobs:
       - soltest
 
   t_ubu_ubsan_clang_soltest:
-    <<: *base_ubuntu2204_clang
+    <<: *base_ubuntu2404_clang
     parallelism: 20
     environment:
-      <<: *base_ubuntu2204_clang_env
+      <<: *base_ubuntu2404_clang_env
       EVM: << pipeline.parameters.evm-version >>
       SOLTEST_FLAGS: --no-smt
     steps:
       - soltest
 
   t_ubu_ubsan_clang_cli:
-    <<: *base_ubuntu2204_clang
+    <<: *base_ubuntu2404_clang
     parallelism: 8 # Should match number of tests in .circleci/parallel_cli_tests.py
     steps:
       - cmdline_tests
 
   t_ems_solcjs:
     # Unlike other t_ems jobs this one actually runs 2x faster on medium (compared to small).
-    <<: *base_ubuntu2204
+    <<: *base_ubuntu2404
     steps:
       - checkout
       - attach_workspace:
@@ -1747,7 +1747,7 @@ jobs:
     parameters:
       preset:
         type: string
-    <<: *base_ubuntu2204_small
+    <<: *base_ubuntu2404_small
     parallelism: 2 # For prepare_bytecode_report
     steps:
       - checkout
@@ -1832,9 +1832,9 @@ jobs:
           preset: "<< parameters.preset >>"
 
   t_bytecode_compare:
-    <<: *base_ubuntu2204_small
+    <<: *base_ubuntu2404_small
     environment:
-      <<: *base_ubuntu2204_small_env
+      <<: *base_ubuntu2404_small_env
       <<: *bytecode_compare_env_presets
     steps:
       - checkout
@@ -1848,7 +1848,7 @@ jobs:
       - matrix_notify_failure_unless_pr
 
   c_release_binaries:
-    <<: *base_ubuntu2204
+    <<: *base_ubuntu2404
     steps:
       - checkout
       - attach_workspace:
