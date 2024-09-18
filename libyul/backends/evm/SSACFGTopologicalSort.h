@@ -38,6 +38,8 @@ public:
 	std::set<size_t> const& backEdgeTargets() const { return m_backEdgeTargets; }
 	SSACFG const& cfg() const { return m_cfg; }
 	bool backEdge(SSACFG::BlockId const& _block1, SSACFG::BlockId const& _block2) const;
+	size_t preOrderIndexOf(size_t _block) const { return m_blockWisePreOrder[_block]; }
+	size_t maxSubtreePreOrderIndexOf(size_t _block) const { return m_blockWiseMaxSubtreePreOrder[_block]; }
 
 private:
 	void dfs(size_t _vertex);

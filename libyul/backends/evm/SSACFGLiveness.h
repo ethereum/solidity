@@ -39,7 +39,7 @@ public:
 
 	std::vector<std::set<SSACFG::ValueId>> const& liveIns() const { return m_liveIns; }
 	std::vector<std::set<SSACFG::ValueId>> const& liveOuts() const { return m_liveOuts; }
-
+	ForwardSSACFGTopologicalSort const& topologicalSort() const { return m_topologicalSort; }
 private:
 
 	void runDagDfs();

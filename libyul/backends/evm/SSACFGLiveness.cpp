@@ -38,7 +38,7 @@ SSACFGLiveness::SSACFGLiveness(SSACFG const& _cfg):
 void SSACFGLiveness::runDagDfs()
 {
 	// SSA Book, Algorithm 9.2
-	for(auto const blockIdValue: m_topologicalSort.postOrder())
+	for (auto const blockIdValue: m_topologicalSort.postOrder())
 	{
 		// post-order traversal
 		SSACFG::BlockId blockId{blockIdValue};
@@ -85,11 +85,7 @@ void SSACFGLiveness::runDagDfs()
 					| ranges::views::filter(filterLiterals);
 
 		// clean out unreachables
-		live = live
-			   | ranges::views::filter(
-				   [&](auto const& valueId)
-				   { return !std::holds_alternative<SSACFG::UnreachableValue>(m_cfg.valueInfo(valueId)); })
-			   | ranges::to<std::set>;
+		live = live | ranges::views::filter([&](auto const& valueId) { return !std::holds_alternative<SSACFG::UnreachableValue>(m_cfg.valueInfo(valueId)); }) | ranges::to<std::set>;
 
 		// LiveOut(B) <- live
 		m_liveOuts[blockId.value] = live;
