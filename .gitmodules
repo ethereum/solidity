@@ -7,3 +7,6 @@
 [submodule "deps/fmtlib"]
 	path = deps/fmtlib
 	url = https://github.com/fmtlib/fmt.git
+[submodule "coq/third-party/coq-evm"]
+	path = coq/third-party/coq-evm
+	url = https://github.com/formal-land/coq-evm.git
