@@ -33,6 +33,7 @@ jobs:
             cd build
             cmake ..
             make
+            cd ..
           endGroup
           startGroup "Check that the diff is empty (excluding submodules)"
             git -c color.ui=always diff --exit-code --ignore-submodules=dirty
@@ -40,5 +41,5 @@ jobs:
           startGroup "Compile Coq translations"
             cd coq/CoqOfSolidity
             make
-            cd ..
+            cd ../..
           endGroup
