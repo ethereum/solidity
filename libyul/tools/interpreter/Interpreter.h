@@ -41,29 +41,41 @@ struct Dialect;
 namespace solidity::yul::tools::interpreter
 {
 
-class InterpreterTerminatedGeneric: public util::Exception
+template<typename T>
+class ExecutionTerminatedCommon
+{
+public:
+	bool operator==(T) const { return true; }
+	bool operator!=(T) const { return false; }
+};
+
+class ExplicitlyTerminated : public ExecutionTerminatedCommon<ExplicitlyTerminated>
 {
 };
 
-class ExplicitlyTerminated: public InterpreterTerminatedGeneric
+class ExplicitlyTerminatedWithReturn : public ExecutionTerminatedCommon<ExplicitlyTerminatedWithReturn>
 {
 };
 
-class ExplicitlyTerminatedWithReturn: public ExplicitlyTerminated
+class StepLimitReached : public ExecutionTerminatedCommon<StepLimitReached>
 {
 };
 
-class StepLimitReached: public InterpreterTerminatedGeneric
+class TraceLimitReached : public ExecutionTerminatedCommon<TraceLimitReached>
 {
 };
 
-class TraceLimitReached: public InterpreterTerminatedGeneric
+class ExpressionNestingLimitReached : public ExecutionTerminatedCommon<ExpressionNestingLimitReached>
 {
 };
 
-class ExpressionNestingLimitReached: public InterpreterTerminatedGeneric
-{
-};
+using ExecutionTerminated = std::variant<
+	ExplicitlyTerminated,
+	ExplicitlyTerminatedWithReturn,
+	StepLimitReached,
+	TraceLimitReached,
+	ExpressionNestingLimitReached
+>;
 
 enum class ControlFlowState
 {
@@ -72,6 +84,39 @@ enum class ControlFlowState
 	Break,
 	Leave
 };
+
+struct ExecutionOk
+{
+	ControlFlowState state;
+
+	bool operator==(ExecutionOk other) const
+	{
+		return state == other.state;
+	}
+
+	bool operator!=(ExecutionOk other) const
+	{
+		return state != other.state;
+	}
+};
+
+struct EvaluationOk
+{
+	std::vector<u256> values;
+
+	EvaluationOk(u256 _x):
+		values{_x}
+	{
+	}
+
+	EvaluationOk(std::vector<u256> const& _values):
+		values(_values)
+	{
+	}
+};
+
+using ExecutionResult = std::variant<ExecutionOk, ExecutionTerminated>;
+using EvaluationResult = std::variant<EvaluationOk, ExecutionTerminated>;
 
 struct InterpreterState
 {
