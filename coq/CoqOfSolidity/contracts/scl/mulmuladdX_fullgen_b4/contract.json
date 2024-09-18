@@ -93,10 +93,10 @@
               "value": {
                 "arguments": [
                   {
-                    "hexValue": "466f6f4261725f39305f6465706c6f796564",
+                    "hexValue": "436f6e74726163745f39315f6465706c6f796564",
                     "kind": "string",
                     "nodeType": "YulLiteral",
-                    "value": "FooBar_90_deployed"
+                    "value": "Contract_91_deployed"
                   }
                 ],
                 "functionName": {
@@ -122,10 +122,10 @@
                   {
                     "arguments": [
                       {
-                        "hexValue": "466f6f4261725f39305f6465706c6f796564",
+                        "hexValue": "436f6e74726163745f39315f6465706c6f796564",
                         "kind": "string",
                         "nodeType": "YulLiteral",
-                        "value": "FooBar_90_deployed"
+                        "value": "Contract_91_deployed"
                       }
                     ],
                     "functionName": {
@@ -173,7 +173,7 @@
     },
     "nodeType": "YulCode"
   },
-  "name": "FooBar_90",
+  "name": "Contract_91",
   "nodeType": "YulObject",
   "subObjects": [
     {
@@ -1489,7 +1489,7 @@
                   }
                 ]
               },
-              "name": "usr$ecAddn2_2185",
+              "name": "usr$ecAddn2_2189",
               "nodeType": "YulFunctionDefinition",
               "parameters": [
                 {
@@ -2176,7 +2176,7 @@
                     "expression": {
                       "arguments": [],
                       "functionName": {
-                        "name": "fun_ecGenMulmuladdX_store_2808",
+                        "name": "fun_ecGenMulmuladdX_store_2814",
                         "nodeType": "YulIdentifier"
                       },
                       "nodeType": "YulFunctionCall"
@@ -3266,7 +3266,7 @@
                         }
                       ],
                       "functionName": {
-                        "name": "usr$ecAddn2_2185",
+                        "name": "usr$ecAddn2_2189",
                         "nodeType": "YulIdentifier"
                       },
                       "nodeType": "YulFunctionCall"
@@ -3823,7 +3823,7 @@
                         }
                       ],
                       "functionName": {
-                        "name": "usr$ecAddn2_2185",
+                        "name": "usr$ecAddn2_2189",
                         "nodeType": "YulIdentifier"
                       },
                       "nodeType": "YulFunctionCall"
@@ -4104,7 +4104,7 @@
                         }
                       ],
                       "functionName": {
-                        "name": "usr$ecAddn2_2185",
+                        "name": "usr$ecAddn2_2189",
                         "nodeType": "YulIdentifier"
                       },
                       "nodeType": "YulFunctionCall"
@@ -4909,7 +4909,7 @@
                         }
                       ],
                       "functionName": {
-                        "name": "usr$ecAddn2_2185",
+                        "name": "usr$ecAddn2_2189",
                         "nodeType": "YulIdentifier"
                       },
                       "nodeType": "YulFunctionCall"
@@ -5203,7 +5203,7 @@
                         }
                       ],
                       "functionName": {
-                        "name": "usr$ecAddn2_2185",
+                        "name": "usr$ecAddn2_2189",
                         "nodeType": "YulIdentifier"
                       },
                       "nodeType": "YulFunctionCall"
@@ -5739,7 +5739,7 @@
                         }
                       ],
                       "functionName": {
-                        "name": "usr$ecAddn2_2185",
+                        "name": "usr$ecAddn2_2189",
                         "nodeType": "YulIdentifier"
                       },
                       "nodeType": "YulFunctionCall"
@@ -13072,7 +13072,29 @@
                               {
                                 "kind": "number",
                                 "nodeType": "YulLiteral",
+                                "value": "0x40"
+                              },
+                              {
+                                "kind": "number",
+                                "nodeType": "YulLiteral",
                                 "value": "2047"
+                              }
+                            ],
+                            "functionName": {
+                              "name": "mstore",
+                              "nodeType": "YulIdentifier"
+                            },
+                            "nodeType": "YulFunctionCall"
+                          },
+                          "nodeType": "YulExpressionStatement"
+                        },
+                        {
+                          "expression": {
+                            "arguments": [
+                              {
+                                "kind": "number",
+                                "nodeType": "YulLiteral",
+                                "value": "0x40"
                               },
                               {
                                 "kind": "number",
@@ -13219,19 +13241,19 @@
                   }
                 ]
               },
-              "name": "fun_ecGenMulmuladdX_store_2808",
+              "name": "fun_ecGenMulmuladdX_store_2814",
               "nodeType": "YulFunctionDefinition"
             }
           ]
         },
         "nodeType": "YulCode"
       },
-      "name": "FooBar_90_deployed",
+      "name": "Contract_91_deployed",
       "nodeType": "YulObject",
       "subObjects": [
         {
           "nodeType": "YulData",
-          "value": "a26469706673582212201e8e3efb908b0a876216c7d74340e010b1f91d7f2c0f61ce0fc1667db3d5fead64736f6c634300081b0033"
+          "value": "a26469706673582212200c51d168b10bf15ef49e8959293608be807c2b445bc61857f0c26ee6a0614f4e64736f6c634300081b0033"
         }
       ]
     }

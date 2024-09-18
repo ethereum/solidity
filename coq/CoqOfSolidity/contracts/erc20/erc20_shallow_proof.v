@@ -2,7 +2,7 @@
 Require Import CoqOfSolidity.CoqOfSolidity.
 Require Import CoqOfSolidity.simulations.CoqOfSolidity.
 Require Import CoqOfSolidity.contracts.erc20.erc20.
-Require Import CoqOfSolidity.contracts.erc20.erc20_shallow_embedding.
+Require Import CoqOfSolidity.contracts.erc20.erc20_shallow.
 
 Import Run.
 
@@ -17,7 +17,7 @@ Module Erc20_403.
       Codes.get_function erc20.codes environment "checked_add_uint256" in
     Compare.t erc20.codes environment stack stack
       (function [x])
-      (erc20_shallow_embedding.Erc20_403.checked_add_uint256 x).
+      (erc20_shallow.Erc20_403.checked_add_uint256 x).
   Proof.
     (* entering function *)
     Compare.Tactic.stack_primitives.
@@ -59,7 +59,7 @@ Module Erc20_403.
       environment <| Environment.code_name := Erc20.code.(Code.hex_name) |> in
     Compare.t erc20.codes environment stack stack
       Erc20.code.(Code.body)
-      erc20_shallow_embedding.Erc20_403.body.
+      erc20_shallow.Erc20_403.body.
   Proof.
     (* entering function *)
     Compare.Tactic.stack_primitives.
@@ -204,7 +204,7 @@ Module Erc20_403.
         Codes.get_function erc20.codes environment "abi_decode_address" in
       Compare.t erc20.codes environment stack stack
         (function [])
-        (erc20_shallow_embedding.Erc20_403.Erc20_403_deployed.abi_decode_address).
+        (erc20_shallow.Erc20_403.Erc20_403_deployed.abi_decode_address).
     Proof.
       (* entering function *)
       Compare.Tactic.stack_primitives.
@@ -238,7 +238,7 @@ Module Erc20_403.
         Codes.get_function erc20.codes environment "abi_decode_address_2305" in
       Compare.t erc20.codes environment stack stack
         (function [])
-        (erc20_shallow_embedding.Erc20_403.Erc20_403_deployed.abi_decode_address_2305).
+        (erc20_shallow.Erc20_403.Erc20_403_deployed.abi_decode_address_2305).
     Proof.
       (* entering function *)
       Compare.Tactic.stack_primitives.
@@ -273,7 +273,7 @@ Module Erc20_403.
         Codes.get_function erc20.codes environment "checked_sub_uint256" in
       Compare.t erc20.codes environment stack stack
         (function [x; y])
-        (erc20_shallow_embedding.Erc20_403.Erc20_403_deployed.checked_sub_uint256 x y).
+        (erc20_shallow.Erc20_403.Erc20_403_deployed.checked_sub_uint256 x y).
     Proof.
       (* entering function *)
       Compare.Tactic.stack_primitives.
@@ -319,7 +319,7 @@ Module Erc20_403.
         Codes.get_function erc20.codes environment "checked_add_uint256" in
       Compare.t erc20.codes environment stack stack
         (function [x; y])
-        (erc20_shallow_embedding.Erc20_403.Erc20_403_deployed.checked_add_uint256 x y).
+        (erc20_shallow.Erc20_403.Erc20_403_deployed.checked_add_uint256 x y).
     Proof.
       (* entering function *)
       Compare.Tactic.stack_primitives.
@@ -366,7 +366,7 @@ Module Erc20_403.
         Codes.get_function erc20.codes environment "fun_approve" in
       Compare.t erc20.codes environment stack stack
         (function [var_owner; var_spender; var_value])
-        (erc20_shallow_embedding.Erc20_403.Erc20_403_deployed.fun_approve var_owner var_spender var_value).
+        (erc20_shallow.Erc20_403.Erc20_403_deployed.fun_approve var_owner var_spender var_value).
     Proof.
       (* entering function *)
       Compare.Tactic.stack_primitives.
@@ -531,7 +531,7 @@ Module Erc20_403.
         Codes.get_function erc20.codes environment "fun_transfer" in
       Compare.t erc20.codes environment stack stack
         (function [var_from; var_to; var_value])
-        (erc20_shallow_embedding.Erc20_403.Erc20_403_deployed.fun_transfer var_from var_to var_value).
+        (erc20_shallow.Erc20_403.Erc20_403_deployed.fun_transfer var_from var_to var_value).
     Proof.
       (* entering function *)
       Compare.Tactic.stack_primitives.
@@ -673,7 +673,7 @@ Module Erc20_403.
         environment <| Environment.code_name := Erc20.deployed.code.(Code.hex_name) |> in
       Compare.t erc20.codes environment stack stack
         Erc20.deployed.code.(Code.body)
-        erc20_shallow_embedding.Erc20_403.Erc20_403_deployed.body.
+        erc20_shallow.Erc20_403.Erc20_403_deployed.body.
     Proof.
       (* entering function *)
       Compare.Tactic.stack_primitives.

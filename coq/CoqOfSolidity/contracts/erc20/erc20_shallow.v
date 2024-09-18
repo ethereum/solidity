@@ -55,6 +55,16 @@ Module Erc20_403.
     M.pure tt.
 
   Module Erc20_403_deployed.
+    Definition abi_decode_address : M.t U256.t :=
+      let~ value := [[ calldataload ~(| 4 |) ]] in
+      do~ [[
+        M.if_unit (| iszero ~(| (eq ~(| value, (and ~(| value, (sub ~(| (shl ~(| 160, 1 |)), 1 |)) |)) |)) |),
+          do~ [[ revert ~(| 0, 0 |) ]] in
+          M.pure tt
+        |)
+      ]] in
+      M.pure value.
+
     Definition abi_decode_address_2305 : M.t U256.t :=
       let~ value := [[ calldataload ~(| 36 |) ]] in
       do~ [[
@@ -64,18 +74,6 @@ Module Erc20_403.
         |)
       ]] in
       M.pure value.
-
-    Definition checked_sub_uint256 (x : U256.t) (y : U256.t) : M.t U256.t :=
-      let~ diff := [[ sub ~(| x, y |) ]] in
-      do~ [[
-        M.if_unit (| gt ~(| diff, x |),
-          do~ [[ mstore ~(| 0, (shl ~(| 224, 0x4e487b71 |)) |) ]] in
-          do~ [[ mstore ~(| 4, 0x11 |) ]] in
-          do~ [[ revert ~(| 0, 0x24 |) ]] in
-          M.pure tt
-        |)
-      ]] in
-      M.pure diff.
 
     Definition checked_add_uint256 (x : U256.t) (y : U256.t) : M.t U256.t :=
       let~ sum := [[ add ~(| x, y |) ]] in
@@ -89,47 +87,17 @@ Module Erc20_403.
       ]] in
       M.pure sum.
 
-    Definition fun_transfer (var_from : U256.t) (var_to : U256.t) (var_value : U256.t) : M.t unit :=
-      let~ _1 := [[ and ~(| var_to, (sub ~(| (shl ~(| 160, 1 |)), 1 |)) |) ]] in
+    Definition checked_sub_uint256 (x : U256.t) (y : U256.t) : M.t U256.t :=
+      let~ diff := [[ sub ~(| x, y |) ]] in
       do~ [[
-        M.if_unit (| iszero ~(| _1 |),
-          let~ memPtr := [[ mload ~(| 64 |) ]] in
-          do~ [[ mstore ~(| memPtr, (shl ~(| 229, 4594637 |)) |) ]] in
-          do~ [[ mstore ~(| (add ~(| memPtr, 4 |)), 32 |) ]] in
-          do~ [[ mstore ~(| (add ~(| memPtr, 36 |)), 35 |) ]] in
-          do~ [[ mstore ~(| (add ~(| memPtr, 68 |)), 0x45726332303a207472616e7366657220746f20746865207a65726f2061646472 |) ]] in
-          do~ [[ mstore ~(| (add ~(| memPtr, 100 |)), 0x6573730000000000000000000000000000000000000000000000000000000000 |) ]] in
-          do~ [[ revert ~(| memPtr, 132 |) ]] in
+        M.if_unit (| gt ~(| diff, x |),
+          do~ [[ mstore ~(| 0, (shl ~(| 224, 0x4e487b71 |)) |) ]] in
+          do~ [[ mstore ~(| 4, 0x11 |) ]] in
+          do~ [[ revert ~(| 0, 0x24 |) ]] in
           M.pure tt
         |)
       ]] in
-      let~ _2 := [[ and ~(| var_from, (sub ~(| (shl ~(| 160, 1 |)), 1 |)) |) ]] in
-      do~ [[ mstore ~(| 0x00, _2 |) ]] in
-      do~ [[ mstore ~(| 0x20, 0x00 |) ]] in
-      let~ _3 := [[ checked_sub_uint256 ~(| (sload ~(| (keccak256 ~(| 0x00, 0x40 |)) |)), var_value |) ]] in
-      do~ [[ mstore ~(| 0x00, _2 |) ]] in
-      do~ [[ mstore ~(| 0x20, 0x00 |) ]] in
-      do~ [[ sstore ~(| (keccak256 ~(| 0x00, 0x40 |)), _3 |) ]] in
-      do~ [[ mstore ~(| 0x00, _1 |) ]] in
-      do~ [[ mstore ~(| 0x20, 0x00 |) ]] in
-      let~ _4 := [[ checked_add_uint256 ~(| (sload ~(| (keccak256 ~(| 0x00, 0x40 |)) |)), var_value |) ]] in
-      do~ [[ mstore ~(| 0x00, _1 |) ]] in
-      do~ [[ mstore ~(| 0x20, 0x00 |) ]] in
-      do~ [[ sstore ~(| (keccak256 ~(| 0x00, 0x40 |)), _4 |) ]] in
-      let~ _5 := [[ mload ~(| 0x40 |) ]] in
-      do~ [[ mstore ~(| _5, var_value |) ]] in
-      do~ [[ log3 ~(| _5, 0x20, 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef, _2, _1 |) ]] in
-      M.pure tt.
-
-    Definition abi_decode_address : M.t U256.t :=
-      let~ value := [[ calldataload ~(| 4 |) ]] in
-      do~ [[
-        M.if_unit (| iszero ~(| (eq ~(| value, (and ~(| value, (sub ~(| (shl ~(| 160, 1 |)), 1 |)) |)) |)) |),
-          do~ [[ revert ~(| 0, 0 |) ]] in
-          M.pure tt
-        |)
-      ]] in
-      M.pure value.
+      M.pure diff.
 
     Definition fun_approve (var_owner : U256.t) (var_spender : U256.t) (var_value : U256.t) : M.t unit :=
       let~ _1 := [[ and ~(| var_owner, (sub ~(| (shl ~(| 160, 1 |)), 1 |)) |) ]] in
@@ -169,6 +137,38 @@ Module Erc20_403.
       let~ _3 := [[ mload ~(| 0x40 |) ]] in
       do~ [[ mstore ~(| _3, var_value |) ]] in
       do~ [[ log3 ~(| _3, 0x20, 0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925, _1, _2 |) ]] in
+      M.pure tt.
+
+    Definition fun_transfer (var_from : U256.t) (var_to : U256.t) (var_value : U256.t) : M.t unit :=
+      let~ _1 := [[ and ~(| var_to, (sub ~(| (shl ~(| 160, 1 |)), 1 |)) |) ]] in
+      do~ [[
+        M.if_unit (| iszero ~(| _1 |),
+          let~ memPtr := [[ mload ~(| 64 |) ]] in
+          do~ [[ mstore ~(| memPtr, (shl ~(| 229, 4594637 |)) |) ]] in
+          do~ [[ mstore ~(| (add ~(| memPtr, 4 |)), 32 |) ]] in
+          do~ [[ mstore ~(| (add ~(| memPtr, 36 |)), 35 |) ]] in
+          do~ [[ mstore ~(| (add ~(| memPtr, 68 |)), 0x45726332303a207472616e7366657220746f20746865207a65726f2061646472 |) ]] in
+          do~ [[ mstore ~(| (add ~(| memPtr, 100 |)), 0x6573730000000000000000000000000000000000000000000000000000000000 |) ]] in
+          do~ [[ revert ~(| memPtr, 132 |) ]] in
+          M.pure tt
+        |)
+      ]] in
+      let~ _2 := [[ and ~(| var_from, (sub ~(| (shl ~(| 160, 1 |)), 1 |)) |) ]] in
+      do~ [[ mstore ~(| 0x00, _2 |) ]] in
+      do~ [[ mstore ~(| 0x20, 0x00 |) ]] in
+      let~ _3 := [[ checked_sub_uint256 ~(| (sload ~(| (keccak256 ~(| 0x00, 0x40 |)) |)), var_value |) ]] in
+      do~ [[ mstore ~(| 0x00, _2 |) ]] in
+      do~ [[ mstore ~(| 0x20, 0x00 |) ]] in
+      do~ [[ sstore ~(| (keccak256 ~(| 0x00, 0x40 |)), _3 |) ]] in
+      do~ [[ mstore ~(| 0x00, _1 |) ]] in
+      do~ [[ mstore ~(| 0x20, 0x00 |) ]] in
+      let~ _4 := [[ checked_add_uint256 ~(| (sload ~(| (keccak256 ~(| 0x00, 0x40 |)) |)), var_value |) ]] in
+      do~ [[ mstore ~(| 0x00, _1 |) ]] in
+      do~ [[ mstore ~(| 0x20, 0x00 |) ]] in
+      do~ [[ sstore ~(| (keccak256 ~(| 0x00, 0x40 |)), _4 |) ]] in
+      let~ _5 := [[ mload ~(| 0x40 |) ]] in
+      do~ [[ mstore ~(| _5, var_value |) ]] in
+      do~ [[ log3 ~(| _5, 0x20, 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef, _2, _1 |) ]] in
       M.pure tt.
 
     Definition body : M.t unit :=

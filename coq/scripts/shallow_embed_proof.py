@@ -148,7 +148,7 @@ def function_definition_to_coq(
         indent(level + 2) + f"Codes.get_function {contract_name}.codes environment \"" + definition_name + "\" in\n" + \
         indent(level + 1) + f"Compare.t {contract_name}.codes environment stack stack\n" + \
         indent(level + 2) + "(function [" + "; ".join(params) + "])\n" + \
-        indent(level + 2) + "(" + ".".join([contract_name + "_shallow_embedding"] + module_prefix + [definition_name]) + "".join(" "+ param for param in params) + ").\n" + \
+        indent(level + 2) + "(" + ".".join([contract_name + "_shallow"] + module_prefix + [definition_name]) + "".join(" "+ param for param in params) + ").\n" + \
         indent(level) + "Proof.\n" + \
         indent(level + 1) + "(* entering function *)\n" + \
         indent(level + 1) + "Compare.Tactic.stack_primitives.\n" + \
@@ -173,7 +173,7 @@ def block_definition_to_coq(
         indent(level + 2) + f"environment <| Environment.code_name := {code}.(Code.hex_name) |> in\n" + \
         indent(level + 1) + f"Compare.t {contract_name}.codes environment stack stack\n" + \
         indent(level + 2) + f"{code}.(Code.body)\n" + \
-        indent(level + 2) + ".".join([contract_name + "_shallow_embedding"] + module_prefix + ["body"]) + ".\n" + \
+        indent(level + 2) + ".".join([contract_name + "_shallow"] + module_prefix + ["body"]) + ".\n" + \
         indent(level) + "Proof.\n" + \
         indent(level + 1) + "(* entering function *)\n" + \
         indent(level + 1) + "Compare.Tactic.stack_primitives.\n" + \
@@ -249,7 +249,7 @@ def main():
     print("Require Import CoqOfSolidity.CoqOfSolidity.")
     print("Require Import CoqOfSolidity.simulations.CoqOfSolidity.")
     print(f"""Require Import {import_path}.
-Require Import {import_path}_shallow_embedding.
+Require Import {import_path}_shallow.
 
 Import Run.""")
     print()

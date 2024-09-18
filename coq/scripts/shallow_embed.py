@@ -3,8 +3,13 @@ import json
 from pathlib import Path
 import sys
 
-def indent(level):
-    return "  " * level
+# Indent each line of the block, except empty lines
+def indent(block: str) -> str:
+    indentation = "  "
+    return "\n".join(
+        line if line == "" else indentation + line
+        for line in block.split("\n")
+    )
 
 def paren(condition: bool, value: str) -> str:
     return f"({value})" if condition else value
@@ -36,14 +41,14 @@ def node_in_block_to_coq(level: int, node):
     elif node_type in ['YulIf', 'YulSwitch']:
         return \
             "do~ [[\n" + \
-            indent(level + 1) + node_to_coq(level + 1, node) + "\n" + \
-            indent(level) + "]] in"
+            indent(node_to_coq(level + 1, node)) + "\n" + \
+            "]] in"
 
     elif node_type in ['YulBlock', 'YulForLoop']:
         return \
             "do~\n" + \
-            indent(level + 1) + node_to_coq(level + 1, node) + "\n" + \
-            indent(level) + "in"
+            indent(node_to_coq(level + 1, node)) + "\n" + \
+            "in"
 
     return \
         "do~ [[ " + node_to_coq(level, node) + " ]] in"
@@ -57,7 +62,7 @@ def block_to_coq(level: int, node, result: str) -> str:
             for stmt in node.get('statements', [])
             if stmt.get('nodeType') != 'YulFunctionDefinition'
         ] + [result]
-        return ("\n" + indent(level)).join(statements)
+        return "\n".join(statements)
 
     return "(* Unsupported block node type: {node_type} *)"
 
@@ -154,22 +159,22 @@ def node_to_coq(level: int, node) -> str:
             true_body = node_to_coq(level + 1, node.get('body'))
             return \
                 f"M.if_unit (| {condition},\n" + \
-                indent(level + 1) + true_body + "\n" + \
-                indent(level) + "|)"
+                indent(true_body) + "\n" + \
+                "|)"
 
         elif node_type == 'YulSwitch':
             expression = node_to_coq(level, node.get('expression'))
             cases = [
                 f"if δ =? {node_to_coq(level, case.get('value'))} then\n" + \
-                indent(level + 1) + node_to_coq(level + 1, case.get('body'))
+                indent(node_to_coq(level + 1, case.get('body')))
                 for case in node.get('cases', [])
             ]
             return \
                 "(* switch *)\n" + \
-                indent(level) + f"let* δ := ltac:(M.monadic ({expression})) in\n" + \
-                indent(level) + ("\n" + indent(level) + "else ").join(cases) + "\n" + \
-                indent(level) + "else\n" + \
-                indent(level + 1) + "M.pure tt"
+                f"let* δ := ltac:(M.monadic ({expression})) in\n" + \
+                ("\nelse ").join(cases) + "\n" + \
+                "else\n" + \
+                indent("M.pure tt")
 
         elif node_type == 'YulLeave':
             return "M.leave"
@@ -188,15 +193,17 @@ def node_to_coq(level: int, node) -> str:
 
             return \
                 "(* for loop *)\n" + \
-                indent(level) + "(* pre *)\n" + \
-                indent(level) + pre + "\n" + \
-                indent(level) + "M.for_unit\n" + \
-                indent(level + 1) + "(* condition *)\n" + \
-                indent(level + 1) + "[[ " + condition + " ]]\n" + \
-                indent(level + 1) + "(* body *)\n" + \
-                indent(level + 1) + "(" + body + ")\n" + \
-                indent(level + 1) + "(* post *)\n" + \
-                indent(level + 1) + "(" + post + ")"
+                "(* pre *)\n" + \
+                pre + "\n" + \
+                "M.for_unit\n" + \
+                indent(
+                    "(* condition *)\n" + \
+                    "[[ " + condition + " ]]\n" + \
+                    "(* body *)\n" + \
+                    "(" + body + ")\n" + \
+                    "(* post *)\n" + \
+                    "(" + post + ")"
+                )
 
         else:
             return f"(* Unsupported node type: {node_type} *)"
@@ -229,8 +236,10 @@ def function_definition_to_coq(level: int, node) -> str:
     body = block_to_coq(level + 1, node.get('body'), result)
     return \
         f"Definition {name}{params} : M.t {function_result_type(len(node.get('returnVariables', [])))} :=\n" + \
-        indent(level + 1) + body + "."
+        indent(body + ".")
 
+# Get the names of the functions called in a function.
+# We take care of sorting the names in alphabetical order so that the output is deterministic.
 def get_function_dependencies(function_node) -> list[str]:
     dependencies = set()
 
@@ -239,8 +248,8 @@ def get_function_dependencies(function_node) -> list[str]:
             if node.get('nodeType') == 'YulFunctionCall':
                 function_name = node['functionName']['name']
                 dependencies.add(function_name)
-            for value in node.values():
-                traverse(value)
+            for key in sorted(node.keys()):
+                traverse(node[key])
         elif isinstance(node, list):
             for item in node:
                 traverse(item)
@@ -248,13 +257,13 @@ def get_function_dependencies(function_node) -> list[str]:
     # Start traversal from the 'statements' field
     traverse(function_node.get('body', {}))
 
-    return list(dependencies)
+    return sorted(dependencies)
 
 def topological_sort(functions: dict[str, list[str]]) -> list[str]:
     # Create a graph representation
     graph = defaultdict(list)
     all_funcs = set()
-    for func, called_funcs in functions.items():
+    for func, called_funcs in sorted(functions.items()):
         all_funcs.add(func)
         for called in called_funcs:
             graph[func].append(called)
@@ -279,7 +288,7 @@ def topological_sort(functions: dict[str, list[str]]) -> list[str]:
     stack = []
 
     # Perform DFS for each unvisited node
-    for func in all_funcs:
+    for func in sorted(all_funcs):
         if func not in visited:
             dfs(func, visited, stack, set())
 
@@ -312,11 +321,10 @@ def top_level_to_coq(level: int, node) -> str:
             for stmt in order_functions(ordered_function_names, node.get('statements', []))
             if stmt.get('nodeType') == 'YulFunctionDefinition'
         ]
-        body = node_to_coq(level + 1, node)
-        return \
-            ("\n\n" + indent(level)).join(functions) + "\n\n" + \
-            indent(level) + "Definition body : M.t unit :=\n" + \
-            indent(level + 1) + body + "."
+        body = \
+            "Definition body : M.t unit :=\n" + \
+            indent(node_to_coq(level + 1, node)) + "."
+        return ("\n\n").join(functions + [body])
 
     return f"(* Unsupported top-level node type: {node_type} *)"
 
@@ -326,14 +334,14 @@ def object_to_coq(level: int, node) -> str:
     if node_type == 'YulObject':
         return \
             "Module " + node['name'] + ".\n" + \
-            indent(level + 1) + object_to_coq(level + 1, node['code']) + "\n" + \
+            indent(object_to_coq(level + 1, node['code'])) + "\n" + \
             "".join(
                 "\n" +
-                indent(level + 1) + object_to_coq(level + 1, child) + "\n"
+                indent(object_to_coq(level + 1, child)) + "\n"
                 for child in node.get('subObjects', [])
                 if child.get('nodeType') != 'YulData'
             ) + \
-            indent(level) + "End " + node['name'] + "."
+            "End " + node['name'] + "."
 
     elif node_type == 'YulCode':
         return top_level_to_coq(level, node['block'])
