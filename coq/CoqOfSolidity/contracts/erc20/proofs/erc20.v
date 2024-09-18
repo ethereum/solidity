@@ -2,7 +2,7 @@ Require Import CoqOfSolidity.CoqOfSolidity.
 Require Import simulations.CoqOfSolidity.
 Require simulations.erc20.
 Require Import contracts.erc20.erc20.
-Require Import contracts.erc20.erc20_shallow_embedding.
+Require Import contracts.erc20.erc20_shallow.
 
 Import RunO.
 
