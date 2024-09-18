@@ -62,8 +62,6 @@ TestCase::TestResult SSAControlFlowGraphTest::run(std::ostream& _stream, std::st
 		return TestResult::FatalError;
 	}
 
-	std::ostringstream output;
-
 	auto info = AsmAnalyzer::analyzeStrictAssertCorrect(*m_dialect, *object);
 	std::unique_ptr<ControlFlow> controlFlow = SSAControlFlowGraphBuilder::build(
 		info,
@@ -71,14 +69,7 @@ TestCase::TestResult SSAControlFlowGraphTest::run(std::ostream& _stream, std::st
 		object->code()->root()
 	);
 
-	output << "digraph SSACFG {\nnodesep=0.7;\ngraph[fontname=\"DejaVu Sans\"]\nnode[shape=box,fontname=\"DejaVu Sans\"];\n\n";
-	output << controlFlow->mainGraph->toDot(false);
-	size_t index = 1;
-	for (auto const& [function, functionGraph]: controlFlow->functionGraphMapping)
-		output << functionGraph->toDot(false, index++);
-	output << "}\n";
-
-	m_obtainedResult = output.str();
+	m_obtainedResult = controlFlow->toDot();
 
 	auto result = checkResult(_stream, _linePrefix, _formatted);
 
@@ -100,7 +91,7 @@ TestCase::TestResult SSAControlFlowGraphTest::run(std::ostream& _stream, std::st
 		boost::process::opstream pipe;
 		boost::process::child child(graphDisplayer, boost::process::std_in < pipe);
 
-		pipe << output.str();
+		pipe << m_obtainedResult;
 		pipe.flush();
 		pipe.pipe().close();
 		if (result == TestResult::Success)

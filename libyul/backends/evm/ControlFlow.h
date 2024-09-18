@@ -38,6 +38,18 @@ struct ControlFlow
 			return std::get<1>(*it);
 		return nullptr;
 	}
+
+	std::string toDot() const
+	{
+		std::ostringstream output;
+		output << "digraph SSACFG {\nnodesep=0.7;\ngraph[fontname=\"DejaVu Sans\"]\nnode[shape=box,fontname=\"DejaVu Sans\"];\n\n";
+		output << mainGraph->toDot(false);
+		size_t index = 1;
+		for (auto const& [function, functionGraph]: functionGraphMapping)
+			output << functionGraph->toDot(false, index++);
+		output << "}\n";
+		return output.str();
+	}
 };
 
 }
