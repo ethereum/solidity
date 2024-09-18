@@ -18,6 +18,8 @@
 
 #include <libyul/backends/evm/SSAControlFlowGraph.h>
 
+#include <libyul/backends/evm/SSACFGLiveness.h>
+
 #include <libsolutil/StringUtils.h>
 #include <libsolutil/Visitor.h>
 
@@ -37,11 +39,13 @@ namespace
 class SSACFGPrinter
 {
 public:
-	SSACFGPrinter(SSACFG const& _cfg, SSACFG::BlockId _blockId)
+	SSACFGPrinter(SSACFG const& _cfg, SSACFG::BlockId _blockId, SSACFGLiveness const* _liveness):
+		m_liveness(_liveness)
 	{
 		printBlock(_cfg, _blockId, 0);
 	}
-	SSACFGPrinter(SSACFG const& _cfg, size_t _functionIndex, Scope::Function const& _function)
+	SSACFGPrinter(SSACFG const& _cfg, size_t _functionIndex, Scope::Function const& _function, SSACFGLiveness const* _liveness):
+		m_liveness(_liveness)
 	{
 		printFunction(_cfg, _functionIndex, _function);
 	}
@@ -97,6 +101,17 @@ private:
 		}
 		{
 			m_result << fmt::format("Block{1}_{0} [label=\"\\\nBlock {0}\\n", _id.value, _functionIndex);
+			if (m_liveness)
+			{
+				m_result << fmt::format(
+					"LiveIn: {}\\l\\\n",
+					fmt::join(m_liveness->liveIns()[_id.value] | ranges::views::transform(valueToString), ",")
+				);
+				m_result << fmt::format(
+					"LiveOut: {}\\l\\n",
+					fmt::join(m_liveness->liveOuts()[_id.value] | ranges::views::transform(valueToString), ",")
+				);
+			}
 			for (auto const& phi: _block.phis)
 			{
 				auto const* phiValue = std::get_if<SSACFG::PhiValue>(&_cfg.valueInfo(phi));
@@ -224,18 +239,23 @@ private:
 	}
 
 	std::stringstream m_result{};
+	SSACFGLiveness const* m_liveness;
 };
 }
 
-std::string SSACFG::toDot(bool _includeDiGraphDefinition, std::optional<size_t> _functionIndex) const
+std::string SSACFG::toDot(
+	bool _includeDiGraphDefinition,
+	std::optional<size_t> _functionIndex,
+	SSACFGLiveness const* _liveness
+) const
 {
 	std::ostringstream output;
 	if (_includeDiGraphDefinition)
 		output << "digraph SSACFG {\nnodesep=0.7;\ngraph[fontname=\"DejaVu Sans\"]\nnode[shape=box,fontname=\"DejaVu Sans\"];\n\n";
 	if (function)
-		output << SSACFGPrinter(*this, _functionIndex ? *_functionIndex : static_cast<size_t>(1), *function);
+		output << SSACFGPrinter(*this, _functionIndex ? *_functionIndex : static_cast<size_t>(1), *function, _liveness);
 	else
-		output << SSACFGPrinter(*this, entry);
+		output << SSACFGPrinter(*this, entry, _liveness);
 	if (_includeDiGraphDefinition)
 		output << "}\n";
 	return output.str();
