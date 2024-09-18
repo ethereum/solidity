@@ -40,14 +40,14 @@ class SSACFGPrinter
 {
 public:
 	SSACFGPrinter(SSACFG const& _cfg, SSACFG::BlockId _blockId, SSACFGLiveness const* _liveness):
-		m_liveness(_liveness)
+		m_cfg(_cfg), m_functionIndex(0), m_liveness(_liveness)
 	{
-		printBlock(_cfg, _blockId, 0);
+		printBlock(_blockId);
 	}
 	SSACFGPrinter(SSACFG const& _cfg, size_t _functionIndex, Scope::Function const& _function, SSACFGLiveness const* _liveness):
-		m_liveness(_liveness)
+		m_cfg(_cfg), m_functionIndex(_functionIndex), m_liveness(_liveness)
 	{
-		printFunction(_cfg, _functionIndex, _function);
+		printFunction(_function);
 	}
 	friend std::ostream& operator<<(std::ostream& stream, SSACFGPrinter const& printer) {
 		stream << printer.m_result.str();
@@ -77,6 +77,20 @@ private:
 		);
 	}
 
+	std::string formatBlockHandle(SSACFG::BlockId const& _id) const
+	{
+		return fmt::format("Block{}_{}", m_functionIndex, _id.value);
+	}
+
+	std::string formatEdge(SSACFG::BlockId const& _v, SSACFG::BlockId const& _w, std::optional<std::string> const& _vPort = std::nullopt)
+	{
+		std::string const style = m_liveness && m_liveness->topologicalSort().backEdge(_v, _w) ? "dashed" : "solid";
+		if (_vPort)
+			return fmt::format("{}Exit:{} -> {} [style=\"{}\"];\n", formatBlockHandle(_v), *_vPort, formatBlockHandle(_w), style);
+		else
+			return fmt::format("{}Exit -> {} [style=\"{}\"];\n", formatBlockHandle(_v), formatBlockHandle(_w), style);
+	}
+
 	static std::string formatPhi(SSACFG const& _cfg, SSACFG::PhiValue const& _phiValue)
 	{
 		auto const transform = [&](SSACFG::ValueId const& valueId) { return varToString(_cfg, valueId); };
@@ -90,19 +104,25 @@ private:
 			return "φ()";
 	}
 
-	void writeBlock(SSACFG const& _cfg, SSACFG::BlockId const& _id, SSACFG::BasicBlock const& _block, size_t const _functionIndex)
+	void writeBlock(SSACFG::BlockId const& _id, SSACFG::BasicBlock const& _block)
 	{
-		auto const valueToString = [&](SSACFG::ValueId const& valueId) { return varToString(_cfg, valueId); };
-		bool entryBlock = _id.value == 0 && _functionIndex == 0;
+		auto const valueToString = [&](SSACFG::ValueId const& valueId) { return varToString(m_cfg, valueId); };
+		bool entryBlock = _id.value == 0 && m_functionIndex == 0;
 		if (entryBlock)
 		{
-			m_result << fmt::format("Entry{} [label=\"Entry\"];\n", _functionIndex);
-			m_result << fmt::format("Entry{} -> Block{}_{};\n", _functionIndex, _functionIndex, _id.value);
+			m_result << fmt::format("Entry{} [label=\"Entry\"];\n", m_functionIndex);
+			m_result << fmt::format("Entry{} -> {};\n", m_functionIndex, formatBlockHandle(_id));
 		}
 		{
-			m_result << fmt::format("Block{1}_{0} [label=\"\\\nBlock {0}\\n", _id.value, _functionIndex);
 			if (m_liveness)
 			{
+				m_result << fmt::format(
+					"{} [label=\"\\\nBlock {}; ({}, max {})\\n",
+					formatBlockHandle(_id),
+					_id.value,
+					m_liveness->topologicalSort().preOrderIndexOf(_id.value),
+					m_liveness->topologicalSort().maxSubtreePreOrderIndexOf(_id.value)
+				);
 				m_result << fmt::format(
 					"LiveIn: {}\\l\\\n",
 					fmt::join(m_liveness->liveIns()[_id.value] | ranges::views::transform(valueToString), ",")
@@ -112,11 +132,13 @@ private:
 					fmt::join(m_liveness->liveOuts()[_id.value] | ranges::views::transform(valueToString), ",")
 				);
 			}
+			else
+				m_result << fmt::format("{} [label=\"\\\nBlock {}\\n", formatBlockHandle(_id), _id.value);
 			for (auto const& phi: _block.phis)
 			{
-				auto const* phiValue = std::get_if<SSACFG::PhiValue>(&_cfg.valueInfo(phi));
+				auto const* phiValue = std::get_if<SSACFG::PhiValue>(&m_cfg.valueInfo(phi));
 				solAssert(phiValue);
-				m_result << fmt::format("v{} := {}\\l\\\n", phi.value, formatPhi(_cfg, *phiValue));
+				m_result << fmt::format("v{} := {}\\l\\\n", phi.value, formatPhi(m_cfg, *phiValue));
 			}
 			for (auto const& operation: _block.operations)
 			{
@@ -143,29 +165,28 @@ private:
 			std::visit(GenericVisitor{
 				[&](SSACFG::BasicBlock::MainExit const&)
 				{
-					m_result << fmt::format("Block{}_{}Exit [label=\"MainExit\"];\n", _functionIndex, _id.value);
-					m_result << fmt::format("Block{1}_{0} -> Block{1}_{0}Exit;\n", _id.value, _functionIndex);
+					m_result << fmt::format("{}Exit [label=\"MainExit\"];\n", formatBlockHandle(_id));
+					m_result << fmt::format("{} -> {}Exit;\n", formatBlockHandle(_id), formatBlockHandle(_id));
 				},
 				[&](SSACFG::BasicBlock::Jump const& _jump)
 				{
-					m_result << fmt::format("Block{1}_{0} -> Block{1}_{0}Exit [arrowhead=none];\n", _id.value, _functionIndex);
-					m_result << fmt::format("Block{}_{}Exit [label=\"Jump\" shape=oval];\n", _functionIndex, _id.value);
-					m_result << fmt::format("Block{}_{}Exit -> Block{}_{};\n", _functionIndex, _id.value, _functionIndex, _jump.target.value);
+					m_result << fmt::format("{} -> {}Exit [arrowhead=none];\n", formatBlockHandle(_id), formatBlockHandle(_id));
+					m_result << fmt::format("{}Exit [label=\"Jump\" shape=oval];\n", formatBlockHandle(_id));
+					m_result << formatEdge(_id, _jump.target);
 				},
 				[&](SSACFG::BasicBlock::ConditionalJump const& _conditionalJump)
 				{
-					m_result << "Block" << _functionIndex << "_" << _id.value << " -> Block" << _functionIndex << "_" << _id.value << "Exit;\n";
-					m_result << "Block" << _functionIndex << "_" << _id.value << "Exit [label=\"{ If ";
-					m_result << varToString(_cfg, _conditionalJump.condition);
-					m_result << "| { <0> Zero | <1> NonZero }}\" shape=Mrecord];\n";
-					m_result << "Block" << _functionIndex << "_" << _id.value;
-					m_result << "Exit:0 -> Block" << _functionIndex << "_" << _conditionalJump.zero.value << ";\n";
-					m_result << "Block" << _functionIndex << "_" << _id.value;
-					m_result << "Exit:1 -> Block" << _functionIndex << "_" << _conditionalJump.nonZero.value << ";\n";
+					m_result << fmt::format("{} -> {}Exit;\n", formatBlockHandle(_id), formatBlockHandle(_id));
+					m_result << fmt::format(
+						"{}Exit [label=\"{{ If {} | {{ <0> Zero | <1> NonZero }}}}\" shape=Mrecord];\n",
+						formatBlockHandle(_id), varToString(m_cfg, _conditionalJump.condition)
+					);
+					m_result << formatEdge(_id, _conditionalJump.zero, "0");
+					m_result << formatEdge(_id, _conditionalJump.nonZero, "1");
 				},
 				[&](SSACFG::BasicBlock::JumpTable const& jt)
 				{
-					m_result << "Block" << _functionIndex << "_" << _id.value << " -> Block" << _functionIndex << "_" << _id.value << "Exit;\n";
+					m_result << fmt::format("{} -> {}Exit;\n", formatBlockHandle(_id), formatBlockHandle(_id));
 					std::string options;
 					for (auto const& jumpCase: jt.cases)
 					{
@@ -176,28 +197,28 @@ private:
 					if (!options.empty())
 						options += " | ";
 					options += "<default> default";
-					m_result << fmt::format("Block{}_{}Exit [label=\"{{ JT | {{ {} }} }}\" shape=Mrecord];\n", _functionIndex, _id.value, options);
+					m_result << fmt::format("{}Exit [label=\"{{ JT | {{ {} }} }}\" shape=Mrecord];\n", formatBlockHandle(_id), options);
 					for (auto const& jumpCase: jt.cases)
-						m_result << fmt::format("Block{}_{}Exit:{} -> Block{}_{};\n", _functionIndex, _id.value, formatNumber(jumpCase.first), _functionIndex, jumpCase.second.value);
-					m_result << fmt::format("Block{}_{}Exit:default -> Block{}_{};\n", _functionIndex, _id.value, _functionIndex, jt.defaultCase.value);
+						m_result << formatEdge(_id, jumpCase.second, formatNumber(jumpCase.first));
+					m_result << formatEdge(_id, jt.defaultCase, "default");
 				},
 				[&](SSACFG::BasicBlock::FunctionReturn const& fr)
 				{
-					m_result << "Block" << _functionIndex << "_" << _id.value << "Exit [label=\"FunctionReturn["
+					m_result << formatBlockHandle(_id) << "Exit [label=\"FunctionReturn["
 							<< fmt::format("{}", fmt::join(fr.returnValues | ranges::views::transform(valueToString), ", "))
 							<< "]\"];\n";
-					m_result << "Block" << _functionIndex << "_" << _id.value << " -> Block" << _functionIndex << "_" << _id.value << "Exit;\n";
+					m_result << formatBlockHandle(_id) << " -> " << formatBlockHandle(_id) << "Exit;\n";
 				},
 				[&](SSACFG::BasicBlock::Terminated const&)
 				{
-					m_result << "Block" << _functionIndex << "_" << _id.value << "Exit [label=\"Terminated\"];\n";
-					m_result << "Block" << _functionIndex << "_" << _id.value << " -> Block" << _functionIndex << "_" << _id.value << "Exit;\n";
+					m_result << formatBlockHandle(_id) << "Exit [label=\"Terminated\"];\n";
+					m_result << formatBlockHandle(_id) << " -> " << formatBlockHandle(_id) << "Exit;\n";
 				}
 			}, _block.exit);
 		}
 	}
 
-	void printBlock(SSACFG const& _cfg, SSACFG::BlockId const& _rootId, size_t const _functionIndex)
+	void printBlock(SSACFG::BlockId const& _rootId)
 	{
 		std::set<SSACFG::BlockId> explored{};
 		explored.insert(_rootId);
@@ -209,8 +230,8 @@ private:
 		{
 			auto const id = toVisit.front();
 			toVisit.pop_front();
-			auto const& block = _cfg.block(id);
-			writeBlock(_cfg, id, block, _functionIndex);
+			auto const& block = m_cfg.block(id);
+			writeBlock(id, block);
 			block.forEachExit(
 				[&](SSACFG::BlockId const& _exitBlock)
 				{
@@ -224,22 +245,24 @@ private:
 		}
 	}
 
-	void printFunction(SSACFG const& _cfg, size_t const _functionIndex, Scope::Function const& _fun)
+	void printFunction(Scope::Function const& _fun)
 	{
 		static auto constexpr returnsTransform = [](auto const& functionReturnValue) { return functionReturnValue.get().name.str(); };
 		static auto constexpr argsTransform = [](auto const& arg) { return fmt::format("v{}", std::get<1>(arg).value); };
-		m_result << "FunctionEntry_" << _fun.name.str() << "_" << _cfg.entry.value << " [label=\"";
-		if (!_cfg.returns.empty())
-			m_result << fmt::format("function {0}:\n {1} := {0}({2})", _fun.name.str(), fmt::join(_cfg.returns | ranges::views::transform(returnsTransform), ", "), fmt::join(_cfg.arguments | ranges::views::transform(argsTransform), ", "));
+		m_result << "FunctionEntry_" << _fun.name.str() << "_" << m_cfg.entry.value << " [label=\"";
+		if (!m_cfg.returns.empty())
+			m_result << fmt::format("function {0}:\n {1} := {0}({2})", _fun.name.str(), fmt::join(m_cfg.returns | ranges::views::transform(returnsTransform), ", "), fmt::join(m_cfg.arguments | ranges::views::transform(argsTransform), ", "));
 		else
-			m_result << fmt::format("function {0}:\n {0}({1})", _fun.name.str(), fmt::join(_cfg.arguments | ranges::views::transform(argsTransform), ", "));
+			m_result << fmt::format("function {0}:\n {0}({1})", _fun.name.str(), fmt::join(m_cfg.arguments | ranges::views::transform(argsTransform), ", "));
 		m_result << "\"];\n";
-		m_result << "FunctionEntry_" << _fun.name.str() << "_" << _cfg.entry.value << " -> Block" << _functionIndex << "_" << _cfg.entry.value << ";\n";
-		printBlock(_cfg, _cfg.entry, _functionIndex);
+		m_result << "FunctionEntry_" << _fun.name.str() << "_" << m_cfg.entry.value << " -> Block" << m_functionIndex << "_" << m_cfg.entry.value << ";\n";
+		printBlock(m_cfg.entry);
 	}
 
-	std::stringstream m_result{};
+	SSACFG const& m_cfg;
+	size_t m_functionIndex;
 	SSACFGLiveness const* m_liveness;
+	std::stringstream m_result{};
 };
 }
 
