@@ -42,7 +42,7 @@ jobs:
             cd coq/third-party/coq-evm
             ./configure
             make
-            sudo make install
+            make install
             cd ../../..
           endGroup
           startGroup "Compile Coq project"
