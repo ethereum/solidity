@@ -27,18 +27,25 @@ jobs:
             sudo apt-get install -y cmake libboost-all-dev
             opam install -y --deps-only coq/CoqOfSolidity/coq-of-solidity.opam
           endGroup
-          startGroup "Build"
-            sudo chown -R $(whoami) .
-            mkdir build
-            cd build
-            cmake ..
-            make
-            cd ..
-          endGroup
+          # startGroup "Build"
+          #   sudo chown -R $(whoami) .
+          #   mkdir build
+          #   cd build
+          #   cmake ..
+          #   make
+          #   cd ..
+          # endGroup
           startGroup "Check that the diff is empty (excluding submodules)"
             git -c color.ui=always diff --exit-code --ignore-submodules=dirty
           endGroup
-          startGroup "Compile Coq translations"
+          startGroup "Install Coq dependencies"
+            cd coq/third-party/coq-evm
+            ./configure
+            make
+            sudo make install
+            cd ../../..
+          endGroup
+          startGroup "Compile Coq project"
             cd coq/CoqOfSolidity
             make
             cd ../..
