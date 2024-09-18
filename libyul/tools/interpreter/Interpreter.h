@@ -209,7 +209,6 @@ public:
 		InterpreterState& _state,
 		Dialect const& _dialect,
 		Block const& _ast,
-		bool _disableExternalCalls,
 		bool _disableMemoryTracing
 	);
 
@@ -217,7 +216,6 @@ public:
 		InterpreterState& _state,
 		Dialect const& _dialect,
 		Scope& _scope,
-		bool _disableExternalCalls,
 		bool _disableMemoryTracing,
 		std::map<YulName, u256> _variables = {}
 	):
@@ -225,7 +223,6 @@ public:
 		m_state(_state),
 		m_variables(std::move(_variables)),
 		m_scope(&_scope),
-		m_disableExternalCalls(_disableExternalCalls),
 		m_disableMemoryTrace(_disableMemoryTracing)
 	{
 	}
@@ -265,9 +262,6 @@ protected:
 	/// Values of variables.
 	std::map<YulName, u256> m_variables;
 	Scope* m_scope;
-	/// If not set, external calls (e.g. using `call()`) to the same contract
-	/// are evaluated in a new parser instance.
-	bool m_disableExternalCalls;
 	bool m_disableMemoryTrace;
 };
 
@@ -282,14 +276,12 @@ public:
 		Dialect const& _dialect,
 		Scope& _scope,
 		std::map<YulName, u256> const& _variables,
-		bool _disableExternalCalls,
 		bool _disableMemoryTrace
 	):
 		m_state(_state),
 		m_dialect(_dialect),
 		m_variables(_variables),
 		m_scope(_scope),
-		m_disableExternalCalls(_disableExternalCalls),
 		m_disableMemoryTrace(_disableMemoryTrace)
 	{}
 
@@ -300,14 +292,12 @@ public:
 	EvaluationResult visit(Expression const& _st);
 
 protected:
-	void runExternalCall(evmasm::Instruction _instruction);
 	virtual std::unique_ptr<Interpreter> makeInterpreterCopy(std::map<YulName, u256> _variables = {}) const
 	{
 		return std::make_unique<Interpreter>(
 			m_state,
 			m_dialect,
 			m_scope,
-			m_disableExternalCalls,
 			m_disableMemoryTrace,
 			std::move(_variables)
 		);
@@ -318,7 +308,6 @@ protected:
 			_state,
 			m_dialect,
 			_scope,
-			m_disableExternalCalls,
 			m_disableMemoryTrace
 		);
 	}
@@ -342,7 +331,6 @@ protected:
 	Scope& m_scope;
 	/// Current expression nesting level
 	unsigned m_nestingLevel = 0;
-	bool m_disableExternalCalls;
 	/// Flag to disable memory tracing
 	bool m_disableMemoryTrace;
 };
