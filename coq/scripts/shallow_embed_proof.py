@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 import sys
 
 def indent(level):
@@ -115,13 +116,17 @@ def deps_tactic(definition_name: str, local_functions: list[str], level: int) ->
             else (" ||\n" + indent(level + 1)).join("apply compare_" + local_function for local_function in local_functions)
         ) + "."
 
+def get_code(contract_name: str, is_deployed_code: bool) -> str:
+    return contract_name.capitalize() + (".deployed" if is_deployed_code else "") + ".code"
+
 def function_definition_to_coq(
+    contract_name: str,
     module_prefix: list[str],
     is_deployed_code: bool,
     local_functions: list[str],
     level: int,
     node
-):
+) -> str:
     definition_name = node.get('name')
     params = [
         p['name']
@@ -131,7 +136,7 @@ def function_definition_to_coq(
         "" \
         if len(params) == 0 \
         else " (" + " ".join(params) + " : U256.t)"
-    code = "deployed_code" if is_deployed_code else "constructor_code"
+    code = get_code(contract_name, is_deployed_code)
     body = block_to_coq(definition_name, level + 1, node.get('body'))
     return \
         deps_tactic(definition_name, local_functions, level) + "\n" + \
@@ -140,10 +145,10 @@ def function_definition_to_coq(
         indent(level + 1) + "let environment :=\n" + \
         indent(level + 2) + f"environment <| Environment.code_name := {code}.(Code.hex_name) |> in\n" + \
         indent(level + 1) + "let function :=\n" + \
-        indent(level + 2) + "Codes.get_function ERC20.codes environment \"" + definition_name + "\" in\n" + \
-        indent(level + 1) + "Compare.t ERC20.codes environment stack stack\n" + \
+        indent(level + 2) + f"Codes.get_function {contract_name}.codes environment \"" + definition_name + "\" in\n" + \
+        indent(level + 1) + f"Compare.t {contract_name}.codes environment stack stack\n" + \
         indent(level + 2) + "(function [" + "; ".join(params) + "])\n" + \
-        indent(level + 2) + "(" + ".".join(["ERC20_functional"] + module_prefix + [definition_name]) + "".join(" "+ param for param in params) + ").\n" + \
+        indent(level + 2) + "(" + ".".join([contract_name + "_shallow_embedding"] + module_prefix + [definition_name]) + "".join(" "+ param for param in params) + ").\n" + \
         indent(level) + "Proof.\n" + \
         indent(level + 1) + "(* entering function *)\n" + \
         indent(level + 1) + "Compare.Tactic.stack_primitives.\n" + \
@@ -151,14 +156,14 @@ def function_definition_to_coq(
         indent(level) + "Qed."
 
 def block_definition_to_coq(
+    contract_name: str,
     module_prefix: list[str],
     is_deployed_code: bool,
     local_functions: list[str],
     level: int,
     node
-):
-    source_code = "ERC20.deployed.code" if is_deployed_code else "ERC20.code"
-    code = "deployed_code" if is_deployed_code else "constructor_code"
+) -> str:
+    code = get_code(contract_name, is_deployed_code)
     body = block_to_coq("body", level + 1, node)
     return \
         deps_tactic("body", local_functions, level) + "\n" + \
@@ -166,16 +171,22 @@ def block_definition_to_coq(
         indent(level) + "Lemma compare_body environment stack :\n" + \
         indent(level + 1) + "let environment :=\n" + \
         indent(level + 2) + f"environment <| Environment.code_name := {code}.(Code.hex_name) |> in\n" + \
-        indent(level + 1) + "Compare.t ERC20.codes environment stack stack\n" + \
-        indent(level + 2) + f"{source_code}.(Code.body)\n" + \
-        indent(level + 2) + ".".join(["ERC20_functional"] + module_prefix + ["body"]) + ".\n" + \
+        indent(level + 1) + f"Compare.t {contract_name}.codes environment stack stack\n" + \
+        indent(level + 2) + f"{code}.(Code.body)\n" + \
+        indent(level + 2) + ".".join([contract_name + "_shallow_embedding"] + module_prefix + ["body"]) + ".\n" + \
         indent(level) + "Proof.\n" + \
         indent(level + 1) + "(* entering function *)\n" + \
         indent(level + 1) + "Compare.Tactic.stack_primitives.\n" + \
         indent(level + 1) + body + "\n" + \
         indent(level) + "Qed."
 
-def top_level_to_coq(module_prefix: list[str], is_deployed_code: bool, level, node):
+def top_level_to_coq(
+    contract_name: str,
+    module_prefix: list[str],
+    is_deployed_code: bool,
+    level,
+    node
+) -> str:
     node_type = node.get('nodeType')
 
     if node_type == 'YulBlock':
@@ -183,17 +194,23 @@ def top_level_to_coq(module_prefix: list[str], is_deployed_code: bool, level, no
         lemmas = []
         for stmt in node.get('statements', []):
             if stmt.get('nodeType') == 'YulFunctionDefinition':
-                lemma = function_definition_to_coq(module_prefix, is_deployed_code, local_functions, level, stmt)
+                lemma = function_definition_to_coq(contract_name, module_prefix, is_deployed_code, local_functions, level, stmt)
                 lemmas.append(lemma)
                 local_functions.append(stmt.get('name'))
-        body_lemma = block_definition_to_coq(module_prefix, is_deployed_code, local_functions, level, node)
+        body_lemma = block_definition_to_coq(contract_name, module_prefix, is_deployed_code, local_functions, level, node)
         lemmas.append(body_lemma)
 
         return ("\n\n" + indent(level)).join(lemmas)
 
     return f"(* Unsupported top-level node type: {node_type} *)"
 
-def object_to_coq(module_prefix: list[str], is_deployed_code: bool, level: int, node) -> str:
+def object_to_coq(
+    contract_name: str,
+    module_prefix: list[str],
+    is_deployed_code: bool,
+    level: int,
+    node
+) -> str:
     node_type = node.get('nodeType')
 
     if node_type == 'YulObject':
@@ -201,17 +218,17 @@ def object_to_coq(module_prefix: list[str], is_deployed_code: bool, level: int, 
         module_prefix = module_prefix + [name]
         return \
             "Module " + name + ".\n" + \
-            indent(level + 1) + object_to_coq(module_prefix, is_deployed_code, level + 1, node['code']) + "\n" + \
+            indent(level + 1) + object_to_coq(contract_name, module_prefix, is_deployed_code, level + 1, node['code']) + "\n" + \
             "".join(
                 "\n" +
-                indent(level + 1) + object_to_coq(module_prefix, True, level + 1, child) + "\n"
+                indent(level + 1) + object_to_coq(contract_name, module_prefix, True, level + 1, child) + "\n"
                 for child in node.get('subObjects', [])
                 if child.get('nodeType') != 'YulData'
             ) + \
             indent(level) + "End " + node['name'] + "."
 
     elif node_type == 'YulCode':
-        return top_level_to_coq(module_prefix, is_deployed_code, level, node['block'])
+        return top_level_to_coq(contract_name, module_prefix, is_deployed_code, level, node['block'])
 
     elif node_type == 'YulData':
         return "(* Data object not expected *)"
@@ -220,17 +237,19 @@ def object_to_coq(module_prefix: list[str], is_deployed_code: bool, level: int, 
 
 def main():
     """Input: JSON file with Yul AST"""
-    with open(sys.argv[1], 'r') as file:
+    json_input = sys.argv[1]
+    with open(json_input, 'r') as file:
         data = json.load(file)
 
-    coq_code = object_to_coq([], False, 0, data)
+    contract_name = Path(json_input).stem
+    import_path = str(Path(json_input).with_suffix('')).replace('/', '.')
+    coq_code = object_to_coq(contract_name, [], False, 0, data)
 
-    print("(* Generated by prepare_proof.py *)")
+    print("(* Generated by " + Path(__file__).name + " *)")
     print("Require Import CoqOfSolidity.CoqOfSolidity.")
-    print("Require Import simulations.CoqOfSolidity.")
-    print("""Require Import test.libsolidity.semanticTests.various.erc20.ERC20.
-Require Import test.libsolidity.semanticTests.various.erc20.GeneratedTest.
-Require Import test.libsolidity.semanticTests.various.erc20.ERC20_functional.
+    print("Require Import CoqOfSolidity.simulations.CoqOfSolidity.")
+    print(f"""Require Import {import_path}.
+Require Import {import_path}_shallow_embedding.
 
 Import Run.""")
     print()

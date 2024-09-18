@@ -1,3 +1,8 @@
+"""
+Compile the Coq files in the CoqOfSolidityTests directory in parallel.
+
+We cannot use a standard Makefile as `coqdep` is too slow on this directory (several minutes).
+"""
 import os
 from pathlib import Path
 import subprocess

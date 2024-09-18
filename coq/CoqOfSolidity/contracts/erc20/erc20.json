@@ -219,10 +219,10 @@
                           "nodeType": "YulFunctionCall"
                         },
                         {
-                          "hexValue": "45524332303a206d696e7420746f20746865207a65726f2061646472657373",
+                          "hexValue": "45726332303a206d696e7420746f20746865207a65726f2061646472657373",
                           "kind": "string",
                           "nodeType": "YulLiteral",
-                          "value": "ERC20: mint to the zero address"
+                          "value": "Erc20: mint to the zero address"
                         }
                       ],
                       "functionName": {
@@ -601,10 +601,10 @@
               "value": {
                 "arguments": [
                   {
-                    "hexValue": "45524332305f3430335f6465706c6f796564",
+                    "hexValue": "45726332305f3430335f6465706c6f796564",
                     "kind": "string",
                     "nodeType": "YulLiteral",
-                    "value": "ERC20_403_deployed"
+                    "value": "Erc20_403_deployed"
                   }
                 ],
                 "functionName": {
@@ -630,10 +630,10 @@
                   {
                     "arguments": [
                       {
-                        "hexValue": "45524332305f3430335f6465706c6f796564",
+                        "hexValue": "45726332305f3430335f6465706c6f796564",
                         "kind": "string",
                         "nodeType": "YulLiteral",
-                        "value": "ERC20_403_deployed"
+                        "value": "Erc20_403_deployed"
                       }
                     ],
                     "functionName": {
@@ -834,7 +834,7 @@
     },
     "nodeType": "YulCode"
   },
-  "name": "ERC20_403",
+  "name": "Erc20_403",
   "nodeType": "YulObject",
   "subObjects": [
     {
@@ -4778,10 +4778,10 @@
                                 "nodeType": "YulFunctionCall"
                               },
                               {
-                                "hexValue": "45524332303a20617070726f76652066726f6d20746865207a65726f20616464",
+                                "hexValue": "45726332303a20617070726f76652066726f6d20746865207a65726f20616464",
                                 "kind": "string",
                                 "nodeType": "YulLiteral",
-                                "value": "ERC20: approve from the zero add"
+                                "value": "Erc20: approve from the zero add"
                               }
                             ],
                             "functionName": {
@@ -5075,10 +5075,10 @@
                                 "nodeType": "YulFunctionCall"
                               },
                               {
-                                "hexValue": "45524332303a20617070726f766520746f20746865207a65726f206164647265",
+                                "hexValue": "45726332303a20617070726f766520746f20746865207a65726f206164647265",
                                 "kind": "string",
                                 "nodeType": "YulLiteral",
-                                "value": "ERC20: approve to the zero addre"
+                                "value": "Erc20: approve to the zero addre"
                               }
                             ],
                             "functionName": {
@@ -5647,10 +5647,10 @@
                                 "nodeType": "YulFunctionCall"
                               },
                               {
-                                "hexValue": "45524332303a207472616e7366657220746f20746865207a65726f2061646472",
+                                "hexValue": "45726332303a207472616e7366657220746f20746865207a65726f2061646472",
                                 "kind": "string",
                                 "nodeType": "YulLiteral",
-                                "value": "ERC20: transfer to the zero addr"
+                                "value": "Erc20: transfer to the zero addr"
                               }
                             ],
                             "functionName": {
@@ -6232,12 +6232,12 @@
         },
         "nodeType": "YulCode"
       },
-      "name": "ERC20_403_deployed",
+      "name": "Erc20_403_deployed",
       "nodeType": "YulObject",
       "subObjects": [
         {
           "nodeType": "YulData",
-          "value": "a26469706673582212204d24044bfcfba3cba7b17b2ca80d27db27f813b28e451db58f86df30e294b20564736f6c634300081b0033"
+          "value": "a2646970667358221220ee4f1ea49e67226a410c5d04adfff380859cc37369e61289b29e7f878c4941bb64736f6c634300081b0033"
         }
       ]
     }

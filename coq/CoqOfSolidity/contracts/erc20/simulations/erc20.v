@@ -1,69 +1,9 @@
 Require Import CoqOfSolidity.CoqOfSolidity.
 Require Import simulations.CoqOfSolidity.
 
-Require Import contracts.erc20.ERC20.
+Require Import contracts.erc20.erc20.
 
 Ltac Zify.zify_post_hook ::= Z.to_euclidean_division_equations.
-
-Definition normalize_i8 (n : Z) : Z :=
-  ((n + 128) mod 256) - 128.
-
-Compute normalize_i8 (-1025).
-
-Definition opposite_i8 (n : Z) : Z :=
-  normalize_i8 (-n).
-
-Compute opposite_i8 0. (* 0 *)
-Compute opposite_i8 40. (* -40 *)
-Compute opposite_i8 (-28). (* 28 *)
-Compute opposite_i8 (-128). (* -128 *)
-
-Compute (opposite_i8 0).
-Compute (opposite_i8 40).
-Compute (opposite_i8 (-20)).
-Compute (opposite_i8 (-128)).
-
-Lemma normalize_i8_eq (n : Z) :
-  - 127 <= n < 128 ->
-  opposite_i8 n = - n.
-Proof.
-  unfold opposite_i8, normalize_i8.
-  lia.
-Qed.
-
-Definition half := 2 ^ 63.
-Definition full := 2 ^ 64.
-
-Definition normalize (n : Z) : Z :=
-  ((n + half) mod full) - half.
-
-Compute normalize (-1025).
-
-Definition opposite (n : Z) : Z :=
-  normalize (-n).
-
-Compute opposite 0. (* 0 *)
-Compute opposite 40. (* -40 *)
-Compute opposite (-28). (* 28 *)
-Compute opposite (-128). (* -128 *)
-
-Compute (opposite 0).
-Compute (opposite 40).
-Compute (opposite (-20)).
-Compute (opposite (-128)).
-
-Lemma normalize_eq (n : Z) :
-  - half < n < half ->
-  opposite n = - n.
-Proof.
-  unfold opposite, normalize, half, full.
-  Time lia.
-Qed.
-
-Compute (opposite_i8 (-128)).
-Compute (opposite_i8 (-129)).
-Compute (opposite_i8 (127)).
-Compute (opposite_i8 (128)).
 
 Module Address.
   Definition t : Set :=

@@ -1,5 +1,6 @@
 from collections import defaultdict
 import json
+from pathlib import Path
 import sys
 
 def indent(level):
@@ -26,33 +27,33 @@ def variables_names_to_coq(as_pattern: bool, variable_names) -> str:
         quote = "'" if as_pattern else ""
         return quote + f"({', '.join(variable_name_to_coq(variable_name.get('name')) for variable_name in variable_names)})"
 
-def node_in_block_to_coq(local_functions: list[str], level: int, node):
+def node_in_block_to_coq(level: int, node):
     node_type = node.get('nodeType')
 
     if node_type in ['YulVariableDeclaration', 'YulAssignment']:
-        return node_to_coq(local_functions, level, node)
+        return node_to_coq(level, node)
 
     elif node_type in ['YulIf', 'YulSwitch']:
         return \
             "do~ [[\n" + \
-            indent(level + 1) + node_to_coq(local_functions, level + 1, node) + "\n" + \
+            indent(level + 1) + node_to_coq(level + 1, node) + "\n" + \
             indent(level) + "]] in"
 
     elif node_type in ['YulBlock', 'YulForLoop']:
         return \
             "do~\n" + \
-            indent(level + 1) + node_to_coq(local_functions, level + 1, node) + "\n" + \
+            indent(level + 1) + node_to_coq(level + 1, node) + "\n" + \
             indent(level) + "in"
 
     return \
-        "do~ [[ " + node_to_coq(local_functions, level, node) + " ]] in"
+        "do~ [[ " + node_to_coq(level, node) + " ]] in"
 
-def block_to_coq(local_functions: list[str], level: int, node, result: str) -> str:
+def block_to_coq(level: int, node, result: str) -> str:
     node_type = node.get('nodeType')
 
     if node_type == 'YulBlock':
         statements = [
-            node_in_block_to_coq(local_functions, level, stmt)
+            node_in_block_to_coq(level, stmt)
             for stmt in node.get('statements', [])
             if stmt.get('nodeType') != 'YulFunctionDefinition'
         ] + [result]
@@ -92,24 +93,24 @@ def is_function_pure(function_name: str) -> bool:
     # return function_name in pure_functions
     return False
 
-def node_to_coq(local_functions: list[str], level: int, node) -> str:
+def node_to_coq(level: int, node) -> str:
     if isinstance(node, dict):
         node_type = node.get('nodeType')
 
         if node_type == 'YulBlock':
-            return block_to_coq(local_functions, level, node, "M.pure tt")
+            return block_to_coq(level, node, "M.pure tt")
 
         elif node_type == 'YulFunctionDefinition':
             return "(* Function definition should be handled at top level *)"
 
         elif node_type == 'YulVariableDeclaration':
             variables = variables_names_to_coq(True, node.get('variables', []))
-            value = node_to_coq(local_functions, level + 1, node.get('value'))
+            value = node_to_coq(level + 1, node.get('value'))
             return f"let~ {variables} := [[ {value} ]] in"
 
         elif node_type == 'YulAssignment':
             variable = variables_names_to_coq(True, node.get('variableNames'))
-            value = node_to_coq(local_functions, level + 1, node.get('value'))
+            value = node_to_coq(level + 1, node.get('value'))
             return f"let~ {variable} := [[ {value} ]] in"
 
         elif node_type == 'YulFunctionCall':
@@ -120,7 +121,7 @@ def node_to_coq(local_functions: list[str], level: int, node) -> str:
             args: list[str] = [
                 paren(
                     arg.get('nodeType') not in ['YulLiteral', 'YulIdentifier'],
-                    node_to_coq(local_functions, level + 1, arg),
+                    node_to_coq(level + 1, arg),
                 )
                 for arg in node.get('arguments', [])
             ]
@@ -146,21 +147,21 @@ def node_to_coq(local_functions: list[str], level: int, node) -> str:
             return node.get('value', 'Unknown literal')
 
         elif node_type == 'YulExpressionStatement':
-            return node_to_coq(local_functions, level + 1, node.get('expression'))
+            return node_to_coq(level + 1, node.get('expression'))
 
         elif node_type == 'YulIf':
-            condition = node_to_coq(local_functions, level, node.get('condition'))
-            true_body = node_to_coq(local_functions, level + 1, node.get('body'))
+            condition = node_to_coq(level, node.get('condition'))
+            true_body = node_to_coq(level + 1, node.get('body'))
             return \
                 f"M.if_unit (| {condition},\n" + \
                 indent(level + 1) + true_body + "\n" + \
                 indent(level) + "|)"
 
         elif node_type == 'YulSwitch':
-            expression = node_to_coq(local_functions, level, node.get('expression'))
+            expression = node_to_coq(level, node.get('expression'))
             cases = [
-                f"if δ =? {node_to_coq(local_functions, level, case.get('value'))} then\n" + \
-                indent(level + 1) + node_to_coq(local_functions, level + 1, case.get('body'))
+                f"if δ =? {node_to_coq(level, case.get('value'))} then\n" + \
+                indent(level + 1) + node_to_coq(level + 1, case.get('body'))
                 for case in node.get('cases', [])
             ]
             return \
@@ -180,10 +181,10 @@ def node_to_coq(local_functions: list[str], level: int, node) -> str:
             return "M.continue"
 
         elif node_type == 'YulForLoop':
-            pre = node_in_block_to_coq(local_functions, level, node.get('pre'))
-            condition = node_to_coq(local_functions, level + 1, node.get('condition'))
-            post = node_to_coq(local_functions, level + 1, node.get('post'))
-            body = node_to_coq(local_functions, level + 1, node.get('body'))
+            pre = node_in_block_to_coq(level, node.get('pre'))
+            condition = node_to_coq(level + 1, node.get('condition'))
+            post = node_to_coq(level + 1, node.get('post'))
+            body = node_to_coq(level + 1, node.get('body'))
 
             return \
                 "(* for loop *)\n" + \
@@ -218,14 +219,14 @@ def function_result_type(arity: int) -> str:
 
     return "(" + " * ".join(["U256.t"] * arity) + ")"
 
-def function_definition_to_coq(local_functions: list[str], level: int, node) -> str:
+def function_definition_to_coq(level: int, node) -> str:
     name = variable_name_to_coq(node.get('name'))
     params = ''.join([
         " (" + variable_name_to_coq(p['name']) + " : U256.t)"
         for p in node.get('parameters', [])
     ])
     result = function_result_value(node.get('returnVariables', []))
-    body = block_to_coq(local_functions, level + 1, node.get('body'), result)
+    body = block_to_coq(level + 1, node.get('body'), result)
     return \
         f"Definition {name}{params} : M.t {function_result_type(len(node.get('returnVariables', [])))} :=\n" + \
         indent(level + 1) + body + "."
@@ -305,13 +306,13 @@ def top_level_to_coq(level: int, node) -> str:
                 function_name = statement.get('name')
                 dependencies = get_function_dependencies(statement)
                 functions_dependencies[function_name] = dependencies
-        local_functions = topological_sort(functions_dependencies)
+        ordered_function_names = topological_sort(functions_dependencies)
         functions = [
-            function_definition_to_coq(local_functions, level, stmt)
-            for stmt in order_functions(local_functions, node.get('statements', []))
+            function_definition_to_coq(level, stmt)
+            for stmt in order_functions(ordered_function_names, node.get('statements', []))
             if stmt.get('nodeType') == 'YulFunctionDefinition'
         ]
-        body = node_to_coq(local_functions, level + 1, node)
+        body = node_to_coq(level + 1, node)
         return \
             ("\n\n" + indent(level)).join(functions) + "\n\n" + \
             indent(level) + "Definition body : M.t unit :=\n" + \
@@ -349,9 +350,9 @@ def main():
 
     coq_code = object_to_coq(0, data)
 
-    print("(* Generated by " + __file__ + " prepare.py *)")
+    print("(* Generated by " + Path(__file__).name + " *)")
     print("Require Import CoqOfSolidity.CoqOfSolidity.")
-    print("Require Import simulations.CoqOfSolidity.")
+    print("Require Import CoqOfSolidity.simulations.CoqOfSolidity.")
     print("Import Stdlib.")
     print()
     print(coq_code)

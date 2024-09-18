@@ -1,8 +1,8 @@
 Require Import CoqOfSolidity.CoqOfSolidity.
 Require Import simulations.CoqOfSolidity.
 Require simulations.erc20.
-Require Import contracts.erc20.ERC20.
-Require Import contracts.erc20.ERC20_functional.
+Require Import contracts.erc20.erc20.
+Require Import contracts.erc20.erc20_shallow_embedding.
 
 Import RunO.
 
@@ -86,15 +86,15 @@ Module erc20.
   Admitted.
 End erc20.
 
-Module ERC20_403.
+Module Erc20_403.
   (** This function will only be executed on zero. *)
   Lemma run_checked_add_uint256 codes environment state :
     {{? codes, environment, state |
-      ERC20_403.checked_add_uint256 0 ⇓
+      Erc20_403.checked_add_uint256 0 ⇓
       Result.Ok 20
     | state ?}}.
   Proof.
-    unfold ERC20_403.checked_add_uint256.
+    unfold Erc20_403.checked_add_uint256.
     repeat (lu || cu || p).
   Qed.
 
@@ -503,12 +503,12 @@ Module ERC20_403.
     exists memory',
     {{? codes, environment,
         Some (make_state environment state SimulatedMemory.init SimulatedStorage.init) |
-      ERC20_403.body ⇓
+      Erc20_403.body ⇓
       Result.Return 128 32
     | Some (make_state environment state memory' storage') ?}}.
   Proof.
     eexists.
-    unfold ERC20_403.body.
+    unfold Erc20_403.body.
     l. {
       l. {
         c. {
@@ -698,7 +698,7 @@ Module ERC20_403.
     p.
   Qed.
 
-  Module ERC20_403_deployed.
+  Module Erc20_403_deployed.
     Module SimulatedCalldata.
       Record t : Set := {
         header : Z;
@@ -731,7 +731,7 @@ Module ERC20_403.
 
     Lemma run_abi_decode_address codes environment state :
       {{? codes, environment, Some state |
-        ERC20_403.ERC20_403_deployed.abi_decode_address ⇓
+        Erc20_403.Erc20_403_deployed.abi_decode_address ⇓
         let calldata := environment.(Environment.calldata) in
         let address := StdlibAux.get_calldata_u256 calldata (4 + 32 * 0) in
         if erc20.Payload.get_is_address_valid address then
@@ -740,7 +740,7 @@ Module ERC20_403.
           Result.Revert 0 0
       | Some state ?}}.
     Proof.
-      unfold ERC20_403.ERC20_403_deployed.abi_decode_address.
+      unfold Erc20_403.Erc20_403_deployed.abi_decode_address.
       lu; c; [pr; p|]; s.
       lu; c; [p|]; s.
       repeat (c; [p|]; s).
@@ -754,7 +754,7 @@ Module ERC20_403.
 
     Lemma run_abi_decode_address_2305 codes environment state :
       {{? codes, environment, Some state |
-        ERC20_403.ERC20_403_deployed.abi_decode_address_2305 ⇓
+        Erc20_403.Erc20_403_deployed.abi_decode_address_2305 ⇓
         let calldata := environment.(Environment.calldata) in
         let address := StdlibAux.get_calldata_u256 calldata (4 + 32 * 1) in
         if erc20.Payload.get_is_address_valid address then
@@ -763,7 +763,7 @@ Module ERC20_403.
           Result.Revert 0 0
       | Some state ?}}.
     Proof.
-      unfold ERC20_403.ERC20_403_deployed.abi_decode_address_2305.
+      unfold Erc20_403.Erc20_403_deployed.abi_decode_address_2305.
       lu; c; [pr; p|]; s.
       lu; c; [p|]; s.
       repeat (c; [p|]; s).
@@ -794,13 +794,13 @@ Module ERC20_403.
       U256.Valid.t y ->
       let output := simulation_checked_sub_uint256 x y in
       {{? codes, environment, Some state |
-        ERC20_403.ERC20_403_deployed.checked_sub_uint256 x y ⇓
+        Erc20_403.Erc20_403_deployed.checked_sub_uint256 x y ⇓
         output
       | wrap_state_with_revert state output
       ?}}.
     Proof.
       intros.
-      unfold ERC20_403.ERC20_403_deployed.checked_sub_uint256.
+      unfold Erc20_403.Erc20_403_deployed.checked_sub_uint256.
       unfold U256.Valid.t in *.
       l. {
         c. {
@@ -862,13 +862,13 @@ Module ERC20_403.
       U256.Valid.t y ->
       let output := simulation_checked_add_uint256 x y in
       {{? codes, environment, Some state |
-        ERC20_403.ERC20_403_deployed.checked_add_uint256 x y ⇓
+        Erc20_403.Erc20_403_deployed.checked_add_uint256 x y ⇓
         output
       | wrap_state_with_revert state output
       ?}}.
     Proof.
       intros.
-      unfold ERC20_403.ERC20_403_deployed.checked_add_uint256.
+      unfold Erc20_403.Erc20_403_deployed.checked_add_uint256.
       unfold U256.Valid.t in *.
       l. {
         c. {
@@ -967,7 +967,7 @@ Module ERC20_403.
           Some (make_state environment state memory_end (SimulatedStorage.of_erc20_state s))
         end in
       {{? codes, environment, Some state_start |
-        ERC20_403.ERC20_403_deployed.fun_approve owner spender value ⇓
+        Erc20_403.Erc20_403_deployed.fun_approve owner spender value ⇓
         match output with
         | erc20.Result.Revert p s => Result.Revert p s
         | erc20.Result.Success _ => Result.Ok tt
@@ -975,7 +975,7 @@ Module ERC20_403.
       | state_end ?}}.
     Proof.
       simpl.
-      unfold ERC20_403.ERC20_403_deployed.fun_approve, erc20._approve.
+      unfold Erc20_403.Erc20_403_deployed.fun_approve, erc20._approve.
       l. {
         now apply run_is_non_null_address.
       }
@@ -1091,7 +1091,7 @@ Module ERC20_403.
           Some (make_state environment state memory_end (SimulatedStorage.of_erc20_state s))
         end in
       {{? codes, environment, Some state_start |
-        ERC20_403.ERC20_403_deployed.fun_transfer from to value ⇓
+        Erc20_403.Erc20_403_deployed.fun_transfer from to value ⇓
         match output with
         | erc20.Result.Revert p s => Result.Revert p s
         | erc20.Result.Success _ => Result.Ok tt
@@ -1099,7 +1099,7 @@ Module ERC20_403.
       | state_end ?}}.
     Proof.
       simpl.
-      unfold ERC20_403.ERC20_403_deployed.fun_transfer, erc20._transfer.
+      unfold Erc20_403.Erc20_403_deployed.fun_transfer, erc20._transfer.
       l. {
         now apply run_is_non_null_address.
       }
@@ -1211,7 +1211,7 @@ Module ERC20_403.
           )
         end in
       {{? codes, environment, Some state_start |
-        ERC20_403.ERC20_403_deployed.body ⇓
+        Erc20_403.Erc20_403_deployed.body ⇓
         match output with
         | erc20.Result.Revert p s => Result.Revert p s
         | erc20.Result.Success (_, memory_end_end, _) =>
@@ -1219,7 +1219,7 @@ Module ERC20_403.
         end
       | state_end ?}}.
     Proof.
-      simpl; unfold ERC20_403.ERC20_403_deployed.body, erc20.body.
+      simpl; unfold Erc20_403.Erc20_403_deployed.body, erc20.body.
       lu.
       l. {
         cu; c. {
@@ -1809,5 +1809,5 @@ Module ERC20_403.
       s.
       lu; cu; pn.
     Qed.
-  End ERC20_403_deployed.
-End ERC20_403.
+  End Erc20_403_deployed.
+End Erc20_403.
