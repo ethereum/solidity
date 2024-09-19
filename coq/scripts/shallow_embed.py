@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import sys
 
+
 # Indent each line of the block, except empty lines
 def indent(block: str) -> str:
     indentation = "  "
@@ -11,8 +12,10 @@ def indent(block: str) -> str:
         for line in block.split("\n")
     )
 
+
 def paren(condition: bool, value: str) -> str:
     return f"({value})" if condition else value
+
 
 def variable_name_to_coq(name: str) -> str:
     reserved_names = [
@@ -25,7 +28,8 @@ def variable_name_to_coq(name: str) -> str:
 
     return name.replace("$", "'dollar'")
 
-def variables_names_to_coq(as_pattern: bool, variable_names) -> str:
+
+def variables_names_to_coq(as_pattern: bool, variable_names: list) -> str:
     if len(variable_names) == 1:
         return variable_name_to_coq(variable_names[0].get('name'))
     else:
@@ -38,39 +42,51 @@ def variables_names_to_coq(as_pattern: bool, variable_names) -> str:
             ) + \
             ")"
 
-def node_in_block_to_coq(node):
+
+def node_in_block_to_coq(local_vars: list[str], node) -> tuple[str, list[str]]:
     node_type = node.get('nodeType')
 
     if node_type in ['YulVariableDeclaration', 'YulAssignment']:
-        return node_to_coq(node)
+        return node_to_coq(local_vars, node)
 
     elif node_type in ['YulIf', 'YulSwitch']:
-        return \
-            "do~ [[\n" + \
-            indent(node_to_coq(node)) + "\n" + \
-            "]] in"
+        return (
+            "do~ [[\n" +
+            indent(node_to_coq(local_vars, node)[0]) + "\n" +
+            "]] in",
+            local_vars,
+        )
 
     elif node_type in ['YulBlock', 'YulForLoop']:
-        return \
-            "do~\n" + \
-            indent(node_to_coq(node)) + "\n" + \
-            "in"
+        return (
+            "do~\n" +
+            indent(node_to_coq(local_vars, node)[0]) + "\n" +
+            "in",
+            local_vars,
+        )
 
-    return \
-        "do~ [[ " + node_to_coq(node) + " ]] in"
+    return (
+        "do~ [[ " + node_to_coq(local_vars, node)[0] + " ]] in",
+        local_vars,
+    )
 
-def block_to_coq(node, result: str) -> str:
+
+def block_to_coq(local_vars: list[str], node, result: str) -> str:
     node_type = node.get('nodeType')
 
     if node_type == 'YulBlock':
-        statements = [
-            node_in_block_to_coq(stmt)
-            for stmt in node.get('statements', [])
-            if stmt.get('nodeType') != 'YulFunctionDefinition'
-        ] + [result]
+        current_local_vars = local_vars
+        statements = []
+        for stmt in node.get('statements', []):
+            if stmt.get('nodeType') == 'YulFunctionDefinition':
+                continue
+            statement, current_local_vars = node_in_block_to_coq(current_local_vars, stmt)
+            statements += [statement]
+        statements += [result]
         return "\n".join(statements)
 
     return "(* Unsupported block node type: {node_type} *)"
+
 
 def is_function_pure(function_name: str) -> bool:
     # For now we do not do specific analysis to detect the pure functions
@@ -104,25 +120,47 @@ def is_function_pure(function_name: str) -> bool:
     # return function_name in pure_functions
     return False
 
-def node_to_coq(node) -> str:
+
+# Merge without duplicates, keeping the order
+def merge_local_vars(local_vars: list[str], new_vars: list[str]) -> list[str]:
+    return local_vars + [var for var in new_vars if var not in local_vars]
+
+
+def node_to_coq(local_vars: list[str], node) -> tuple[str, list[str]]:
     if isinstance(node, dict):
         node_type = node.get('nodeType')
 
         if node_type == 'YulBlock':
-            return block_to_coq(node, "M.pure tt")
+            return (block_to_coq(local_vars, node, "M.pure tt"), local_vars)
 
         elif node_type == 'YulFunctionDefinition':
-            return "(* Function definition should be handled at top level *)"
+            return ("(* Function definition is only handled at top level *)", local_vars)
 
         elif node_type == 'YulVariableDeclaration':
-            variables = variables_names_to_coq(True, node.get('variables', []))
-            value = node_to_coq(node.get('value'))
-            return f"let~ {variables} := [[ {value} ]] in"
+            variable_names = node.get('variables', [])
+            variables = variables_names_to_coq(True, variable_names)
+            value, _ = node_to_coq(local_vars, node.get('value'))
+            return (
+                f"let~ {variables} := [[ {value} ]] in",
+                merge_local_vars(
+                    local_vars,
+                    [variable.get('name') for variable in variable_names],
+                ),
+            )
 
         elif node_type == 'YulAssignment':
-            variable = variables_names_to_coq(True, node.get('variableNames'))
-            value = node_to_coq(node.get('value'))
-            return f"let~ {variable} := [[ {value} ]] in"
+            variable_names = node.get('variableNames', [])
+            variables = variables_names_to_coq(True, variable_names)
+            value, _ = node_to_coq(local_vars, node.get('value'))
+            # Sometimes the assignments are used as declarations, so we also add the
+            # variables to the `local_vars`. Is this a bug of the Solidity compiler?`
+            return (
+                f"let~ {variables} := [[ {value} ]] in",
+                merge_local_vars(
+                    local_vars,
+                    [variable.get('name') for variable in variable_names],
+                ),
+            )
 
         elif node_type == 'YulFunctionCall':
             func_name = variable_name_to_coq(node['functionName']['name'])
@@ -132,97 +170,124 @@ def node_to_coq(node) -> str:
             args: list[str] = [
                 paren(
                     arg.get('nodeType') not in ['YulLiteral', 'YulIdentifier'],
-                    node_to_coq(arg),
+                    node_to_coq(local_vars, arg)[0],
                 )
                 for arg in node.get('arguments', [])
             ]
             if is_pure:
-                return func_name + "".join(" " + arg for arg in args)
+                return (
+                    func_name + "".join(" " + arg for arg in args),
+                    local_vars,
+                )
             args_left = "~(|"
             args_right = "|)"
-            return \
+            return (
                 func_name + " " + \
                 (args_left + args_right \
                 if len(node.get('arguments', [])) == 0 \
                 else \
                     args_left + " " + \
                     ', '.join(args) + \
-                    " " + args_right)
+                    " " + args_right),
+                local_vars,
+            )
 
         elif node_type == 'YulIdentifier':
-            return variable_name_to_coq(node.get('name', 'Unknown identifier'))
+            name = node.get('name', 'Unknown identifier')
+            # Sanity check for the environment of variables
+            if name not in local_vars:
+                print(f"Warning: Expression: variable {name} not in scope {local_vars}")
+            return (
+                variable_name_to_coq(name),
+                local_vars,
+            )
 
         elif node_type == 'YulLiteral':
             if node['kind'] == 'string':
-                return "0x" + node['hexValue'].ljust(64, '0')
-            return node.get('value', 'Unknown literal')
+                return (
+                    "0x" + node['hexValue'].ljust(64, '0') +
+                    " (* " + node['value'] + " *)",
+                    local_vars,
+                )
+            return (
+                node.get('value', 'Unknown literal'),
+                local_vars,
+            )
 
         elif node_type == 'YulExpressionStatement':
-            return node_to_coq(node.get('expression'))
+            return node_to_coq(local_vars, node.get('expression'))
 
         elif node_type == 'YulIf':
-            condition = node_to_coq(node.get('condition'))
-            true_body = node_to_coq(node.get('body'))
-            return \
-                f"M.if_unit (| {condition},\n" + \
-                indent(true_body) + "\n" + \
-                "|)"
+            condition, _ = node_to_coq(local_vars, node.get('condition'))
+            true_body, _ = node_to_coq(local_vars, node.get('body'))
+            return (
+                f"M.if_unit (| {condition},\n" +
+                indent(true_body) + "\n" +
+                "|)",
+                local_vars,
+            )
 
         elif node_type == 'YulSwitch':
-            expression = node_to_coq(node.get('expression'))
+            expression, _ = node_to_coq(local_vars, node.get('expression'))
             cases = [
-                f"if δ =? {node_to_coq(case.get('value'))} then\n" + \
-                indent(node_to_coq(case.get('body')))
+                f"if δ =? {node_to_coq(local_vars, case.get('value'))[0]} then\n" +
+                indent(node_to_coq(local_vars, case.get('body'))[0])
                 for case in node.get('cases', [])
             ]
-            return \
-                "(* switch *)\n" + \
-                f"let* δ := ltac:(M.monadic ({expression})) in\n" + \
-                ("\nelse ").join(cases) + "\n" + \
-                "else\n" + \
-                indent("M.pure tt")
+            return (
+                "(* switch *)\n" +
+                f"let* δ := ltac:(M.monadic ({expression})) in\n" +
+                ("\nelse ").join(cases) + "\n" +
+                "else\n" +
+                indent("M.pure tt"),
+                local_vars,
+            )
 
         elif node_type == 'YulLeave':
-            return "M.leave"
+            return ("M.leave", local_vars)
 
         elif node_type == 'YulBreak':
-            return "M.break"
+            return ("M.break", local_vars)
 
         elif node_type == 'YulContinue':
-            return "M.continue"
+            return ("M.continue", local_vars)
 
         elif node_type == 'YulForLoop':
-            pre = node_in_block_to_coq(node.get('pre'))
-            condition = node_to_coq(node.get('condition'))
-            post = node_to_coq(node.get('post'))
-            body = node_to_coq(node.get('body'))
+            pre, _ = node_in_block_to_coq(local_vars, node.get('pre'))
+            condition, _ = node_to_coq(local_vars, node.get('condition'))
+            post, _ = node_to_coq(local_vars, node.get('post'))
+            body, _ = node_to_coq(local_vars, node.get('body'))
 
-            return \
-                "(* for loop *)\n" + \
-                "(* pre *)\n" + \
-                pre + "\n" + \
-                "M.for_unit\n" + \
+            return (
+                "(* for loop *)\n" +
+                "(* pre *)\n" +
+                pre + "\n" +
+                "M.for_unit\n" +
                 indent(
-                    "(* condition *)\n" + \
-                    "[[ " + condition + " ]]\n" + \
-                    "(* body *)\n" + \
-                    "(" + body + ")\n" + \
-                    "(* post *)\n" + \
+                    "(* condition *)\n" +
+                    "[[ " + condition + " ]]\n" +
+                    "(* body *)\n" +
+                    "(" + body + ")\n" +
+                    "(* post *)\n" +
                     "(" + post + ")"
-                )
+                ),
+                local_vars,
+            )
 
         else:
-            return f"(* Unsupported node type: {node_type} *)"
+            return (f"(* Unsupported node type: {node_type} *)", local_vars)
 
     else:
         # A node should always be a dictionary
-        return f"(* Unsupported node: {node} *)"
+        return (f"(* Unsupported node: {node} *)", local_vars)
 
-def function_result_value(returnVariables) -> str:
+
+def function_result_value(returnVariables: list) -> str:
     if len(returnVariables) == 0:
         return "M.pure tt"
 
     return "M.pure " + variables_names_to_coq(False, returnVariables)
+
 
 def function_result_type(arity: int) -> str:
     if arity == 0:
@@ -232,18 +297,24 @@ def function_result_type(arity: int) -> str:
 
     return "(" + " * ".join(["U256.t"] * arity) + ")"
 
+
 def function_definition_to_coq(node) -> str:
     name = variable_name_to_coq(node.get('name'))
-    params = ''.join([
-        " (" + variable_name_to_coq(p['name']) + " : U256.t)"
+    param_names = [
+        p['name']
         for p in node.get('parameters', [])
+    ]
+    params = ''.join([
+        " (" + variable_name_to_coq(name) + " : U256.t)"
+        for name in param_names
     ])
     result = function_result_value(node.get('returnVariables', []))
-    body = block_to_coq(node.get('body'), result)
+    body = block_to_coq(param_names, node.get('body'), result)
     return \
         f"Definition {name}{params} : M.t " + \
         function_result_type(len(node.get('returnVariables', []))) + " :=\n" + \
         indent(body) + "."
+
 
 # Get the names of the functions called in a function.
 # We take care of sorting the names in alphabetical order so that the output is
@@ -266,6 +337,7 @@ def get_function_dependencies(function_node) -> list[str]:
     traverse(function_node.get('body', {}))
 
     return sorted(dependencies)
+
 
 def topological_sort(functions: dict[str, list[str]]) -> list[str]:
     # Create a graph representation
@@ -302,6 +374,7 @@ def topological_sort(functions: dict[str, list[str]]) -> list[str]:
 
     return stack
 
+
 def order_functions(ordered_names: list[str], function_nodes: list) -> list:
     # Create a dictionary for quick lookup of index in ordered_names
     name_order: dict[str, int] = {
@@ -315,6 +388,7 @@ def order_functions(ordered_names: list[str], function_nodes: list) -> list:
 
     # Sort the function_nodes using the key function
     return sorted(function_nodes, key=key_func)
+
 
 def top_level_to_coq(node) -> str:
     node_type = node.get('nodeType')
@@ -336,10 +410,11 @@ def top_level_to_coq(node) -> str:
         ]
         body = \
             "Definition body : M.t unit :=\n" + \
-            indent(node_to_coq(node)) + "."
+            indent(node_to_coq([], node)[0]) + "."
         return ("\n\n").join(functions + [body])
 
     return f"(* Unsupported top-level node type: {node_type} *)"
+
 
 def object_to_coq(node) -> str:
     node_type = node.get('nodeType')
@@ -364,6 +439,7 @@ def object_to_coq(node) -> str:
 
     return f"(* Unsupported object node type: {node_type} *)"
 
+
 def main():
     """Input: JSON file with Yul AST"""
     with open(sys.argv[1], 'r') as file:
@@ -377,6 +453,7 @@ def main():
     print("Import Stdlib.")
     print()
     print(coq_code)
+
 
 if __name__ == "__main__":
     main()

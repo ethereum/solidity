@@ -14,8 +14,8 @@ Module Contract_91.
           M.pure tt
         |)
       ]] in
-      let~ _2 := [[ datasize ~(| 0x436f6e74726163745f39315f6465706c6f796564000000000000000000000000 |) ]] in
-      do~ [[ codecopy ~(| _1, (dataoffset ~(| 0x436f6e74726163745f39315f6465706c6f796564000000000000000000000000 |)), _2 |) ]] in
+      let~ _2 := [[ datasize ~(| 0x436f6e74726163745f39315f6465706c6f796564000000000000000000000000 (* Contract_91_deployed *) |) ]] in
+      do~ [[ codecopy ~(| _1, (dataoffset ~(| 0x436f6e74726163745f39315f6465706c6f796564000000000000000000000000 (* Contract_91_deployed *) |)), _2 |) ]] in
       do~ [[ return_ ~(| _1, _2 |) ]] in
       M.pure tt
     in

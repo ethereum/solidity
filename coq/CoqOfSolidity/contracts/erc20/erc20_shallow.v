@@ -31,7 +31,7 @@ Module Erc20_403.
           do~ [[ mstore ~(| _1, (shl ~(| 229, 4594637 |)) |) ]] in
           do~ [[ mstore ~(| (add ~(| _1, 4 |)), 32 |) ]] in
           do~ [[ mstore ~(| (add ~(| _1, 36 |)), 31 |) ]] in
-          do~ [[ mstore ~(| (add ~(| _1, 68 |)), 0x45726332303a206d696e7420746f20746865207a65726f206164647265737300 |) ]] in
+          do~ [[ mstore ~(| (add ~(| _1, 68 |)), 0x45726332303a206d696e7420746f20746865207a65726f206164647265737300 (* Erc20: mint to the zero address *) |) ]] in
           do~ [[ revert ~(| _1, 100 |) ]] in
           M.pure tt
         |)
@@ -47,8 +47,8 @@ Module Erc20_403.
       do~ [[ mstore ~(| _3, 0x14 |) ]] in
       do~ [[ log3 ~(| _3, 0x20, 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef, 0x00, (caller ~(||)) |) ]] in
       let~ _4 := [[ mload ~(| 64 |) ]] in
-      let~ _5 := [[ datasize ~(| 0x45726332305f3430335f6465706c6f7965640000000000000000000000000000 |) ]] in
-      do~ [[ codecopy ~(| _4, (dataoffset ~(| 0x45726332305f3430335f6465706c6f7965640000000000000000000000000000 |)), _5 |) ]] in
+      let~ _5 := [[ datasize ~(| 0x45726332305f3430335f6465706c6f7965640000000000000000000000000000 (* Erc20_403_deployed *) |) ]] in
+      do~ [[ codecopy ~(| _4, (dataoffset ~(| 0x45726332305f3430335f6465706c6f7965640000000000000000000000000000 (* Erc20_403_deployed *) |)), _5 |) ]] in
       do~ [[ return_ ~(| _4, _5 |) ]] in
       M.pure tt
     in
@@ -107,8 +107,8 @@ Module Erc20_403.
           do~ [[ mstore ~(| memPtr, (shl ~(| 229, 4594637 |)) |) ]] in
           do~ [[ mstore ~(| (add ~(| memPtr, 4 |)), 32 |) ]] in
           do~ [[ mstore ~(| (add ~(| memPtr, 36 |)), 36 |) ]] in
-          do~ [[ mstore ~(| (add ~(| memPtr, 68 |)), 0x45726332303a20617070726f76652066726f6d20746865207a65726f20616464 |) ]] in
-          do~ [[ mstore ~(| (add ~(| memPtr, 100 |)), 0x7265737300000000000000000000000000000000000000000000000000000000 |) ]] in
+          do~ [[ mstore ~(| (add ~(| memPtr, 68 |)), 0x45726332303a20617070726f76652066726f6d20746865207a65726f20616464 (* Erc20: approve from the zero add *) |) ]] in
+          do~ [[ mstore ~(| (add ~(| memPtr, 100 |)), 0x7265737300000000000000000000000000000000000000000000000000000000 (* ress *) |) ]] in
           do~ [[ revert ~(| memPtr, 132 |) ]] in
           M.pure tt
         |)
@@ -120,8 +120,8 @@ Module Erc20_403.
           do~ [[ mstore ~(| memPtr_1, (shl ~(| 229, 4594637 |)) |) ]] in
           do~ [[ mstore ~(| (add ~(| memPtr_1, 4 |)), 32 |) ]] in
           do~ [[ mstore ~(| (add ~(| memPtr_1, 36 |)), 34 |) ]] in
-          do~ [[ mstore ~(| (add ~(| memPtr_1, 68 |)), 0x45726332303a20617070726f766520746f20746865207a65726f206164647265 |) ]] in
-          do~ [[ mstore ~(| (add ~(| memPtr_1, 100 |)), 0x7373000000000000000000000000000000000000000000000000000000000000 |) ]] in
+          do~ [[ mstore ~(| (add ~(| memPtr_1, 68 |)), 0x45726332303a20617070726f766520746f20746865207a65726f206164647265 (* Erc20: approve to the zero addre *) |) ]] in
+          do~ [[ mstore ~(| (add ~(| memPtr_1, 100 |)), 0x7373000000000000000000000000000000000000000000000000000000000000 (* ss *) |) ]] in
           do~ [[ revert ~(| memPtr_1, 132 |) ]] in
           M.pure tt
         |)
@@ -147,8 +147,8 @@ Module Erc20_403.
           do~ [[ mstore ~(| memPtr, (shl ~(| 229, 4594637 |)) |) ]] in
           do~ [[ mstore ~(| (add ~(| memPtr, 4 |)), 32 |) ]] in
           do~ [[ mstore ~(| (add ~(| memPtr, 36 |)), 35 |) ]] in
-          do~ [[ mstore ~(| (add ~(| memPtr, 68 |)), 0x45726332303a207472616e7366657220746f20746865207a65726f2061646472 |) ]] in
-          do~ [[ mstore ~(| (add ~(| memPtr, 100 |)), 0x6573730000000000000000000000000000000000000000000000000000000000 |) ]] in
+          do~ [[ mstore ~(| (add ~(| memPtr, 68 |)), 0x45726332303a207472616e7366657220746f20746865207a65726f2061646472 (* Erc20: transfer to the zero addr *) |) ]] in
+          do~ [[ mstore ~(| (add ~(| memPtr, 100 |)), 0x6573730000000000000000000000000000000000000000000000000000000000 (* ess *) |) ]] in
           do~ [[ revert ~(| memPtr, 132 |) ]] in
           M.pure tt
         |)
