@@ -91,7 +91,8 @@ evmasm::AssemblyItems compileContract(std::shared_ptr<CharStream> _sourceCode)
 			);
 			compiler.compileContract(*contract, std::map<ContractDefinition const*, std::shared_ptr<Compiler const>>{}, bytes());
 
-			return compiler.runtimeAssembly().items();
+			BOOST_REQUIRE(compiler.runtimeAssembly().codeSections().size() == 1);
+			return compiler.runtimeAssembly().codeSections().at(0).items;
 		}
 	BOOST_FAIL("No contract found in source.");
 	return AssemblyItems();
