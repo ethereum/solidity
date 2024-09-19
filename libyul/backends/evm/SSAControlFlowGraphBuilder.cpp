@@ -84,14 +84,6 @@ SSACFG::ValueId SSAControlFlowGraphBuilder::tryRemoveTrivialPhi(SSACFG::ValueId 
 			return _phi;  // phi merges at least two distinct values -> not trivial
 		same = arg;
 	}
-
-	struct Use {
-		std::reference_wrapper<SSACFG::Operation> operation;
-		size_t inputIndex = std::numeric_limits<size_t>::max();
-	};
-	std::vector<Use> uses;
-	std::vector<SSACFG::ValueId> phiUses;
-
 	if (!same.hasValue())
 	{
 		// This will happen for unreachable paths.
@@ -99,40 +91,29 @@ SSACFG::ValueId SSAControlFlowGraphBuilder::tryRemoveTrivialPhi(SSACFG::ValueId 
 		same = m_graph.unreachableValue();
 	}
 
-	auto phiBlock = phiInfo->block;
-	m_graph.block(phiBlock).phis.erase(_phi);
+	m_graph.block(phiInfo->block).phis.erase(_phi);
 
+	std::set<SSACFG::ValueId> phiUses;
 	for (size_t blockIdValue = 0; blockIdValue < m_graph.numBlocks(); ++blockIdValue)
 	{
 		auto& block = m_graph.block(SSACFG::BlockId{blockIdValue});
 		for (auto blockPhi: block.phis)
 		{
-			if (blockPhi == _phi)
-				continue;
-			auto const* blockPhiInfo = std::get_if<SSACFG::PhiValue>(&m_graph.valueInfo(blockPhi));
+			yulAssert(blockPhi != _phi, "Phis should be defined in exactly one block, _phi was erased.");
+			auto* blockPhiInfo = std::get_if<SSACFG::PhiValue>(&m_graph.valueInfo(blockPhi));
 			yulAssert(blockPhiInfo);
 			bool usedInPhi = false;
-			for (auto input: blockPhiInfo->arguments)
-			{
-				if (input == _phi)
+			for (auto& arg: blockPhiInfo->arguments)
+				if (arg == _phi)
+				{
+					arg = same;
 					usedInPhi = true;
-			}
+				}
 			if (usedInPhi)
-				phiUses.emplace_back(blockPhi);
+				phiUses.emplace(blockPhi);
 		}
 		for (auto& op: block.operations)
-		{
-			// TODO: double check when phiVar occurs in outputs here and what to do about it.
-			if (op.outputs.size() == 1 && op.outputs.front() == _phi)
-				continue;
-			// TODO: check if this always hold - and if so if the assertion is really valuable.
-			for (auto& output: op.outputs)
-				yulAssert(output != _phi);
-
-			for (auto&& [n, input]: op.inputs | ranges::views::enumerate)
-				if (input == _phi)
-					uses.emplace_back(Use{std::ref(op), n});
-		}
+			std::replace(op.inputs.begin(), op.inputs.end(), _phi, same);
 		std::visit(util::GenericVisitor{
 			[_phi, same](SSACFG::BasicBlock::FunctionReturn& _functionReturn) {
 				std::replace(
@@ -155,22 +136,8 @@ SSACFG::ValueId SSAControlFlowGraphBuilder::tryRemoveTrivialPhi(SSACFG::ValueId 
 			[](SSACFG::BasicBlock::Terminated&) {}
 		}, block.exit);
 	}
-	for (auto& use: uses)
-		use.operation.get().inputs.at(use.inputIndex) = same;
-	for (auto phiUse: phiUses)
-	{
-		auto* blockPhiInfo = std::get_if<SSACFG::PhiValue>(&m_graph.valueInfo(phiUse));
-		yulAssert(blockPhiInfo);
-		for (auto& arg: blockPhiInfo->arguments)
-			if (arg == _phi)
-				arg = same;
-	}
 	for (auto& [_, currentVariableDefs]: m_currentDef)
-	{
-		for (auto& def: currentVariableDefs)
-			if (def && *def == _phi)
-				def = same;
-	}
+		std::replace(currentVariableDefs.begin(), currentVariableDefs.end(), _phi, same);
 
 	for (auto phiUse: phiUses)
 		tryRemoveTrivialPhi(phiUse);
