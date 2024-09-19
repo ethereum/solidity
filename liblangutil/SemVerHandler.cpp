@@ -240,6 +240,8 @@ SemVerMatchExpression::MatchComponent SemVerMatchExpressionParser::parseMatchCom
 		component.prefix = Token::Assign;
 	}
 
+	auto const partsStartPos = m_pos;
+
 	component.levelsPresent = 0;
 	while (component.levelsPresent < 3)
 	{
@@ -250,6 +252,18 @@ SemVerMatchExpression::MatchComponent SemVerMatchExpressionParser::parseMatchCom
 		else
 			break;
 	}
+
+	// Validate that the parsed version parts are either a single string literal or multiple bare tokens,
+	// i.e. "1.2.3" or 1.2.3 but not 1."2.3", "1".2.3 or 1"."2.3.
+	auto const partsEndPos = m_pos; // Points *after* the last version part
+	for (auto i = partsStartPos; i < partsEndPos; ++i)
+	{
+		if (m_tokens[i] == Token::StringLiteral && partsStartPos != partsEndPos - 1)
+		{
+			solThrow(SemVerError, "String literals are only allowed as the only component in a version pragma.");
+		}
+	}
+
 	// TODO we do not support pre and build version qualifiers for now in match expressions
 	// (but we do support them in the actual versions)
 	return component;

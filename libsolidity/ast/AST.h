@@ -311,7 +311,7 @@ private:
 };
 
 /**
- * Pragma directive, only version requirements in the form `pragma solidity "^0.4.0";` are
+ * Pragma directive, only version requirements in the form `pragma solidity ^"0.4.0";` are
  * supported for now.
  */
 class PragmaDirective: public ASTNode
