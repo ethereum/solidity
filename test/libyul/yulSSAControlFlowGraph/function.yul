@@ -37,10 +37,10 @@
 //  r := f(v0, v1)"];
 // FunctionEntry_f_0 -> Block1_0;
 // Block1_0 [label="\
-// Block 0\nv2 := add(v1, v0)\l\
-// v3 := sub(v0, v2)\l\
+// Block 0\nv3 := add(v1, v0)\l\
+// v4 := sub(v0, v3)\l\
 // "];
-// Block1_0Exit [label="FunctionReturn[v3]"];
+// Block1_0Exit [label="FunctionReturn[v4]"];
 // Block1_0 -> Block1_0Exit;
 // FunctionEntry_g_0 [label="function g:
 //  g()"];
