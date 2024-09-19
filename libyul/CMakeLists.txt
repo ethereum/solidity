@@ -77,6 +77,8 @@ add_library(yul
 	backends/evm/SSAControlFlowGraph.h
 	backends/evm/SSAControlFlowGraphBuilder.cpp
 	backends/evm/SSAControlFlowGraphBuilder.h
+	backends/evm/SSAEVMCodeTransform.cpp
+	backends/evm/SSAEVMCodeTransform.h
 	backends/evm/StackHelpers.h
 	backends/evm/StackLayoutGenerator.cpp
 	backends/evm/StackLayoutGenerator.h
