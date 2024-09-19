@@ -29,12 +29,16 @@ SSACFGLiveness::SSACFGLiveness(SSACFG const& _cfg):
 	m_topologicalSort(_cfg),
 	m_loopNestingForest(m_topologicalSort),
 	m_liveIns(_cfg.numBlocks()),
-	m_liveOuts(_cfg.numBlocks())
+	m_liveOuts(_cfg.numBlocks()),
+	m_operationLiveOuts(_cfg.numBlocks())
 {
 	runDagDfs();
 	for (auto const loopRootNode: m_loopNestingForest.loopRootNodes())
 		runLoopTreeDfs(loopRootNode);
+
+	fillOperationsLiveOut();
 }
+
 void SSACFGLiveness::runDagDfs()
 {
 	// SSA Book, Algorithm 9.2
@@ -103,6 +107,7 @@ void SSACFGLiveness::runDagDfs()
 		m_liveIns[blockId.value] = live + block.phis;
 	}
 }
+
 void SSACFGLiveness::runLoopTreeDfs(size_t const _loopHeader)
 {
 	// SSA Book, Algorithm 9.3
@@ -124,5 +129,30 @@ void SSACFGLiveness::runLoopTreeDfs(size_t const _loopHeader)
 
 				runLoopTreeDfs(blockId);
 			}
+	}
+}
+
+void SSACFGLiveness::fillOperationsLiveOut()
+{
+	auto const filterLiterals = [this](auto const& valueId){
+		return !std::holds_alternative<SSACFG::LiteralValue>(m_cfg.valueInfo(valueId));
+	};
+	for (size_t blockIdValue = 0; blockIdValue < m_cfg.numBlocks(); ++blockIdValue)
+	{
+		auto const& operations = m_cfg.block(SSACFG::BlockId{blockIdValue}).operations;
+		auto& liveOuts = m_operationLiveOuts[blockIdValue];
+		liveOuts.resize(operations.size());
+		if (!operations.empty())
+		{
+			auto live = m_liveOuts[blockIdValue];
+			auto rit = liveOuts.rbegin();
+			for (auto const& op: operations | ranges::views::reverse)
+			{
+				*rit = live;
+				live -= op.outputs | ranges::views::filter(filterLiterals) | ranges::to<std::vector>;
+				live += op.inputs | ranges::views::filter(filterLiterals) | ranges::to<std::vector>;
+				++rit;
+			}
+		}
 	}
 }
