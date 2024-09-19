@@ -35,21 +35,25 @@ namespace solidity::yul
 class SSACFGLiveness
 {
 public:
+	using LivenessData = std::set<SSACFG::ValueId>;
 	explicit SSACFGLiveness(SSACFG const& _cfg);
 
-	std::vector<std::set<SSACFG::ValueId>> const& liveIns() const { return m_liveIns; }
-	std::vector<std::set<SSACFG::ValueId>> const& liveOuts() const { return m_liveOuts; }
+	LivenessData const& liveIn(SSACFG::BlockId _blockId) const { return m_liveIns[_blockId.value]; }
+	LivenessData const& liveOut(SSACFG::BlockId _blockId) const { return m_liveOuts[_blockId.value]; }
+	std::vector<LivenessData> const& operationsLiveOut(SSACFG::BlockId _blockId) const { return m_operationLiveOuts[_blockId.value]; }
 	ForwardSSACFGTopologicalSort const& topologicalSort() const { return m_topologicalSort; }
 private:
 
 	void runDagDfs();
 	void runLoopTreeDfs(size_t _loopHeader);
+	void fillOperationsLiveOut();
 
 	SSACFG const& m_cfg;
 	ForwardSSACFGTopologicalSort m_topologicalSort;
 	SSACFGLoopNestingForest m_loopNestingForest;
-	std::vector<std::set<SSACFG::ValueId>> m_liveIns;
-	std::vector<std::set<SSACFG::ValueId>> m_liveOuts;
+	std::vector<LivenessData> m_liveIns;
+	std::vector<LivenessData> m_liveOuts;
+	std::vector<std::vector<LivenessData>> m_operationLiveOuts;
 };
 
 }

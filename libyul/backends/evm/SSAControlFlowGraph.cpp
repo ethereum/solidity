@@ -125,11 +125,11 @@ private:
 				);
 				m_result << fmt::format(
 					"LiveIn: {}\\l\\\n",
-					fmt::join(m_liveness->liveIns()[_id.value] | ranges::views::transform(valueToString), ",")
+					fmt::join(m_liveness->liveIn(_id) | ranges::views::transform(valueToString), ",")
 				);
 				m_result << fmt::format(
 					"LiveOut: {}\\l\\n",
-					fmt::join(m_liveness->liveOuts()[_id.value] | ranges::views::transform(valueToString), ",")
+					fmt::join(m_liveness->liveOut(_id) | ranges::views::transform(valueToString), ",")
 				);
 			}
 			else
