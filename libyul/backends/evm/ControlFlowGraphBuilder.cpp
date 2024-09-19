@@ -360,10 +360,11 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 			Builtin{{}, *equalityBuiltin},
 			{*_case.value, Identifier{{}, ghostVariableName}}
 		});
+		CFG::BuiltinCall builtinCall{debugDataOf(_case), m_dialect.builtinFunction(*equalityBuiltin), ghostCall, 2};
 		CFG::Operation& operation = m_currentBlock->operations.emplace_back(CFG::Operation{
 			Stack{ghostVarSlot, LiteralSlot{_case.value->value.value(), debugDataOf(*_case.value)}},
 			Stack{TemporarySlot{ghostCall, 0}},
-			CFG::BuiltinCall{debugDataOf(_case), m_dialect.builtinFunction(*equalityBuiltin), ghostCall, 2},
+			std::move(builtinCall),
 		});
 		return operation.output.front();
 	};
