@@ -94,6 +94,7 @@ private:
 	std::vector<StackSlot> m_stack;
 	std::vector<BlockData> m_blockData;
 	SSACFG::BlockId m_currentBlock;
+	std::vector<std::uint8_t> m_generatedBlocks;
 };
 
 }

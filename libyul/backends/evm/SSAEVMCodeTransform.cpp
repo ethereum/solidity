@@ -143,7 +143,8 @@ SSAEVMCodeTransform::SSAEVMCodeTransform(
 		}
 		return functionLabels;
 	}()),
-	m_blockData(_cfg.numBlocks())
+	m_blockData(_cfg.numBlocks()),
+	m_generatedBlocks(_cfg.numBlocks(), false)
 {
 }
 
@@ -172,6 +173,9 @@ void SSAEVMCodeTransform::operator()(SSACFG::BlockId const _block)
 		// TODO: remove - only used for debugging
 		m_currentBlock = _block;
 	}
+
+	yulAssert(!m_generatedBlocks[_block.value]);
+	m_generatedBlocks[_block.value] = true;
 
 	ScopedSaveAndRestore stackSave{m_stack, {}};
 
@@ -359,7 +363,8 @@ void SSAEVMCodeTransform::operator()(SSACFG::BlockId const _block)
 				targetStack = currentStackToTargetStack(_jump.target);
 			}
 			m_assembly.appendJumpTo(*targetLabel);
-			(*this)(_jump.target);
+			if (!m_generatedBlocks[_jump.target.value])
+				(*this)(_jump.target);
 		},
 		[&](SSACFG::BasicBlock::ConditionalJump const& _conditionalJump) {
 			auto& nonZeroLayout = blockData(_conditionalJump.nonZero).stackIn;
@@ -399,8 +404,10 @@ void SSAEVMCodeTransform::operator()(SSACFG::BlockId const _block)
 				std::cout << "(to b" << _conditionalJump.zero.value << ")" << std::endl;
 			}
 			m_assembly.appendJumpTo(*zeroLabel);
-			(*this)(_conditionalJump.zero);
-			(*this)(_conditionalJump.nonZero);
+			if (!m_generatedBlocks[_conditionalJump.zero.value])
+				(*this)(_conditionalJump.zero);
+			if (!m_generatedBlocks[_conditionalJump.nonZero.value])
+				(*this)(_conditionalJump.nonZero);
 		},
 		[&](SSACFG::BasicBlock::JumpTable const&){ yulAssert(false, "Jump tables not yet implemented."); },
 		[&](SSACFG::BasicBlock::FunctionReturn const& _return){
