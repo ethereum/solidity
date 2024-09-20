@@ -1,7 +1,9 @@
 from collections import defaultdict
+from dataclasses import dataclass
 import json
 from pathlib import Path
 import sys
+from typing import Literal, Union
 
 
 # Indent each line of the block, except empty lines
@@ -43,49 +45,82 @@ def variables_names_to_coq(as_pattern: bool, variable_names: list) -> str:
             ")"
 
 
-def node_in_block_to_coq(local_vars: list[str], node) -> tuple[str, list[str]]:
+@dataclass(frozen=True)
+class Effect:
+    new_vars: set[str]
+    updated_vars: set[str]
+
+
+empty_effect: Effect = Effect(set(), set())
+
+
+def node_in_block_to_coq(local_vars: set[str], node) -> tuple[str, Effect]:
     node_type = node.get('nodeType')
 
     if node_type in ['YulVariableDeclaration', 'YulAssignment']:
         return node_to_coq(local_vars, node)
 
-    elif node_type in ['YulIf', 'YulSwitch']:
+    if node_type in ['YulIf', 'YulSwitch']:
+        coq, effect = node_to_coq(local_vars, node)
         return (
             "do~ [[\n" +
-            indent(node_to_coq(local_vars, node)[0]) + "\n" +
+            indent(coq) + "\n" +
             "]] in",
-            local_vars,
+            effect,
         )
 
-    elif node_type in ['YulBlock', 'YulForLoop']:
+    if node_type in ['YulBlock', 'YulForLoop']:
         return (
             "do~\n" +
             indent(node_to_coq(local_vars, node)[0]) + "\n" +
             "in",
-            local_vars,
+            empty_effect,
+        )
+
+    if node_type in ['YulExpressionStatement']:
+        return (
+            "do~ [[ " + node_to_coq(local_vars, node)[0] + " ]] in",
+            empty_effect,
         )
 
     return (
-        "do~ [[ " + node_to_coq(local_vars, node)[0] + " ]] in",
-        local_vars,
+        "(* Unsupported node type: {node_type} *)",
+        empty_effect,
     )
 
 
-def block_to_coq(local_vars: list[str], node, result: str) -> str:
+def block_to_coq(local_vars: set[str], node, result: str) -> tuple[str, Effect]:
     node_type = node.get('nodeType')
 
     if node_type == 'YulBlock':
         current_local_vars = local_vars
+        current_updated_vars: set[str] = set()
         statements = []
         for stmt in node.get('statements', []):
             if stmt.get('nodeType') == 'YulFunctionDefinition':
                 continue
-            statement, current_local_vars = node_in_block_to_coq(current_local_vars, stmt)
+            statement, effect = node_in_block_to_coq(current_local_vars, stmt)
             statements += [statement]
+            current_local_vars |= effect.new_vars
+            current_updated_vars |= effect.updated_vars
         statements += [result]
-        return "\n".join(statements)
+        state_variables = paren(
+            True,
+            ", ".join(variable_name_to_coq(name) for name in current_updated_vars)
+        )
+        return (
+            f"fun '{state_variables} mode =>\n" +
+            "\n".join(statements),
+            Effect(
+                new_vars=set(),
+                updated_vars=current_updated_vars,
+            ),
+        )
 
-    return "(* Unsupported block node type: {node_type} *)"
+    return (
+        "(* Unsupported block node type: {node_type} *)",
+        empty_effect,
+    )
 
 
 def is_function_pure(function_name: str) -> bool:
@@ -121,20 +156,48 @@ def is_function_pure(function_name: str) -> bool:
     return False
 
 
-# Merge without duplicates, keeping the order
-def merge_local_vars(local_vars: list[str], new_vars: list[str]) -> list[str]:
-    return local_vars + [var for var in new_vars if var not in local_vars]
+def get_effect(
+    local_vars: set[str],
+    bound_variable_names: list,
+    mode: Union[Literal["declaration"], Literal["assignment"]],
+) -> Effect:
+    new_vars = {
+        variable.get('name')
+        for variable in bound_variable_names
+        if variable.get('name') not in local_vars
+    }
+    updated_vars = {
+        variable.get('name')
+        for variable in bound_variable_names
+        if variable.get('name') in local_vars
+    }
+
+    if mode == "declaration" and len(updated_vars) > 0:
+        print(
+            f"Warning: Declaration: {updated_vars} already in scope {local_vars}",
+            file=sys.stderr
+        )
+    if mode == "assignment" and len(new_vars) > 0:
+        print(
+            f"Warning: Assignment: {new_vars} not in scope {local_vars}",
+            file=sys.stderr
+        )
+
+    return Effect(new_vars, updated_vars)
 
 
-def node_to_coq(local_vars: list[str], node) -> tuple[str, list[str]]:
+def node_to_coq(local_vars: set[str], node) -> tuple[str, Effect]:
     if isinstance(node, dict):
         node_type = node.get('nodeType')
 
         if node_type == 'YulBlock':
-            return (block_to_coq(local_vars, node, "M.pure tt"), local_vars)
+            return block_to_coq(local_vars, node, "M.pure tt")
 
         elif node_type == 'YulFunctionDefinition':
-            return ("(* Function definition is only handled at top level *)", local_vars)
+            return (
+                "(* Function definition is only handled at top level *)",
+                empty_effect
+            )
 
         elif node_type == 'YulVariableDeclaration':
             variable_names = node.get('variables', [])
@@ -142,24 +205,16 @@ def node_to_coq(local_vars: list[str], node) -> tuple[str, list[str]]:
             value, _ = node_to_coq(local_vars, node.get('value'))
             return (
                 f"let~ {variables} := [[ {value} ]] in",
-                merge_local_vars(
-                    local_vars,
-                    [variable.get('name') for variable in variable_names],
-                ),
+                get_effect(local_vars, variable_names, "declaration"),
             )
 
         elif node_type == 'YulAssignment':
             variable_names = node.get('variableNames', [])
             variables = variables_names_to_coq(True, variable_names)
             value, _ = node_to_coq(local_vars, node.get('value'))
-            # Sometimes the assignments are used as declarations, so we also add the
-            # variables to the `local_vars`. Is this a bug of the Solidity compiler?`
             return (
                 f"let~ {variables} := [[ {value} ]] in",
-                merge_local_vars(
-                    local_vars,
-                    [variable.get('name') for variable in variable_names],
-                ),
+                get_effect(local_vars, variable_names, "assignment"),
             )
 
         elif node_type == 'YulFunctionCall':
@@ -177,7 +232,7 @@ def node_to_coq(local_vars: list[str], node) -> tuple[str, list[str]]:
             if is_pure:
                 return (
                     func_name + "".join(" " + arg for arg in args),
-                    local_vars,
+                    empty_effect,
                 )
             args_left = "~(|"
             args_right = "|)"
@@ -189,7 +244,7 @@ def node_to_coq(local_vars: list[str], node) -> tuple[str, list[str]]:
                     args_left + " " + \
                     ', '.join(args) + \
                     " " + args_right),
-                local_vars,
+                empty_effect,
             )
 
         elif node_type == 'YulIdentifier':
@@ -199,7 +254,7 @@ def node_to_coq(local_vars: list[str], node) -> tuple[str, list[str]]:
                 print(f"Warning: Expression: variable {name} not in scope {local_vars}")
             return (
                 variable_name_to_coq(name),
-                local_vars,
+                empty_effect,
             )
 
         elif node_type == 'YulLiteral':
@@ -207,11 +262,11 @@ def node_to_coq(local_vars: list[str], node) -> tuple[str, list[str]]:
                 return (
                     "0x" + node['hexValue'].ljust(64, '0') +
                     " (* " + node['value'] + " *)",
-                    local_vars,
+                    empty_effect,
                 )
             return (
                 node.get('value', 'Unknown literal'),
-                local_vars,
+                empty_effect,
             )
 
         elif node_type == 'YulExpressionStatement':
@@ -219,12 +274,15 @@ def node_to_coq(local_vars: list[str], node) -> tuple[str, list[str]]:
 
         elif node_type == 'YulIf':
             condition, _ = node_to_coq(local_vars, node.get('condition'))
-            true_body, _ = node_to_coq(local_vars, node.get('body'))
+            true_body, true_effect = node_to_coq(local_vars, node.get('body'))
             return (
                 f"M.if_unit (| {condition},\n" +
                 indent(true_body) + "\n" +
                 "|)",
-                local_vars,
+                Effect(
+                    new_vars=set(),
+                    updated_vars=true_effect.updated_vars,
+                ),
             )
 
         elif node_type == 'YulSwitch':
@@ -240,17 +298,17 @@ def node_to_coq(local_vars: list[str], node) -> tuple[str, list[str]]:
                 ("\nelse ").join(cases) + "\n" +
                 "else\n" +
                 indent("M.pure tt"),
-                local_vars,
+                empty_effect,
             )
 
         elif node_type == 'YulLeave':
-            return ("M.leave", local_vars)
+            return ("M.leave", empty_effect)
 
         elif node_type == 'YulBreak':
-            return ("M.break", local_vars)
+            return ("M.break", empty_effect)
 
         elif node_type == 'YulContinue':
-            return ("M.continue", local_vars)
+            return ("M.continue", empty_effect)
 
         elif node_type == 'YulForLoop':
             pre, _ = node_in_block_to_coq(local_vars, node.get('pre'))
@@ -271,15 +329,15 @@ def node_to_coq(local_vars: list[str], node) -> tuple[str, list[str]]:
                     "(* post *)\n" +
                     "(" + post + ")"
                 ),
-                local_vars,
+                empty_effect,
             )
 
         else:
-            return (f"(* Unsupported node type: {node_type} *)", local_vars)
+            return (f"(* Unsupported node type: {node_type} *)", empty_effect)
 
     else:
         # A node should always be a dictionary
-        return (f"(* Unsupported node: {node} *)", local_vars)
+        return (f"(* Unsupported node: {node} *)", empty_effect)
 
 
 def function_result_value(returnVariables: list) -> str:
@@ -300,16 +358,24 @@ def function_result_type(arity: int) -> str:
 
 def function_definition_to_coq(node) -> str:
     name = variable_name_to_coq(node.get('name'))
-    param_names = [
-        p['name']
-        for p in node.get('parameters', [])
+    param_names: list[str] = [
+        param['name']
+        for param in node.get('parameters', [])
     ]
     params = ''.join([
         " (" + variable_name_to_coq(name) + " : U256.t)"
         for name in param_names
     ])
+    result_names: list[str] = [
+        result['name']
+        for result in node.get('returnVariables', [])
+    ]
     result = function_result_value(node.get('returnVariables', []))
-    body = block_to_coq(param_names, node.get('body'), result)
+    body, _ = block_to_coq(
+        set(param_names) | set(result_names),
+        node.get('body'),
+        result,
+    )
     return \
         f"Definition {name}{params} : M.t " + \
         function_result_type(len(node.get('returnVariables', []))) + " :=\n" + \
@@ -410,7 +476,7 @@ def top_level_to_coq(node) -> str:
         ]
         body = \
             "Definition body : M.t unit :=\n" + \
-            indent(node_to_coq([], node)[0]) + "."
+            indent(node_to_coq(set(), node)[0]) + "."
         return ("\n\n").join(functions + [body])
 
     return f"(* Unsupported top-level node type: {node_type} *)"

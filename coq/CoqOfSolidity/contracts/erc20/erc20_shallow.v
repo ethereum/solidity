@@ -5,9 +5,11 @@ Import Stdlib.
 
 Module Erc20_403.
   Definition checked_add_uint256 (x : U256.t) : M.t U256.t :=
+    fun '(sum) mode =>
     let~ sum := [[ add ~(| x, 0x14 |) ]] in
     do~ [[
       M.if_unit (| gt ~(| x, sum |),
+        fun '() mode =>
         do~ [[ mstore ~(| 0, (shl ~(| 224, 0x4e487b71 |)) |) ]] in
         do~ [[ mstore ~(| 4, 0x11 |) ]] in
         do~ [[ revert ~(| 0, 0x24 |) ]] in
@@ -17,17 +19,21 @@ Module Erc20_403.
     M.pure sum.
 
   Definition body : M.t unit :=
+    fun '() mode =>
     do~
+      fun '() mode =>
       let~ _1 := [[ memoryguard ~(| 0x80 |) ]] in
       do~ [[ mstore ~(| 64, _1 |) ]] in
       do~ [[
         M.if_unit (| callvalue ~(||),
+          fun '() mode =>
           do~ [[ revert ~(| 0, 0 |) ]] in
           M.pure tt
         |)
       ]] in
       do~ [[
         M.if_unit (| iszero ~(| (caller ~(||)) |),
+          fun '() mode =>
           do~ [[ mstore ~(| _1, (shl ~(| 229, 4594637 |)) |) ]] in
           do~ [[ mstore ~(| (add ~(| _1, 4 |)), 32 |) ]] in
           do~ [[ mstore ~(| (add ~(| _1, 36 |)), 31 |) ]] in
@@ -56,9 +62,11 @@ Module Erc20_403.
 
   Module Erc20_403_deployed.
     Definition abi_decode_address : M.t U256.t :=
+      fun '(value) mode =>
       let~ value := [[ calldataload ~(| 4 |) ]] in
       do~ [[
         M.if_unit (| iszero ~(| (eq ~(| value, (and ~(| value, (sub ~(| (shl ~(| 160, 1 |)), 1 |)) |)) |)) |),
+          fun '() mode =>
           do~ [[ revert ~(| 0, 0 |) ]] in
           M.pure tt
         |)
@@ -66,9 +74,11 @@ Module Erc20_403.
       M.pure value.
 
     Definition abi_decode_address_2305 : M.t U256.t :=
+      fun '(value) mode =>
       let~ value := [[ calldataload ~(| 36 |) ]] in
       do~ [[
         M.if_unit (| iszero ~(| (eq ~(| value, (and ~(| value, (sub ~(| (shl ~(| 160, 1 |)), 1 |)) |)) |)) |),
+          fun '() mode =>
           do~ [[ revert ~(| 0, 0 |) ]] in
           M.pure tt
         |)
@@ -76,9 +86,11 @@ Module Erc20_403.
       M.pure value.
 
     Definition checked_add_uint256 (x : U256.t) (y : U256.t) : M.t U256.t :=
+      fun '(sum) mode =>
       let~ sum := [[ add ~(| x, y |) ]] in
       do~ [[
         M.if_unit (| gt ~(| x, sum |),
+          fun '() mode =>
           do~ [[ mstore ~(| 0, (shl ~(| 224, 0x4e487b71 |)) |) ]] in
           do~ [[ mstore ~(| 4, 0x11 |) ]] in
           do~ [[ revert ~(| 0, 0x24 |) ]] in
@@ -88,9 +100,11 @@ Module Erc20_403.
       M.pure sum.
 
     Definition checked_sub_uint256 (x : U256.t) (y : U256.t) : M.t U256.t :=
+      fun '(diff) mode =>
       let~ diff := [[ sub ~(| x, y |) ]] in
       do~ [[
         M.if_unit (| gt ~(| diff, x |),
+          fun '() mode =>
           do~ [[ mstore ~(| 0, (shl ~(| 224, 0x4e487b71 |)) |) ]] in
           do~ [[ mstore ~(| 4, 0x11 |) ]] in
           do~ [[ revert ~(| 0, 0x24 |) ]] in
@@ -100,9 +114,11 @@ Module Erc20_403.
       M.pure diff.
 
     Definition fun_approve (var_owner : U256.t) (var_spender : U256.t) (var_value : U256.t) : M.t unit :=
+      fun '(dataSlot_1) mode =>
       let~ _1 := [[ and ~(| var_owner, (sub ~(| (shl ~(| 160, 1 |)), 1 |)) |) ]] in
       do~ [[
         M.if_unit (| iszero ~(| _1 |),
+          fun '() mode =>
           let~ memPtr := [[ mload ~(| 64 |) ]] in
           do~ [[ mstore ~(| memPtr, (shl ~(| 229, 4594637 |)) |) ]] in
           do~ [[ mstore ~(| (add ~(| memPtr, 4 |)), 32 |) ]] in
@@ -116,6 +132,7 @@ Module Erc20_403.
       let~ _2 := [[ and ~(| var_spender, (sub ~(| (shl ~(| 160, 1 |)), 1 |)) |) ]] in
       do~ [[
         M.if_unit (| iszero ~(| _2 |),
+          fun '() mode =>
           let~ memPtr_1 := [[ mload ~(| 64 |) ]] in
           do~ [[ mstore ~(| memPtr_1, (shl ~(| 229, 4594637 |)) |) ]] in
           do~ [[ mstore ~(| (add ~(| memPtr_1, 4 |)), 32 |) ]] in
@@ -140,9 +157,11 @@ Module Erc20_403.
       M.pure tt.
 
     Definition fun_transfer (var_from : U256.t) (var_to : U256.t) (var_value : U256.t) : M.t unit :=
+      fun '() mode =>
       let~ _1 := [[ and ~(| var_to, (sub ~(| (shl ~(| 160, 1 |)), 1 |)) |) ]] in
       do~ [[
         M.if_unit (| iszero ~(| _1 |),
+          fun '() mode =>
           let~ memPtr := [[ mload ~(| 64 |) ]] in
           do~ [[ mstore ~(| memPtr, (shl ~(| 229, 4594637 |)) |) ]] in
           do~ [[ mstore ~(| (add ~(| memPtr, 4 |)), 32 |) ]] in
@@ -172,22 +191,28 @@ Module Erc20_403.
       M.pure tt.
 
     Definition body : M.t unit :=
+      fun '() mode =>
       do~
+        fun '() mode =>
         do~ [[ mstore ~(| 64, (memoryguard ~(| 0x80 |)) |) ]] in
         do~ [[
           M.if_unit (| iszero ~(| (lt ~(| (calldatasize ~(||)), 4 |)) |),
+            fun '() mode =>
             do~ [[
               (* switch *)
               let* δ := ltac:(M.monadic (shr ~(| 224, (calldataload ~(| 0 |)) |))) in
               if δ =? 0x095ea7b3 then
+                fun '() mode =>
                 do~ [[
                   M.if_unit (| callvalue ~(||),
+                    fun '() mode =>
                     do~ [[ revert ~(| 0, 0 |) ]] in
                     M.pure tt
                   |)
                 ]] in
                 do~ [[
                   M.if_unit (| slt ~(| (add ~(| (calldatasize ~(||)), (not ~(| 3 |)) |)), 64 |),
+                    fun '() mode =>
                     do~ [[ revert ~(| 0, 0 |) ]] in
                     M.pure tt
                   |)
@@ -199,14 +224,17 @@ Module Erc20_403.
                 do~ [[ return_ ~(| memPos, 32 |) ]] in
                 M.pure tt
               else if δ =? 0x18160ddd then
+                fun '() mode =>
                 do~ [[
                   M.if_unit (| callvalue ~(||),
+                    fun '() mode =>
                     do~ [[ revert ~(| 0, 0 |) ]] in
                     M.pure tt
                   |)
                 ]] in
                 do~ [[
                   M.if_unit (| slt ~(| (add ~(| (calldatasize ~(||)), (not ~(| 3 |)) |)), 0 |),
+                    fun '() mode =>
                     do~ [[ revert ~(| 0, 0 |) ]] in
                     M.pure tt
                   |)
@@ -217,14 +245,17 @@ Module Erc20_403.
                 do~ [[ return_ ~(| memPos_1, 32 |) ]] in
                 M.pure tt
               else if δ =? 0x23b872dd then
+                fun '(dataSlot_1) mode =>
                 do~ [[
                   M.if_unit (| callvalue ~(||),
+                    fun '() mode =>
                     do~ [[ revert ~(| 0, 0 |) ]] in
                     M.pure tt
                   |)
                 ]] in
                 do~ [[
                   M.if_unit (| slt ~(| (add ~(| (calldatasize ~(||)), (not ~(| 3 |)) |)), 96 |),
+                    fun '() mode =>
                     do~ [[ revert ~(| 0, 0 |) ]] in
                     M.pure tt
                   |)
@@ -246,14 +277,17 @@ Module Erc20_403.
                 do~ [[ return_ ~(| memPos_2, 32 |) ]] in
                 M.pure tt
               else if δ =? 0x39509351 then
+                fun '(dataSlot_3) mode =>
                 do~ [[
                   M.if_unit (| callvalue ~(||),
+                    fun '() mode =>
                     do~ [[ revert ~(| 0, 0 |) ]] in
                     M.pure tt
                   |)
                 ]] in
                 do~ [[
                   M.if_unit (| slt ~(| (add ~(| (calldatasize ~(||)), (not ~(| 3 |)) |)), 64 |),
+                    fun '() mode =>
                     do~ [[ revert ~(| 0, 0 |) ]] in
                     M.pure tt
                   |)
@@ -272,14 +306,17 @@ Module Erc20_403.
                 do~ [[ return_ ~(| memPos_3, 32 |) ]] in
                 M.pure tt
               else if δ =? 0x70a08231 then
+                fun '() mode =>
                 do~ [[
                   M.if_unit (| callvalue ~(||),
+                    fun '() mode =>
                     do~ [[ revert ~(| 0, 0 |) ]] in
                     M.pure tt
                   |)
                 ]] in
                 do~ [[
                   M.if_unit (| slt ~(| (add ~(| (calldatasize ~(||)), (not ~(| 3 |)) |)), 32 |),
+                    fun '() mode =>
                     do~ [[ revert ~(| 0, 0 |) ]] in
                     M.pure tt
                   |)
@@ -292,14 +329,17 @@ Module Erc20_403.
                 do~ [[ return_ ~(| memPos_4, 32 |) ]] in
                 M.pure tt
               else if δ =? 0xa457c2d7 then
+                fun '(dataSlot_5) mode =>
                 do~ [[
                   M.if_unit (| callvalue ~(||),
+                    fun '() mode =>
                     do~ [[ revert ~(| 0, 0 |) ]] in
                     M.pure tt
                   |)
                 ]] in
                 do~ [[
                   M.if_unit (| slt ~(| (add ~(| (calldatasize ~(||)), (not ~(| 3 |)) |)), 64 |),
+                    fun '() mode =>
                     do~ [[ revert ~(| 0, 0 |) ]] in
                     M.pure tt
                   |)
@@ -318,14 +358,17 @@ Module Erc20_403.
                 do~ [[ return_ ~(| memPos_5, 32 |) ]] in
                 M.pure tt
               else if δ =? 0xa9059cbb then
+                fun '() mode =>
                 do~ [[
                   M.if_unit (| callvalue ~(||),
+                    fun '() mode =>
                     do~ [[ revert ~(| 0, 0 |) ]] in
                     M.pure tt
                   |)
                 ]] in
                 do~ [[
                   M.if_unit (| slt ~(| (add ~(| (calldatasize ~(||)), (not ~(| 3 |)) |)), 64 |),
+                    fun '() mode =>
                     do~ [[ revert ~(| 0, 0 |) ]] in
                     M.pure tt
                   |)
@@ -337,14 +380,17 @@ Module Erc20_403.
                 do~ [[ return_ ~(| memPos_6, 32 |) ]] in
                 M.pure tt
               else if δ =? 0xdd62ed3e then
+                fun '(dataSlot_7) mode =>
                 do~ [[
                   M.if_unit (| callvalue ~(||),
+                    fun '() mode =>
                     do~ [[ revert ~(| 0, 0 |) ]] in
                     M.pure tt
                   |)
                 ]] in
                 do~ [[
                   M.if_unit (| slt ~(| (add ~(| (calldatasize ~(||)), (not ~(| 3 |)) |)), 64 |),
+                    fun '() mode =>
                     do~ [[ revert ~(| 0, 0 |) ]] in
                     M.pure tt
                   |)
