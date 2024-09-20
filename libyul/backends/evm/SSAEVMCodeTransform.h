@@ -51,11 +51,12 @@ private:
 	SSAEVMCodeTransform(
 		AbstractAssembly& _assembly,
 		BuiltinContext& _builtinContext,
-		UseNamedLabels _useNamedLabelsForFunctions,
+		std::map<Scope::Function const*, AbstractAssembly::LabelID> _functionLabels,
 		SSACFG const& _cfg,
 		SSACFGLiveness const& _liveness
 	);
 
+	static std::map<Scope::Function const*, AbstractAssembly::LabelID> registerFunctionLabels(AbstractAssembly& _assembly, ControlFlow const& _controlFlow, UseNamedLabels _useNamedLabelsForFunctions);
 	AbstractAssembly::LabelID getFunctionLabel(Scope::Function const& _function) const;
 
 	void operator()(SSACFG::BlockId _block);

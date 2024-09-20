@@ -74,13 +74,14 @@ std::vector<StackTooDeepError> SSAEVMCodeTransform::run(
 {
 	std::unique_ptr<ControlFlow> controlFlow = SSAControlFlowGraphBuilder::build(_analysisInfo, _dialect, _block);
 	ControlFlowLiveness liveness(*controlFlow);
-
 	fmt::print("{}\n", controlFlow->toDot(&liveness));
+
+	auto functionLabels = registerFunctionLabels(_assembly, *controlFlow, _useNamedLabelsForFunctions);
 
 	SSAEVMCodeTransform mainCodeTransform(
 		_assembly,
 		_builtinContext,
-		_useNamedLabelsForFunctions,
+		functionLabels,
 		*controlFlow->mainGraph,
 		*liveness.mainLiveness
 	);
@@ -99,7 +100,7 @@ std::vector<StackTooDeepError> SSAEVMCodeTransform::run(
 		SSAEVMCodeTransform functionCodeTransform(
 			_assembly,
 			_builtinContext,
-			_useNamedLabelsForFunctions,
+			functionLabels,
 			*functionGraph,
 			*functionLiveness
 		);
@@ -111,10 +112,33 @@ std::vector<StackTooDeepError> SSAEVMCodeTransform::run(
 	return stackErrors;
 }
 
+std::map<Scope::Function const*, AbstractAssembly::LabelID> SSAEVMCodeTransform::registerFunctionLabels(AbstractAssembly& _assembly, ControlFlow const& _controlFlow, UseNamedLabels _useNamedLabelsForFunctions)
+{
+	std::map<Scope::Function const*, AbstractAssembly::LabelID> functionLabels;
+
+	for (auto const& [_function, _functionGraph]: _controlFlow.functionGraphMapping)
+	{
+		std::set<YulString> assignedFunctionNames;
+		bool nameAlreadySeen = !assignedFunctionNames.insert(_function->name).second;
+		if (_useNamedLabelsForFunctions == UseNamedLabels::YesAndForceUnique)
+			yulAssert(!nameAlreadySeen);
+		bool useNamedLabel = _useNamedLabelsForFunctions != UseNamedLabels::Never && !nameAlreadySeen;
+		functionLabels[_function] = useNamedLabel ?
+			_assembly.namedLabel(
+				_function->name.str(),
+				_functionGraph->arguments.size(),
+				_functionGraph->returns.size(),
+				_functionGraph->debugData ? _functionGraph->debugData->astID : std::nullopt
+			) :
+			_assembly.newLabelId();
+	}
+	return functionLabels;
+}
+
 SSAEVMCodeTransform::SSAEVMCodeTransform(
 	AbstractAssembly& _assembly,
 	BuiltinContext& _builtinContext,
-	UseNamedLabels _useNamedLabelsForFunctions,
+	std::map<Scope::Function const*, AbstractAssembly::LabelID> _functionLabels,
 	SSACFG const& _cfg,
 	SSACFGLiveness const& _liveness
 ):
@@ -122,27 +146,7 @@ SSAEVMCodeTransform::SSAEVMCodeTransform(
 	m_builtinContext(_builtinContext),
 	m_cfg(_cfg),
 	m_liveness(_liveness),
-	m_functionLabels([&](){
-		std::map<Scope::Function const*, AbstractAssembly::LabelID> functionLabels;
-
-		if (_cfg.function)
-		{
-			std::set<YulString> assignedFunctionNames;
-			bool nameAlreadySeen = !assignedFunctionNames.insert(_cfg.function->name).second;
-			if (_useNamedLabelsForFunctions == UseNamedLabels::YesAndForceUnique)
-				yulAssert(!nameAlreadySeen);
-			bool useNamedLabel = _useNamedLabelsForFunctions != UseNamedLabels::Never && !nameAlreadySeen;
-			functionLabels[_cfg.function] = useNamedLabel ?
-				m_assembly.namedLabel(
-					_cfg.function->name.str(),
-					_cfg.arguments.size(),
-					_cfg.returns.size(),
-					_cfg.debugData ? _cfg.debugData->astID : std::nullopt
-				) :
-				m_assembly.newLabelId();
-		}
-		return functionLabels;
-	}()),
+	m_functionLabels(_functionLabels),
 	m_blockData(_cfg.numBlocks()),
 	m_generatedBlocks(_cfg.numBlocks(), false)
 {
