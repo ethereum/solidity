@@ -83,7 +83,7 @@ private:
 	void bringUpSlot(StackSlot const& _slot);
 
 	std::string stackToString(std::vector<StackSlot> const& _stack);
-	std::string stackSlotToString(StackSlot const& _slot);
+	std::string stackSlotToString(StackSlot const& _slot) const;
 
 	AbstractAssembly& m_assembly;
 	BuiltinContext& m_builtinContext;

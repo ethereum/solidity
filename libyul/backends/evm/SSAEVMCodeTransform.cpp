@@ -75,6 +75,8 @@ std::vector<StackTooDeepError> SSAEVMCodeTransform::run(
 	std::unique_ptr<ControlFlow> controlFlow = SSAControlFlowGraphBuilder::build(_analysisInfo, _dialect, _block);
 	ControlFlowLiveness liveness(*controlFlow);
 
+	fmt::print("{}\n", controlFlow->toDot(&liveness));
+
 	SSAEVMCodeTransform mainCodeTransform(
 		_assembly,
 		_builtinContext,
@@ -173,6 +175,7 @@ void SSAEVMCodeTransform::operator()(SSACFG::BlockId const _block)
 
 	ScopedSaveAndRestore stackSave{m_stack, {}};
 
+	if (_block != m_cfg.entry)
 	{
 		auto& label = blockData(_block).label;
 		if (!label)
@@ -236,10 +239,14 @@ void SSAEVMCodeTransform::operator()(SSACFG::BlockId const _block)
 	};
 	auto cleanUpStack = [&](std::optional<SSACFG::ValueId> _additional = std::nullopt)
 	{
-		auto liveOut = m_liveness.liveOut(_block)	;
+		auto liveOut = m_liveness.liveOut(_block);
 		if (_additional)
 			liveOut.emplace(*_additional);
 		restrictStackToSet(liveOut);
+	};
+	auto addPhiValuesToStack = [&](SSACFG::BlockId _target)
+	{
+		m_stack += m_cfg.block(_target).phis;
 	};
 	auto transformStackWithTargetPhis = [&](SSACFG::BlockId _current, SSACFG::BlockId _target, std::vector<StackSlot> const& _stack, bool _direction) {
 		auto const& targetInfo = m_cfg.block(_target);
@@ -384,6 +391,7 @@ void SSAEVMCodeTransform::operator()(SSACFG::BlockId const _block)
 				std::cout << "STACK1: " << stackToString(m_stack) << std::endl;
 				auto inset = inSetOfBlock(_conditionalJump.zero);
 				std::cout << "INSET: " << stackToString(inset | ranges::to<std::vector<StackSlot>>) << std::endl;
+				addPhiValuesToStack(_conditionalJump.zero);
 				restrictStackToSet(inset);
 				std::cout << "STACK2: " << stackToString(m_stack) << std::endl;
 				zeroLayout = currentStackToTargetStack(_conditionalJump.zero);
@@ -643,7 +651,7 @@ std::string SSAEVMCodeTransform::stackToString(std::vector<StackSlot> const& _st
 	return "[" + util::joinHumanReadable(_stack | ranges::views::transform([&](StackSlot const& _slot) { return stackSlotToString(_slot); })) + "]";
 }
 
-std::string SSAEVMCodeTransform::stackSlotToString(StackSlot const& _slot)
+std::string SSAEVMCodeTransform::stackSlotToString(StackSlot const& _slot) const
 {
 	return std::visit(util::GenericVisitor{
 		[&](SSACFG::ValueId _value) {
