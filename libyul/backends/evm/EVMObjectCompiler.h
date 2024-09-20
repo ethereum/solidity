@@ -38,6 +38,7 @@ public:
 		AbstractAssembly& _assembly,
 		EVMDialect const& _dialect,
 		bool _optimize,
+		bool _ssaCfg,
 		std::optional<uint8_t> _eofVersion
 	);
 private:
@@ -45,7 +46,7 @@ private:
 		m_assembly(_assembly), m_dialect(_dialect), m_eofVersion(_eofVersion)
 	{}
 
-	void run(Object const& _object, bool _optimize);
+	void run(Object const& _object, bool _optimize, bool _ssaCfg);
 
 	AbstractAssembly& m_assembly;
 	EVMDialect const& m_dialect;

@@ -155,7 +155,7 @@ private:
 	bool analyzeParsed();
 	bool analyzeParsed(yul::Object& _object);
 
-	void compileEVM(yul::AbstractAssembly& _assembly, bool _optimize) const;
+	void compileEVM(yul::AbstractAssembly& _assembly, bool _optimize, bool _ssaCfg) const;
 
 	/// Prints the Yul object stored internally and parses it again.
 	/// This ensures that the debug info in the AST matches the source that printing would produce

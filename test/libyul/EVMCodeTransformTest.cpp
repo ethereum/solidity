@@ -52,6 +52,7 @@ TestCase::TestResult EVMCodeTransformTest::run(std::ostream& _stream, std::strin
 	solidity::frontend::OptimiserSettings settings = solidity::frontend::OptimiserSettings::none();
 	settings.runYulOptimiser = false;
 	settings.optimizeStackAllocation = m_stackOpt;
+	settings.runPeephole = false;
 	YulStack stack(
 		EVMVersion{},
 		std::nullopt,
@@ -74,6 +75,7 @@ TestCase::TestResult EVMCodeTransformTest::run(std::ostream& _stream, std::strin
 		adapter,
 		EVMDialect::strictAssemblyForEVMObjects(EVMVersion{}),
 		m_stackOpt,
+		true, // todo replace this so that both transforms are run
 		std::nullopt
 	);
 
