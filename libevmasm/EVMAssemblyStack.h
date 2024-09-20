@@ -33,7 +33,8 @@ namespace solidity::evmasm
 class EVMAssemblyStack: public AbstractAssemblyStack
 {
 public:
-	explicit EVMAssemblyStack(langutil::EVMVersion _evmVersion): m_evmVersion(_evmVersion) {}
+	explicit EVMAssemblyStack(langutil::EVMVersion _evmVersion, std::optional<uint8_t> _eofVersion):
+		m_evmVersion(_evmVersion), m_eofVersion(_eofVersion) {}
 
 	/// Runs parsing and analysis steps.
 	/// Multiple calls overwrite the previous state.
@@ -76,6 +77,7 @@ public:
 
 private:
 	langutil::EVMVersion m_evmVersion;
+	std::optional<uint8_t> m_eofVersion;
 	std::string m_name;
 	std::shared_ptr<evmasm::Assembly> m_evmAssembly;
 	std::shared_ptr<evmasm::Assembly> m_evmRuntimeAssembly;
