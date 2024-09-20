@@ -808,7 +808,11 @@ evmasm::AssemblyItems const* CompilerStack::assemblyItems(std::string const& _co
 	solAssert(m_stackState == CompilationSuccessful, "Compilation was not successful.");
 
 	Contract const& currentContract = contract(_contractName);
-	return currentContract.evmAssembly ? &currentContract.evmAssembly->items() : nullptr;
+	if (!currentContract.evmAssembly)
+		return nullptr;
+	solUnimplementedAssert(!m_eofVersion.has_value(), "EVM assembly output not implemented for EOF yet.");
+	solAssert(currentContract.evmAssembly->codeSections().size() == 1, "Expected a single code section in legacy codegen.");
+	return &currentContract.evmAssembly->codeSections().front().items;
 }
 
 evmasm::AssemblyItems const* CompilerStack::runtimeAssemblyItems(std::string const& _contractName) const
@@ -816,7 +820,12 @@ evmasm::AssemblyItems const* CompilerStack::runtimeAssemblyItems(std::string con
 	solAssert(m_stackState == CompilationSuccessful, "Compilation was not successful.");
 
 	Contract const& currentContract = contract(_contractName);
-	return currentContract.evmRuntimeAssembly ? &currentContract.evmRuntimeAssembly->items() : nullptr;
+
+	if (!currentContract.evmRuntimeAssembly)
+		return nullptr;
+	solUnimplementedAssert(!m_eofVersion.has_value(), "EVM assembly output not implemented for EOF yet.");
+	solAssert(currentContract.evmRuntimeAssembly->codeSections().size() == 1, "Expected a single code section in legacy codegen.");
+	return &currentContract.evmRuntimeAssembly->codeSections().front().items;
 }
 
 Json CompilerStack::generatedSources(std::string const& _contractName, bool _runtime) const
