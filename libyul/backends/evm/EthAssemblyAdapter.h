@@ -21,9 +21,12 @@
 
 #pragma once
 
-#include <libyul/backends/evm/AbstractAssembly.h>
-#include <libyul/AsmAnalysis.h>
+#include "libevmasm/Assembly.h"
+
+
 #include <liblangutil/SourceLocation.h>
+#include <libyul/AsmAnalysis.h>
+#include <libyul/backends/evm/AbstractAssembly.h>
 
 #include <functional>
 #include <limits>
@@ -69,7 +72,11 @@ public:
 
 	langutil::EVMVersion evmVersion() const override;
 
-
+	friend std::ostream& operator<<(std::ostream& _os, EthAssemblyAdapter const& _adapter)
+	{
+		_adapter.m_assembly.assemblyStream(_os);
+		return _os;
+	}
 private:
 	static LabelID assemblyTagToIdentifier(evmasm::AssemblyItem const& _tag);
 	void appendJumpInstruction(evmasm::Instruction _instruction, JumpType _jumpType);

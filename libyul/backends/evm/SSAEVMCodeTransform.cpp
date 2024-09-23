@@ -218,7 +218,7 @@ void SSAEVMCodeTransform::operator()(SSACFG::BlockId const _block)
 	auto cleanUpStack = [&](std::optional<SSACFG::ValueId> _additional = std::nullopt)
 	{
 		auto liveOut = m_liveness.liveOut(_block);
-		if (_additional)
+		if (_additional && !std::holds_alternative<SSACFG::LiteralValue>(m_cfg.valueInfo(*_additional)))
 			liveOut.emplace(*_additional);
 		restrictStackToSet(liveOut);
 	};
@@ -522,7 +522,7 @@ void SSAEVMCodeTransform::bringUpSlot(StackSlot const& _slot)
 		[&](SSACFG::ValueId _value) {
 			if (auto depth = util::findOffset(m_stack | ranges::views::reverse, _slot))
 			{
-				m_assembly.appendInstruction(evmasm::dupInstruction(static_cast<unsigned>(*depth + 1)));
+			m_assembly.appendInstruction(evmasm::dupInstruction(static_cast<unsigned>(*depth + 1)));
 				m_stack.emplace_back(_slot);
 				return;
 			}

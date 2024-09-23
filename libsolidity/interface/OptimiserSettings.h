@@ -80,17 +80,8 @@ struct OptimiserSettings
 	}
 	static OptimiserSettings yulSSA()
 	{
-		OptimiserSettings s;
-		s.runOrderLiterals = true;
-		s.runInliner = true;
-		s.runJumpdestRemover = true;
+		auto s = minimal();
 		s.runPeephole = false;
-		s.runDeduplicate = true;
-		s.runCSE = true;
-		s.runConstantOptimiser = true;
-		s.simpleCounterForLoopUncheckedIncrement = true;
-		s.runYulOptimiser = true;
-		s.optimizeStackAllocation = true;
 		s.runSSAYul = true;
 		return s;
 	}

@@ -19,11 +19,14 @@
  * Transformation of a Yul AST into a control flow graph.
  */
 
-#include <libyul/backends/evm/SSAControlFlowGraphBuilder.h>
+#include "libyul/AsmPrinter.h"
+
+
 #include <libyul/AST.h>
+#include <libyul/ControlFlowSideEffectsCollector.h>
 #include <libyul/Exceptions.h>
 #include <libyul/backends/evm/ControlFlow.h>
-#include <libyul/ControlFlowSideEffectsCollector.h>
+#include <libyul/backends/evm/SSAControlFlowGraphBuilder.h>
 
 #include <libsolutil/Algorithms.h>
 #include <libsolutil/StringUtils.h>
@@ -590,7 +593,6 @@ void SSAControlFlowGraphBuilder::assign(std::vector<std::reference_wrapper<Scope
 
 	for (auto const& [var, value]: ranges::zip_view(_variables, rhs))
 		writeVariable(var, m_currentBlock, value);
-
 }
 
 std::vector<SSACFG::ValueId> SSAControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _call)
