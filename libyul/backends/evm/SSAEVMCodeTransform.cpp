@@ -16,10 +16,11 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include <libyul/backends/evm/SSAEVMCodeTransform.h>
-
 #include <libyul/backends/evm/SSAControlFlowGraph.h>
+
+#include <libyul/backends/evm/EthAssemblyAdapter.h> // todo remove, just for debugging
 #include <libyul/backends/evm/SSAControlFlowGraphBuilder.h>
+#include <libyul/backends/evm/SSAEVMCodeTransform.h>
 
 #include <libsolutil/StringUtils.h>
 #include <libsolutil/Visitor.h>
@@ -74,8 +75,11 @@ std::vector<StackTooDeepError> SSAEVMCodeTransform::run(
 {
 	std::unique_ptr<ControlFlow> controlFlow = SSAControlFlowGraphBuilder::build(_analysisInfo, _dialect, _block);
 	ControlFlowLiveness liveness(*controlFlow);
-	fmt::print("{}\n", controlFlow->toDot(&liveness));
-
+	{
+		// todo remove, just for debugging
+		fmt::print("{}\n", controlFlow->toDot(&liveness));
+		std::fflush(nullptr);
+	}
 	auto functionLabels = registerFunctionLabels(_assembly, *controlFlow, _useNamedLabelsForFunctions);
 
 	SSAEVMCodeTransform mainCodeTransform(
@@ -109,6 +113,12 @@ std::vector<StackTooDeepError> SSAEVMCodeTransform::run(
 			stackErrors.insert(stackErrors.end(), functionCodeTransform.m_stackErrors.begin(), functionCodeTransform.m_stackErrors.end());
 	}
 
+	if (auto adapter = dynamic_cast<EthAssemblyAdapter*>(&_assembly))
+	{
+		// todo remove, just for debugging
+		std::cout << "------------------------------------------" << std::endl;
+		std::cout << *adapter << std::endl;
+	}
 	return stackErrors;
 }
 
@@ -183,7 +193,7 @@ void SSAEVMCodeTransform::operator()(SSACFG::BlockId const _block)
 
 	ScopedSaveAndRestore stackSave{m_stack, {}};
 
-	if (_block != m_cfg.entry)
+	if (_block != m_cfg.entry) // todo or perhaps there's a backedge to it?
 	{
 		auto& label = blockData(_block).label;
 		if (!label)
@@ -205,46 +215,6 @@ void SSAEVMCodeTransform::operator()(SSACFG::BlockId const _block)
 	for (auto&& [op, liveOut]: ranges::zip_view(m_cfg.block(_block).operations, m_liveness.operationsLiveOut(_block)))
 		(*this)(op, liveOut);
 
-	auto restrictStackToSet = [&](std::set<SSACFG::ValueId> liveOut) {
-		auto originalLiveOut = liveOut;
-		std::vector<size_t> freeSlots;
-		for (auto&& [pos, slot]: m_stack | ranges::views::enumerate)
-		{
-			if (std::holds_alternative<AbstractAssembly::LabelID>(slot))
-				freeSlots.emplace_back(pos);
-			if (!liveOut.erase(std::get<SSACFG::ValueId>(slot)))
-				freeSlots.emplace_back(pos);
-		}
-		while (!freeSlots.empty())
-		{
-			auto lastFreeSlot = freeSlots.back();
-			freeSlots.pop_back();
-			if (lastFreeSlot == m_stack.size() - 1)
-				pop();
-			else
-			{
-				auto slot = m_stack[lastFreeSlot];
-				swap(m_stack.size() - lastFreeSlot - 1);
-				yulAssert(slot == m_stack.back());
-				pop();
-			}
-		}
-		// Validate resulting m_stack is just an ordering of the block's live out set.
-		bool same = true;
-		if (originalLiveOut.size() != m_stack.size())
-			same = false;
-		if (same)
-		{
-			if (!((m_stack | ranges::to<std::set<StackSlot>>) == (originalLiveOut | ranges::to<std::set<StackSlot>>)))
-				same = false;
-		}
-		if (!same) {
-			std::cout << "CLEAN UP STACK " << stackToString(m_stack) << " <=> " << stackToString(originalLiveOut | ranges::to<std::vector<StackSlot>>) <<  " (current block: " << m_currentBlock.value << ")" << std::endl;
-		}
-		yulAssert(same);
-		yulAssert(originalLiveOut.size() == m_stack.size());
-		yulAssert((m_stack | ranges::to<std::set<StackSlot>>) == (originalLiveOut | ranges::to<std::set<StackSlot>>));
-	};
 	auto cleanUpStack = [&](std::optional<SSACFG::ValueId> _additional = std::nullopt)
 	{
 		auto liveOut = m_liveness.liveOut(_block);
@@ -257,12 +227,7 @@ void SSAEVMCodeTransform::operator()(SSACFG::BlockId const _block)
 		m_stack += m_cfg.block(_target).phis;
 	};
 	auto transformStackWithTargetPhis = [&](SSACFG::BlockId _current, SSACFG::BlockId _target, std::vector<StackSlot> const& _stack, bool _direction) {
-		auto const& targetInfo = m_cfg.block(_target);
-		size_t phiArgumentIndex = [&]() {
-			auto idx = util::findOffset(targetInfo.entries, _current);
-			yulAssert(idx, "Current block not found as entry in one of the exits of the current block.");
-			return *idx;
-		}();
+		size_t phiArgumentIndex = m_cfg.phiArgumentIndex(_current, _target);
 		std::map<StackSlot, StackSlot> translation;
 		for (auto const& phi: m_cfg.block(_target).phis)
 		{
@@ -280,19 +245,13 @@ void SSAEVMCodeTransform::operator()(SSACFG::BlockId const _block)
 	auto currentStackToTargetStack = [&](SSACFG::BlockId _target) {
 		auto result = transformStackWithTargetPhis(_block, _target, m_stack, true);
 		// TODO: this is a hack... this should happen elsewhere somehow...
-		auto const& targetInfo = m_cfg.block(_target);
-		size_t phiArgumentIndex = [&]() {
-			auto idx = util::findOffset(targetInfo.entries, _block);
-			yulAssert(idx, "Current block not found as entry in one of the exits of the current block.");
-			return *idx;
-		}();
 		for (auto const& phi: m_cfg.block(_target).phis)
 		{
 			auto const* phiInfo = std::get_if<SSACFG::PhiValue>(&m_cfg.valueInfo(phi));
 			yulAssert(phiInfo);
 			if (!util::contains(m_stack, StackSlot{phi}))
 			{
-				bringUpSlot(phiInfo->arguments.at(phiArgumentIndex));
+				bringUpSlot(phiInfo->arguments.at(m_cfg.phiArgumentIndex(_block, _target)));
 				result.emplace_back(phi);
 			}
 		}
@@ -300,17 +259,11 @@ void SSAEVMCodeTransform::operator()(SSACFG::BlockId const _block)
 	};
 	auto inSetOfBlock = [&](SSACFG::BlockId _target) {
 		std::set<SSACFG::ValueId> result = m_liveness.liveIn(_target);
-		auto const& targetInfo = m_cfg.block(_target);
-		size_t phiArgumentIndex = [&]() {
-			auto idx = util::findOffset(targetInfo.entries, _block);
-			yulAssert(idx, "Current block not found as entry in one of the exits of the current block.");
-			return *idx;
-		}();
 		for (auto phi: m_cfg.block(_target).phis)
 		{
 			auto const* phiInfo = std::get_if<SSACFG::PhiValue>(&m_cfg.valueInfo(phi));
 			yulAssert(phiInfo);
-			auto slot = phiInfo->arguments.at(phiArgumentIndex);
+			auto slot = phiInfo->arguments.at(m_cfg.phiArgumentIndex(_block, _target));
 			if (!std::holds_alternative<SSACFG::LiteralValue>(m_cfg.valueInfo(slot)))
 				result.emplace(slot);
 		}
@@ -318,12 +271,6 @@ void SSAEVMCodeTransform::operator()(SSACFG::BlockId const _block)
 	};
 	auto targetStackToCurrentStack = [&](SSACFG::BlockId _target) {
 		yulAssert(blockData(_target).stackIn);
-		auto const& targetInfo = m_cfg.block(_target);
-		size_t phiArgumentIndex = [&]() {
-			auto idx = util::findOffset(targetInfo.entries, _block);
-			yulAssert(idx, "Current block not found as entry in one of the exits of the current block.");
-			return *idx;
-		}();
 		auto stack = transformStackWithTargetPhis(_block, _target, *blockData(_target).stackIn, false);
 		for (auto& slot: stack)
 		{
@@ -334,7 +281,7 @@ void SSAEVMCodeTransform::operator()(SSACFG::BlockId const _block)
 				for (auto phi: m_cfg.block(_target).phis)
 				{
 					auto const& phiInfo = std::get<SSACFG::PhiValue>(m_cfg.valueInfo(phi));
-					if(*value == phiInfo.arguments.at(phiArgumentIndex))
+					if(*value == phiInfo.arguments.at(m_cfg.phiArgumentIndex(_block, _target)))
 					{
 						skip = false;
 						break;
@@ -602,10 +549,11 @@ void SSAEVMCodeTransform::createExactStack(std::vector<StackSlot> const& _target
 	std::map<StackSlot, std::set<size_t>> targetPositions;
 	for (auto&& [pos, slot]: _target | ranges::views::enumerate)
 		targetPositions[slot].insert(pos);
-	auto swapTopToTargetOrPop = [&]() {
+	auto swapTopToTargetOrPop = [&]()
+	{
 		auto top = m_stack.back();
 		// Check if the top should be somewhere else where it not already is.
-		for(auto targetPos: targetPositions[top])
+		for (auto targetPos: targetPositions[top])
 			if (targetPos < m_stack.size() - 1 && m_stack[targetPos] != top)
 			{
 				// If so swap it there.
@@ -631,7 +579,7 @@ void SSAEVMCodeTransform::createExactStack(std::vector<StackSlot> const& _target
 	do
 	{
 		// As long as stack top isn't final
-		while(m_stack.size() > _target.size() || (!m_stack.empty() && _target[m_stack.size() - 1] != m_stack.back()))
+		while (m_stack.size() > _target.size() || (!m_stack.empty() && _target[m_stack.size() - 1] != m_stack.back()))
 		{
 			std::cout << "  ..." << stackToString(m_stack) << std::endl;
 			// Try to swap it to where it is still needed - or otherwise pop it.
@@ -655,6 +603,47 @@ void SSAEVMCodeTransform::createExactStack(std::vector<StackSlot> const& _target
 		bringUpSlot(_target[m_stack.size()]);
 	yulAssert(m_stack.size() == _target.size());
 	yulAssert(m_stack == _target);
+}
+void SSAEVMCodeTransform::restrictStackToSet(std::set<SSACFG::ValueId> liveOut)
+{
+	auto originalLiveOut = liveOut;
+	std::vector<size_t> freeSlots;
+	for (auto&& [pos, slot]: m_stack | ranges::views::enumerate)
+	{
+		if (std::holds_alternative<AbstractAssembly::LabelID>(slot))
+			freeSlots.emplace_back(pos);
+		if (!liveOut.erase(std::get<SSACFG::ValueId>(slot)))
+			freeSlots.emplace_back(pos);
+	}
+	while (!freeSlots.empty())
+	{
+		auto lastFreeSlot = freeSlots.back();
+		freeSlots.pop_back();
+		if (lastFreeSlot == m_stack.size() - 1)
+			pop();
+		else
+		{
+			auto slot = m_stack[lastFreeSlot];
+			swap(m_stack.size() - lastFreeSlot - 1);
+			yulAssert(slot == m_stack.back());
+			pop();
+		}
+	}
+	// Validate resulting m_stack is just an ordering of the block's live out set.
+	bool same = true;
+	if (originalLiveOut.size() != m_stack.size())
+		same = false;
+	if (same)
+	{
+		if (!((m_stack | ranges::to<std::set<StackSlot>>) == (originalLiveOut | ranges::to<std::set<StackSlot>>)))
+			same = false;
+	}
+	if (!same) {
+		std::cout << "CLEAN UP STACK " << stackToString(m_stack) << " <=> " << stackToString(originalLiveOut | ranges::to<std::vector<StackSlot>>) <<  " (current block: " << m_currentBlock.value << ")" << std::endl;
+	}
+	yulAssert(same);
+	yulAssert(originalLiveOut.size() == m_stack.size());
+	yulAssert((m_stack | ranges::to<std::set<StackSlot>>) == (originalLiveOut | ranges::to<std::set<StackSlot>>));
 }
 
 std::string SSAEVMCodeTransform::stackToString(std::vector<StackSlot> const& _stack)

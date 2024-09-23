@@ -208,6 +208,14 @@ public:
 		return it->second;
 	}
 
+	size_t phiArgumentIndex(BlockId const _source, BlockId const _target) const
+	{
+		auto const& targetBlock = block(_target);
+		auto idx = util::findOffset(targetBlock.entries, _source);
+		yulAssert(idx, "Current block not found as entry in one of the exits of the current block.");
+		return *idx;
+	}
+
 	std::string toDot(
 		bool _includeDiGraphDefinition=true,
 		std::optional<size_t> _functionIndex=std::nullopt,

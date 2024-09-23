@@ -77,6 +77,7 @@ private:
 
 	void createStackTop(std::vector<StackSlot> const& _targetTop, std::set<SSACFG::ValueId> const& _liveOut);
 	void createExactStack(std::vector<StackSlot> const& _target);
+	void restrictStackToSet(std::set<SSACFG::ValueId> liveOut);
 
 	void pop();
 	void swap(size_t _depth);
