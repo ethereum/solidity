@@ -33,6 +33,7 @@
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/drop_last.hpp>
 #include <range/v3/view/enumerate.hpp>
+#include <range/v3/view/filter.hpp>
 #include <range/v3/view/reverse.hpp>
 #include <range/v3/view/transform.hpp>
 #include <range/v3/view/zip.hpp>
@@ -46,10 +47,12 @@ namespace solidity::yul
 SSAControlFlowGraphBuilder::SSAControlFlowGraphBuilder(
 	SSACFG& _graph,
 	AsmAnalysisInfo const& _analysisInfo,
+	ControlFlowSideEffectsCollector const& _sideEffects,
 	Dialect const& _dialect
 ):
 	m_graph(_graph),
 	m_info(_analysisInfo),
+	m_sideEffects(_sideEffects),
 	m_dialect(_dialect)
 {
 }
@@ -63,7 +66,7 @@ std::unique_ptr<ControlFlow> SSAControlFlowGraphBuilder::build(
 	ControlFlowSideEffectsCollector sideEffects(_dialect, _block);
 
 	auto result = std::make_unique<ControlFlow>();
-	auto functions = buildMainGraph(*result->mainGraph, _analysisInfo, _dialect, _block);
+	auto functions = buildMainGraph(*result->mainGraph, _analysisInfo, sideEffects, _dialect, _block);
 	buildFunctionGraphs(*result, _analysisInfo, sideEffects, _dialect, functions);
 	return result;
 }
@@ -267,8 +270,9 @@ void SSAControlFlowGraphBuilder::buildFunctionGraphs(
 		cfg.arguments = arguments;
 		cfg.returns = returns;
 
-		SSAControlFlowGraphBuilder builder(cfg, _info, _dialect);
+		SSAControlFlowGraphBuilder builder(cfg, _info, _sideEffects, _dialect);
 		builder.m_currentBlock = cfg.entry;
+		builder.m_functionDefinitions = _functions;
 		for (auto&& [var, varId]: cfg.arguments)
 			builder.currentDef(var, cfg.entry) = varId;
 		for (auto const& var: cfg.returns)
@@ -285,11 +289,12 @@ void SSAControlFlowGraphBuilder::buildFunctionGraphs(
 std::vector<std::tuple<Scope::Function const*, FunctionDefinition const*>> SSAControlFlowGraphBuilder::buildMainGraph(
 	SSACFG& _cfg,
 	AsmAnalysisInfo const& _analysisInfo,
+	ControlFlowSideEffectsCollector const& _sideEffects,
 	Dialect const& _dialect,
 	Block const& _block
 )
 {
-	SSAControlFlowGraphBuilder builder(_cfg, _analysisInfo, _dialect);
+	SSAControlFlowGraphBuilder builder(_cfg, _analysisInfo, _sideEffects, _dialect);
 	builder.m_currentBlock = _cfg.makeBlock(debugDataOf(_block));
 	builder.sealBlock(builder.m_currentBlock);
 	builder(_block);
@@ -535,8 +540,22 @@ void SSAControlFlowGraphBuilder::operator()(Leave const& _leaveStatement)
 void SSAControlFlowGraphBuilder::operator()(Block const& _block)
 {
 	ScopedSaveAndRestore saveScope(m_scope, m_info.scopes.at(&_block).get());
-	for (auto const& statement: _block.statements)
-		std::visit(*this, statement);
+	if (m_currentBlock == m_graph.entry)
+	{
+		auto const filterFunctionDefinitions = [](bool _yieldDefinitionsOnly)
+		{
+			return [b=_yieldDefinitionsOnly](Statement const& _statement) -> bool { return !b ^ std::holds_alternative<FunctionDefinition>(_statement);};
+		};
+		for (auto const& statement: _block.statements | ranges::views::filter(filterFunctionDefinitions(true)))
+			std::visit(*this, statement);
+		for (auto const& statement: _block.statements | ranges::views::filter(filterFunctionDefinitions(false)))
+			std::visit(*this, statement);
+	}
+	else
+	{
+		for (auto const& statement: _block.statements)
+			std::visit(*this, statement);
+	}
 }
 
 SSACFG::ValueId SSAControlFlowGraphBuilder::operator()(FunctionCall const& _call)
@@ -592,7 +611,9 @@ std::vector<SSACFG::ValueId> SSAControlFlowGraphBuilder::visitFunctionCall(Funct
 		else
 		{
 			Scope::Function const& function = lookupFunction(_call.functionName.name);
-			canContinue = m_graph.canContinue;
+			auto const* definition = findFunctionDefinition(&function);
+			yulAssert(definition);
+			canContinue = m_sideEffects.functionSideEffects().at(definition).canContinue;
 			SSACFG::Operation result{{}, SSACFG::Call{debugDataOf(_call), function, _call, canContinue}, {}};
 			for (auto const& arg: _call.arguments | ranges::views::reverse)
 				result.inputs.emplace_back(std::visit(*this, arg));
@@ -745,8 +766,7 @@ void SSAControlFlowGraphBuilder::tableJump(
 	langutil::DebugData::ConstPtr _debugData,
 	SSACFG::ValueId _value,
 	std::map<u256, SSACFG::BlockId> _cases,
-	SSACFG::BlockId _defaultCase
-)
+	SSACFG::BlockId _defaultCase)
 {
 	for (auto caseBlock: _cases | ranges::views::values)
 	{
@@ -755,13 +775,20 @@ void SSAControlFlowGraphBuilder::tableJump(
 	}
 	yulAssert(!blockInfo(_defaultCase).sealed);
 	m_graph.block(_defaultCase).entries.insert(m_currentBlock);
-	currentBlock().exit = SSACFG::BasicBlock::JumpTable{
-		std::move(_debugData),
-		_value,
-		std::move(_cases),
-		_defaultCase
-	};
+	currentBlock().exit = SSACFG::BasicBlock::JumpTable{std::move(_debugData), _value, std::move(_cases), _defaultCase};
 	m_currentBlock = {};
+}
+
+FunctionDefinition const* SSAControlFlowGraphBuilder::findFunctionDefinition(Scope::Function const* _function) const
+{
+	auto it = std::find_if(
+			m_functionDefinitions.begin(),
+			m_functionDefinitions.end(),
+			[&_function](auto const& _entry) { return std::get<0>(_entry) == _function; }
+		);
+	if (it != m_functionDefinitions.end())
+		return std::get<1>(*it);
+	return nullptr;
 }
 
 }
