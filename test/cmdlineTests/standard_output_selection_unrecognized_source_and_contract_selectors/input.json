@@ -1,0 +1,21 @@
+{
+    "language": "Solidity",
+    "sources": {
+        "*": {"content": "contract A {}\n//SPDX-License-Identifier: GPL-3.0\npragma solidity *;"},
+        "C": {"content": "contract A {}\n//SPDX-License-Identifier: GPL-3.0\npragma solidity *;"}
+    },
+    "settings": {
+        "outputSelection": {
+            "*": {
+                "X": ["userdoc"] // No contract X, but no error, just ignored.
+            },
+            "Y": {
+                "*": ["devdoc"], // No source "Y", but no error, just ignored.
+                "Z": ["abi"]     // No source "Y", but no error, just ignored.
+            },
+            "C": {
+                "A": ["evm.bytecode.object"]
+            }
+        }
+    }
+}

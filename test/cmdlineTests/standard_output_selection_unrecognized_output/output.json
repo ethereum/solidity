@@ -1,0 +1,18 @@
+{
+    "contracts": {
+        "C": {
+            "A": {
+                "userdoc": {
+                    "kind": "user",
+                    "methods": {},
+                    "version": 1
+                }
+            }
+        }
+    },
+    "sources": {
+        "C": {
+            "id": 0
+        }
+    }
+}
