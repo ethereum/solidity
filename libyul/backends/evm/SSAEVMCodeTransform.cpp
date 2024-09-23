@@ -32,6 +32,7 @@
 #include <range/v3/view/enumerate.hpp>
 #include <range/v3/view/reverse.hpp>
 #include <range/v3/view/zip.hpp>
+#include <utility>
 
 using namespace solidity;
 using namespace solidity::yul;
@@ -156,7 +157,7 @@ SSAEVMCodeTransform::SSAEVMCodeTransform(
 	m_builtinContext(_builtinContext),
 	m_cfg(_cfg),
 	m_liveness(_liveness),
-	m_functionLabels(_functionLabels),
+	m_functionLabels(std::move(_functionLabels)),
 	m_blockData(_cfg.numBlocks()),
 	m_generatedBlocks(_cfg.numBlocks(), false)
 {
