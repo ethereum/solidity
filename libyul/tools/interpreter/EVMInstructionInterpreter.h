@@ -23,7 +23,7 @@
 
 #include <libyul/ASTForward.h>
 
-#include <libyul/tools/interpreter//Interpreter.h>
+#include <libyul/tools/interpreter/Results.h>
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/FixedHash.h>

@@ -21,6 +21,8 @@
 
 #pragma once
 
+#include <libyul/tools/interpreter/Results.h>
+
 #include <libyul/ASTForward.h>
 #include <libyul/YulName.h>
 #include <libyul/Exceptions.h>
@@ -41,93 +43,6 @@ struct Dialect;
 
 namespace solidity::yul::tools::interpreter
 {
-
-template<typename T>
-class ExecutionTerminatedCommon
-{
-public:
-	bool operator==(T) const { return true; }
-	bool operator!=(T) const { return false; }
-};
-
-class ExplicitlyTerminated : public ExecutionTerminatedCommon<ExplicitlyTerminated>
-{
-};
-
-class ExplicitlyTerminatedWithReturn : public ExecutionTerminatedCommon<ExplicitlyTerminatedWithReturn>
-{
-};
-
-class StepLimitReached : public ExecutionTerminatedCommon<StepLimitReached>
-{
-};
-
-class TraceLimitReached : public ExecutionTerminatedCommon<TraceLimitReached>
-{
-};
-
-class RecursionDepthLimitReached : public ExecutionTerminatedCommon<RecursionDepthLimitReached>
-{
-};
-
-class ExpressionNestingLimitReached : public ExecutionTerminatedCommon<ExpressionNestingLimitReached>
-{
-};
-
-class ImpureBuiltinEncountered : public ExecutionTerminatedCommon<ImpureBuiltinEncountered>
-{
-};
-
-using ExecutionTerminated = std::variant<
-	ExplicitlyTerminated,
-	ExplicitlyTerminatedWithReturn,
-	StepLimitReached,
-	TraceLimitReached,
-	RecursionDepthLimitReached,
-	ExpressionNestingLimitReached,
-	ImpureBuiltinEncountered
->;
-
-enum class ControlFlowState
-{
-	Default,
-	Continue,
-	Break,
-	Leave
-};
-
-struct ExecutionOk
-{
-	ControlFlowState state;
-
-	bool operator==(ExecutionOk other) const
-	{
-		return state == other.state;
-	}
-
-	bool operator!=(ExecutionOk other) const
-	{
-		return state != other.state;
-	}
-};
-
-struct EvaluationOk
-{
-	std::vector<u256> values;
-
-	EvaluationOk(u256 _x):
-		values{_x}
-	{
-	}
-
-	EvaluationOk(std::vector<u256> const& _values):
-		values(_values)
-	{
-	}
-};
-
-using ExecutionResult = std::variant<ExecutionOk, ExecutionTerminated>;
-using EvaluationResult = std::variant<EvaluationOk, ExecutionTerminated>;
 
 struct InterpreterConfig
 {
