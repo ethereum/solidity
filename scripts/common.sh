@@ -359,6 +359,6 @@ function gnu_time_to_json_file
     "$gnu_time_path" \
         --output "$time_file" \
         --quiet \
-        --format '{"real": %e, "user": %U, "sys": %S, "exit": %x}' \
+        --format '{"real": %e, "user": %U, "sys": %S, "mem": %M, "exit": %x}' \
             "${cmd[@]}"
 }
