@@ -782,6 +782,28 @@ void CompilerStack::link()
 	}
 }
 
+YulStack CompilerStack::loadGeneratedIR(std::string const& _ir) const
+{
+	YulStack stack(
+		m_evmVersion,
+		m_eofVersion,
+		YulStack::Language::StrictAssembly,
+		m_optimiserSettings,
+		m_debugInfoSelection,
+		this, // _soliditySourceProvider
+		m_objectOptimizer
+	);
+	bool yulAnalysisSuccessful = stack.parseAndAnalyze("", _ir);
+	solAssert(
+		yulAnalysisSuccessful,
+		_ir + "\n\n"
+		"Invalid IR generated:\n" +
+		SourceReferenceFormatter::formatErrorInformation(stack.errors(), stack) + "\n"
+	);
+
+	return stack;
+}
+
 std::vector<std::string> CompilerStack::contractNames() const
 {
 	solAssert(m_stackState >= Parsed, "Parsing was not successful.");
@@ -1516,23 +1538,7 @@ void CompilerStack::generateIR(ContractDefinition const& _contract, bool _unopti
 		);
 	}
 
-	YulStack stack(
-		m_evmVersion,
-		m_eofVersion,
-		YulStack::Language::StrictAssembly,
-		m_optimiserSettings,
-		m_debugInfoSelection,
-		this, // _soliditySourceProvider
-		m_objectOptimizer
-	);
-	bool yulAnalysisSuccessful = stack.parseAndAnalyze("", compiledContract.yulIR);
-	solAssert(
-		yulAnalysisSuccessful,
-		compiledContract.yulIR + "\n\n"
-		"Invalid IR generated:\n" +
-		SourceReferenceFormatter::formatErrorInformation(stack.errors(), stack) + "\n"
-	);
-
+	YulStack stack = loadGeneratedIR(compiledContract.yulIR);
 	compiledContract.yulIRAst = stack.astJson();
 	compiledContract.yulCFGJson = stack.cfgJson();
 	if (!_unoptimizedOnly)
@@ -1556,17 +1562,7 @@ void CompilerStack::generateEVMFromIR(ContractDefinition const& _contract)
 		return;
 
 	// Re-parse the Yul IR in EVM dialect
-	yul::YulStack stack(
-		m_evmVersion,
-		m_eofVersion,
-		yul::YulStack::Language::StrictAssembly,
-		m_optimiserSettings,
-		m_debugInfoSelection,
-		this, // _soliditySourceProvider
-		m_objectOptimizer
-	);
-	bool analysisSuccessful = stack.parseAndAnalyze("", compiledContract.yulIROptimized);
-	solAssert(analysisSuccessful);
+	YulStack stack = loadGeneratedIR(compiledContract.yulIROptimized);
 
 	//cout << yul::AsmPrinter{}(*stack.parserResult()->code) << endl;
 

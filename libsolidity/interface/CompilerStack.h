@@ -71,6 +71,11 @@ class AssemblyItem;
 using AssemblyItems = std::vector<AssemblyItem>;
 }
 
+namespace solidity::yul
+{
+class YulStack;
+}
+
 namespace solidity::frontend
 {
 
@@ -489,6 +494,11 @@ private:
 	/// Links all the known library addresses in the available objects. Any unknown
 	/// library will still be kept as an unlinked placeholder in the objects.
 	void link();
+
+	/// Parses and analyzes specified Yul source and returns the YulStack that can be used to manipulate it.
+	/// Assumes that the IR was generated from sources loaded currently into CompilerStack, which
+	/// means that it is error-free and uses the same settings.
+	yul::YulStack loadGeneratedIR(std::string const& _ir) const;
 
 	/// @returns the contract object for the given @a _contractName.
 	/// Can only be called after state is CompilationSuccessful.
