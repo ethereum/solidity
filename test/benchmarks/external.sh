@@ -46,6 +46,7 @@ source "${repo_root}/scripts/common_cmdline.sh"
 
 solc="${1:-${SOLIDITY_BUILD_DIR}/solc/solc}"
 command_available "$solc" --version
+command_available "$(type -P time)" --version
 
 function benchmark_project {
     local pipeline="$1"
@@ -59,18 +60,16 @@ function benchmark_project {
 
     # NOTE: The pipeline may fail with "Stack too deep" in some cases. That's fine.
     # We note the exit code and will later show full output.
-    "$time_bin_path" \
-        --output "$time_file" \
-        --quiet \
-        --format '%e s |         %x' \
-            "${foundry_command[@]}" \
-            > /dev/null \
-            2> "../stderr-${project}-${pipeline}.log" || true
+    gnu_time_to_json_file "$time_file" \
+        "${foundry_command[@]}" \
+        > /dev/null \
+        2> "../stderr-${project}-${pipeline}.log" || true
 
-    printf '| %-20s | %8s | %21s |\n' \
+    printf '| %-20s | %8s | %7s s | %9d |\n' \
         "$project" \
         "$pipeline" \
-        "$(cat "$time_file")"
+        "$(jq '.real' "$time_file")" \
+        "$(jq '.exit' "$time_file")"
     cd ..
 }
 
@@ -82,7 +81,6 @@ benchmarks=(
     seaport
     sablier-v2
 )
-time_bin_path=$(type -P time)
 
 mkdir -p "$BENCHMARK_DIR"
 cd "$BENCHMARK_DIR"

@@ -35,6 +35,7 @@ source "${REPO_ROOT}/scripts/common_cmdline.sh"
 
 solc="${1:-${SOLIDITY_BUILD_DIR}/solc/solc}"
 command_available "$solc" --version
+command_available "$(type -P time)" --version
 
 output_dir=$(mktemp -d -t solc-benchmark-XXXXXX)
 
@@ -51,24 +52,23 @@ function benchmark_contract {
 
     local solc_command=("${solc}" --optimize --bin --color "${input_path}")
     [[ $pipeline == via-ir ]] && solc_command+=(--via-ir)
-    local time_args=(--output "${output_dir}/time-and-status-${pipeline}.txt" --quiet --format '%e s |         %x')
+    local time_file="${output_dir}/time-and-status-${pipeline}.txt"
 
     # NOTE: Legacy pipeline may fail with "Stack too deep" in some cases. That's fine.
-    "$time_bin_path" \
-        "${time_args[@]}" \
+    gnu_time_to_json_file "$time_file" \
         "${solc_command[@]}" \
         > "${output_dir}/bytecode-${pipeline}.bin" \
         2>> "${output_dir}/benchmark-warn-err.txt" || [[ $pipeline == legacy ]]
 
-    printf '| %-20s | %s   | %7d bytes | %20s |\n' \
+    printf '| %-20s | %s   | %7d bytes | %6s s | %9d |\n' \
         '`'"$input_file"'`' \
         "$pipeline" \
         "$(bytecode_size < "${output_dir}/bytecode-${pipeline}.bin")" \
-        "$(< "${output_dir}/time-and-status-${pipeline}.txt")"
+        "$(jq '.real' "$time_file")" \
+        "$(jq '.exit' "$time_file")"
 }
 
 benchmarks=("verifier.sol" "OptimizorClub.sol" "chains.sol")
-time_bin_path=$(type -P time)
 
 echo "| File                 | Pipeline | Bytecode size | Time     | Exit code |"
 echo "|----------------------|----------|--------------:|---------:|----------:|"
