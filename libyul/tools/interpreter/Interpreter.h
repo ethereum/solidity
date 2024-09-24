@@ -267,15 +267,6 @@ protected:
 			std::move(_variables)
 		);
 	}
-	virtual std::unique_ptr<Interpreter> makeInterpreterNew(InterpreterState& _state, Scope& _scope) const
-	{
-		return std::make_unique<Interpreter>(
-			_state,
-			m_dialect,
-			_scope,
-			m_disableMemoryTrace
-		);
-	}
 
 	// evaluate the expression and assert that the number of return variable is _numReturnVars
 	virtual EvaluationResult evaluate(Expression const& _expression, size_t _numReturnVars);
