@@ -109,51 +109,51 @@ contract Contract {
           Y:=mload(add(Q,_gpow2p128_y))
           X,Y,ZZ,ZZZ:=ecAddn2( X,Y,1,1, mload(add(Q,_gx)),mload(add(Q,_gy)), _modulusp) //G+G'
           mstore4(mload(0x40), 384, X,Y,ZZ,ZZZ)                        //Q, the public key
-          mstore4(mload(0x40), 512, mload(Q),mload(add(32,Q)),1,1)                         
+          mstore4(mload(0x40), 512, mload(Q),mload(add(32,Q)),1,1)
          
           X,Y,ZZ,ZZZ:=ecAddn2( mload(Q),mload(add(Q,32)),1,1, mload(add(Q,_gx)),mload(add(Q,_gy)),_modulusp )//G+Q
-          mstore4(mload(0x40), 640, X,Y,ZZ,ZZZ)   
+          mstore4(mload(0x40), 640, X,Y,ZZ,ZZZ)
          
           
           X:=mload(add(Q,_gpow2p128_x))
           Y:=mload(add(Q,_gpow2p128_y))
           X,Y,ZZ,ZZZ:=ecAddn2(X,Y,1,1,mload(Q),mload(add(Q,32)), _modulusp)//G'+Q
-          mstore4(mload(0x40), 768, X,Y,ZZ,ZZZ)   
+          mstore4(mload(0x40), 768, X,Y,ZZ,ZZZ)
         
           X,Y,ZZ,ZZZ:=ecAddn2( X,Y,ZZ,ZZZ, mload(add(Q,_gx)), mload(add(Q,_gy)), _modulusp)//G'+Q+G
-          mstore4(mload(0x40), 896, X,Y,ZZ,ZZZ)  
+          mstore4(mload(0x40), 896, X,Y,ZZ,ZZZ)
          
           mstore4(mload(0x40), 1024, mload(add(Q, 64)), mload(add(Q, 96)),1,1)   //Q'=2^128.Q
 
 
           X,Y,ZZ,ZZZ:=ecAddn2(mload(add(Q, 64)), mload(add(Q, 96)),1,1, mload(add(Q,_gx)),mload(add(Q,_gy)), mload(add(mload(0x40), _Ap))   )//Q'+G
-          mstore4(mload(0x40), 1152, X,Y,ZZ,ZZZ)  
+          mstore4(mload(0x40), 1152, X,Y,ZZ,ZZZ)
         
           
           X:=mload(add(Q,_gpow2p128_x))
           Y:=mload(add(Q,_gpow2p128_y))
           X,Y,ZZ,ZZZ:=ecAddn2(mload(add(Q, 64)), mload(add(Q, 96)),1,1, X,Y, mload(add(mload(0x40), _Ap))   )//Q'+G'
-          mstore4(mload(0x40), 1280, X,Y,ZZ,ZZZ)  
+          mstore4(mload(0x40), 1280, X,Y,ZZ,ZZZ)
            
           X,Y,ZZ,ZZZ:=ecAddn2(X, Y, ZZ, ZZZ, mload(add(Q,_gx)), mload(add(Q,_gy)), mload(add(mload(0x40), _Ap))   )//Q'+G'+G
-          mstore4(mload(0x40), 1408, X,Y,ZZ,ZZZ)  
+          mstore4(mload(0x40), 1408, X,Y,ZZ,ZZZ)
            
           X,Y,ZZ,ZZZ:=ecAddn2( mload(Q),mload(add(Q,32)),1,1, mload(add(Q, 64)), mload(add(Q, 96)), mload(add(mload(0x40), _Ap))   )//Q+Q'
-          mstore4(mload(0x40), 1536, X,Y,ZZ,ZZZ)  
+          mstore4(mload(0x40), 1536, X,Y,ZZ,ZZZ)
 
           X,Y,ZZ,ZZZ:=ecAddn2( X,Y,ZZ,ZZZ, mload(add(Q,_gx)), mload(add(Q,_gy)), mload(add(mload(0x40), _Ap))   )//Q+Q'+G
-          mstore4(mload(0x40), 1664, X,Y,ZZ,ZZZ)  
+          mstore4(mload(0x40), 1664, X,Y,ZZ,ZZZ)
 
          X:= mload(add(768, mload(0x40)) )//G'+Q
          Y:= mload(add(800, mload(0x40)) )
          ZZ:= mload(add(832, mload(0x40)) )
          ZZZ:=mload(add(864, mload(0x40)) )
          X,Y,ZZ,ZZZ:=ecAddn2( X,Y,ZZ,ZZZ,mload(add(Q, 64)), mload(add(Q, 96)), mload(add(mload(0x40), _Ap))   )//G'+Q+Q'+
-         mstore4(mload(0x40), 1792, X,Y,ZZ,ZZZ)  
+         mstore4(mload(0x40), 1792, X,Y,ZZ,ZZZ)
 
           X,Y,ZZ,ZZZ:=ecAddn2( X,Y,ZZ,ZZZ,mload(add(Q,0xc0)),mload(add(Q,_gy)), mload(add(mload(0x40), _Ap))   )//G'+Q+Q'+G
           //  Prec[15]
-          mstore4(mload(0x40), 1920, X,Y,ZZ,ZZZ)  
+          mstore4(mload(0x40), 1920, X,Y,ZZ,ZZZ)
           }
         /*II. First MSB bit*/
                 ZZZ:=0

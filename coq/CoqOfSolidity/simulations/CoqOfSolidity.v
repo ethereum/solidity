@@ -2099,12 +2099,12 @@ Module Compare.
         ])
       ).
 
-    Ltac open_if :=
+    (* Ltac open_if :=
       unfold M.if_, M.if_unit; simpl;
         match goal with
         | |- Compare.t _ _ _ _ (if ?cond then _ else _) _ =>
           destruct cond; [now apply Compare.Pure|]
-        end.
+        end. *)
 
     Ltac open_switch_case :=
       match goal with
