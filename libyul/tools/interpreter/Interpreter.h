@@ -74,13 +74,18 @@ class ExpressionNestingLimitReached : public ExecutionTerminatedCommon<Expressio
 {
 };
 
+class ImpureBuiltinEncountered : public ExecutionTerminatedCommon<ImpureBuiltinEncountered>
+{
+};
+
 using ExecutionTerminated = std::variant<
 	ExplicitlyTerminated,
 	ExplicitlyTerminatedWithReturn,
 	StepLimitReached,
 	TraceLimitReached,
 	RecursionDepthLimitReached,
-	ExpressionNestingLimitReached
+	ExpressionNestingLimitReached,
+	ImpureBuiltinEncountered
 >;
 
 enum class ControlFlowState

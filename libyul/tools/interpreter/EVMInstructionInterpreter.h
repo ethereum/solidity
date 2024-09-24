@@ -23,6 +23,8 @@
 
 #include <libyul/ASTForward.h>
 
+#include <libyul/tools/interpreter//Interpreter.h>
+
 #include <libsolutil/CommonData.h>
 #include <libsolutil/FixedHash.h>
 #include <libsolutil/Numeric.h>
@@ -69,7 +71,7 @@ void copyZeroExtendedWithOverlap(
 	size_t _size
 );
 
-struct InterpreterState;
+using EVMInstructionInterpretedResult = std::variant<u256, ExecutionTerminated>;
 
 /**
  * Interprets EVM instructions based on the current state without side-effect.
@@ -83,10 +85,10 @@ public:
 	{}
 
 	/// Evaluate instruction
-	u256 eval(evmasm::Instruction _instruction, std::vector<u256> const& _arguments);
+	EVMInstructionInterpretedResult eval(evmasm::Instruction _instruction, std::vector<u256> const& _arguments);
 
 	/// Evaluate builtin function
-	u256 evalBuiltin(
+	EVMInstructionInterpretedResult evalBuiltin(
 		BuiltinFunctionForEVM const& _fun,
 		std::vector<Expression> const& _arguments,
 		std::vector<u256> const& _evaluatedArguments
