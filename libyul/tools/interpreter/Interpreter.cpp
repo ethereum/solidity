@@ -251,7 +251,7 @@ EvaluationResult Interpreter::operator()(FunctionCall const& _funCall)
 	{
 		if (BuiltinFunctionForEVM const* fun = dialect->builtin(_funCall.functionName.name))
 		{
-			EVMInstructionInterpreter interpreter(dialect->evmVersion(), m_state, false);
+			EVMInstructionInterpreter interpreter(dialect->evmVersion(), m_state);
 
 			u256 const value = interpreter.evalBuiltin(*fun, _funCall.arguments, argsValues);
 
