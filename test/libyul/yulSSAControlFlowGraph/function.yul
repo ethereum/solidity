@@ -29,9 +29,8 @@
 // Block0_0 [label="\
 // Block 0\nv0, v1 := i()\l\
 // h(v0)\l\
-// h(v1)\l\
 // "];
-// Block0_0Exit [label="MainExit"];
+// Block0_0Exit [label="Terminated"];
 // Block0_0 -> Block0_0Exit;
 // FunctionEntry_f_0 [label="function f:
 //  r := f(v0, v1)"];
@@ -55,6 +54,7 @@
 // FunctionEntry_h_0 -> Block3_0;
 // Block3_0 [label="\
 // Block 0\nv2 := f(0, v0)\l\
+// h(v2)\l\
 // "];
 // Block3_0Exit [label="Terminated"];
 // Block3_0 -> Block3_0Exit;
