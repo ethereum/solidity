@@ -253,8 +253,8 @@ protected:
 	void enterScope(Block const& _block);
 	void leaveScope();
 
-	/// Increment interpreter step count, throwing exception if step limit
-	/// is reached.
+	/// Increment interpreter step count, returning StepLimitReached if step
+	/// limit is reached.
 	std::optional<ExecutionTerminated> incrementStep();
 
 	Dialect const& m_dialect;
@@ -319,9 +319,9 @@ protected:
 		std::vector<std::optional<LiteralKind>> const* _literalArguments
 	);
 
-	/// Increment evaluation count, throwing exception if the
-	/// nesting level is beyond the upper bound configured in
-	/// the interpreter state.
+	/// Increment evaluation count, returning ExpressionNestingLimitReached if
+	/// the nesting level is beyond the upper bound configured in the
+	/// interpreter state.
 	std::optional<ExecutionTerminated> incrementStep();
 
 	InterpreterState& m_state;
