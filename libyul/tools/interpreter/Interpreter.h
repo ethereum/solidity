@@ -131,9 +131,6 @@ struct InterpreterState
 	InterpreterConfig const config;
 
 	size_t numSteps = 0;
-
-	/// Number of the current state instance, used for recursion protection
-	size_t numInstance = 0;
 };
 
 /**
