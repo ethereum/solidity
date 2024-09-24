@@ -119,13 +119,18 @@ struct EvaluationOk
 using ExecutionResult = std::variant<ExecutionOk, ExecutionTerminated>;
 using EvaluationResult = std::variant<EvaluationOk, ExecutionTerminated>;
 
-struct InterpreterState
+struct InterpreterConfig
 {
-	/// This is actually an input parameter that more or less limits the runtime.
 	size_t maxTraceSize = 0;
 	size_t maxSteps = 0;
-	size_t numSteps = 0;
 	size_t maxExprNesting = 0;
+};
+
+struct InterpreterState
+{
+	InterpreterConfig const config;
+
+	size_t numSteps = 0;
 
 	/// Number of the current state instance, used for recursion protection
 	size_t numInstance = 0;

@@ -357,7 +357,7 @@ void Interpreter::leaveScope()
 std::optional<ExecutionTerminated> Interpreter::incrementStatementStep()
 {
 	m_state.numSteps++;
-	if (m_state.maxSteps > 0 && m_state.numSteps >= m_state.maxSteps)
+	if (m_state.config.maxSteps > 0 && m_state.numSteps >= m_state.config.maxSteps)
 		return StepLimitReached();
 
 	// Reset m_expressionNestingLevel, preparing for new expression.
@@ -368,7 +368,7 @@ std::optional<ExecutionTerminated> Interpreter::incrementStatementStep()
 std::optional<ExecutionTerminated> Interpreter::incrementExpressionStep()
 {
 	m_expressionNestingLevel++;
-	if (m_state.maxExprNesting > 0 && m_expressionNestingLevel > m_state.maxExprNesting)
+	if (m_state.config.maxExprNesting > 0 && m_expressionNestingLevel > m_state.config.maxExprNesting)
 		return ExpressionNestingLimitReached();
 	return std::nullopt;
 }
