@@ -333,6 +333,11 @@ std::optional<ExecutionTerminated> Interpreter::incrementStep()
 	return std::nullopt;
 }
 
+EvaluationResult ExpressionEvaluator::visit(Expression const& _st)
+{
+	return std::visit(*this, _st);
+}
+
 EvaluationResult ExpressionEvaluator::operator()(Literal const& _literal)
 {
 	if (auto terminated = incrementStep()) return *terminated;
