@@ -252,10 +252,9 @@ EvaluationResult Interpreter::operator()(FunctionCall const& _funCall)
 		if (BuiltinFunctionForEVM const* fun = dialect->builtin(_funCall.functionName.name))
 		{
 			EVMInstructionInterpreter interpreter(dialect->evmVersion(), m_state);
-
-			u256 const value = interpreter.evalBuiltin(*fun, _funCall.arguments, argsValues);
-
-			return EvaluationOk(value);
+			EVMInstructionInterpretedResult const value = interpreter.evalBuiltin(*fun, _funCall.arguments, argsValues);
+			if (auto* terminated = std::get_if<ExecutionTerminated>(&value)) return *terminated;
+			return EvaluationOk(std::get<u256>(value));
 		}
 	}
 
