@@ -286,14 +286,13 @@ ExecutionResult Interpreter::operator()(Block const& _block)
 
 ExecutionResult Interpreter::visit(Statement const& _st)
 {
-	if (auto terminated = incrementStep()) return *terminated;
+	if (auto terminated = incrementStatementStep()) return *terminated;
 	return std::visit(*this, _st);
 }
 
 EvaluationResult Interpreter::evaluate(Expression const& _expression, size_t _numReturnVars)
 {
-	ExpressionEvaluator ev(m_state, m_dialect, *m_scope, m_variables, m_disableMemoryTrace);
-	EvaluationResult res = ev.visit(_expression);
+	EvaluationResult res = visit(_expression);
 	if (auto* resOk = std::get_if<EvaluationOk>(&res))
 		yulAssert(resOk->values.size() == _numReturnVars, "");
 
@@ -320,7 +319,7 @@ void Interpreter::leaveScope()
 	yulAssert(m_scope, "");
 }
 
-std::optional<ExecutionTerminated> Interpreter::incrementStep()
+std::optional<ExecutionTerminated> Interpreter::incrementStatementStep()
 {
 	m_state.numSteps++;
 	if (m_state.maxSteps > 0 && m_state.numSteps >= m_state.maxSteps)
@@ -328,18 +327,18 @@ std::optional<ExecutionTerminated> Interpreter::incrementStep()
 	return std::nullopt;
 }
 
-EvaluationResult ExpressionEvaluator::operator()(Literal const& _literal)
+EvaluationResult Interpreter::operator()(Literal const& _literal)
 {
 	return EvaluationOk(_literal.value.value());
 }
 
-EvaluationResult ExpressionEvaluator::operator()(Identifier const& _identifier)
+EvaluationResult Interpreter::operator()(Identifier const& _identifier)
 {
 	solAssert(m_variables.count(_identifier.name), "");
 	return EvaluationOk(m_variables.at(_identifier.name));
 }
 
-EvaluationResult ExpressionEvaluator::operator()(FunctionCall const& _funCall)
+EvaluationResult Interpreter::operator()(FunctionCall const& _funCall)
 {
 	std::vector<std::optional<LiteralKind>> const* literalArguments = nullptr;
 	if (BuiltinFunction const* builtin = m_dialect.builtin(_funCall.functionName.name))
@@ -362,7 +361,7 @@ EvaluationResult ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 		}
 	}
 
-	Scope* scope = &m_scope;
+	Scope* scope = m_scope;
 	for (; scope; scope = scope->parent)
 		if (scope->names.count(_funCall.functionName.name))
 			break;
@@ -387,13 +386,13 @@ EvaluationResult ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 	return EvaluationOk(returnedValues);
 }
 
-EvaluationResult ExpressionEvaluator::visit(Expression const& _st)
+EvaluationResult Interpreter::visit(Expression const& _st)
 {
-	if (auto terminated = incrementStep()) return *terminated;
+	if (auto terminated = incrementExpressionStep()) return *terminated;
 	return std::visit(*this, _st);
 }
 
-EvaluationResult ExpressionEvaluator::evaluateArgs(
+EvaluationResult Interpreter::evaluateArgs(
 	std::vector<Expression> const& _expr,
 	std::vector<std::optional<LiteralKind>> const* _literalArguments
 )
@@ -428,10 +427,10 @@ EvaluationResult ExpressionEvaluator::evaluateArgs(
 	return EvaluationOk(values);
 }
 
-std::optional<ExecutionTerminated> ExpressionEvaluator::incrementStep()
+std::optional<ExecutionTerminated> Interpreter::incrementExpressionStep()
 {
-	m_nestingLevel++;
-	if (m_state.maxExprNesting > 0 && m_nestingLevel > m_state.maxExprNesting)
+	m_expressionNestingLevel++;
+	if (m_state.maxExprNesting > 0 && m_expressionNestingLevel > m_state.maxExprNesting)
 		return ExpressionNestingLimitReached();
 	return std::nullopt;
 }

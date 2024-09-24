@@ -227,6 +227,8 @@ public:
 	{
 	}
 
+	// Statement visit methods
+
 	ExecutionResult operator()(ExpressionStatement const& _statement);
 	ExecutionResult operator()(Assignment const& _assignment);
 	ExecutionResult operator()(VariableDeclaration const& _varDecl);
@@ -241,49 +243,7 @@ public:
 
 	ExecutionResult visit(Statement const& _st);
 
-	bytes returnData() const { return m_state.returndata; }
-	std::vector<std::string> const& trace() const { return m_state.trace; }
-
-	u256 valueOfVariable(YulName _name) const { return m_variables.at(_name); }
-
-protected:
-	// evaluate the expression and assert that the number of return variable is _numReturnVars
-	virtual EvaluationResult evaluate(Expression const& _expression, size_t _numReturnVars);
-
-	void enterScope(Block const& _block);
-	void leaveScope();
-
-	/// Increment interpreter step count, returning StepLimitReached if step
-	/// limit is reached.
-	std::optional<ExecutionTerminated> incrementStep();
-
-	Dialect const& m_dialect;
-	InterpreterState& m_state;
-	/// Values of variables.
-	std::map<YulName, u256> m_variables;
-	Scope* m_scope;
-	bool m_disableMemoryTrace;
-};
-
-/**
- * Yul expression evaluator.
- */
-class ExpressionEvaluator
-{
-public:
-	ExpressionEvaluator(
-		InterpreterState& _state,
-		Dialect const& _dialect,
-		Scope& _scope,
-		std::map<YulName, u256> const& _variables,
-		bool _disableMemoryTrace
-	):
-		m_state(_state),
-		m_dialect(_dialect),
-		m_variables(_variables),
-		m_scope(_scope),
-		m_disableMemoryTrace(_disableMemoryTrace)
-	{}
+	// Expression visit methods
 
 	EvaluationResult operator()(Literal const&);
 	EvaluationResult operator()(Identifier const&);
@@ -291,13 +251,18 @@ public:
 
 	EvaluationResult visit(Expression const& _st);
 
+	bytes returnData() const { return m_state.returndata; }
+	std::vector<std::string> const& trace() const { return m_state.trace; }
+
+	u256 valueOfVariable(YulName _name) const { return m_variables.at(_name); }
+
 protected:
 	virtual std::unique_ptr<Interpreter> makeInterpreterCopy(std::map<YulName, u256> _variables = {}) const
 	{
 		return std::make_unique<Interpreter>(
 			m_state,
 			m_dialect,
-			m_scope,
+			*m_scope,
 			m_disableMemoryTrace,
 			std::move(_variables)
 		);
@@ -319,20 +284,29 @@ protected:
 		std::vector<std::optional<LiteralKind>> const* _literalArguments
 	);
 
+	// evaluate the expression and assert that the number of return variable is _numReturnVars
+	virtual EvaluationResult evaluate(Expression const& _expression, size_t _numReturnVars);
+
+	void enterScope(Block const& _block);
+	void leaveScope();
+
+	/// Increment interpreter step count, returning StepLimitReached if step
+	/// limit is reached.
+	std::optional<ExecutionTerminated> incrementStatementStep();
+
 	/// Increment evaluation count, returning ExpressionNestingLimitReached if
 	/// the nesting level is beyond the upper bound configured in the
 	/// interpreter state.
-	std::optional<ExecutionTerminated> incrementStep();
+	std::optional<ExecutionTerminated> incrementExpressionStep();
 
-	InterpreterState& m_state;
 	Dialect const& m_dialect;
+	InterpreterState& m_state;
 	/// Values of variables.
-	std::map<YulName, u256> const& m_variables;
-	Scope& m_scope;
-	/// Current expression nesting level
-	unsigned m_nestingLevel = 0;
-	/// Flag to disable memory tracing
+	std::map<YulName, u256> m_variables;
+	Scope* m_scope;
 	bool m_disableMemoryTrace;
+
+	unsigned m_expressionNestingLevel = 0;
 };
 
 }
