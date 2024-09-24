@@ -108,7 +108,7 @@ void copyZeroExtendedWithOverlap(
 
 using u512 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<512, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
 
-u256 EVMInstructionInterpreter::eval(
+EVMInstructionInterpretedResult EVMInstructionInterpreter::eval(
 	evmasm::Instruction _instruction,
 	std::vector<u256> const& _arguments
 )
@@ -123,8 +123,7 @@ u256 EVMInstructionInterpreter::eval(
 	switch (_instruction)
 	{
 	case Instruction::STOP:
-		logTrace(_instruction);
-		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
+		return ExplicitlyTerminated();
 	// --------------- arithmetic ---------------
 	case Instruction::ADD:
 		return arg[0] + arg[1];
@@ -202,220 +201,65 @@ u256 EVMInstructionInterpreter::eval(
 		}
 	// --------------- blockchain stuff ---------------
 	case Instruction::KECCAK256:
-	{
-		if (!accessMemory(arg[0], arg[1]))
-			return u256("0x1234cafe1234cafe1234cafe") + arg[0];
-		uint64_t offset = uint64_t(arg[0] & uint64_t(-1));
-		uint64_t size = uint64_t(arg[1] & uint64_t(-1));
-		return u256(keccak256(m_state.readMemory(offset, size)));
-	}
 	case Instruction::ADDRESS:
-		return h256(m_state.address, h256::AlignRight);
 	case Instruction::BALANCE:
-		if (arg[0] == h256(m_state.address, h256::AlignRight))
-			return m_state.selfbalance;
-		else
-			return m_state.balance;
 	case Instruction::SELFBALANCE:
-		return m_state.selfbalance;
 	case Instruction::ORIGIN:
-		return h256(m_state.origin, h256::AlignRight);
 	case Instruction::CALLER:
-		return h256(m_state.caller, h256::AlignRight);
 	case Instruction::CALLVALUE:
-		return m_state.callvalue;
 	case Instruction::CALLDATALOAD:
-		return readZeroExtended(m_state.calldata, arg[0]);
 	case Instruction::CALLDATASIZE:
-		return m_state.calldata.size();
 	case Instruction::CALLDATACOPY:
-		if (accessMemory(arg[0], arg[2]))
-			copyZeroExtended(
-				m_state.memory, m_state.calldata,
-				size_t(arg[0]), size_t(arg[1]), size_t(arg[2])
-			);
-		logTrace(_instruction, arg);
-		return 0;
 	case Instruction::CODESIZE:
-		return m_state.code.size();
 	case Instruction::CODECOPY:
-		if (accessMemory(arg[0], arg[2]))
-			copyZeroExtended(
-				m_state.memory, m_state.code,
-				size_t(arg[0]), size_t(arg[1]), size_t(arg[2])
-			);
-		logTrace(_instruction, arg);
-		return 0;
 	case Instruction::GASPRICE:
-		return m_state.gasprice;
 	case Instruction::CHAINID:
-		return m_state.chainid;
 	case Instruction::BASEFEE:
-		return m_state.basefee;
 	case Instruction::BLOBHASH:
-		return blobHash(arg[0]);
 	case Instruction::BLOBBASEFEE:
-		return m_state.blobbasefee;
 	case Instruction::EXTCODESIZE:
-		return u256(keccak256(h256(arg[0]))) & 0xffffff;
 	case Instruction::EXTCODEHASH:
-		return u256(keccak256(h256(arg[0] + 1)));
 	case Instruction::EXTCODECOPY:
-		if (accessMemory(arg[1], arg[3]))
-			// TODO this way extcodecopy and codecopy do the same thing.
-			copyZeroExtended(
-				m_state.memory, m_state.code,
-				size_t(arg[1]), size_t(arg[2]), size_t(arg[3])
-			);
-		logTrace(_instruction, arg);
-		return 0;
 	case Instruction::RETURNDATASIZE:
-		return m_state.returndata.size();
 	case Instruction::RETURNDATACOPY:
-		if (accessMemory(arg[0], arg[2]))
-			copyZeroExtended(
-				m_state.memory, m_state.returndata,
-				size_t(arg[0]), size_t(arg[1]), size_t(arg[2])
-			);
-		logTrace(_instruction, arg);
-		return 0;
 	case Instruction::MCOPY:
-		if (accessMemory(arg[1], arg[2]) && accessMemory(arg[0], arg[2]))
-			copyZeroExtendedWithOverlap(
-				m_state.memory,
-				m_state.memory,
-				static_cast<size_t>(arg[0]),
-				static_cast<size_t>(arg[1]),
-				static_cast<size_t>(arg[2])
-			);
-		logTrace(_instruction, arg);
-		return 0;
 	case Instruction::BLOCKHASH:
-		if (arg[0] >= m_state.blockNumber || arg[0] + 256 < m_state.blockNumber)
-			return 0;
-		else
-			return 0xaaaaaaaa + (arg[0] - m_state.blockNumber - 256);
 	case Instruction::COINBASE:
-		return h256(m_state.coinbase, h256::AlignRight);
 	case Instruction::TIMESTAMP:
-		return m_state.timestamp;
 	case Instruction::NUMBER:
-		return m_state.blockNumber;
 	case Instruction::PREVRANDAO:
-		return (m_evmVersion < langutil::EVMVersion::paris()) ? m_state.difficulty : m_state.prevrandao;
 	case Instruction::GASLIMIT:
-		return m_state.gaslimit;
+		return ImpureBuiltinEncountered();
 	// --------------- memory / storage / logs ---------------
 	case Instruction::MLOAD:
-		accessMemory(arg[0], 0x20);
-		return readMemoryWord(arg[0]);
 	case Instruction::MSTORE:
-		accessMemory(arg[0], 0x20);
-		writeMemoryWord(arg[0], arg[1]);
-		return 0;
 	case Instruction::MSTORE8:
-		accessMemory(arg[0], 1);
-		m_state.memory[arg[0]] = uint8_t(arg[1] & 0xff);
-		return 0;
 	case Instruction::SLOAD:
-		return m_state.storage[h256(arg[0])];
 	case Instruction::SSTORE:
-		m_state.storage[h256(arg[0])] = h256(arg[1]);
-		return 0;
 	case Instruction::PC:
-		return 0x77;
 	case Instruction::MSIZE:
-		return m_state.msize;
 	case Instruction::GAS:
-		return 0x99;
 	case Instruction::LOG0:
-		accessMemory(arg[0], arg[1]);
-		logTrace(_instruction, arg);
-		return 0;
 	case Instruction::LOG1:
-		accessMemory(arg[0], arg[1]);
-		logTrace(_instruction, arg);
-		return 0;
 	case Instruction::LOG2:
-		accessMemory(arg[0], arg[1]);
-		logTrace(_instruction, arg);
-		return 0;
 	case Instruction::LOG3:
-		accessMemory(arg[0], arg[1]);
-		logTrace(_instruction, arg);
-		return 0;
 	case Instruction::LOG4:
-		accessMemory(arg[0], arg[1]);
-		logTrace(_instruction, arg);
-		return 0;
 	case Instruction::TLOAD:
-		return m_state.transientStorage[h256(arg[0])];
 	case Instruction::TSTORE:
-		m_state.transientStorage[h256(arg[0])] = h256(arg[1]);
-		return 0;
+		return ImpureBuiltinEncountered();
 	// --------------- calls ---------------
 	case Instruction::CREATE:
-		accessMemory(arg[1], arg[2]);
-		logTrace(_instruction, arg);
-		if (arg[2] != 0)
-			return (0xcccccc + arg[1]) & u256("0xffffffffffffffffffffffffffffffffffffffff");
-		else
-			return 0xcccccc;
 	case Instruction::CREATE2:
-		accessMemory(arg[1], arg[2]);
-		logTrace(_instruction, arg);
-		if (arg[2] != 0)
-			return (0xdddddd + arg[1]) & u256("0xffffffffffffffffffffffffffffffffffffffff");
-		else
-			return 0xdddddd;
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
-		accessMemory(arg[3], arg[4]);
-		accessMemory(arg[5], arg[6]);
-		logTrace(_instruction, arg);
-		// Randomly fail based on the called address if it isn't a call to self.
-		// Used for fuzzing.
-		return (
-			(arg[0] > 0) &&
-			(arg[1] == util::h160::Arith(m_state.address) || (arg[1] & 1))
-		) ? 1 : 0;
 	case Instruction::DELEGATECALL:
 	case Instruction::STATICCALL:
-		accessMemory(arg[2], arg[3]);
-		accessMemory(arg[4], arg[5]);
-		logTrace(_instruction, arg);
-		// Randomly fail based on the called address if it isn't a call to self.
-		// Used for fuzzing.
-		return (
-			(arg[0] > 0) &&
-			(arg[1] == util::h160::Arith(m_state.address) || (arg[1] & 1))
-		) ? 1 : 0;
 	case Instruction::RETURN:
-	{
-		m_state.returndata = {};
-		if (accessMemory(arg[0], arg[1]))
-			m_state.returndata = m_state.readMemory(arg[0], arg[1]);
-		logTrace(_instruction, arg, m_state.returndata);
-		BOOST_THROW_EXCEPTION(ExplicitlyTerminatedWithReturn());
-	}
 	case Instruction::REVERT:
-		accessMemory(arg[0], arg[1]);
-		logTrace(_instruction, arg);
-		m_state.storage.clear();
-		m_state.transientStorage.clear();
-		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	case Instruction::INVALID:
-		logTrace(_instruction);
-		m_state.storage.clear();
-		m_state.transientStorage.clear();
-		m_state.trace.clear();
-		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	case Instruction::SELFDESTRUCT:
-		logTrace(_instruction, arg);
-		m_state.storage.clear();
-		m_state.transientStorage.clear();
-		m_state.trace.clear();
-		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
+		return ImpureBuiltinEncountered();
+
 	case Instruction::POP:
 		break;
 	// --------------- invalid in strict assembly ---------------
@@ -493,12 +337,14 @@ u256 EVMInstructionInterpreter::eval(
 	}
 	}
 
+	yulAssert(false, "Unknown instruction with opcode " + std::to_string(static_cast<uint8_t>(_instruction)));
 	return 0;
 }
 
-u256 EVMInstructionInterpreter::evalBuiltin(
+EVMInstructionInterpretedResult EVMInstructionInterpreter::evalBuiltin(
 	BuiltinFunctionForEVM const& _fun,
-	std::vector<Expression> const& _arguments,
+	std::vector<Expression> const& /* _arguments */,  // This was required to execute some builtin.
+													  // But all of them are impure.
 	std::vector<u256> const& _evaluatedArguments
 )
 {
@@ -506,42 +352,20 @@ u256 EVMInstructionInterpreter::evalBuiltin(
 		return eval(*_fun.instruction, _evaluatedArguments);
 
 	std::string fun = _fun.name.str();
-	// Evaluate datasize/offset/copy instructions
-	if (fun == "datasize" || fun == "dataoffset")
-	{
-		std::string arg = formatLiteral(std::get<Literal>(_arguments.at(0)));
-		if (arg.length() < 32)
-			arg.resize(32, 0);
-		if (fun == "datasize")
-			return u256(keccak256(arg)) & 0xfff;
-		else
-		{
-			// Force different value than for datasize
-			arg[31]++;
-			arg[31]++;
-			return u256(keccak256(arg)) & 0xfff;
-		}
-	}
-	else if (fun == "datacopy")
-	{
-		// This is identical to codecopy.
-		if (
-			_evaluatedArguments.at(2) != 0 &&
-			accessMemory(_evaluatedArguments.at(0), _evaluatedArguments.at(2))
-		)
-			copyZeroExtended(
-				m_state.memory,
-				m_state.code,
-				size_t(_evaluatedArguments.at(0)),
-				size_t(_evaluatedArguments.at(1) & std::numeric_limits<size_t>::max()),
-				size_t(_evaluatedArguments.at(2))
-			);
-		return 0;
-	}
-	else if (fun == "memoryguard")
-		return _evaluatedArguments.at(0);
-	else
-		yulAssert(false, "Unknown builtin: " + fun);
+
+	static std::set<std::string> const NON_INSTRUCTION_BUILTIN_NAME = {
+		"datasize",
+		"dataoffset",
+		"datacopy",
+		"memoryguard",
+		"loadimmutable",
+		"setimmutable",
+		"linkersymbol"
+	};
+	if (NON_INSTRUCTION_BUILTIN_NAME.count(fun))
+		return ImpureBuiltinEncountered();
+
+	yulAssert(false, "Unknown builtin: " + fun);
 	return 0;
 }
 
