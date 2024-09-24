@@ -160,8 +160,13 @@ ExecutionResult Interpreter::operator()(ForLoop const& _forLoop)
 			if (std::get<EvaluationOk>(conditionRes).values.at(0) == 0) break;
 		}
 
+		// Increment step for each loop iteration for loops with
+		// an empty body and post blocks to prevent a deadlock.
+		if (_forLoop.body.statements.size() == 0 && _forLoop.post.statements.size() == 0)
+			if (auto terminated = incrementStatementStep()) return *terminated;
+
 		{
-			ExecutionResult bodyRes = visit(_forLoop.body);
+			ExecutionResult bodyRes = (*this)(_forLoop.body);
 			if (
 				std::holds_alternative<ExecutionTerminated>(bodyRes) ||
 				bodyRes == ExecutionResult(ExecutionOk{ ControlFlowState::Leave })
@@ -172,7 +177,7 @@ ExecutionResult Interpreter::operator()(ForLoop const& _forLoop)
 		}
 
 		{
-			ExecutionResult postRes = visit(_forLoop.post);
+			ExecutionResult postRes = (*this)(_forLoop.post);
 			if (
 				std::holds_alternative<ExecutionTerminated>(postRes) ||
 				postRes == ExecutionResult(ExecutionOk{ ControlFlowState::Leave })
