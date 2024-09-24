@@ -34,8 +34,6 @@
 #include <libsolutil/Numeric.h>
 #include <libsolutil/picosha2.h>
 
-#include <limits>
-
 using namespace solidity;
 using namespace solidity::evmasm;
 using namespace solidity::yul;
@@ -43,68 +41,6 @@ using namespace solidity::yul::tools::interpreter;
 
 using solidity::util::h160;
 using solidity::util::h256;
-using solidity::util::keccak256;
-
-namespace
-{
-
-/// Reads 32 bytes from @a _data at position @a _offset bytes while
-/// interpreting @a _data to be padded with an infinite number of zero
-/// bytes beyond its end.
-u256 readZeroExtended(bytes const& _data, u256 const& _offset)
-{
-	if (_offset >= _data.size())
-		return 0;
-	else if (_offset + 32 <= _data.size())
-		return *reinterpret_cast<h256 const*>(_data.data() + static_cast<size_t>(_offset));
-	else
-	{
-		size_t off = static_cast<size_t>(_offset);
-		u256 val;
-		for (size_t i = 0; i < 32; ++i)
-		{
-			val <<= 8;
-			if (off + i < _data.size())
-				val += _data[off + i];
-		}
-		return val;
-	}
-}
-
-}
-
-namespace solidity::yul::tools::interpreter
-{
-
-void copyZeroExtended(
-	std::map<u256, uint8_t>& _target,
-	bytes const& _source,
-	size_t _targetOffset,
-	size_t _sourceOffset,
-	size_t _size
-)
-{
-	for (size_t i = 0; i < _size; ++i)
-		_target[_targetOffset + i] = (_sourceOffset + i < _source.size() ? _source[_sourceOffset + i] : 0);
-}
-
-void copyZeroExtendedWithOverlap(
-	std::map<u256, uint8_t>& _target,
-	std::map<u256, uint8_t> const& _source,
-	size_t _targetOffset,
-	size_t _sourceOffset,
-	size_t _size
-)
-{
-	if (_targetOffset >= _sourceOffset)
-		for (size_t i = _size; i > 0; --i)
-			_target[_targetOffset + i - 1] = (_source.count(_sourceOffset + i - 1) != 0 ? _source.at(_sourceOffset + i - 1) : 0);
-	else
-		for (size_t i = 0; i < _size; ++i)
-			_target[_targetOffset + i] = (_source.count(_sourceOffset + i) != 0 ? _source.at(_sourceOffset + i) : 0);
-}
-
-}
 
 using u512 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<512, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
 
