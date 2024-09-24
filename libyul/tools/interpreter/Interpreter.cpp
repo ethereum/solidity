@@ -225,13 +225,8 @@ ExecutionResult Interpreter::operator()(ForLoop const& _forLoop)
 			if (std::get<EvaluationOk>(conditionRes).values.at(0) == 0) break;
 		}
 
-		// Increment step for each loop iteration for loops with
-		// an empty body and post blocks to prevent a deadlock.
-		if (_forLoop.body.statements.size() == 0 && _forLoop.post.statements.size() == 0)
-			if (auto terminated = incrementStep()) return *terminated;
-
 		{
-			ExecutionResult bodyRes = (*this)(_forLoop.body);
+			ExecutionResult bodyRes = visit(_forLoop.body);
 			if (
 				std::holds_alternative<ExecutionTerminated>(bodyRes) ||
 				bodyRes == ExecutionResult(ExecutionOk{ ControlFlowState::Leave })
@@ -242,7 +237,7 @@ ExecutionResult Interpreter::operator()(ForLoop const& _forLoop)
 		}
 
 		{
-			ExecutionResult postRes = (*this)(_forLoop.post);
+			ExecutionResult postRes = visit(_forLoop.post);
 			if (
 				std::holds_alternative<ExecutionTerminated>(postRes) ||
 				postRes == ExecutionResult(ExecutionOk{ ControlFlowState::Leave })
@@ -282,7 +277,6 @@ ExecutionResult Interpreter::operator()(Block const& _block)
 
 	for (auto const& statement: _block.statements)
 	{
-		if (auto terminated = incrementStep()) return *terminated;
 		ExecutionResult statementRes = visit(statement);
 		if (statementRes != ExecutionResult(ExecutionOk{ ControlFlowState::Default }))
 			return statementRes;
@@ -292,6 +286,7 @@ ExecutionResult Interpreter::operator()(Block const& _block)
 
 ExecutionResult Interpreter::visit(Statement const& _st)
 {
+	if (auto terminated = incrementStep()) return *terminated;
 	return std::visit(*this, _st);
 }
 
@@ -333,21 +328,14 @@ std::optional<ExecutionTerminated> Interpreter::incrementStep()
 	return std::nullopt;
 }
 
-EvaluationResult ExpressionEvaluator::visit(Expression const& _st)
-{
-	return std::visit(*this, _st);
-}
-
 EvaluationResult ExpressionEvaluator::operator()(Literal const& _literal)
 {
-	if (auto terminated = incrementStep()) return *terminated;
 	return EvaluationOk(_literal.value.value());
 }
 
 EvaluationResult ExpressionEvaluator::operator()(Identifier const& _identifier)
 {
 	solAssert(m_variables.count(_identifier.name), "");
-	if (auto terminated = incrementStep()) return *terminated;
 	return EvaluationOk(m_variables.at(_identifier.name));
 }
 
@@ -399,12 +387,17 @@ EvaluationResult ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 	return EvaluationOk(returnedValues);
 }
 
+EvaluationResult ExpressionEvaluator::visit(Expression const& _st)
+{
+	if (auto terminated = incrementStep()) return *terminated;
+	return std::visit(*this, _st);
+}
+
 EvaluationResult ExpressionEvaluator::evaluateArgs(
 	std::vector<Expression> const& _expr,
 	std::vector<std::optional<LiteralKind>> const* _literalArguments
 )
 {
-	if (auto terminated = incrementStep()) return *terminated;
 	std::vector<u256> values;
 	size_t i = 0;
 	/// Function arguments are evaluated in reverse.
