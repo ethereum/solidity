@@ -65,10 +65,10 @@ function benchmark_project {
         > /dev/null \
         2> "../stderr-${project}-${pipeline}.log" || true
 
-    printf '| %-20s | %8s | %7s s | %9d |\n' \
+    printf '| %-20s | %8s | %7d s | %9d |\n' \
         "$project" \
         "$pipeline" \
-        "$(jq '.real' "$time_file")" \
+        "$(jq '(.user + .sys) | round' "$time_file")" \
         "$(jq '.exit' "$time_file")"
     cd ..
 }

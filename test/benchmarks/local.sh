@@ -60,11 +60,11 @@ function benchmark_contract {
         > "${output_dir}/bytecode-${pipeline}.bin" \
         2>> "${output_dir}/benchmark-warn-err.txt" || [[ $pipeline == legacy ]]
 
-    printf '| %-20s | %s   | %7d bytes | %6s s | %9d |\n' \
+    printf '| %-20s | %s   | %7d bytes | %6.2f s | %9d |\n' \
         '`'"$input_file"'`' \
         "$pipeline" \
         "$(bytecode_size < "${output_dir}/bytecode-${pipeline}.bin")" \
-        "$(jq '.real' "$time_file")" \
+        "$(jq '(.user + .sys) * 100 | round / 100' "$time_file")" \
         "$(jq '.exit' "$time_file")"
 }
 
