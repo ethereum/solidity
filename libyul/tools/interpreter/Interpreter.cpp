@@ -111,12 +111,11 @@ void InterpreterState::dumpTraceAndState(std::ostream& _out, bool _disableMemory
 void Interpreter::run(
 	InterpreterState& _state,
 	Dialect const& _dialect,
-	Block const& _ast,
-	bool _disableMemoryTrace
+	Block const& _ast
 )
 {
 	Scope scope;
-	Interpreter{_state, _dialect, scope, _disableMemoryTrace}(_ast);
+	Interpreter{_state, _dialect, scope}(_ast);
 }
 
 ExecutionResult Interpreter::operator()(ExpressionStatement const& _expressionStatement)
@@ -316,7 +315,7 @@ EvaluationResult Interpreter::operator()(FunctionCall const& _funCall)
 	{
 		if (BuiltinFunctionForEVM const* fun = dialect->builtin(_funCall.functionName.name))
 		{
-			EVMInstructionInterpreter interpreter(dialect->evmVersion(), m_state, m_disableMemoryTrace);
+			EVMInstructionInterpreter interpreter(dialect->evmVersion(), m_state, false);
 
 			u256 const value = interpreter.evalBuiltin(*fun, _funCall.arguments, argsValues);
 

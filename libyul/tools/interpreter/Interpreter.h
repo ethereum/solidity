@@ -201,29 +201,23 @@ struct Scope
 class Interpreter
 {
 public:
-	/// Executes the Yul interpreter. Flag @param _disableMemoryTracing if set ensures that
-	/// instructions that write to memory do not affect @param _state. This
-	/// avoids false positives reports by the fuzzer when certain optimizer steps are
-	/// activated e.g., Redundant store eliminator, Equal store eliminator.
+	/// Executes the Yul interpreter.
 	static void run(
 		InterpreterState& _state,
 		Dialect const& _dialect,
-		Block const& _ast,
-		bool _disableMemoryTracing
+		Block const& _ast
 	);
 
 	Interpreter(
 		InterpreterState& _state,
 		Dialect const& _dialect,
 		Scope& _scope,
-		bool _disableMemoryTracing,
 		std::map<YulName, u256> _variables = {}
 	):
 		m_dialect(_dialect),
 		m_state(_state),
 		m_variables(std::move(_variables)),
-		m_scope(&_scope),
-		m_disableMemoryTrace(_disableMemoryTracing)
+		m_scope(&_scope)
 	{
 	}
 
@@ -263,7 +257,6 @@ protected:
 			m_state,
 			m_dialect,
 			*m_scope,
-			m_disableMemoryTrace,
 			std::move(_variables)
 		);
 	}
