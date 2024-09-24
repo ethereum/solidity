@@ -424,6 +424,9 @@ std::optional<ExecutionTerminated> Interpreter::incrementStatementStep()
 	m_state.numSteps++;
 	if (m_state.maxSteps > 0 && m_state.numSteps >= m_state.maxSteps)
 		return StepLimitReached();
+
+	// Reset m_expressionNestingLevel, preparing for new expression.
+	m_expressionNestingLevel = 0;
 	return std::nullopt;
 }
 
