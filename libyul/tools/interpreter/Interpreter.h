@@ -121,35 +121,6 @@ using EvaluationResult = std::variant<EvaluationOk, ExecutionTerminated>;
 
 struct InterpreterState
 {
-	bytes calldata;
-	bytes returndata;
-	std::map<u256, uint8_t> memory;
-	/// This is different than memory.size() because we ignore gas.
-	u256 msize;
-	std::map<util::h256, util::h256> storage;
-	std::map<util::h256, util::h256> transientStorage;
-	util::h160 address = util::h160("0x0000000000000000000000000000000011111111");
-	u256 balance = 0x22222222;
-	u256 selfbalance = 0x22223333;
-	util::h160 origin = util::h160("0x0000000000000000000000000000000033333333");
-	util::h160 caller = util::h160("0x0000000000000000000000000000000044444444");
-	u256 callvalue = 0x55555555;
-	/// Deployed code
-	bytes code = util::asBytes("codecodecodecodecode");
-	u256 gasprice = 0x66666666;
-	util::h160 coinbase = util::h160("0x0000000000000000000000000000000077777777");
-	u256 timestamp = 0x88888888;
-	u256 blockNumber = 1024;
-	u256 difficulty = 0x9999999;
-	u256 prevrandao = (u256(1) << 64) + 1;
-	u256 gaslimit = 4000000;
-	u256 chainid = 0x01;
-	/// The minimum value of basefee: 7 wei.
-	u256 basefee = 0x07;
-	/// The minimum value of blobbasefee: 1 wei.
-	u256 blobbasefee = 0x01;
-	/// Log of changes / effects. Sholud be structured data in the future.
-	std::vector<std::string> trace;
 	/// This is actually an input parameter that more or less limits the runtime.
 	size_t maxTraceSize = 0;
 	size_t maxSteps = 0;
@@ -158,30 +129,6 @@ struct InterpreterState
 
 	/// Number of the current state instance, used for recursion protection
 	size_t numInstance = 0;
-
-	// Blob commitment hash version
-	util::FixedHash<1> const blobHashVersion = util::FixedHash<1>(1);
-	// Blob commitments
-	std::array<u256, 2> const blobCommitments = {0x01, 0x02};
-
-	/// Prints execution trace and non-zero storage to @param _out.
-	/// Flag @param _disableMemoryTrace, if set, does not produce a memory dump. This
-	/// avoids false positives reports by the fuzzer when certain optimizer steps are
-	/// activated e.g., Redundant store eliminator, Equal store eliminator.
-	void dumpTraceAndState(std::ostream& _out, bool _disableMemoryTrace) const;
-	/// Prints non-zero storage to @param _out.
-	void dumpStorage(std::ostream& _out) const;
-	/// Prints non-zero transient storage to @param _out.
-	void dumpTransientStorage(std::ostream& _out) const;
-
-	bytes readMemory(u256 const& _offset, u256 const& _size)
-	{
-		yulAssert(_size <= 0xffff, "Too large read.");
-		bytes data(size_t(_size), uint8_t(0));
-		for (size_t i = 0; i < data.size(); ++i)
-			data[i] = memory[_offset + i];
-		return data;
-	}
 };
 
 /**
@@ -245,9 +192,6 @@ public:
 
 	EvaluationResult visit(Expression const& _st);
 
-	bytes returnData() const { return m_state.returndata; }
-	std::vector<std::string> const& trace() const { return m_state.trace; }
-
 	u256 valueOfVariable(YulName _name) const { return m_variables.at(_name); }
 
 protected:
@@ -288,7 +232,6 @@ protected:
 	/// Values of variables.
 	std::map<YulName, u256> m_variables;
 	Scope* m_scope;
-	bool m_disableMemoryTrace;
 
 	unsigned m_expressionNestingLevel = 0;
 };
