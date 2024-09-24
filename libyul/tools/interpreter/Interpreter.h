@@ -285,11 +285,11 @@ public:
 		m_disableMemoryTrace(_disableMemoryTrace)
 	{}
 
+	EvaluationResult visit(Expression const& _st);
+
 	EvaluationResult operator()(Literal const&);
 	EvaluationResult operator()(Identifier const&);
 	EvaluationResult operator()(FunctionCall const& _funCall);
-
-	EvaluationResult visit(Expression const& _st);
 
 protected:
 	virtual std::unique_ptr<Interpreter> makeInterpreterCopy(std::map<YulName, u256> _variables = {}) const
