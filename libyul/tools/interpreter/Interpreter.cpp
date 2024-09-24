@@ -51,7 +51,7 @@ void Interpreter::run(
 )
 {
 	Scope scope;
-	Interpreter{_state, _dialect, scope}(_ast);
+	Interpreter{_state, _dialect, scope, 0}(_ast);
 }
 
 ExecutionResult Interpreter::operator()(ExpressionStatement const& _expressionStatement)
@@ -359,6 +359,11 @@ std::optional<ExecutionTerminated> Interpreter::incrementStatementStep()
 	m_state.numSteps++;
 	if (m_state.config.maxSteps > 0 && m_state.numSteps >= m_state.config.maxSteps)
 		return StepLimitReached();
+
+	// Checking recursion depth here because we are sure that a statement
+	// inside the body evaluated.
+	if (m_state.config.maxRecursionDepth > 0 && m_recursionDepth > m_state.config.maxRecursionDepth)
+		return RecursionDepthLimitReached();
 
 	// Reset m_expressionNestingLevel, preparing for new expression.
 	m_expressionNestingLevel = 0;
