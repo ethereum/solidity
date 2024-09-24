@@ -30,6 +30,7 @@ using namespace solidity::yul;
 
 void SSACFGValidator::validate(ControlFlow const& _controlFlow, Block const& _ast, AsmAnalysisInfo const& _analysisInfo, Dialect const& _dialect)
 {
+	std::cout << _controlFlow.toDot() << std::endl;
     Context context{_analysisInfo, _dialect, _controlFlow, *_controlFlow.mainGraph};
     SSACFGValidator validator(context);
     validator.m_currentBlock = context.cfg.entry;
@@ -88,6 +89,12 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 			return false;
 		},
 		[&](VariableDeclaration const& _variableDeclaration) {
+			if (!_variableDeclaration.value)
+			{
+				for (auto&& variable: _variableDeclaration.variables)
+					m_currentVariableValues[resolveVariable(variable.name)] = {};
+				return true;
+			}
 			if (auto results = consumeExpression(*_variableDeclaration.value))
 			{
 				yulAssert(results->size() == _variableDeclaration.variables.size());
@@ -213,6 +220,7 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 		},
 		[&](ForLoop const& _loop)
 		{
+			// TODO: Handle constant conditions as well
 			// TODO: try to clean up and simplify especially the "continue" validation
         	ScopedSaveAndRestore scopeRestore(m_scope, m_context.analysisInfo.scopes.at(&_loop.pre).get());
 			consumeBlock(_loop.pre);
