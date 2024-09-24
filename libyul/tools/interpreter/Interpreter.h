@@ -277,15 +277,15 @@ protected:
 		);
 	}
 
+	// evaluate the expression and assert that the number of return variable is _numReturnVars
+	virtual EvaluationResult evaluate(Expression const& _expression, size_t _numReturnVars);
+
 	/// Evaluates the given expression from right to left and
 	/// stores it in m_value.
 	EvaluationResult evaluateArgs(
 		std::vector<Expression> const& _expr,
 		std::vector<std::optional<LiteralKind>> const* _literalArguments
 	);
-
-	// evaluate the expression and assert that the number of return variable is _numReturnVars
-	virtual EvaluationResult evaluate(Expression const& _expression, size_t _numReturnVars);
 
 	void enterScope(Block const& _block);
 	void leaveScope();

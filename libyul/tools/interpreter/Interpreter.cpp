@@ -290,43 +290,6 @@ ExecutionResult Interpreter::visit(Statement const& _st)
 	return std::visit(*this, _st);
 }
 
-EvaluationResult Interpreter::evaluate(Expression const& _expression, size_t _numReturnVars)
-{
-	EvaluationResult res = visit(_expression);
-	if (auto* resOk = std::get_if<EvaluationOk>(&res))
-		yulAssert(resOk->values.size() == _numReturnVars, "");
-
-	return res;
-}
-
-void Interpreter::enterScope(Block const& _block)
-{
-	if (!m_scope->subScopes.count(&_block))
-		m_scope->subScopes[&_block] = std::make_unique<Scope>(Scope{
-			{},
-			{},
-			m_scope
-		});
-	m_scope = m_scope->subScopes[&_block].get();
-}
-
-void Interpreter::leaveScope()
-{
-	for (auto const& [var, funDeclaration]: m_scope->names)
-		if (!funDeclaration)
-			m_variables.erase(var);
-	m_scope = m_scope->parent;
-	yulAssert(m_scope, "");
-}
-
-std::optional<ExecutionTerminated> Interpreter::incrementStatementStep()
-{
-	m_state.numSteps++;
-	if (m_state.maxSteps > 0 && m_state.numSteps >= m_state.maxSteps)
-		return StepLimitReached();
-	return std::nullopt;
-}
-
 EvaluationResult Interpreter::operator()(Literal const& _literal)
 {
 	return EvaluationOk(_literal.value.value());
@@ -392,6 +355,15 @@ EvaluationResult Interpreter::visit(Expression const& _st)
 	return std::visit(*this, _st);
 }
 
+EvaluationResult Interpreter::evaluate(Expression const& _expression, size_t _numReturnVars)
+{
+	EvaluationResult res = visit(_expression);
+	if (auto* resOk = std::get_if<EvaluationOk>(&res))
+		yulAssert(resOk->values.size() == _numReturnVars, "");
+
+	return res;
+}
+
 EvaluationResult Interpreter::evaluateArgs(
 	std::vector<Expression> const& _expr,
 	std::vector<std::optional<LiteralKind>> const* _literalArguments
@@ -425,6 +397,34 @@ EvaluationResult Interpreter::evaluateArgs(
 	}
 	std::reverse(values.begin(), values.end());
 	return EvaluationOk(values);
+}
+
+void Interpreter::enterScope(Block const& _block)
+{
+	if (!m_scope->subScopes.count(&_block))
+		m_scope->subScopes[&_block] = std::make_unique<Scope>(Scope{
+			{},
+			{},
+			m_scope
+		});
+	m_scope = m_scope->subScopes[&_block].get();
+}
+
+void Interpreter::leaveScope()
+{
+	for (auto const& [var, funDeclaration]: m_scope->names)
+		if (!funDeclaration)
+			m_variables.erase(var);
+	m_scope = m_scope->parent;
+	yulAssert(m_scope, "");
+}
+
+std::optional<ExecutionTerminated> Interpreter::incrementStatementStep()
+{
+	m_state.numSteps++;
+	if (m_state.maxSteps > 0 && m_state.numSteps >= m_state.maxSteps)
+		return StepLimitReached();
+	return std::nullopt;
 }
 
 std::optional<ExecutionTerminated> Interpreter::incrementExpressionStep()
