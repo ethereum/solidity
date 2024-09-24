@@ -266,6 +266,18 @@ private:
 };
 }
 
+SSACFG::ValueId SSACFG::lookupLiteral(yul::LiteralValue const& _literalValue) const
+{
+	auto it = std::find_if(m_valueInfos.begin(), m_valueInfos.end(), [&](auto const& info) {
+		if (LiteralValue const* literalInfo = std::get_if<LiteralValue>(&info))
+			return literalInfo->value == _literalValue.value();
+		return false;
+	});
+	if (it != m_valueInfos.end())
+		return ValueId{static_cast<size_t>(std::distance(m_valueInfos.begin(), it))};
+	return {};
+}
+
 std::string SSACFG::toDot(
 	bool _includeDiGraphDefinition,
 	std::optional<size_t> _functionIndex,

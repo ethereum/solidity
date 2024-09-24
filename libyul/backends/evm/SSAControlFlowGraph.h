@@ -207,6 +207,7 @@ public:
 		yulAssert(it->second.value < m_valueInfos.size());
 		return it->second;
 	}
+	ValueId lookupLiteral(yul::LiteralValue const& _literalValue) const;
 
 	std::string toDot(
 		bool _includeDiGraphDefinition=true,
