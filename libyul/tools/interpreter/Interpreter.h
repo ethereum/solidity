@@ -66,6 +66,10 @@ class TraceLimitReached : public ExecutionTerminatedCommon<TraceLimitReached>
 {
 };
 
+class RecursionDepthLimitReached : public ExecutionTerminatedCommon<RecursionDepthLimitReached>
+{
+};
+
 class ExpressionNestingLimitReached : public ExecutionTerminatedCommon<ExpressionNestingLimitReached>
 {
 };
@@ -75,6 +79,7 @@ using ExecutionTerminated = std::variant<
 	ExplicitlyTerminatedWithReturn,
 	StepLimitReached,
 	TraceLimitReached,
+	RecursionDepthLimitReached,
 	ExpressionNestingLimitReached
 >;
 
@@ -124,6 +129,7 @@ struct InterpreterConfig
 	size_t maxTraceSize = 0;
 	size_t maxSteps = 0;
 	size_t maxExprNesting = 0;
+	size_t maxRecursionDepth = 0;
 };
 
 struct InterpreterState
@@ -161,12 +167,16 @@ public:
 		InterpreterState& _state,
 		Dialect const& _dialect,
 		Scope& _scope,
+		size_t _callerRecursionDepth,
 		std::map<YulName, u256> _variables = {}
 	):
 		m_dialect(_dialect),
 		m_state(_state),
 		m_variables(std::move(_variables)),
-		m_scope(&_scope)
+		m_scope(&_scope),
+
+		// The only place that increases recursion depth
+		m_recursionDepth(_callerRecursionDepth + 1)
 	{
 	}
 
@@ -203,6 +213,7 @@ protected:
 			m_state,
 			m_dialect,
 			*m_scope,
+			m_recursionDepth,
 			std::move(_variables)
 		);
 	}
@@ -235,6 +246,7 @@ protected:
 	std::map<YulName, u256> m_variables;
 	Scope* m_scope;
 
+	size_t const m_recursionDepth = 0;
 	unsigned m_expressionNestingLevel = 0;
 };
 
