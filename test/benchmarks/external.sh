@@ -65,7 +65,7 @@ function benchmark_project {
         > /dev/null \
         2> "../stderr-${project}-${pipeline}.log" || true
 
-    printf '| %-20s | %8s | %7d s | %9d MiB | %9d |\n' \
+    printf '| %-20s | %8s | %6d s | %9d MiB | %9d |\n' \
         "$project" \
         "$pipeline" \
         "$(jq '(.user + .sys) | round' "$time_file")" \
@@ -86,8 +86,8 @@ benchmarks=(
 mkdir -p "$BENCHMARK_DIR"
 cd "$BENCHMARK_DIR"
 
-echo "| Project              | Pipeline | Time      | Memory (peak) | Exit code |"
-echo "|----------------------|----------|----------:|--------------:|----------:|"
+echo "|         File         | Pipeline |   Time   | Memory (peak) | Exit code |"
+echo "|----------------------|----------|---------:|--------------:|----------:|"
 
 for project in "${benchmarks[@]}"; do
     benchmark_project legacy "$project"

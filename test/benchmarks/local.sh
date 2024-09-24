@@ -51,7 +51,7 @@ function benchmark_contract {
     local input_path="$2"
 
     local solc_command=("${solc}" --optimize --bin --color "${input_path}")
-    [[ $pipeline == via-ir ]] && solc_command+=(--via-ir)
+    [[ $pipeline == ir ]] && solc_command+=(--via-ir)
     local time_file="${output_dir}/time-and-status-${pipeline}.txt"
 
     # NOTE: Legacy pipeline may fail with "Stack too deep" in some cases. That's fine.
@@ -60,7 +60,7 @@ function benchmark_contract {
         > "${output_dir}/bytecode-${pipeline}.bin" \
         2>> "${output_dir}/benchmark-warn-err.txt" || [[ $pipeline == legacy ]]
 
-    printf '| %-20s | %s   | %7d bytes | %6.2f s | %9d MiB | %9d |\n' \
+    printf '| %-20s | %8s | %7d bytes | %6.2f s | %9d MiB | %9d |\n' \
         '`'"$input_file"'`' \
         "$pipeline" \
         "$(bytecode_size < "${output_dir}/bytecode-${pipeline}.bin")" \
@@ -71,13 +71,13 @@ function benchmark_contract {
 
 benchmarks=("verifier.sol" "OptimizorClub.sol" "chains.sol")
 
-echo "| File                 | Pipeline | Bytecode size | Time     | Memory (peak) | Exit code |"
+echo "|         File         | Pipeline | Bytecode size |   Time   | Memory (peak) | Exit code |"
 echo "|----------------------|----------|--------------:|---------:|--------------:|----------:|"
 
 for input_file in "${benchmarks[@]}"
 do
     benchmark_contract legacy "${REPO_ROOT}/test/benchmarks/${input_file}"
-    benchmark_contract via-ir "${REPO_ROOT}/test/benchmarks/${input_file}"
+    benchmark_contract ir     "${REPO_ROOT}/test/benchmarks/${input_file}"
 done
 
 echo
