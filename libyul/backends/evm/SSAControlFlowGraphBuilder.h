@@ -40,6 +40,7 @@ namespace solidity::yul
 class SSAControlFlowGraphBuilder
 {
 	SSAControlFlowGraphBuilder(
+		ControlFlow& _controlFlow,
 		SSACFG& _graph,
 		AsmAnalysisInfo const& _analysisInfo,
 		ControlFlowSideEffectsCollector const& _sideEffects,
@@ -50,20 +51,6 @@ public:
 	SSAControlFlowGraphBuilder& operator=(SSAControlFlowGraphBuilder const&) = delete;
 	static std::unique_ptr<ControlFlow> build(
 		AsmAnalysisInfo const& _analysisInfo,
-		Dialect const& _dialect,
-		Block const& _block
-	);
-	static void buildFunctionGraphs(
-		ControlFlow& _controlFlow,
-		AsmAnalysisInfo const& _info,
-		ControlFlowSideEffectsCollector const& _sideEffects,
-		Dialect const& _dialect,
-		std::vector<std::tuple<Scope::Function const*, FunctionDefinition const*>> const& _functions
-	);
-	static std::vector<std::tuple<Scope::Function const*, FunctionDefinition const*>> buildMainGraph(
-		SSACFG& _cfg,
-		AsmAnalysisInfo const& _analysisInfo,
-		ControlFlowSideEffectsCollector const& _sideEffects,
 		Dialect const& _dialect,
 		Block const& _block
 	);
@@ -91,6 +78,8 @@ private:
 	SSACFG::ValueId tryRemoveTrivialPhi(SSACFG::ValueId _phi);
 	void assign(std::vector<std::reference_wrapper<Scope::Variable const>> _variables, Expression const* _expression);
 	std::vector<SSACFG::ValueId> visitFunctionCall(FunctionCall const& _call);
+	void registerFunctionDefinition(FunctionDefinition const& _functionDefinition);
+	void buildFunctionGraph(Scope::Function const* _function, FunctionDefinition const* _functionDefinition);
 
 	SSACFG::ValueId zero();
 	SSACFG::ValueId readVariable(Scope::Variable const& _variable, SSACFG::BlockId _block);
@@ -98,6 +87,7 @@ private:
 	SSACFG::ValueId addPhiOperands(Scope::Variable const& _variable, SSACFG::ValueId _phi);
 	void writeVariable(Scope::Variable const& _variable, SSACFG::BlockId _block, SSACFG::ValueId _value);
 
+	ControlFlow& m_controlFlow;
 	SSACFG& m_graph;
 	AsmAnalysisInfo const& m_info;
 	ControlFlowSideEffectsCollector const& m_sideEffects;
