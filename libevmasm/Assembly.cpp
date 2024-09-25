@@ -403,12 +403,13 @@ void Assembly::assemblyStream(
 {
 	Functionalizer f(_out, _prefix, _sourceCodes, *this);
 
-	// TODO: support EOF
-	solUnimplementedAssert(!m_eofVersion.has_value(), "Assembly output for EOF is not yet implemented.");
-	solAssert(m_codeSections.size() == 1);
 	for (auto const& i: m_codeSections.front().items)
 		f.feed(i, _debugInfoSelection);
 	f.flush();
+
+	// Implementing this requires introduction of CALLF, RETF and JUMPF
+	if (m_codeSections.size() > 1)
+		solUnimplemented("Add support for more code sections");
 
 	if (!m_data.empty() || !m_subs.empty())
 	{

@@ -262,15 +262,14 @@ YulStack::assembleWithDeployed(std::optional<std::string_view> _deployName)
 		creationObject.bytecode = std::make_shared<evmasm::LinkerObject>(creationAssembly->assemble());
 		yulAssert(creationObject.bytecode->immutableReferences.empty(), "Leftover immutables.");
 		creationObject.assembly = creationAssembly;
-		solUnimplementedAssert(!m_eofVersion.has_value(), "EVM assembly output not implemented for EOF yet.");
-		solAssert(creationAssembly->codeSections().size() == 1);
-		creationObject.sourceMappings = std::make_unique<std::string>(
-			// TODO: fix for EOF
-			evmasm::AssemblyItem::computeSourceMapping(
-				creationAssembly->codeSections().front().items,
+		creationObject.sourceMappings = std::make_unique<std::string>();
+		for (auto const& codeSection: creationAssembly->codeSections())
+		{
+			*creationObject.sourceMappings += evmasm::AssemblyItem::computeSourceMapping(
+				codeSection.items,
 				{{m_charStream->name(), 0}}
-			)
-		);
+			);
+		}
 
 		if (deployedAssembly)
 		{

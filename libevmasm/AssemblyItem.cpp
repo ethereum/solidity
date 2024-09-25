@@ -450,9 +450,10 @@ std::string AssemblyItem::computeSourceMapping(
 			static_cast<int>(_sourceIndicesMap.at(*location.sourceName)) :
 			-1;
 		char jump = '-';
-		if (item.getJumpType() == evmasm::AssemblyItem::JumpType::IntoFunction)
+		// TODO: Uncomment when EOF functions introduced.
+		if (item.getJumpType() == evmasm::AssemblyItem::JumpType::IntoFunction /*|| item.type() == CallF || item.type() == JumpF*/)
 			jump = 'i';
-		else if (item.getJumpType() == evmasm::AssemblyItem::JumpType::OutOfFunction)
+		else if (item.getJumpType() == evmasm::AssemblyItem::JumpType::OutOfFunction /*|| item.type() == RetF*/)
 			jump = 'o';
 		int modifierDepth = static_cast<int>(item.m_modifierDepth);
 

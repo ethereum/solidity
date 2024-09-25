@@ -1,5 +1,103 @@
 
 ======= strict_asm_eof_container_prague/input.yul (EVM) =======
 
+Pretty printed source:
+object "object" {
+    code { { revert(0, 0) } }
+    object "sub0" {
+        code {
+            {
+                mstore(0, 0)
+                revert(0, 32)
+            }
+        }
+    }
+    object "sub1" {
+        code {
+            {
+                mstore(0, 1)
+                revert(0, 32)
+            }
+        }
+    }
+    object "sub2" {
+        code {
+            {
+                mstore(0, 2)
+                revert(0, 32)
+            }
+        }
+        object "sub20" {
+            code {
+                {
+                    mstore(0, 0x20)
+                    revert(0, 32)
+                }
+            }
+        }
+    }
+    object "sub3" {
+        code {
+            {
+                mstore(0, 3)
+                revert(0, 32)
+            }
+        }
+    }
+}
+
+
 Binary representation:
 ef00010100040200010003030004001a001b003b001b040000000080ffff5f80fdef00010100040200010007040000000080ffff5f805260205ffdef00010100040200010008040000000080ffff60015f5260205ffdef00010100040200010008030001001b040000000080ffff60025f5260205ffdef00010100040200010008040000000080ffff60205f5260205ffdef00010100040200010008040000000080ffff60035f5260205ffd
+
+Text representation:
+  0x00
+  dup1
+  revert
+stop
+
+sub_0: assembly {
+      0x00
+      dup1
+      mstore
+      0x20
+      0x00
+      revert
+}
+
+sub_1: assembly {
+      0x01
+      0x00
+      mstore
+      0x20
+      0x00
+      revert
+}
+
+sub_2: assembly {
+      0x02
+      0x00
+      mstore
+      0x20
+      0x00
+      revert
+    stop
+
+    sub_0: assembly {
+          0x20
+          0x00
+          mstore
+          0x20
+          0x00
+          revert
+    }
+}
+
+sub_3: assembly {
+      0x03
+      0x00
+      mstore
+      0x20
+      0x00
+      revert
+}
