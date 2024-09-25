@@ -176,9 +176,9 @@ contract Contract {
                 for {} gt(mask, 0) { mask := shr(1, mask) } {
                     
 
-                {      
+                {
                 //X,Y,ZZ,ZZZ:=ecDblNeg(X,Y,ZZ,ZZZ), not having it inplace increase by 12K the cost of the function
-                
+
                 let T1 := mulmod(2, Y, _p) //U = 2*Y1, y free
                 let T2 := mulmod(T1, T1, _p) // V=U^2
                 let T3 := mulmod(X, T2, _p) // S = X1*V
@@ -193,7 +193,7 @@ contract Contract {
                 T2 := mulmod(T4, addmod(X, sub(_p, T3), _p), _p) //-M(S-X3)=M(X3-S)
                 Y := addmod(mulmod(T1, Y, _p), T2, _p) //-Y3= W*Y1-M(S-X3), we replace Y by -Y to avoid a sub in ecAdd
                 //Y:=sub(p,Y)*/
-                
+
                 }
 
              //   let T4:=shl(128,mask)  
@@ -257,10 +257,10 @@ contract Contract {
                   T4 := mulmod(T1, T4, _p)///Q=U1*PP
                   Y := addmod(mulmod(addmod(T4, sub(_p, X), _p), mload(add(Mem, _y2)), _p), mulmod(mulmod(Y,mload(add(Mem, _zzz2)), _p), T2, _p), _p)// R*(Q-X3)-S1*PPP
 
-               }//endloop   
+               }//endloop
                 /* IV. Normalization */
                 //(X,)=ec_Normalize(X,Y,ZZ,ZZZ);
-               
+
                 mstore(0x40, _free)
                  let T := mload(0x40)
                 mstore(add(T, 0x60), ZZ)
@@ -284,7 +284,6 @@ contract Contract {
                 //zz :=mulmod(zz, mload(T),p) //1/z
                 //zz:= mulmod(zz,zz,p) //1/zz
                 X := mulmod(X, mload(T), _p) //X/zz   
-               
           }//end assembly
     }
 }
