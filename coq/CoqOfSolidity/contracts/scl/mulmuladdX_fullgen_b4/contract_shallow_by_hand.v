@@ -3,75 +3,6 @@ Require Import CoqOfSolidity.simulations.CoqOfSolidity.
 Import Stdlib.
 
 (*
-//error calling modExpPrecompile
-uint256 constant _ModExpError=0x7FF;
-
-//Starting from mload(0x40) this is the mapping in allocated memory
-//https://medium.com/@ac1d_eth/technical-exploration-of-inline-assembly-in-solidity-b7d2b0b2bda8
-//mapping from 0x40 in memory
-uint256 constant _Prec_T8=0x800;
-uint256 constant _Ap=0x820;
-uint256 constant _y2=0x840;
-uint256 constant _zzz2=0x860;
-uint256 constant _free=0x880;
-
-//mapping from Q in input to function, contains Qx, Qy, Qx', Qy', p, a, gx, gy, gx', gy'
-//where P' is P multiplied by 2 pow 128 for shamir's multidimensional trick
-//todo: remove all magic numbers
-uint constant _Qx=0x00;
-uint constant _Qy=0x20;
-uint constant _Qx2pow128=0x40;
-uint constant _Qy2pow128=0x60;
-uint constant _modp=0x80;
-uint constant _a=0xa0;
-uint constant _gx=0xc0;
-uint constant _gy=0xe0;
-uint constant _gpow2p128_x=0x100;
-uint constant _gpow2p128_y=0x120;
-*)
-Definition _ModExpError := 0x7FF.
-
-Definition _Prec_T8 := 0x800.
-Definition _Ap := 0x820.
-Definition _y2 := 0x840.
-Definition _zzz2 := 0x860.
-Definition _free := 0x880.
-
-Definition _Qx := 0x00.
-Definition _Qy := 0x20.
-Definition _Qx2pow128 := 0x40.
-Definition _Qy2pow128 := 0x60.
-Definition _modp := 0x80.
-Definition _a := 0xa0.
-Definition _gx := 0xc0.
-Definition _gy := 0xe0.
-Definition _gpow2p128_x := 0x100.
-Definition _gpow2p128_y := 0x120.
-
-(*
-//store 4 256 bits values starting from addr+offset
-function mstore4(addr, offset, val1, val2, val3, val4){
-    mstore(add(offset, addr),val1 )
-    offset:=add(32, offset)
-    mstore(add(offset, addr),val2 )
-    offset:=add(32, offset)
-    mstore(add(offset, addr),val3 )
-    offset:=add(32, offset)
-    mstore(add(offset, addr),val4 )
-    offset:=add(32, offset)
-}
-*)
-(* Definition mstore4 (addr offset val1 val2 val3 val4 : U256.t) : M.t unit :=
-  do~ [[ mstore ~(| add ~(| offset, addr |), val1 |) ]] in
-  let~ offset := [[ add ~(| 32, offset |) ]] in
-  do~ [[ mstore ~(| add ~(| offset, addr |), val2 |) ]] in
-  let~ offset := [[ add ~(| 32, offset |) ]] in
-  do~ [[ mstore ~(| add ~(| offset, addr |), val3 |) ]] in
-  let~ offset := [[ add ~(| 32, offset |) ]] in
-  do~ [[ mstore ~(| add ~(| offset, addr |), val4 |) ]] in
-  M.pure tt. *)
-
-(*
 //normalized addition of two point, must not be neutral input
 function ecAddn2(x1, y1, zz1, zzz1, x2, y2, _p) -> _x, _y, _zz, _zzz {
   y1 := sub(_p, y1)
@@ -570,6 +501,8 @@ Definition ecGenMulmuladdX_store (Q : Q.t) (scalar_u scalar_v : U256.t) : U256.t
     let state := (mask, X, Y, ZZ, ZZZ, _y2, _zzz2) in
     state in
   (*  }//endloop *)
+  let _y2 := 0 in
+  let _zzz2 := 0 in
   let state : State := (mask, X, Y, ZZ, ZZZ, _y2, _zzz2) in
   let '(mask, X, Y, ZZ, ZZZ, _y2, _zzz2) := for_loop 128 state condition next body in
 

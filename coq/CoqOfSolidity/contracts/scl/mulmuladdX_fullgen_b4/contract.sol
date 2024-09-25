@@ -262,7 +262,7 @@ contract Contract {
                 //(X,)=ec_Normalize(X,Y,ZZ,ZZZ);
 
                 mstore(0x40, _free)
-                 let T := mload(0x40)
+                let T := mload(0x40)
                 mstore(add(T, 0x60), ZZ)
                 //(X,Y)=ecZZ_SetAff(X,Y,zz, zzz);
                 //T[0] = inverseModp_Hard(T[0], p); //1/zzz, inline modular inversion using Memmpile:

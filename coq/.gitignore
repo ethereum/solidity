@@ -1,4 +1,5 @@
 .lia.cache
+.nia.cache
 .CoqMakefile.d
 _CoqProject
 CoqMakefile
