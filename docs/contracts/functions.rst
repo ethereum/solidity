@@ -267,7 +267,7 @@ This behavior is also in line with the ``STATICCALL`` opcode.
 
 .. note::
   Prior to version 0.4.17 the compiler did not enforce that ``pure`` is not reading the state.
-  It is a compile-time type check, which can be circumvented doing invalid explicit conversions
+  It is a compile-time type check, which can be circumvented by doing invalid explicit conversions
   between contract types, because the compiler can verify that the type of the contract does
   not do state-changing operations, but it cannot check that the contract that will be called
   at runtime is actually of that type.
@@ -383,7 +383,7 @@ operations as long as there is enough gas passed on to it.
 .. warning::
     A ``payable`` fallback function is also executed for
     plain Ether transfers, if no :ref:`receive Ether function <receive-ether-function>`
-    is present. It is recommended to always define a receive Ether
+    is present. It is recommended to always define a received Ether
     function as well, if you define a payable fallback function
     to distinguish Ether transfers from interface confusions.
 
