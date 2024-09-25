@@ -271,7 +271,7 @@ void IRGeneratorForStatements::initializeStateVar(VariableDeclaration const& _va
 		solAssert(!_varDecl.isConstant());
 		if (!_varDecl.value())
 			return;
-		solAssert(_varDecl.referenceLocation() != VariableDeclaration::Location::Transient, "State variables cannot be initialized in place.");
+		solAssert(_varDecl.referenceLocation() != VariableDeclaration::Location::Transient, "Transient storage state variables cannot be initialized in place.");
 
 		_varDecl.value()->accept(*this);
 
@@ -2569,6 +2569,8 @@ void IRGeneratorForStatements::handleVariableReference(
 			}
 		});
 	else if (m_context.isStateVariable(_variable))
+	{
+		solAssert(_variable.referenceLocation() == VariableDeclaration::Location::Unspecified, "Must have storage location.");
 		setLValue(_referencingExpression, IRLValue{
 			*_variable.annotation().type,
 			IRLValue::Storage{
@@ -2576,6 +2578,7 @@ void IRGeneratorForStatements::handleVariableReference(
 				m_context.storageLocationOfStateVariable(_variable).second
 			}
 		});
+	}
 	else
 		solAssert(false, "Invalid variable kind.");
 }

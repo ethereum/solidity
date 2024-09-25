@@ -35,7 +35,7 @@ contract Test {
         a.callSetValue(address(b), 8);
         return (a.value(), b.value());
     }
-        function testStatic() view public returns (bool) {
+    function testStatic() view public returns (bool) {
         return a.staticSetValue(address(b), 0);
     }
 }

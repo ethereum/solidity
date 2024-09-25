@@ -6,12 +6,13 @@ contract C {
         _;
     }
 
-    function f() public m(x) returns (uint16 x) {
+    function f() public m(x) returns (uint16) {
         x *= 10;
+        return x;
     }
 }
 
 // ====
 // EVMVersion: >=cancun
 // ----
-// f() -> 0
+// f() -> 100

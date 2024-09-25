@@ -127,7 +127,7 @@ object \"C_54\" {
             ret := value
         }
 
-        function update_storage_value_offset_0t_int256_to_t_int256(slot, value_0) {
+        function update_storage_value_offset_0_t_int256_to_t_int256(slot, value_0) {
             let convertedValue_0 := convert_t_int256_to_t_int256(value_0)
             sstore(slot, update_byte_slice_32_shift_0(sload(slot), prepare_store_t_int256(convertedValue_0)))
         }
@@ -147,7 +147,7 @@ object \"C_54\" {
             let _4 := var__init_12
             let expr_16 := _4
             /// @src 0:231:247  \"stateVar = _init\"
-            update_storage_value_offset_0t_int256_to_t_int256(0x00, expr_16)
+            update_storage_value_offset_0_t_int256_to_t_int256(0x00, expr_16)
             let expr_17 := expr_16
 
         }
@@ -398,12 +398,12 @@ object \"C_54\" {
 
             }
 
-            function extract_from_storage_value_offset_0t_int256(slot_value) -> value {
+            function extract_from_storage_value_offset_0_t_int256(slot_value) -> value {
                 value := cleanup_from_storage_t_int256(shift_right_0_unsigned(slot_value))
             }
 
             function read_from_storage_split_offset_0_t_int256(slot) -> value {
-                value := extract_from_storage_value_offset_0t_int256(sload(slot))
+                value := extract_from_storage_value_offset_0_t_int256(sload(slot))
 
             }
 
@@ -435,7 +435,7 @@ object \"C_54\" {
                 ret := value
             }
 
-            function update_storage_value_offset_0t_int256_to_t_int256(slot, value_0) {
+            function update_storage_value_offset_0_t_int256_to_t_int256(slot, value_0) {
                 let convertedValue_0 := convert_t_int256_to_t_int256(value_0)
                 sstore(slot, update_byte_slice_32_shift_0(sload(slot), prepare_store_t_int256(convertedValue_0)))
             }
@@ -448,7 +448,7 @@ object \"C_54\" {
                 /// @src 0:380:390  \"stateVar++\"
                 let _7 := read_from_storage_split_offset_0_t_int256(0x00)
                 let _6 := increment_t_int256(_7)
-                update_storage_value_offset_0t_int256_to_t_int256(0x00, _6)
+                update_storage_value_offset_0_t_int256_to_t_int256(0x00, _6)
                 let expr_33 := _7
                 /// @src 0:400:401  \"_\"
                 _5 := fun_f2_53_inner(var__42)
@@ -882,12 +882,12 @@ object \"D_72\" {
             cleaned := value
         }
 
-        function extract_from_storage_value_offset_0t_int256(slot_value) -> value {
+        function extract_from_storage_value_offset_0_t_int256(slot_value) -> value {
             value := cleanup_from_storage_t_int256(shift_right_0_unsigned(slot_value))
         }
 
         function read_from_storage_split_offset_0_t_int256(slot) -> value {
-            value := extract_from_storage_value_offset_0t_int256(sload(slot))
+            value := extract_from_storage_value_offset_0_t_int256(sload(slot))
 
         }
 
@@ -933,7 +933,7 @@ object \"D_72\" {
             ret := value
         }
 
-        function update_storage_value_offset_0t_int256_to_t_int256(slot, value_0) {
+        function update_storage_value_offset_0_t_int256_to_t_int256(slot, value_0) {
             let convertedValue_0 := convert_t_int256_to_t_int256(value_0)
             sstore(slot, update_byte_slice_32_shift_0(sload(slot), prepare_store_t_int256(convertedValue_0)))
         }
@@ -955,7 +955,7 @@ object \"D_72\" {
             let _5 := read_from_storage_split_offset_0_t_int256(0x00)
             let expr_68 := checked_add_t_int256(_5, expr_67)
 
-            update_storage_value_offset_0t_int256_to_t_int256(0x00, expr_68)
+            update_storage_value_offset_0_t_int256_to_t_int256(0x00, expr_68)
 
         }
         /// @src 1:91:181  \"contract D is C(3)...\"
@@ -983,7 +983,7 @@ object \"D_72\" {
             let _7 := var__init_12
             let expr_16 := _7
             /// @src 0:231:247  \"stateVar = _init\"
-            update_storage_value_offset_0t_int256_to_t_int256(0x00, expr_16)
+            update_storage_value_offset_0_t_int256_to_t_int256(0x00, expr_16)
             let expr_17 := expr_16
 
         }
@@ -1234,12 +1234,12 @@ object \"D_72\" {
 
             }
 
-            function extract_from_storage_value_offset_0t_int256(slot_value) -> value {
+            function extract_from_storage_value_offset_0_t_int256(slot_value) -> value {
                 value := cleanup_from_storage_t_int256(shift_right_0_unsigned(slot_value))
             }
 
             function read_from_storage_split_offset_0_t_int256(slot) -> value {
-                value := extract_from_storage_value_offset_0t_int256(sload(slot))
+                value := extract_from_storage_value_offset_0_t_int256(sload(slot))
 
             }
 
@@ -1271,7 +1271,7 @@ object \"D_72\" {
                 ret := value
             }
 
-            function update_storage_value_offset_0t_int256_to_t_int256(slot, value_0) {
+            function update_storage_value_offset_0_t_int256_to_t_int256(slot, value_0) {
                 let convertedValue_0 := convert_t_int256_to_t_int256(value_0)
                 sstore(slot, update_byte_slice_32_shift_0(sload(slot), prepare_store_t_int256(convertedValue_0)))
             }
@@ -1284,7 +1284,7 @@ object \"D_72\" {
                 /// @src 0:380:390  \"stateVar++\"
                 let _7 := read_from_storage_split_offset_0_t_int256(0x00)
                 let _6 := increment_t_int256(_7)
-                update_storage_value_offset_0t_int256_to_t_int256(0x00, _6)
+                update_storage_value_offset_0_t_int256_to_t_int256(0x00, _6)
                 let expr_33 := _7
                 /// @src 0:400:401  \"_\"
                 _5 := fun_f2_53_inner(var__42)

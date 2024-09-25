@@ -1,16 +1,18 @@
 contract C {
-    uint256 transient x;
+    uint128 transient x;
+    uint128 y;
 
     constructor() {
         x = 100;
+        y = x;
     }
 
-    function f() external view returns (uint256 x) {
-        x;
+    function f() external view returns (uint128) {
+        return y;
     }
 }
 
 // ====
 // EVMVersion: >=cancun
 // ----
-// f() -> 0
+// f() -> 100

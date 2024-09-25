@@ -2923,7 +2923,7 @@ std::string YulUtilFunctions::updateStorageValueFunction(
 		"update_" +
 		(_location == VariableDeclaration::Location::Transient ? "transient_"s : "") +
 		"storage_value_" +
-		(_offset.has_value() ? ("offset_" + std::to_string(*_offset)) : "") +
+		(_offset.has_value() ? ("offset_" + std::to_string(*_offset)) + "_" : "") +
 		_fromType.identifier() +
 		"_to_" +
 		_toType.identifier();
@@ -3106,7 +3106,7 @@ std::string YulUtilFunctions::extractFromStorageValueDynamic(Type const& _type)
 
 std::string YulUtilFunctions::extractFromStorageValue(Type const& _type, size_t _offset)
 {
-	std::string functionName = "extract_from_storage_value_offset_" + std::to_string(_offset) + _type.identifier();
+	std::string functionName = "extract_from_storage_value_offset_" + std::to_string(_offset) + "_" + _type.identifier();
 	return m_functionCollector.createFunction(functionName, [&] {
 		return Whiskers(R"(
 			function <functionName>(slot_value) -> value {

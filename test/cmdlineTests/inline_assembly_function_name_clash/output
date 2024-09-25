@@ -128,7 +128,7 @@
                     "parameterSlots": 2,
                     "returnSlots": 1
                 },
-                "update_storage_value_offsett_uint256_to_uint256": {
+                "update_storage_value_offset_uint256_to_uint256": {
                     "entryPoint": 307,
                     "parameterSlots": 2,
                     "returnSlots": 0
