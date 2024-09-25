@@ -216,7 +216,15 @@ void YulStack::reparse()
 	// are not stored in the AST and the other info that is (location, AST ID, etc) will still be present.
 	std::string source = print(nullptr /* _soliditySourceProvider */);
 
-	YulStack cleanStack(m_evmVersion, m_eofVersion, m_language, m_optimiserSettings, m_debugInfoSelection, m_objectOptimizer);
+	YulStack cleanStack(
+		m_evmVersion,
+		m_eofVersion,
+		m_language,
+		m_optimiserSettings,
+		m_debugInfoSelection,
+		m_soliditySourceProvider,
+		m_objectOptimizer
+	);
 	bool reanalysisSuccessful = cleanStack.parseAndAnalyze(m_charStream->name(), source);
 	yulAssert(
 		reanalysisSuccessful,
@@ -348,16 +356,14 @@ YulStack::assembleEVMWithDeployed(std::optional<std::string_view> _deployName)
 	return {std::make_shared<evmasm::Assembly>(assembly), {}};
 }
 
-std::string YulStack::print(
-	CharStreamProvider const* _soliditySourceProvider
-) const
+std::string YulStack::print() const
 {
 	yulAssert(m_stackState >= Parsed);
 	yulAssert(m_parserResult, "");
 	yulAssert(m_parserResult->hasCode(), "");
 	return m_parserResult->toString(
 		m_debugInfoSelection,
-		_soliditySourceProvider
+		m_soliditySourceProvider
 	) + "\n";
 }
 

@@ -1522,6 +1522,7 @@ void CompilerStack::generateIR(ContractDefinition const& _contract, bool _unopti
 		YulStack::Language::StrictAssembly,
 		m_optimiserSettings,
 		m_debugInfoSelection,
+		this, // _soliditySourceProvider
 		m_objectOptimizer
 	);
 	bool yulAnalysisSuccessful = stack.parseAndAnalyze("", compiledContract.yulIR);
@@ -1537,7 +1538,7 @@ void CompilerStack::generateIR(ContractDefinition const& _contract, bool _unopti
 	if (!_unoptimizedOnly)
 	{
 		stack.optimize();
-		compiledContract.yulIROptimized = stack.print(this);
+		compiledContract.yulIROptimized = stack.print();
 		compiledContract.yulIROptimizedAst = stack.astJson();
 	}
 }
@@ -1561,6 +1562,7 @@ void CompilerStack::generateEVMFromIR(ContractDefinition const& _contract)
 		yul::YulStack::Language::StrictAssembly,
 		m_optimiserSettings,
 		m_debugInfoSelection,
+		this, // _soliditySourceProvider
 		m_objectOptimizer
 	);
 	bool analysisSuccessful = stack.parseAndAnalyze("", compiledContract.yulIROptimized);
