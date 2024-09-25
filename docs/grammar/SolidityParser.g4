@@ -482,7 +482,7 @@ forStatement: For LParen (simpleStatement | Semicolon) (expressionStatement | Se
 whileStatement: While LParen expression RParen statement;
 doWhileStatement: Do statement While LParen expression RParen Semicolon;
 /**
- * A continue statement. Only allowed inside for, while or do-while loops.
+ * A continued statement. Only allowed inside for, while or do-while loops.
  */
 continueStatement: Continue Semicolon;
 /**
