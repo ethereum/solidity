@@ -47,6 +47,12 @@ using AssemblyPointer = std::shared_ptr<Assembly>;
 
 class Assembly
 {
+	using TagRefs = std::map<size_t, std::pair<size_t, size_t>>;
+	using DataRefs = std::multimap<util::h256, unsigned>;
+	using SubAssemblyRefs = std::multimap<size_t, size_t>;
+	using ProgramSizeRefs = std::vector<unsigned>;
+	using LinkRef = std::pair<size_t, std::string>;
+
 public:
 	Assembly(langutil::EVMVersion _evmVersion, bool _creation, std::optional<uint8_t> _eofVersion, std::string _name):
 		m_evmVersion(_evmVersion),
@@ -234,6 +240,14 @@ private:
 
 	/// Returns map from m_subs to an index of subcontainer in the final EOF bytecode
 	std::map<uint16_t, uint16_t> findReferencedContainers() const;
+
+	/// Assemble bytecode for AssemblyItem type.
+	[[nodiscard]] bytes assembleOperation(AssemblyItem const& _item) const;
+	[[nodiscard]] bytes assemblePush(AssemblyItem const& _item) const;
+	[[nodiscard]] std::pair<bytes, Assembly::LinkRef> assemblePushLibraryAddress(AssemblyItem const& _item, size_t _pos) const;
+	[[nodiscard]] bytes assembleVerbatimBytecode(AssemblyItem const& item) const;
+	[[nodiscard]] bytes assemblePushDeployTimeAddress() const;
+	[[nodiscard]] bytes assembleTag(AssemblyItem const& _item, size_t _pos, bool _addJumpDest) const;
 
 protected:
 	/// 0 is reserved for exception

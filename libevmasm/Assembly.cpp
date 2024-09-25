@@ -926,19 +926,19 @@ std::tuple<bytes, std::vector<size_t>, size_t> Assembly::createEOFHeader(std::se
 
 	retBytecode.push_back(0xef);
 	retBytecode.push_back(0x00);
-	retBytecode.push_back(0x01);										// version 1
+	retBytecode.push_back(0x01);                                        // version 1
 
-	retBytecode.push_back(0x01);										// kind=type
-	appendBigEndianUint16(retBytecode, m_codeSections.size() * 4u);		// length of type section
+	retBytecode.push_back(0x01);                                        // kind=type
+	appendBigEndianUint16(retBytecode, m_codeSections.size() * 4u);     // length of type section
 
-	retBytecode.push_back(0x02);										// kind=code
-	appendBigEndianUint16(retBytecode, m_codeSections.size());			// placeholder for number of code sections
+	retBytecode.push_back(0x02);                                        // kind=code
+	appendBigEndianUint16(retBytecode, m_codeSections.size());          // placeholder for number of code sections
 
 	for (auto const& codeSection: m_codeSections)
 	{
 		(void) codeSection;
 		codeSectionSizeOffsets.emplace_back(retBytecode.size());
-		appendBigEndianUint16(retBytecode, 0u);							// placeholder for length of code
+		appendBigEndianUint16(retBytecode, 0u);                         // placeholder for length of code
 	}
 
 	if (!_referencedSubIds.empty())
@@ -950,17 +950,18 @@ std::tuple<bytes, std::vector<size_t>, size_t> Assembly::createEOFHeader(std::se
 			appendBigEndianUint16(retBytecode, m_subs[subId]->assemble().bytecode.size());
 	}
 
-	retBytecode.push_back(0x04);										// kind=data
+	retBytecode.push_back(0x04);                                        // kind=data
 	dataSectionSizeOffset = retBytecode.size();
-	appendBigEndianUint16(retBytecode, 0u);								// length of data
+	appendBigEndianUint16(retBytecode, 0u);                             // length of data
 
-	retBytecode.push_back(0x00);										// terminator
+	retBytecode.push_back(0x00);                                        // terminator
 
 	for (auto const& codeSection: m_codeSections)
 	{
 		retBytecode.push_back(codeSection.inputs);
 		retBytecode.push_back(codeSection.outputs);
-		appendBigEndianUint16(retBytecode, 0xFFFFu);	// TODO: Add stack height calculation
+		// TODO: Add stack height calculation
+		appendBigEndianUint16(retBytecode, 0xFFFFu);
 	}
 
 	return {retBytecode, codeSectionSizeOffsets, dataSectionSizeOffset};
@@ -985,6 +986,65 @@ LinkerObject const& Assembly::assemble() const
 		return assembleEOF();
 }
 
+[[nodiscard]] bytes Assembly::assembleOperation(AssemblyItem const& _item) const
+{
+	// solidity::evmasm::Instructions underlying type is uint8_t
+	// TODO: Change to std::to_underlying since C++23
+	return {static_cast<uint8_t>(_item.instruction())};
+}
+
+[[nodiscard]] bytes Assembly::assemblePush(AssemblyItem const& _item) const
+{
+	bytes ret;
+	unsigned pushValueSize = numberEncodingSize(_item.data());
+	if (pushValueSize == 0 && !m_evmVersion.hasPush0())
+		pushValueSize = 1;
+
+	// solidity::evmasm::Instructions underlying type is uint8_t
+	// TODO: Change to std::to_underlying since C++23
+	ret.push_back(static_cast<uint8_t>(pushInstruction(pushValueSize)));
+	if (pushValueSize > 0)
+		appendBigEndian(ret, pushValueSize, _item.data());
+
+	return ret;
+}
+
+[[nodiscard]] std::pair<bytes, Assembly::LinkRef> Assembly::assemblePushLibraryAddress(AssemblyItem const& _item, size_t _pos) const
+{
+	return {
+		// solidity::evmasm::Instructions underlying type is uint8_t
+		// TODO: Change to std::to_underlying since C++23
+		bytes(1, static_cast<uint8_t>(Instruction::PUSH20)) + bytes(20),
+		{_pos + 1, m_libraries.at(_item.data())}
+	};
+}
+
+[[nodiscard]] bytes Assembly::assembleVerbatimBytecode(AssemblyItem const& item) const
+{
+	return item.verbatimData();
+}
+
+[[nodiscard]] bytes Assembly::assemblePushDeployTimeAddress() const
+{
+	// solidity::evmasm::Instructions underlying type is uint8_t
+	// TODO: Change to std::to_underlying since C++23
+	return bytes(1, static_cast<uint8_t>(Instruction::PUSH20)) + bytes(20);
+}
+
+[[nodiscard]] bytes Assembly::assembleTag(AssemblyItem const& _item, size_t _pos, bool _addJumpDest) const
+{
+	solRequire(_item.data() != 0, AssemblyException, "Invalid tag position.");
+	solRequire(_item.splitForeignPushTag().first == std::numeric_limits<size_t>::max(), AssemblyException, "Foreign tag.");
+	solRequire(_pos < 0xffffffffL, AssemblyException, "Tag too large.");
+	size_t tagId = static_cast<size_t>(_item.data());
+	solRequire(m_tagPositionsInBytecode[tagId] == std::numeric_limits<size_t>::max(), AssemblyException, "Duplicate tag position.");
+	m_tagPositionsInBytecode[tagId] = _pos;
+
+	// solidity::evmasm::Instructions underlying type is uint8_t
+	// TODO: Change to std::to_underlying since C++23
+	return _addJumpDest ? bytes(1, static_cast<uint8_t>(Instruction::JUMPDEST)) : bytes();
+}
+
 LinkerObject const& Assembly::assembleLegacy() const
 {
 	solAssert(!m_eofVersion.has_value());
@@ -998,7 +1058,7 @@ LinkerObject const& Assembly::assembleLegacy() const
 	LinkerObject& ret = m_assembledObject;
 
 	size_t subTagSize = 1;
-	std::map<u256, std::pair<std::string, std::vector<size_t>>> immutableReferencesBySub;
+	std::map<u256, LinkerObject::ImmutableRefs> immutableReferencesBySub;
 	for (auto const& sub: m_subs)
 	{
 		auto const& linkerObject = sub->assemble();
@@ -1039,10 +1099,6 @@ LinkerObject const& Assembly::assembleLegacy() const
 
 	unsigned bytesRequiredForCode = codeSize(static_cast<unsigned>(subTagSize));
 	m_tagPositionsInBytecode = std::vector<size_t>(m_usedTags, std::numeric_limits<size_t>::max());
-	std::map<size_t, std::pair<size_t, size_t>> tagRef;
-	std::multimap<h256, unsigned> dataRef;
-	std::multimap<size_t, size_t> subRef;
-	std::vector<unsigned> sizeRef; ///< Pointers to code locations where the size of the program is inserted
 	unsigned bytesPerTag = numberEncodingSize(bytesRequiredForCode);
 	// Adjust bytesPerTag for references to sub assemblies.
 	for (AssemblyItem const& item: items)
@@ -1056,15 +1112,20 @@ LinkerObject const& Assembly::assembleLegacy() const
 			assertThrow(subTagPosition != std::numeric_limits<size_t>::max(), AssemblyException, "Reference to tag without position.");
 			bytesPerTag = std::max(bytesPerTag, numberEncodingSize(subTagPosition));
 		}
-	uint8_t tagPush = static_cast<uint8_t>(pushInstruction(bytesPerTag));
 
 	unsigned bytesRequiredIncludingData = bytesRequiredForCode + 1 + static_cast<unsigned>(m_auxiliaryData.size());
 	for (auto const& sub: m_subs)
 		bytesRequiredIncludingData += static_cast<unsigned>(sub->assemble().bytecode.size());
 
 	unsigned bytesPerDataRef = numberEncodingSize(bytesRequiredIncludingData);
-	uint8_t dataRefPush = static_cast<uint8_t>(pushInstruction(bytesPerDataRef));
 	ret.bytecode.reserve(bytesRequiredIncludingData);
+
+	TagRefs tagRefs;
+	DataRefs dataRefs;
+	SubAssemblyRefs subRefs;
+	ProgramSizeRefs sizeRefs;
+	uint8_t tagPush = static_cast<uint8_t>(pushInstruction(bytesPerTag));
+	uint8_t dataRefPush = static_cast<uint8_t>(pushInstruction(bytesPerDataRef));
 
 	for (AssemblyItem const& item: items)
 	{
@@ -1075,40 +1136,27 @@ LinkerObject const& Assembly::assembleLegacy() const
 		switch (item.type())
 		{
 		case Operation:
-			ret.bytecode.push_back(static_cast<uint8_t>(item.instruction()));
+			ret.bytecode += assembleOperation(item);
 			break;
 		case Push:
-		{
-			unsigned b = numberEncodingSize(item.data());
-			if (b == 0 && !m_evmVersion.hasPush0())
-			{
-				b = 1;
-			}
-			ret.bytecode.push_back(static_cast<uint8_t>(pushInstruction(b)));
-			if (b > 0)
-			{
-				ret.bytecode.resize(ret.bytecode.size() + b);
-				bytesRef byr(&ret.bytecode.back() + 1 - b, b);
-				toBigEndian(item.data(), byr);
-			}
+			ret.bytecode += assemblePush(item);
 			break;
-		}
 		case PushTag:
 		{
 			ret.bytecode.push_back(tagPush);
-			tagRef[ret.bytecode.size()] = item.splitForeignPushTag();
+			tagRefs[ret.bytecode.size()] = item.splitForeignPushTag();
 			ret.bytecode.resize(ret.bytecode.size() + bytesPerTag);
 			break;
 		}
 		case PushData:
 			ret.bytecode.push_back(dataRefPush);
-			dataRef.insert(std::make_pair(h256(item.data()), ret.bytecode.size()));
+			dataRefs.insert(std::make_pair(h256(item.data()), ret.bytecode.size()));
 			ret.bytecode.resize(ret.bytecode.size() + bytesPerDataRef);
 			break;
 		case PushSub:
 			assertThrow(item.data() <= std::numeric_limits<size_t>::max(), AssemblyException, "");
 			ret.bytecode.push_back(dataRefPush);
-			subRef.insert(std::make_pair(static_cast<size_t>(item.data()), ret.bytecode.size()));
+			subRefs.insert(std::make_pair(static_cast<size_t>(item.data()), ret.bytecode.size()));
 			ret.bytecode.resize(ret.bytecode.size() + bytesPerDataRef);
 			break;
 		case PushSubSize:
@@ -1126,15 +1174,17 @@ LinkerObject const& Assembly::assembleLegacy() const
 		case PushProgramSize:
 		{
 			ret.bytecode.push_back(dataRefPush);
-			sizeRef.push_back(static_cast<unsigned>(ret.bytecode.size()));
+			sizeRefs.push_back(static_cast<unsigned>(ret.bytecode.size()));
 			ret.bytecode.resize(ret.bytecode.size() + bytesPerDataRef);
 			break;
 		}
 		case PushLibraryAddress:
-			ret.bytecode.push_back(static_cast<uint8_t>(Instruction::PUSH20));
-			ret.linkReferences[ret.bytecode.size()] = m_libraries.at(item.data());
-			ret.bytecode.resize(ret.bytecode.size() + 20);
+		{
+			auto const [bytecode, linkRef] = assemblePushLibraryAddress(item, ret.bytecode.size());
+			ret.bytecode += bytecode;
+			ret.linkReferences.insert(linkRef);
 			break;
+		}
 		case PushImmutable:
 			ret.bytecode.push_back(static_cast<uint8_t>(Instruction::PUSH32));
 			// Maps keccak back to the "identifier" std::string of that immutable.
@@ -1145,7 +1195,7 @@ LinkerObject const& Assembly::assembleLegacy() const
 			ret.bytecode.resize(ret.bytecode.size() + 32);
 			break;
 		case VerbatimBytecode:
-			ret.bytecode += item.verbatimData();
+			ret.bytecode += assembleVerbatimBytecode(item);
 			break;
 		case AssignImmutable:
 		{
@@ -1174,20 +1224,11 @@ LinkerObject const& Assembly::assembleLegacy() const
 			break;
 		}
 		case PushDeployTimeAddress:
-			ret.bytecode.push_back(static_cast<uint8_t>(Instruction::PUSH20));
-			ret.bytecode.resize(ret.bytecode.size() + 20);
+			ret.bytecode += assemblePushDeployTimeAddress();
 			break;
 		case Tag:
-		{
-			assertThrow(item.data() != 0, AssemblyException, "Invalid tag position.");
-			assertThrow(item.splitForeignPushTag().first == std::numeric_limits<size_t>::max(), AssemblyException, "Foreign tag.");
-			size_t tagId = static_cast<size_t>(item.data());
-			assertThrow(ret.bytecode.size() < 0xffffffffL, AssemblyException, "Tag too large.");
-			assertThrow(m_tagPositionsInBytecode[tagId] == std::numeric_limits<size_t>::max(), AssemblyException, "Duplicate tag position.");
-			m_tagPositionsInBytecode[tagId] = ret.bytecode.size();
-			ret.bytecode.push_back(static_cast<uint8_t>(Instruction::JUMPDEST));
+			ret.bytecode += assembleTag(item, ret.bytecode.size(), true);
 			break;
-		}
 		default:
 			assertThrow(false, InvalidOpcode, "Unexpected opcode while assembling.");
 		}
@@ -1206,7 +1247,7 @@ LinkerObject const& Assembly::assembleLegacy() const
 		ret.bytecode.push_back(static_cast<uint8_t>(Instruction::INVALID));
 
 	std::map<LinkerObject, size_t> subAssemblyOffsets;
-	for (auto const& [subIdPath, bytecodeOffset]: subRef)
+	for (auto const& [subIdPath, bytecodeOffset]: subRefs)
 	{
 		LinkerObject subObject = subAssemblyById(subIdPath)->assemble();
 		bytesRef r(ret.bytecode.data() + bytecodeOffset, bytesPerDataRef);
@@ -1224,7 +1265,7 @@ LinkerObject const& Assembly::assembleLegacy() const
 		for (auto const& ref: subObject.linkReferences)
 			ret.linkReferences[ref.first + subAssemblyOffsets[subObject]] = ref.second;
 	}
-	for (auto const& i: tagRef)
+	for (auto const& i: tagRefs)
 	{
 		size_t subId;
 		size_t tagId;
@@ -1262,7 +1303,7 @@ LinkerObject const& Assembly::assembleLegacy() const
 
 	for (auto const& dataItem: m_data)
 	{
-		auto references = dataRef.equal_range(dataItem.first);
+		auto references = dataRefs.equal_range(dataItem.first);
 		if (references.first == references.second)
 			continue;
 		for (auto ref = references.first; ref != references.second; ++ref)
@@ -1275,7 +1316,7 @@ LinkerObject const& Assembly::assembleLegacy() const
 
 	ret.bytecode += m_auxiliaryData;
 
-	for (unsigned pos: sizeRef)
+	for (unsigned pos: sizeRefs)
 	{
 		bytesRef r(ret.bytecode.data() + pos, bytesPerDataRef);
 		toBigEndian(ret.bytecode.size(), r);
@@ -1321,15 +1362,14 @@ LinkerObject const& Assembly::assembleEOF() const
 	);
 
 	// Insert EOF1 header.
-	auto [bytecode, codeSectionSizeOffsets, dataSectionSizeOffset] = createEOFHeader(referencedSubIds);
-	ret.bytecode = bytecode;
+	auto [headerBytecode, codeSectionSizeOffsets, dataSectionSizeOffset] = createEOFHeader(referencedSubIds);
+	ret.bytecode = headerBytecode;
 
 	m_tagPositionsInBytecode = std::vector<size_t>(m_usedTags, std::numeric_limits<size_t>::max());
 
 	for (auto&& [codeSectionIndex, codeSection]: m_codeSections | ranges::views::enumerate)
 	{
 		auto const sectionStart = ret.bytecode.size();
-
 		for (AssemblyItem const& item: codeSection.items)
 		{
 			// store position of the invalid jump destination
@@ -1338,54 +1378,34 @@ LinkerObject const& Assembly::assembleEOF() const
 
 			switch (item.type())
 			{
-				case Operation:
-					ret.bytecode.push_back(static_cast<uint8_t>(item.instruction()));
-					break;
-				case Push:
-				{
-					unsigned pushValueSize = numberEncodingSize(item.data());
-					if (pushValueSize == 0 && !m_evmVersion.hasPush0())
-					{
-						pushValueSize = 1;
-					}
-					ret.bytecode.push_back(static_cast<uint8_t>(pushInstruction(pushValueSize)));
-					if (pushValueSize > 0)
-					{
-						ret.bytecode.resize(ret.bytecode.size() + pushValueSize);
-						bytesRef pushValueBytecodeRef(&ret.bytecode.back() + 1 - pushValueSize, pushValueSize);
-						toBigEndian(item.data(), pushValueBytecodeRef);
-					}
-					break;
-				}
-				case PushLibraryAddress:
-					ret.bytecode.push_back(static_cast<uint8_t>(Instruction::PUSH20));
-					ret.linkReferences[ret.bytecode.size()] = m_libraries.at(item.data());
-					ret.bytecode.resize(ret.bytecode.size() + 20);
-					break;
-				case VerbatimBytecode:
-					ret.bytecode += item.verbatimData();
-					break;
-				case PushDeployTimeAddress:
-					ret.bytecode.push_back(static_cast<uint8_t>(Instruction::PUSH20));
-					ret.bytecode.resize(ret.bytecode.size() + 20);
-					break;
-				case Tag:
-				{
-					solRequire(item.data() != 0, AssemblyException, "Invalid tag position.");
-					solRequire(item.splitForeignPushTag().first == std::numeric_limits<size_t>::max(), AssemblyException, "Foreign tag.");
-					size_t tagId = static_cast<size_t>(item.data());
-					solRequire(ret.bytecode.size() < 0xffffffffL, AssemblyException, "Tag too large.");
-					solRequire(m_tagPositionsInBytecode[tagId] == std::numeric_limits<size_t>::max(), AssemblyException, "Duplicate tag position.");
-					m_tagPositionsInBytecode[tagId] = ret.bytecode.size();
-					break;
-				}
-				default:
-					solRequire(false, InvalidOpcode, "Unexpected opcode while assembling.");
+			case Operation:
+				ret.bytecode += assembleOperation(item);
+				break;
+			case Push:
+				ret.bytecode += assemblePush(item);
+				break;
+			case PushLibraryAddress:
+			{
+				auto const [pushLibraryAddressBytecode, linkRef] = assemblePushLibraryAddress(item, ret.bytecode.size());
+				ret.bytecode += pushLibraryAddressBytecode;
+				ret.linkReferences.insert(linkRef);
+				break;
+			}
+			case VerbatimBytecode:
+				ret.bytecode += assembleVerbatimBytecode(item);
+				break;
+			case PushDeployTimeAddress:
+				ret.bytecode += assemblePushDeployTimeAddress();
+				break;
+			case Tag:
+				ret.bytecode += assembleTag(item, ret.bytecode.size(), false);
+				break;
+			default:
+				solThrow(InvalidOpcode, "Unexpected opcode while assembling.");
 			}
 		}
 
-		auto sectionEnd = ret.bytecode.size();
-		setBigEndianUint16(ret.bytecode, codeSectionSizeOffsets[codeSectionIndex], sectionEnd - sectionStart);
+		setBigEndianUint16(ret.bytecode, codeSectionSizeOffsets[codeSectionIndex], ret.bytecode.size() - sectionStart);
 	}
 
 	for (auto i: referencedSubIds)
