@@ -50,6 +50,8 @@ private:
 	}
 	bool consumeBlock(Block const& _block);
 	bool consumeStatement(Statement const& _statement);
+	bool consumeConstantForLoop(ForLoop const& _loop, bool _conditionIsZero);
+	bool consumeDynamicForLoop(ForLoop const& _loop);
 	SSACFG::BasicBlock const& currentBlock() const
 	{
 		return m_context.cfg.block(m_currentBlock);
