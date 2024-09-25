@@ -63,6 +63,11 @@ void SSACFGValidator::consolidateVariables(VariableMapping const& _variables, st
 		}
 	}
 }
+void SSACFGValidator::advanceToBlock(SSACFG::BlockId _target)
+{
+	m_currentBlock = _target;
+	m_currentOperation = 0;
+}
 
 bool SSACFGValidator::consumeStatement(Statement const& _statement)
 {
@@ -113,8 +118,7 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 			yulAssert(functionGraph);
 			Context nestedContext{m_context.analysisInfo, m_context.dialect, m_context.controlFlow, *functionGraph};
 			SSACFGValidator nestedValidator(nestedContext);
-			nestedValidator.m_currentBlock = functionGraph->entry;
-			nestedValidator.m_currentOperation = 0;
+			nestedValidator.advanceToBlock(functionGraph->entry);
 			yulAssert(_function.parameters.size() == functionGraph->arguments.size());
 			yulAssert(_function.returnVariables.size() == functionGraph->returns.size());
 			nestedValidator.m_currentVariableValues = functionGraph->arguments
@@ -134,8 +138,7 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 				yulAssert(exit.condition == *cond);
 				auto zeroBranchVariableValues = applyPhis(m_currentBlock, exit.zero);
 
-				m_currentBlock = exit.nonZero;
-				m_currentOperation = 0;
+				advanceToBlock(exit.nonZero);
 				if (consumeBlock(_if.body))
 				{
 					auto const& jumpBack = expectUnconditionalJump();
@@ -144,8 +147,7 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 					consolidateVariables(zeroBranchVariableValues, std::vector{nonZeroBranchVariableValues});
 				}
 
-				m_currentBlock = exit.zero;
-				m_currentOperation = 0;
+				advanceToBlock(exit.zero);
 				m_currentVariableValues = zeroBranchVariableValues;
 				return true;
 			}
@@ -178,8 +180,7 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 					exit = &expectConditionalJump();
 					yulAssert(exit->condition == ghostEq.outputs[0]);
 					auto zeroBranchVariableValues = applyPhis(m_currentBlock, exit->zero);
-					m_currentBlock = exit->nonZero;
-					m_currentOperation = 0;
+					advanceToBlock(exit->nonZero);
 					if (consumeBlock(switchCase.body))
 					{
 						auto const& jumpBack = expectUnconditionalJump();
@@ -188,8 +189,7 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 						parentsOfJumpBackTarget.push_back(applyPhis(m_currentBlock, jumpBack.target));
 					}
 					m_currentVariableValues = zeroBranchVariableValues;
-					m_currentBlock = exit->zero;
-					m_currentOperation = 0;
+					advanceToBlock(exit->zero);
 				}
 
 				// no default case, we're done
@@ -212,8 +212,7 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 
 				if (!afterSwitch)
 					return false;
-				m_currentBlock = *afterSwitch;
-				m_currentOperation = 0;
+				advanceToBlock(*afterSwitch);
 				return true;
 			}
 			return false;
@@ -227,8 +226,7 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 			auto const& entryJump = expectUnconditionalJump();
 
 			auto entryVariableValues = applyPhis(m_currentBlock, entryJump.target);
-			m_currentBlock = entryJump.target;
-			m_currentOperation = 0;
+			advanceToBlock(entryJump.target);
 			m_currentVariableValues = entryVariableValues;
 
 			if (auto cond = consumeUnaryExpression(*_loop.condition))
@@ -245,8 +243,7 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 						std::nullopt
 				});
 				std::swap(m_currentLoopInfo, loopInfo);
-				m_currentBlock = exit.nonZero;
-				m_currentOperation = 0;
+				advanceToBlock(exit.nonZero);
 				if (consumeBlock(_loop.body))
 				{
 					std::swap(m_currentLoopInfo, loopInfo);
@@ -258,14 +255,12 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 					if (loopInfo->loopPostVariableValues)
 						for (auto var: entryVariableValues | ranges::view::keys)
 							yulAssert(loopInfo->loopPostVariableValues->at(var) == m_currentVariableValues.at(var));
-					m_currentBlock = jumpToPost.target;
-					m_currentOperation = 0;
+					advanceToBlock(jumpToPost.target);
 					if (consumeBlock(_loop.post))
 					{
 						auto const& jumpBackToCondition = expectUnconditionalJump();
 						m_currentVariableValues = applyPhis(m_currentBlock, jumpBackToCondition.target);
-						m_currentBlock = jumpBackToCondition.target;
-						m_currentOperation = 0;
+						advanceToBlock(jumpBackToCondition.target);
 						yulAssert(m_currentBlock == entryJump.target);
 						for (auto&& [var, value]: entryVariableValues)
 							yulAssert(m_currentVariableValues.at(var) == value);
@@ -274,8 +269,7 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 				}
 				else
 					std::swap(m_currentLoopInfo, loopInfo);
-				m_currentBlock = exit.zero;
-				m_currentOperation = 0;
+				advanceToBlock(exit.zero);
 				m_currentVariableValues = loopExitVariableValues;
 				return true;
 			}

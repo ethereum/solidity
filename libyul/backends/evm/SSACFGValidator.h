@@ -35,7 +35,7 @@ private:
     	ControlFlow const& controlFlow;
     	SSACFG const& cfg;
     };
-	SSACFGValidator(Context const& _context): m_context(_context)
+	explicit SSACFGValidator(Context const& _context): m_context(_context)
 	{}
 	std::optional<std::vector<SSACFG::ValueId>> consumeExpression(Expression const& _expression);
 	std::optional<SSACFG::ValueId> consumeUnaryExpression(Expression const& _expression)
@@ -67,6 +67,7 @@ private:
 	/// Applys the phi functions of @a _target assuming an entry from @a _source.
 	VariableMapping applyPhis(SSACFG::BlockId _source, SSACFG::BlockId _target);
 	void consolidateVariables(VariableMapping const& _variables, std::vector<VariableMapping> const& _toBeConsolidated);
+	void advanceToBlock(SSACFG::BlockId _target);
 
 	Context const& m_context;
 	Scope* m_scope = nullptr;
