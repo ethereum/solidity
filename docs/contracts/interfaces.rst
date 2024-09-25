@@ -40,7 +40,7 @@ functions that override them do not need the ``override`` keyword.
 This does not automatically mean that an overriding function can be overridden again -
 this is only possible if the overriding function is marked ``virtual``.
 
-Interfaces can inherit from other interfaces. This has the same rules as normal
+Interfaces can be inherited from other interfaces. This has the same rules as normal
 inheritance.
 
 .. code-block:: solidity
