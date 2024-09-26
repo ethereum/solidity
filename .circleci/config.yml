@@ -1005,7 +1005,11 @@ jobs:
     <<: *base_ubuntu2404
     environment:
       <<: *base_ubuntu2404_env
-      CMAKE_OPTIONS: -DSANITIZE=address
+      # NOTE: Sanitizers may alter the intermediate code, potentially causing false warnings.
+      # As a result, treating warnings as errors in instrumented builds can lead to build failures due to these false positives.
+      # Therefore, we disable pedantic builds in such cases.
+      # See: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105562#c27
+      CMAKE_OPTIONS: -DSANITIZE=address -DPEDANTIC=OFF
       CMAKE_BUILD_TYPE: Release
     steps:
       - build
@@ -1026,7 +1030,8 @@ jobs:
     <<: *base_ubuntu2404_clang
     environment:
       <<: *base_ubuntu2404_clang_env
-      CMAKE_OPTIONS: << parameters.cmake_options >>
+      # NOTE: Disabled pedantic builds to avoid false positives, see b_ubu_asan for a more detailed explanation.
+      CMAKE_OPTIONS: -DPEDANTIC=OFF << parameters.cmake_options >>
     steps:
       - build
 
