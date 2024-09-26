@@ -17,8 +17,8 @@ parameters:
     default: "solbuildpackpusher/solidity-buildpack-deps@sha256:5d6d27551104321a30326d6024bd4e96d9d899a97a78eb9feea364996f1d18b5"
   ubuntu-2404-clang-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2404.clang-1
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:8df0086907cc1e57068ad48841f2284a87bfbd0a95006286a19a7132d84bb861"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2404.clang-2
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:bc99a858ba18e088c1cb889ce631e3e707bb3348f0ae452bfe69116dbb931173"
   ubuntu-clang-ossfuzz-docker-image:
     type: string
     # solbuildpackpusher/solidity-buildpack-deps:ubuntu.clang.ossfuzz-6
