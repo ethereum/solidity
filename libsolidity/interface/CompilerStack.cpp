@@ -861,15 +861,18 @@ Json CompilerStack::generatedSources(std::string const& _contractName, bool _run
 		c.generatedSources;
 	return sources.init([&]{
 		Json sources = Json::array();
-		// If there is no compiler, then no bytecode was generated and thus no
+
+		solAssert(c.generatedYulUtilityCode.has_value() == c.runtimeGeneratedYulUtilityCode.has_value());
+
+		// If there is no generated utility code, then no bytecode was generated and thus no
 		// sources were generated (or we compiled "via IR").
-		if (c.compiler)
+		if (c.runtimeGeneratedYulUtilityCode.has_value())
 		{
 			solAssert(!m_viaIR, "");
 			std::string source =
 				_runtime ?
-				c.compiler->runtimeGeneratedYulUtilityCode() :
-				c.compiler->generatedYulUtilityCode();
+				*c.runtimeGeneratedYulUtilityCode :
+				*c.generatedYulUtilityCode;
 			if (!source.empty())
 			{
 				std::string sourceName = CompilerContext::yulUtilityFileName();
@@ -1469,13 +1472,14 @@ void CompilerStack::compileContract(
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 
 	std::shared_ptr<Compiler> compiler = std::make_shared<Compiler>(m_evmVersion, m_revertStrings, m_optimiserSettings);
-	compiledContract.compiler = compiler;
 
 	solAssert(!m_viaIR, "");
 	bytes cborEncodedMetadata = createCBORMetadata(compiledContract, /* _forIR */ false);
 
 	// Run optimiser and compile the contract.
 	compiler->compileContract(_contract, _otherCompilers, cborEncodedMetadata);
+	compiledContract.generatedYulUtilityCode = compiler->generatedYulUtilityCode();
+	compiledContract.runtimeGeneratedYulUtilityCode = compiler->runtimeGeneratedYulUtilityCode();
 
 	_otherCompilers[compiledContract.contract] = compiler;
 
