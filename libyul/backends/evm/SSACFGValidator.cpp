@@ -427,7 +427,12 @@ std::optional<std::vector<SSACFG::ValueId>> SSACFGValidator::consumeExpression(E
 				++idx;
 			}
 			yulAssert(ranges::all_of(arguments, [](SSACFG::ValueId const& _arg) { return _arg.hasValue(); }));
-			auto const& currentOp = currentBlock().operations.at(m_currentOperation++);
+			auto const& currentOp = currentBlock().operations.at(m_currentOperation);
+			if (auto f = std::get_if<SSACFG::Call>(&currentOp.kind); f && !f->canContinue)
+				return std::nullopt;
+			if (auto f = std::get_if<SSACFG::BuiltinCall>(&currentOp.kind); f && !f->builtin.get().controlFlowSideEffects.canContinue)
+				return std::nullopt;
+			++m_currentOperation;
 			yulAssert(currentOp.inputs == arguments);
 			if (validateCall(currentOp.kind, _call.functionName, currentOp.outputs.size()))
 				return currentOp.outputs;
