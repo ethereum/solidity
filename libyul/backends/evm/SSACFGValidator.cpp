@@ -56,8 +56,7 @@ void SSACFGValidator::consolidateVariables(VariableMapping const& _variables, st
 	{
 		for (auto const& parent: _toBeConsolidated)
 		{
-			yulAssert(parent.count(var));
-			if (valueId != parent.at(var))
+			if (!parent.count(var) || valueId != parent.at(var))
 				// set to no value, should be asserted against if that variable is consumed (eg as function arg)
 				m_currentVariableValues[var] = {};
 		}
@@ -102,10 +101,8 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 			{
 				if (!_variableDeclaration.value)
 				{
-					auto const zeroLiteral = m_context.cfg.zeroLiteral();
-					yulAssert(zeroLiteral);
 					for (auto&& variable: _variableDeclaration.variables)
-						m_currentVariableValues[resolveVariable(variable.name)] = *zeroLiteral;
+						m_currentVariableValues[resolveVariable(variable.name)] = {};
 					return true;
 				}
 				if (auto results = consumeExpression(*_variableDeclaration.value))
@@ -366,7 +363,7 @@ bool SSACFGValidator::consumeDynamicForLoop(ForLoop const& _loop)
 	if (auto cond = consumeUnaryExpression(*_loop.condition))
 	{
 		auto const& exit = expectConditionalJump();
-		yulAssert(exit.condition == cond);
+		yulAssert(!cond.value().hasValue() || exit.condition == cond);
 		auto loopExitVariableValues = applyPhis(m_currentBlock, exit.zero);
 
 		std::unique_ptr<LoopInfo> loopInfo = std::make_unique<LoopInfo>(LoopInfo{
@@ -395,8 +392,7 @@ bool SSACFGValidator::consumeDynamicForLoop(ForLoop const& _loop)
 				m_currentVariableValues = applyPhis(m_currentBlock, jumpBackToCondition.target);
 				advanceToBlock(jumpBackToCondition.target);
 				yulAssert(m_currentBlock == entryJump.target);
-				for (auto&& [var, value]: entryVariableValues)
-					yulAssert(m_currentVariableValues.at(var) == value);
+				consolidateVariables(m_currentVariableValues, {entryVariableValues});
 			}
 		}
 		else
@@ -415,16 +411,15 @@ std::optional<std::vector<SSACFG::ValueId>> SSACFGValidator::consumeExpression(E
 		{
 			BuiltinFunction const* builtin = m_context.dialect.builtin(_call.functionName.name);
 			std::vector<SSACFG::ValueId> arguments;
-			size_t idx = 0;
+			size_t idx = _call.arguments.size();
 			for(auto& _arg: _call.arguments | ranges::view::reverse)
 			{
-				if (builtin && builtin->literalArgument(idx).has_value())
+				if (builtin && builtin->literalArgument(--idx).has_value())
 					continue;
 				if (auto arg = consumeExpression(_arg))
 					arguments += *arg;
 				else
 					return std::nullopt;
-				++idx;
 			}
 			yulAssert(ranges::all_of(arguments, [](SSACFG::ValueId const& _arg) { return _arg.hasValue(); }));
 			auto const& currentOp = currentBlock().operations.at(m_currentOperation);
@@ -551,9 +546,7 @@ SSACFGValidator::VariableMapping SSACFGValidator::applyPhis(SSACFG::BlockId _sou
 		yulAssert(phiInfo);
 		auto const argumentValueId = phiInfo->arguments.at(*entryOffset);
 		yulAssert(argumentValueId.hasValue());
-		// literals should not get remapped
-		if (!std::holds_alternative<SSACFG::LiteralValue>(m_context.cfg.valueInfo(argumentValueId)))
-			phiMap[argumentValueId] = phi;
+		phiMap[argumentValueId] = phi;
 	}
 	VariableMapping result;
 	for (auto& [var, value]: m_currentVariableValues)
