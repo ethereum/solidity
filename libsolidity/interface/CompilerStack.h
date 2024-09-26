@@ -424,8 +424,6 @@ private:
 		util::LazyInit<Json const> transientStorageLayout;
 		util::LazyInit<Json const> userDocumentation;
 		util::LazyInit<Json const> devDocumentation;
-		util::LazyInit<Json const> generatedSources;
-		util::LazyInit<Json const> runtimeGeneratedSources;
 		mutable std::optional<std::string const> sourceMapping;
 		mutable std::optional<std::string const> runtimeSourceMapping;
 	};

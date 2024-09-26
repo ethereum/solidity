@@ -855,43 +855,35 @@ Json CompilerStack::generatedSources(std::string const& _contractName, bool _run
 	solAssert(m_stackState == CompilationSuccessful, "Compilation was not successful.");
 
 	Contract const& c = contract(_contractName);
-	util::LazyInit<Json const> const& sources =
-		_runtime ?
-		c.runtimeGeneratedSources :
-		c.generatedSources;
-	return sources.init([&]{
-		Json sources = Json::array();
-
+	Json sources = Json::array();
+	// If there is no compiler, then no bytecode was generated and thus no
+	// sources were generated (or we compiled "via IR").
+	if (c.runtimeGeneratedYulUtilityCode.has_value())
+	{
 		solAssert(c.generatedYulUtilityCode.has_value() == c.runtimeGeneratedYulUtilityCode.has_value());
-
-		// If there is no generated utility code, then no bytecode was generated and thus no
-		// sources were generated (or we compiled "via IR").
-		if (c.runtimeGeneratedYulUtilityCode.has_value())
+		solAssert(!m_viaIR);
+		std::string source =
+			_runtime ?
+			*c.runtimeGeneratedYulUtilityCode :
+			*c.generatedYulUtilityCode;
+		if (!source.empty())
 		{
-			solAssert(!m_viaIR, "");
-			std::string source =
-				_runtime ?
-				*c.runtimeGeneratedYulUtilityCode :
-				*c.generatedYulUtilityCode;
-			if (!source.empty())
-			{
-				std::string sourceName = CompilerContext::yulUtilityFileName();
-				unsigned sourceIndex = sourceIndices()[sourceName];
-				ErrorList errors;
-				ErrorReporter errorReporter(errors);
-				CharStream charStream(source, sourceName);
-				yul::EVMDialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(m_evmVersion);
-				std::shared_ptr<yul::AST> parserResult = yul::Parser{errorReporter, dialect}.parse(charStream);
-				solAssert(parserResult, "");
-				sources[0]["ast"] = yul::AsmJsonConverter{sourceIndex}(parserResult->root());
-				sources[0]["name"] = sourceName;
-				sources[0]["id"] = sourceIndex;
-				sources[0]["language"] = "Yul";
-				sources[0]["contents"] = std::move(source);
-			}
+			std::string sourceName = CompilerContext::yulUtilityFileName();
+			unsigned sourceIndex = sourceIndices()[sourceName];
+			ErrorList errors;
+			ErrorReporter errorReporter(errors);
+			CharStream charStream(source, sourceName);
+			yul::EVMDialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(m_evmVersion);
+			std::shared_ptr<yul::AST> parserResult = yul::Parser{errorReporter, dialect}.parse(charStream);
+			solAssert(parserResult);
+			sources[0]["ast"] = yul::AsmJsonConverter{sourceIndex}(parserResult->root());
+			sources[0]["name"] = sourceName;
+			sources[0]["id"] = sourceIndex;
+			sources[0]["language"] = "Yul";
+			sources[0]["contents"] = std::move(source);
 		}
-		return sources;
-	});
+	}
+	return sources;
 }
 
 std::string const* CompilerStack::sourceMapping(std::string const& _contractName) const
