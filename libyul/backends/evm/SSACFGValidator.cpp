@@ -341,8 +341,7 @@ bool SSACFGValidator::consumeConstantForLoop(ForLoop const& _loop, bool _conditi
 				m_currentVariableValues = applyPhis(m_currentBlock, jumpBackToCondition.target);
 				advanceToBlock(jumpBackToCondition.target);
 				yulAssert(m_currentBlock == jumpToBody.target);
-				for (auto&& [var, value]: entryVariableValues)
-					yulAssert(m_currentVariableValues.at(var) == value);
+				consolidateVariables(m_currentVariableValues, {entryVariableValues});
 			}
 		}
 		else
