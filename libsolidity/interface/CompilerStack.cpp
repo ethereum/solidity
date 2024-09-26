@@ -855,40 +855,34 @@ Json CompilerStack::generatedSources(std::string const& _contractName, bool _run
 	solAssert(m_stackState == CompilationSuccessful, "Compilation was not successful.");
 
 	Contract const& c = contract(_contractName);
-	util::LazyInit<Json const> const& sources =
-		_runtime ?
-		c.runtimeGeneratedSources :
-		c.generatedSources;
-	return sources.init([&]{
-		Json sources = Json::array();
-		// If there is no compiler, then no bytecode was generated and thus no
-		// sources were generated (or we compiled "via IR").
-		if (c.compiler)
+	Json sources = Json::array();
+	// If there is no compiler, then no bytecode was generated and thus no
+	// sources were generated (or we compiled "via IR").
+	if (c.compiler)
+	{
+		solAssert(!m_viaIR, "");
+		std::string source =
+			_runtime ?
+			c.compiler->runtimeGeneratedYulUtilityCode() :
+			c.compiler->generatedYulUtilityCode();
+		if (!source.empty())
 		{
-			solAssert(!m_viaIR, "");
-			std::string source =
-				_runtime ?
-				c.compiler->runtimeGeneratedYulUtilityCode() :
-				c.compiler->generatedYulUtilityCode();
-			if (!source.empty())
-			{
-				std::string sourceName = CompilerContext::yulUtilityFileName();
-				unsigned sourceIndex = sourceIndices()[sourceName];
-				ErrorList errors;
-				ErrorReporter errorReporter(errors);
-				CharStream charStream(source, sourceName);
-				yul::EVMDialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(m_evmVersion);
-				std::shared_ptr<yul::AST> parserResult = yul::Parser{errorReporter, dialect}.parse(charStream);
-				solAssert(parserResult, "");
-				sources[0]["ast"] = yul::AsmJsonConverter{sourceIndex}(parserResult->root());
-				sources[0]["name"] = sourceName;
-				sources[0]["id"] = sourceIndex;
-				sources[0]["language"] = "Yul";
-				sources[0]["contents"] = std::move(source);
-			}
+			std::string sourceName = CompilerContext::yulUtilityFileName();
+			unsigned sourceIndex = sourceIndices()[sourceName];
+			ErrorList errors;
+			ErrorReporter errorReporter(errors);
+			CharStream charStream(source, sourceName);
+			yul::EVMDialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(m_evmVersion);
+			std::shared_ptr<yul::AST> parserResult = yul::Parser{errorReporter, dialect}.parse(charStream);
+			solAssert(parserResult, "");
+			sources[0]["ast"] = yul::AsmJsonConverter{sourceIndex}(parserResult->root());
+			sources[0]["name"] = sourceName;
+			sources[0]["id"] = sourceIndex;
+			sources[0]["language"] = "Yul";
+			sources[0]["contents"] = std::move(source);
 		}
-		return sources;
-	});
+	}
+	return sources;
 }
 
 std::string const* CompilerStack::sourceMapping(std::string const& _contractName) const
@@ -961,8 +955,6 @@ Json CompilerStack::yulIRAst(std::string const& _contractName) const
 	solAssert(m_stackState == CompilationSuccessful, "Compilation was not successful.");
 	solUnimplementedAssert(!isExperimentalSolidity());
 
-	// NOTE: Intentionally not using LazyInit. The artifact can get very large and we don't want to
-	// keep it around when compiling a large project containing many contracts.
 	return loadGeneratedIR(contract(_contractName).yulIR).astJson();
 }
 
@@ -971,8 +963,6 @@ Json CompilerStack::yulCFGJson(std::string const& _contractName) const
 	solAssert(m_stackState == CompilationSuccessful, "Compilation was not successful.");
 	solUnimplementedAssert(!isExperimentalSolidity());
 
-	// NOTE: Intentionally not using LazyInit. The artifact can get very large and we don't want to
-	// keep it around when compiling a large project containing many contracts.
 	return loadGeneratedIR(contract(_contractName).yulIR).cfgJson();
 }
 
@@ -987,8 +977,6 @@ Json CompilerStack::yulIROptimizedAst(std::string const& _contractName) const
 	solAssert(m_stackState == CompilationSuccessful, "Compilation was not successful.");
 	solUnimplementedAssert(!isExperimentalSolidity());
 
-	// NOTE: Intentionally not using LazyInit. The artifact can get very large and we don't want to
-	// keep it around when compiling a large project containing many contracts.
 	return loadGeneratedIR(contract(_contractName).yulIROptimized).astJson();
 }
 
@@ -1045,76 +1033,76 @@ std::map<std::string, unsigned> CompilerStack::sourceIndices() const
 	return indices;
 }
 
-Json const& CompilerStack::contractABI(std::string const& _contractName) const
+Json CompilerStack::contractABI(std::string const& _contractName) const
 {
 	solAssert(m_stackState >= AnalysisSuccessful, "Analysis was not successful.");
 	return contractABI(contract(_contractName));
 }
 
-Json const& CompilerStack::contractABI(Contract const& _contract) const
+Json CompilerStack::contractABI(Contract const& _contract) const
 {
 	solAssert(m_stackState >= AnalysisSuccessful, "Analysis was not successful.");
 	solAssert(_contract.contract);
 	solUnimplementedAssert(!isExperimentalSolidity());
-	return _contract.abi.init([&]{ return ABI::generate(*_contract.contract); });
+	return ABI::generate(*_contract.contract);
 }
 
-Json const& CompilerStack::storageLayout(std::string const& _contractName) const
+Json CompilerStack::storageLayout(std::string const& _contractName) const
 {
 	solAssert(m_stackState >= AnalysisSuccessful, "Analysis was not successful.");
 	return storageLayout(contract(_contractName));
 }
 
-Json const& CompilerStack::storageLayout(Contract const& _contract) const
+Json CompilerStack::storageLayout(Contract const& _contract) const
 {
 	solAssert(m_stackState >= AnalysisSuccessful, "Analysis was not successful.");
 	solAssert(_contract.contract);
 	solUnimplementedAssert(!isExperimentalSolidity());
 
-	return _contract.storageLayout.init([&]{ return StorageLayout().generate(*_contract.contract, DataLocation::Storage); });
+	return StorageLayout().generate(*_contract.contract, DataLocation::Storage);
 }
 
-Json const& CompilerStack::transientStorageLayout(std::string const& _contractName) const
+Json CompilerStack::transientStorageLayout(std::string const& _contractName) const
 {
 	solAssert(m_stackState >= AnalysisSuccessful, "Analysis was not successful.");
 	return transientStorageLayout(contract(_contractName));
 }
 
-Json const& CompilerStack::transientStorageLayout(Contract const& _contract) const
+Json CompilerStack::transientStorageLayout(Contract const& _contract) const
 {
 	solAssert(m_stackState >= AnalysisSuccessful, "Analysis was not successful.");
 	solAssert(_contract.contract);
 	solUnimplementedAssert(!isExperimentalSolidity());
 
-	return _contract.transientStorageLayout.init([&]{ return StorageLayout().generate(*_contract.contract, DataLocation::Transient); });
+	return StorageLayout().generate(*_contract.contract, DataLocation::Transient);
 }
 
-Json const& CompilerStack::natspecUser(std::string const& _contractName) const
+Json CompilerStack::natspecUser(std::string const& _contractName) const
 {
 	solAssert(m_stackState >= AnalysisSuccessful, "Analysis was not successful.");
 	return natspecUser(contract(_contractName));
 }
 
-Json const& CompilerStack::natspecUser(Contract const& _contract) const
+Json CompilerStack::natspecUser(Contract const& _contract) const
 {
 	solAssert(m_stackState >= AnalysisSuccessful, "Analysis was not successful.");
 	solAssert(_contract.contract);
 	solUnimplementedAssert(!isExperimentalSolidity());
-	return _contract.userDocumentation.init([&]{ return Natspec::userDocumentation(*_contract.contract); });
+	return Natspec::userDocumentation(*_contract.contract);
 }
 
-Json const& CompilerStack::natspecDev(std::string const& _contractName) const
+Json CompilerStack::natspecDev(std::string const& _contractName) const
 {
 	solAssert(m_stackState >= AnalysisSuccessful, "Analysis was not successful.");
 	return natspecDev(contract(_contractName));
 }
 
-Json const& CompilerStack::natspecDev(Contract const& _contract) const
+Json CompilerStack::natspecDev(Contract const& _contract) const
 {
 	solAssert(m_stackState >= AnalysisSuccessful, "Analysis was not successful.");
 	solAssert(_contract.contract);
 	solUnimplementedAssert(!isExperimentalSolidity());
-	return _contract.devDocumentation.init([&]{ return Natspec::devDocumentation(*_contract.contract); });
+	return Natspec::devDocumentation(*_contract.contract);
 }
 
 Json CompilerStack::interfaceSymbols(std::string const& _contractName) const
@@ -1153,12 +1141,12 @@ bytes CompilerStack::cborMetadata(std::string const& _contractName, bool _forIR)
 	return createCBORMetadata(contract(_contractName), _forIR);
 }
 
-std::string const& CompilerStack::metadata(Contract const& _contract) const
+std::string CompilerStack::metadata(Contract const& _contract) const
 {
 	solAssert(m_stackState >= AnalysisSuccessful, "Analysis was not successful.");
 	solAssert(_contract.contract);
 	solUnimplementedAssert(!isExperimentalSolidity());
-	return _contract.metadata.init([&]{ return createMetadata(_contract, m_viaIR); });
+	return createMetadata(_contract, m_viaIR);
 }
 
 CharStream const& CompilerStack::charStream(std::string const& _sourceName) const
