@@ -102,8 +102,10 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 			{
 				if (!_variableDeclaration.value)
 				{
+					auto const zeroLiteral = m_context.cfg.zeroLiteral();
+					yulAssert(zeroLiteral);
 					for (auto&& variable: _variableDeclaration.variables)
-						m_currentVariableValues[resolveVariable(variable.name)] = {};
+						m_currentVariableValues[resolveVariable(variable.name)] = *zeroLiteral;
 					return true;
 				}
 				if (auto results = consumeExpression(*_variableDeclaration.value))
@@ -545,7 +547,9 @@ SSACFGValidator::VariableMapping SSACFGValidator::applyPhis(SSACFG::BlockId _sou
 		yulAssert(phiInfo);
 		auto const argumentValueId = phiInfo->arguments.at(*entryOffset);
 		yulAssert(argumentValueId.hasValue());
-		phiMap[argumentValueId] = phi;
+		// literals should not get remapped
+		if (!std::holds_alternative<SSACFG::LiteralValue>(m_context.cfg.valueInfo(argumentValueId)))
+			phiMap[argumentValueId] = phi;
 	}
 	VariableMapping result;
 	for (auto& [var, value]: m_currentVariableValues)
