@@ -30,7 +30,7 @@
 #include <libsolidity/codegen/ABIFunctions.h>
 #include <libsolidity/codegen/CompilerUtils.h>
 
-#include <libyul/YulStack.h>
+#include <libyul/Object.h>
 #include <libyul/Utilities.h>
 
 #include <libsolutil/Algorithms.h>

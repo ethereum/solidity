@@ -90,6 +90,7 @@ public:
 		Language _language,
 		solidity::frontend::OptimiserSettings _optimiserSettings,
 		langutil::DebugInfoSelection const& _debugInfoSelection,
+		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr,
 		std::shared_ptr<ObjectOptimizer> _objectOptimizer = nullptr
 	):
 		m_language(_language),
@@ -97,6 +98,7 @@ public:
 		m_eofVersion(_eofVersion),
 		m_optimiserSettings(std::move(_optimiserSettings)),
 		m_debugInfoSelection(_debugInfoSelection),
+		m_soliditySourceProvider(_soliditySourceProvider),
 		m_errorReporter(m_errors),
 		m_objectOptimizer(_objectOptimizer ? std::move(_objectOptimizer) : std::make_shared<ObjectOptimizer>())
 	{}
@@ -137,9 +139,7 @@ public:
 	bool hasErrors() const { return m_errorReporter.hasErrors(); }
 
 	/// Pretty-print the input after having parsed it.
-	std::string print(
-		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
-	) const;
+	std::string print() const;
 	Json astJson() const;
 
 	// return the JSON representation of the YuL CFG (experimental)
@@ -171,6 +171,11 @@ private:
 	std::optional<uint8_t> m_eofVersion;
 	solidity::frontend::OptimiserSettings m_optimiserSettings;
 	langutil::DebugInfoSelection m_debugInfoSelection{};
+
+	/// Provider of the Solidity sources that the Yul code was generated from.
+	/// Necessary when code snippets are requested as a part of debug info. When null, code snippets are omitted.
+	/// NOTE: Not owned by YulStack, the user must ensure that it is not destroyed before the stack is.
+	langutil::CharStreamProvider const* m_soliditySourceProvider{};
 
 	std::unique_ptr<langutil::CharStream> m_charStream;
 

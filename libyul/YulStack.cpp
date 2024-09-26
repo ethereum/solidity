@@ -211,12 +211,20 @@ void YulStack::reparse()
 	yulAssert(m_parserResult);
 	yulAssert(m_charStream);
 
-	// NOTE: Without passing in _soliditySourceProvider, printed debug info will not include code
-	// snippets, but it does not matter - we'll still get the same AST after we parse it. Snippets
-	// are not stored in the AST and the other info that is (location, AST ID, etc) will still be present.
-	std::string source = print(nullptr /* _soliditySourceProvider */);
+	// NOTE: it is important for the source printed here to exactly match what the compiler will
+	// eventually output to the user. In particular, debug info must be exactly the same.
+	// Otherwise source locations will be off.
+	std::string source = print();
 
-	YulStack cleanStack(m_evmVersion, m_eofVersion, m_language, m_optimiserSettings, m_debugInfoSelection, m_objectOptimizer);
+	YulStack cleanStack(
+		m_evmVersion,
+		m_eofVersion,
+		m_language,
+		m_optimiserSettings,
+		m_debugInfoSelection,
+		m_soliditySourceProvider,
+		m_objectOptimizer
+	);
 	bool reanalysisSuccessful = cleanStack.parseAndAnalyze(m_charStream->name(), source);
 	yulAssert(
 		reanalysisSuccessful,
@@ -348,16 +356,14 @@ YulStack::assembleEVMWithDeployed(std::optional<std::string_view> _deployName)
 	return {std::make_shared<evmasm::Assembly>(assembly), {}};
 }
 
-std::string YulStack::print(
-	CharStreamProvider const* _soliditySourceProvider
-) const
+std::string YulStack::print() const
 {
 	yulAssert(m_stackState >= Parsed);
 	yulAssert(m_parserResult, "");
 	yulAssert(m_parserResult->hasCode(), "");
 	return m_parserResult->toString(
 		m_debugInfoSelection,
-		_soliditySourceProvider
+		m_soliditySourceProvider
 	) + "\n";
 }
 
