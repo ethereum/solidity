@@ -71,6 +71,11 @@ class AssemblyItem;
 using AssemblyItems = std::vector<AssemblyItem>;
 }
 
+namespace solidity::yul
+{
+class YulStack;
+}
+
 namespace solidity::frontend
 {
 
@@ -290,15 +295,15 @@ public:
 	std::string const& yulIR(std::string const& _contractName) const;
 
 	/// @returns the IR representation of a contract AST in format.
-	Json const& yulIRAst(std::string const& _contractName) const;
+	Json yulIRAst(std::string const& _contractName) const;
 
 	/// @returns the optimized IR representation of a contract.
 	std::string const& yulIROptimized(std::string const& _contractName) const;
 
 	/// @returns the optimized IR representation of a contract AST in JSON format.
-	Json const& yulIROptimizedAst(std::string const& _contractName) const;
+	Json yulIROptimizedAst(std::string const& _contractName) const;
 
-	Json const& yulCFGJson(std::string const& _contractName) const;
+	Json yulCFGJson(std::string const& _contractName) const;
 
 	/// @returns the assembled object for a contract.
 	virtual evmasm::LinkerObject const& object(std::string const& _contractName) const override;
@@ -411,9 +416,6 @@ private:
 		evmasm::LinkerObject runtimeObject; ///< Runtime object.
 		std::string yulIR; ///< Yul IR code straight from the code generator.
 		std::string yulIROptimized; ///< Reparsed and possibly optimized Yul IR code.
-		Json yulIRAst; ///< JSON AST of Yul IR code.
-		Json yulIROptimizedAst; ///< JSON AST of optimized Yul IR code.
-		Json yulCFGJson; ///< JSON CFG of Yul IR code.
 		util::LazyInit<std::string const> metadata; ///< The metadata json that will be hashed into the chain.
 		util::LazyInit<Json const> abi;
 		util::LazyInit<Json const> storageLayout;
@@ -489,6 +491,11 @@ private:
 	/// Links all the known library addresses in the available objects. Any unknown
 	/// library will still be kept as an unlinked placeholder in the objects.
 	void link();
+
+	/// Parses and analyzes specified Yul source and returns the YulStack that can be used to manipulate it.
+	/// Assumes that the IR was generated from sources loaded currently into CompilerStack, which
+	/// means that it is error-free and uses the same settings.
+	yul::YulStack loadGeneratedIR(std::string const& _ir) const;
 
 	/// @returns the contract object for the given @a _contractName.
 	/// Can only be called after state is CompilationSuccessful.
