@@ -103,16 +103,6 @@ std::string IRGenerator::generate(
 	std::map<ContractDefinition const*, std::string_view const> const& _otherYulSources
 )
 {
-	auto notTransient = [](VariableDeclaration const* _varDeclaration) {
-		solAssert(_varDeclaration);
-		return _varDeclaration->referenceLocation() != VariableDeclaration::Location::Transient;
-	};
-
-	solUnimplementedAssert(
-		ranges::all_of(_contract.stateVariables(), notTransient),
-		"Transient storage variables are not supported when compiling via IR."
-	);
-
 	auto subObjectSources = [&_otherYulSources](UniqueVector<ContractDefinition const*> const& _subObjects) -> std::string
 	{
 		std::string subObjectsSources;
@@ -674,7 +664,7 @@ std::string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 					<ret> := <readStorage>(add(slot, <slotOffset>))
 				)")
 				("ret", joinHumanReadable(retVars))
-				("readStorage", m_utils.readFromStorage(*returnTypes[i], offsets.second, true))
+				("readStorage", m_utils.readFromStorage(*returnTypes[i], offsets.second, true, _varDecl.referenceLocation()))
 				("slotOffset", offsets.first.str())
 				.render();
 			}
@@ -691,7 +681,7 @@ std::string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 				<ret> := <readStorage>(slot, offset)
 			)")
 			("ret", joinHumanReadable(retVars))
-			("readStorage", m_utils.readFromStorageDynamic(*returnTypes.front(), true))
+			("readStorage", m_utils.readFromStorageDynamic(*returnTypes.front(), true, _varDecl.referenceLocation()))
 			.render();
 		}
 
@@ -834,7 +824,6 @@ std::string IRGenerator::initStateVariables(ContractDefinition const& _contract)
 	IRGeneratorForStatements generator{m_context, m_utils, m_optimiserSettings};
 	for (VariableDeclaration const* variable: _contract.stateVariables())
 	{
-		solUnimplementedAssert(variable->referenceLocation() != VariableDeclaration::Location::Transient, "Transient storage variables not supported.");
 		if (!variable->isConstant())
 			generator.initializeStateVar(*variable);
 	}

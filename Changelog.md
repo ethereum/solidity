@@ -4,7 +4,7 @@ Language Features:
 
 
 Compiler Features:
- * Code Generator: Transient storage value type state variables are now supported by the legacy pipeline.
+ * Code Generator: Transient storage value type state variables are now supported.
  * General: Generate JSON representations of Yul ASTs only on demand to reduce memory usage.
 
 

@@ -10,7 +10,6 @@ contract C {
 }
 // ====
 // EVMVersion: >=cancun
-// compileViaYul: false
 // ----
 // constructor() ->
 // gas legacy: 59027

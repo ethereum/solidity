@@ -16,6 +16,5 @@ contract C {
 }
 // ====
 // EVMVersion: >=cancun
-// compileViaYul: false
 // ----
 // f() -> 2, 3, 4

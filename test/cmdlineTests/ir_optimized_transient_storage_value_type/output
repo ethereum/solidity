@@ -1,0 +1,41 @@
+Optimized IR:
+/// @use-src 0:"ir_optimized_transient_storage_value_type/input.sol"
+object "C_14" {
+    code {
+        {
+            let _1 := memoryguard(0x80)
+            mstore(64, _1)
+            if callvalue() { revert(0, 0) }
+            let _2 := datasize("C_14_deployed")
+            codecopy(_1, dataoffset("C_14_deployed"), _2)
+            return(_1, _2)
+        }
+    }
+    /// @use-src 0:"ir_optimized_transient_storage_value_type/input.sol"
+    object "C_14_deployed" {
+        code {
+            {
+                if iszero(lt(calldatasize(), 4))
+                {
+                    if eq(0x26121ff0, shr(224, calldataload(0)))
+                    {
+                        if callvalue() { revert(0, 0) }
+                        if slt(add(calldatasize(), not(3)), 0) { revert(0, 0) }
+                        let _1 := tload(0)
+                        let sum := add(_1, 0x01)
+                        if gt(_1, sum)
+                        {
+                            mstore(0, shl(224, 0x4e487b71))
+                            mstore(4, 0x11)
+                            revert(0, 0x24)
+                        }
+                        tstore(0, sum)
+                        return(0, 0)
+                    }
+                }
+                revert(0, 0)
+            }
+        }
+        data ".metadata" hex""
+    }
+}
