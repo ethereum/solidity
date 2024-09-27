@@ -1394,13 +1394,13 @@ jobs:
             test/externalTests/solc-js/solc-js.sh /tmp/workspace/soljson.js $(cat /tmp/workspace/version.txt)
       - matrix_notify_failure_unless_pr
 
-  t_ems_ext_hardhat:
+  t_ems_ext_edr:
     <<: *base_node_small
     docker:
-      - image: cimg/rust:1.74.0-node
+      - image: cimg/rust:1.79.0-node
     environment:
       <<: *base_node_small_env
-      HARDHAT_TESTS_SOLC_PATH: /tmp/workspace/soljson.js
+      EDR_TESTS_SOLC_PATH: /tmp/workspace/soljson.js
     steps:
       - checkout
       - attach_workspace:
@@ -1409,48 +1409,36 @@ jobs:
           name: Ensure pnpm is installed if npm is present
           command: sudo npm install -g pnpm
       - run:
-          name: Retrieve Hardhat latest release tag
+          name: Retrieve EDR latest release tag
           command: |
             # Make authenticated requests when the Github token is available
             if [[ -n "$GITHUB_ACCESS_TOKEN" ]]; then
               EXTRA_HEADERS=(--header "Authorization: Bearer ${GITHUB_ACCESS_TOKEN}")
             fi
-            HARDHAT_LATEST_RELEASE_TAG=$(
+            EDR_LATEST_RELEASE_TAG=$(
               curl \
                 --silent \
                 --location \
                 --fail \
                 --show-error \
                 "${EXTRA_HEADERS[@]}" \
-                https://api.github.com/repos/nomiclabs/hardhat/releases/latest \
+                https://api.github.com/repos/nomicfoundation/edr/releases/latest \
                 | jq --raw-output .tag_name \
             )
-            echo "export HARDHAT_LATEST_RELEASE_TAG='${HARDHAT_LATEST_RELEASE_TAG}'" >> "$BASH_ENV"
-      - run: git clone --depth 1 https://github.com/nomiclabs/hardhat.git --branch "$HARDHAT_LATEST_RELEASE_TAG"
+            echo "export EDR_LATEST_RELEASE_TAG='${EDR_LATEST_RELEASE_TAG}'" >> "$BASH_ENV"
+      - run: git clone --depth 1 https://github.com/nomicfoundation/edr.git --branch "$EDR_LATEST_RELEASE_TAG"
       - run:
           name: Install dependencies
           command: |
-            cd hardhat
+            cd edr
             pnpm install --no-frozen-lockfile
       - run:
-          name: Run hardhat-core test suite
+          name: Run hardhat-tests in EDR repo
           command: |
-            HARDHAT_TESTS_SOLC_VERSION=$(scripts/get_version.sh)
-            export HARDHAT_TESTS_SOLC_VERSION
+            EDR_TESTS_SOLC_VERSION=$(scripts/get_version.sh)
+            export EDR_TESTS_SOLC_VERSION
 
-            # NOTE: This is expected to work without running `pnpm build` first.
-            cd hardhat/packages/hardhat-core
-            # TODO: temporarily set hardhat stack traces tests to use cancun hardfork
-            # Remove this when hardhat switch to cancun by default: https://github.com/NomicFoundation/hardhat/issues/4851
-            sed -i 's/hardfork: "shanghai",/hardfork: "cancun",/' test/internal/hardhat-network/stack-traces/execution.ts
-            # TODO: Remove these tests because they rely on specific stack sequence which has changed since
-            # Remove when hardhat properly fix a specific version for the tests: https://github.com/NomicFoundation/hardhat/issues/5443
-            rm -rf test/internal/hardhat-network/stack-traces/test-files/0_8/revert-without-message/modifiers/call-message/multiple-modifiers-require/
-            rm -rf test/internal/hardhat-network/stack-traces/test-files/0_8/revert-without-message/modifiers/create-message/multiple-modifiers-require/
-            rm -rf test/internal/hardhat-network/stack-traces/test-files/0_8/revert-without-message/revert-without-message/within-receive/between-statements/
-            rm -rf test/internal/hardhat-network/stack-traces/test-files/0_8/revert-without-message/revert-without-message/within-receive/no-other-statements/
-            rm -rf test/internal/hardhat-network/stack-traces/test-files/0_8/revert-without-message/revert-without-message/within-receive/statement-after/
-            rm -rf test/internal/hardhat-network/stack-traces/test-files/0_8/revert-without-message/revert-without-message/within-receive/statement-before/
+            cd edr/hardhat-tests
             pnpm test
       - matrix_notify_failure_unless_pr
 
@@ -1904,7 +1892,7 @@ workflows:
       # Emscripten build and tests that take 15 minutes or less
       - b_ems: *requires_nothing
       - t_ems_solcjs: *requires_b_ems
-      - t_ems_ext_hardhat: *requires_b_ems
+      - t_ems_ext_edr: *requires_b_ems
 
       - t_ext: *job_ems_compile_ext_colony
 
