@@ -44,7 +44,7 @@ struct Dialect;
 namespace solidity::yul::tools::interpreter
 {
 
-struct InterpreterConfig
+struct PureInterpreterConfig
 {
 	size_t maxTraceSize = 0;
 	size_t maxSteps = 0;
@@ -52,9 +52,9 @@ struct InterpreterConfig
 	size_t maxRecursionDepth = 0;
 };
 
-struct InterpreterState
+struct PureInterpreterState
 {
-	InterpreterConfig const config;
+	PureInterpreterConfig const config;
 
 	size_t numSteps = 0;
 };
@@ -73,18 +73,18 @@ struct Scope
 /**
  * Yul interpreter.
  */
-class Interpreter
+class PureInterpreter
 {
 public:
 	/// Executes the Yul interpreter.
 	static void run(
-		InterpreterState& _state,
+		PureInterpreterState& _state,
 		Dialect const& _dialect,
 		Block const& _ast
 	);
 
-	Interpreter(
-		InterpreterState& _state,
+	PureInterpreter(
+		PureInterpreterState& _state,
 		Dialect const& _dialect,
 		Scope& _scope,
 		size_t _callerRecursionDepth,
@@ -127,9 +127,9 @@ public:
 	u256 valueOfVariable(YulName _name) const { return m_variables.at(_name); }
 
 protected:
-	virtual std::unique_ptr<Interpreter> makeInterpreterCopy(std::map<YulName, u256> _variables = {}) const
+	virtual std::unique_ptr<PureInterpreter> makeInterpreterCopy(std::map<YulName, u256> _variables = {}) const
 	{
-		return std::make_unique<Interpreter>(
+		return std::make_unique<PureInterpreter>(
 			m_state,
 			m_dialect,
 			*m_scope,
@@ -161,7 +161,7 @@ protected:
 	std::optional<ExecutionTerminated> incrementExpressionStep();
 
 	Dialect const& m_dialect;
-	InterpreterState& m_state;
+	PureInterpreterState& m_state;
 	/// Values of variables.
 	std::map<YulName, u256> m_variables;
 	Scope* m_scope;

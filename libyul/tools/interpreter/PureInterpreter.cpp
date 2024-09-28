@@ -19,9 +19,9 @@
  * Yul interpreter.
  */
 
-#include <libyul/tools/interpreter/Interpreter.h>
+#include <libyul/tools/interpreter/PureInterpreter.h>
 
-#include <libyul/tools/interpreter/EVMInstructionInterpreter.h>
+#include <libyul/tools/interpreter/PureEVMInstructionInterpreter.h>
 
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
@@ -44,24 +44,24 @@ using namespace solidity::yul::tools::interpreter;
 
 using solidity::util::h256;
 
-void Interpreter::run(
-	InterpreterState& _state,
+void PureInterpreter::run(
+	PureInterpreterState& _state,
 	Dialect const& _dialect,
 	Block const& _ast
 )
 {
 	Scope scope;
-	Interpreter{_state, _dialect, scope, 0}(_ast);
+	PureInterpreter{_state, _dialect, scope, 0}(_ast);
 }
 
-ExecutionResult Interpreter::operator()(ExpressionStatement const& _expressionStatement)
+ExecutionResult PureInterpreter::operator()(ExpressionStatement const& _expressionStatement)
 {
 	EvaluationResult res = evaluate(_expressionStatement.expression, 0);
 	if (auto* terminated = std::get_if<ExecutionTerminated>(&res)) return *terminated;
 	return ExecutionOk{ ControlFlowState::Default };
 }
 
-ExecutionResult Interpreter::operator()(Assignment const& _assignment)
+ExecutionResult PureInterpreter::operator()(Assignment const& _assignment)
 {
 	solAssert(_assignment.value, "");
 	EvaluationResult evalRes = evaluate(*_assignment.value, _assignment.variableNames.size());
@@ -77,7 +77,7 @@ ExecutionResult Interpreter::operator()(Assignment const& _assignment)
 	return ExecutionOk { ControlFlowState::Default };
 }
 
-ExecutionResult Interpreter::operator()(VariableDeclaration const& _declaration)
+ExecutionResult PureInterpreter::operator()(VariableDeclaration const& _declaration)
 {
 	std::vector<u256> values(_declaration.variables.size(), 0);
 	if (_declaration.value)
@@ -98,7 +98,7 @@ ExecutionResult Interpreter::operator()(VariableDeclaration const& _declaration)
 	return ExecutionOk { ControlFlowState::Default };
 }
 
-ExecutionResult Interpreter::operator()(If const& _if)
+ExecutionResult PureInterpreter::operator()(If const& _if)
 {
 	solAssert(_if.condition, "");
 	EvaluationResult conditionRes = evaluate(*_if.condition, 1);
@@ -109,7 +109,7 @@ ExecutionResult Interpreter::operator()(If const& _if)
 	return ExecutionOk { ControlFlowState::Default };
 }
 
-ExecutionResult Interpreter::operator()(Switch const& _switch)
+ExecutionResult PureInterpreter::operator()(Switch const& _switch)
 {
 	solAssert(_switch.expression, "");
 	solAssert(!_switch.cases.empty(), "");
@@ -134,12 +134,12 @@ ExecutionResult Interpreter::operator()(Switch const& _switch)
 	return ExecutionOk { ControlFlowState::Default };
 }
 
-ExecutionResult Interpreter::operator()(FunctionDefinition const&)
+ExecutionResult PureInterpreter::operator()(FunctionDefinition const&)
 {
 	return ExecutionOk{ ControlFlowState::Default };
 }
 
-ExecutionResult Interpreter::operator()(ForLoop const& _forLoop)
+ExecutionResult PureInterpreter::operator()(ForLoop const& _forLoop)
 {
 	solAssert(_forLoop.condition, "");
 
@@ -157,7 +157,8 @@ ExecutionResult Interpreter::operator()(ForLoop const& _forLoop)
 		{
 			EvaluationResult conditionRes = evaluate(*_forLoop.condition, 1);
 			if (auto* terminated = std::get_if<ExecutionTerminated>(&conditionRes)) return *terminated;
-			if (std::get<EvaluationOk>(conditionRes).values.at(0) == 0) break;
+			if (std::get<EvaluationOk>(conditionRes).values.at(0) == 0)
+				break;
 		}
 
 		// Increment step for each loop iteration for loops with
@@ -187,22 +188,22 @@ ExecutionResult Interpreter::operator()(ForLoop const& _forLoop)
 	return ExecutionOk { ControlFlowState::Default };
 }
 
-ExecutionResult Interpreter::operator()(Break const&)
+ExecutionResult PureInterpreter::operator()(Break const&)
 {
 	return ExecutionOk{ ControlFlowState::Break };
 }
 
-ExecutionResult Interpreter::operator()(Continue const&)
+ExecutionResult PureInterpreter::operator()(Continue const&)
 {
 	return ExecutionOk{ ControlFlowState::Continue };
 }
 
-ExecutionResult Interpreter::operator()(Leave const&)
+ExecutionResult PureInterpreter::operator()(Leave const&)
 {
 	return ExecutionOk{ ControlFlowState::Leave };
 }
 
-ExecutionResult Interpreter::operator()(Block const& _block)
+ExecutionResult PureInterpreter::operator()(Block const& _block)
 {
 	enterScope(_block);
 	ScopeGuard guard([this] { leaveScope(); });
@@ -218,30 +219,30 @@ ExecutionResult Interpreter::operator()(Block const& _block)
 	for (auto const& statement: _block.statements)
 	{
 		ExecutionResult statementRes = visit(statement);
-		if (statementRes != ExecutionResult(ExecutionOk{ ControlFlowState::Default }))
+		if (statementRes != ExecutionResult(ExecutionOk {ControlFlowState::Default}))
 			return statementRes;
 	}
 	return ExecutionOk{ ControlFlowState::Default };
 }
 
-ExecutionResult Interpreter::visit(Statement const& _st)
+ExecutionResult PureInterpreter::visit(Statement const& _st)
 {
 	if (auto terminated = incrementStatementStep()) return *terminated;
 	return std::visit(*this, _st);
 }
 
-EvaluationResult Interpreter::operator()(Literal const& _literal)
+EvaluationResult PureInterpreter::operator()(Literal const& _literal)
 {
 	return EvaluationOk(_literal.value.value());
 }
 
-EvaluationResult Interpreter::operator()(Identifier const& _identifier)
+EvaluationResult PureInterpreter::operator()(Identifier const& _identifier)
 {
 	solAssert(m_variables.count(_identifier.name), "");
 	return EvaluationOk(m_variables.at(_identifier.name));
 }
 
-EvaluationResult Interpreter::operator()(FunctionCall const& _funCall)
+EvaluationResult PureInterpreter::operator()(FunctionCall const& _funCall)
 {
 	std::vector<std::optional<LiteralKind>> const* literalArguments = nullptr;
 	if (BuiltinFunction const* builtin = m_dialect.builtin(_funCall.functionName.name))
@@ -256,7 +257,7 @@ EvaluationResult Interpreter::operator()(FunctionCall const& _funCall)
 	{
 		if (BuiltinFunctionForEVM const* fun = dialect->builtin(_funCall.functionName.name))
 		{
-			EVMInstructionInterpreter interpreter(dialect->evmVersion(), m_state);
+			PureEVMInstructionInterpreter interpreter(dialect->evmVersion(), m_state);
 			EVMInstructionInterpretedResult const value = interpreter.evalBuiltin(*fun, _funCall.arguments, argsValues);
 			if (auto* terminated = std::get_if<ExecutionTerminated>(&value)) return *terminated;
 			return EvaluationOk(std::get<u256>(value));
@@ -278,7 +279,7 @@ EvaluationResult Interpreter::operator()(FunctionCall const& _funCall)
 	for (size_t i = 0; i < fun->returnVariables.size(); ++i)
 		variables[fun->returnVariables.at(i).name] = 0;
 
-	std::unique_ptr<Interpreter> interpreter = makeInterpreterCopy(std::move(variables));
+	std::unique_ptr<PureInterpreter> interpreter = makeInterpreterCopy(std::move(variables));
 	ExecutionResult funcBodyRes = (*interpreter)(fun->body);
 	if (auto* terminated = std::get_if<ExecutionTerminated>(&funcBodyRes)) return *terminated;
 
@@ -288,13 +289,13 @@ EvaluationResult Interpreter::operator()(FunctionCall const& _funCall)
 	return EvaluationOk(returnedValues);
 }
 
-EvaluationResult Interpreter::visit(Expression const& _st)
+EvaluationResult PureInterpreter::visit(Expression const& _st)
 {
 	if (auto terminated = incrementExpressionStep()) return *terminated;
 	return std::visit(*this, _st);
 }
 
-EvaluationResult Interpreter::evaluate(Expression const& _expression, size_t _numReturnVars)
+EvaluationResult PureInterpreter::evaluate(Expression const& _expression, size_t _numReturnVars)
 {
 	EvaluationResult res = visit(_expression);
 	if (auto* resOk = std::get_if<EvaluationOk>(&res))
@@ -303,7 +304,7 @@ EvaluationResult Interpreter::evaluate(Expression const& _expression, size_t _nu
 	return res;
 }
 
-EvaluationResult Interpreter::evaluateArgs(
+EvaluationResult PureInterpreter::evaluateArgs(
 	std::vector<Expression> const& _expr,
 	std::vector<std::optional<LiteralKind>> const* _literalArguments
 )
@@ -338,7 +339,7 @@ EvaluationResult Interpreter::evaluateArgs(
 	return EvaluationOk(values);
 }
 
-void Interpreter::enterScope(Block const& _block)
+void PureInterpreter::enterScope(Block const& _block)
 {
 	if (!m_scope->subScopes.count(&_block))
 		m_scope->subScopes[&_block] = std::make_unique<Scope>(Scope{
@@ -349,7 +350,7 @@ void Interpreter::enterScope(Block const& _block)
 	m_scope = m_scope->subScopes[&_block].get();
 }
 
-void Interpreter::leaveScope()
+void PureInterpreter::leaveScope()
 {
 	for (auto const& [var, funDeclaration]: m_scope->names)
 		if (!funDeclaration)
@@ -358,7 +359,7 @@ void Interpreter::leaveScope()
 	yulAssert(m_scope, "");
 }
 
-std::optional<ExecutionTerminated> Interpreter::incrementStatementStep()
+std::optional<ExecutionTerminated> PureInterpreter::incrementStatementStep()
 {
 	m_state.numSteps++;
 	if (m_state.config.maxSteps > 0 && m_state.numSteps >= m_state.config.maxSteps)
@@ -374,7 +375,7 @@ std::optional<ExecutionTerminated> Interpreter::incrementStatementStep()
 	return std::nullopt;
 }
 
-std::optional<ExecutionTerminated> Interpreter::incrementExpressionStep()
+std::optional<ExecutionTerminated> PureInterpreter::incrementExpressionStep()
 {
 	m_expressionNestingLevel++;
 	if (m_state.config.maxExprNesting > 0 && m_expressionNestingLevel > m_state.config.maxExprNesting)
