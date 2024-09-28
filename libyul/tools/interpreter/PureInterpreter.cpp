@@ -259,7 +259,7 @@ EvaluationResult PureInterpreter::operator()(FunctionCall const& _funCall)
 	FunctionDefinition const& fun = m_scope->getFunction(_funCall.functionName.name);
 
 	yulAssert(argsValues.size() == fun.parameters.size(), "");
-	std::map<YulName, u256> variables;
+	VariableValuesMap variables;
 	for (size_t i = 0; i < fun.parameters.size(); ++i)
 		variables[fun.parameters.at(i).name] = argsValues.at(i);
 	for (size_t i = 0; i < fun.returnVariables.size(); ++i)

@@ -46,7 +46,7 @@ void Scope::addDeclaredVariable(YulName const& _name)
 	m_declaredVariables.push_back(_name);
 }
 
-void Scope::cleanupVariables(std::map<YulName, u256>& _variables)
+void Scope::cleanupVariables(VariableValuesMap& _variables)
 {
 	for (YulName const& varName: m_declaredVariables)
 		_variables.erase(varName);

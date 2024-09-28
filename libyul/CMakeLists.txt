@@ -206,6 +206,7 @@ add_library(yul
 	tools/interpreter/PureInterpreterState.h
 	tools/interpreter/Scope.h
 	tools/interpreter/Scope.cpp
+	tools/interpreter/types.h
 	tools/interpreter/PureInterpreter.cpp
 	tools/interpreter/PureInterpreter.h
 	tools/interpreter/PureEVMInstructionInterpreter.cpp

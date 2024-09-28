@@ -17,6 +17,8 @@
 // SPDX-License-Identifier: GPL-3.0
 #pragma once
 
+#include <libyul/tools/interpreter/types.h>
+
 #include <libyul/ASTForward.h>
 #include <libyul/YulName.h>
 
@@ -51,7 +53,7 @@ public:
 	void addDeclaredVariable(YulName const& _name);
 
 	/// Note: m_declaredVariables will be cleared after this function
-	void cleanupVariables(std::map<YulName, u256>& _variables);
+	void cleanupVariables(VariableValuesMap& _variables);
 
 	/// Throw an error if function with the given name is not found.
 	FunctionDefinition const& getFunction(YulName const& _functionName) const;
