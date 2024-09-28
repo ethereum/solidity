@@ -18,9 +18,10 @@
 
 #pragma once
 
+#include <libyul/tools/interpreter/Results.h>
+
 #include <libyul/ASTForward.h>
 
-#include <libsolutil/Exceptions.h>
 #include <libsolutil/Numeric.h>
 
 #include <cstddef>
@@ -29,10 +30,6 @@
 
 namespace solidity::yul::tools::interpreter
 {
-
-class TraceLimitReached: public util::Exception
-{
-};
 
 struct FunctionCallTrace
 {
@@ -85,12 +82,13 @@ struct PureInterpreterState
 	/// Will do nothing if config.maxTraceSize == 0
 	///	- the log entry will not be constructed in this case
 	template<typename TraceType, typename... Args>
-	void addTrace(const Args&... args)
+	std::optional<TraceLimitReached> addTrace(const Args&... args)
 	{
-		if (config.maxTraceSize == 0) return;
+		if (config.maxTraceSize == 0) return std::nullopt;
 		if (traces.size() > config.maxTraceSize)
-			BOOST_THROW_EXCEPTION(TraceLimitReached());
+			return TraceLimitReached();
 		traces.emplace_back(std::in_place_type<TraceType>, args...);
+		return std::nullopt;
 	}
 
 	void dumpTraces(std::ostream& _out) const;

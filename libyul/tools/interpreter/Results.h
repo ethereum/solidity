@@ -61,6 +61,11 @@ class UnlimitedLiteralEncountered : public ExecutionTerminatedCommon<UnlimitedLi
 {
 };
 
+class TraceLimitReached: public ExecutionTerminatedCommon<TraceLimitReached>
+{
+};
+
+
 using ExecutionTerminated = std::variant<
 	ExplicitlyTerminated,
 	ExplicitlyTerminatedWithReturn,
@@ -68,7 +73,8 @@ using ExecutionTerminated = std::variant<
 	RecursionDepthLimitReached,
 	ExpressionNestingLimitReached,
 	ImpureBuiltinEncountered,
-	UnlimitedLiteralEncountered
+	UnlimitedLiteralEncountered,
+	TraceLimitReached
 >;
 
 enum class ControlFlowState
