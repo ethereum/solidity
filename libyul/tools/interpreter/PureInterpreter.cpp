@@ -279,7 +279,7 @@ EvaluationResult PureInterpreter::operator()(FunctionCall const& _funCall)
 		returnedValues.emplace_back(interpreter->valueOfVariable(retVar.name));
 	m_state.addTrace<FunctionReturnTrace>(fun, returnedValues);
 
-	return EvaluationOk(returnedValues);
+	return EvaluationOk(std::move(returnedValues));
 }
 
 EvaluationResult PureInterpreter::visit(Expression const& _st)
@@ -324,7 +324,7 @@ EvaluationResult PureInterpreter::evaluateArgs(
 				values[i] = std::get<Literal>(expr).value.value();
 		}
 	}
-	return EvaluationOk(values);
+	return EvaluationOk(std::move(values));
 }
 
 void PureInterpreter::enterScope(Block const& _block)
