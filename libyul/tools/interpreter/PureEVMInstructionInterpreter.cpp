@@ -19,9 +19,9 @@
  * Yul interpreter module that evaluates EVM instructions.
  */
 
-#include <libyul/tools/interpreter/EVMInstructionInterpreter.h>
+#include <libyul/tools/interpreter/PureEVMInstructionInterpreter.h>
 
-#include <libyul/tools/interpreter/Interpreter.h>
+#include <libyul/tools/interpreter/PureInterpreter.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/AST.h>
@@ -44,7 +44,7 @@ using solidity::util::h256;
 
 using u512 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<512, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
 
-EVMInstructionInterpretedResult EVMInstructionInterpreter::eval(
+EVMInstructionInterpretedResult PureEVMInstructionInterpreter::eval(
 	evmasm::Instruction _instruction,
 	std::vector<u256> const& _arguments
 )
@@ -277,7 +277,7 @@ EVMInstructionInterpretedResult EVMInstructionInterpreter::eval(
 	return 0;
 }
 
-EVMInstructionInterpretedResult EVMInstructionInterpreter::evalBuiltin(
+EVMInstructionInterpretedResult PureEVMInstructionInterpreter::evalBuiltin(
 	BuiltinFunctionForEVM const& _fun,
 	std::vector<Expression> const& /* _arguments */,  // This was required to execute some builtin.
 													  // But all of them are impure.

@@ -24,6 +24,7 @@
 #include <libyul/ASTForward.h>
 
 #include <libyul/tools/interpreter/Results.h>
+#include <libyul/tools/interpreter/PureInterpreter.h>
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/FixedHash.h>
@@ -52,10 +53,10 @@ using EVMInstructionInterpretedResult = std::variant<u256, ExecutionTerminated>;
 /**
  * Interprets EVM instructions based on the current state without side-effect.
  */
-class EVMInstructionInterpreter
+class PureEVMInstructionInterpreter
 {
 public:
-	explicit EVMInstructionInterpreter(langutil::EVMVersion _evmVersion, InterpreterState& _state):
+	explicit PureEVMInstructionInterpreter(langutil::EVMVersion _evmVersion, PureInterpreterState& _state):
 		m_evmVersion(_evmVersion),
 		m_state(_state)
 	{}
@@ -73,7 +74,7 @@ public:
 private:
 
 	langutil::EVMVersion m_evmVersion;
-	InterpreterState& m_state;
+	PureInterpreterState& m_state;
 public:
 };
 
