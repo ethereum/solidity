@@ -20,6 +20,8 @@
 
 #include <test/TestCase.h>
 
+#include <libyul/tools/interpreter/PureInterpreterState.h>
+
 namespace solidity::yul
 {
 struct AsmAnalysisInfo;
@@ -47,7 +49,7 @@ private:
 
 	std::shared_ptr<AST const> m_ast;
 	std::shared_ptr<AsmAnalysisInfo const> m_analysisInfo;
-	bool m_simulateExternalCallsToSelf = false;
+	tools::interpreter::PureInterpreterConfig m_config;
 };
 
 }

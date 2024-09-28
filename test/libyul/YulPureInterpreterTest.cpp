@@ -51,7 +51,11 @@ YulPureInterpreterTest::YulPureInterpreterTest(std::string const& _filename):
 {
 	m_source = m_reader.source();
 	m_expectation = m_reader.simpleExpectations();
-	m_simulateExternalCallsToSelf = m_reader.boolSetting("simulateExternalCall", false);
+
+	m_config.maxTraceSize = m_reader.sizetSetting("maxTraceSize", 128);
+	m_config.maxExprNesting = m_reader.sizetSetting("maxExprNesting", 64);
+	m_config.maxSteps = m_reader.sizetSetting("maxSteps", 512);
+	m_config.maxRecursionDepth = m_reader.sizetSetting("maxRecursionDepth", 64);
 }
 
 TestCase::TestResult YulPureInterpreterTest::run(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted)
@@ -100,7 +104,7 @@ std::string YulPureInterpreterTest::interpret()
 			state,
 			EVMDialect::strictAssemblyForEVMObjects(solidity::test::CommonOptions::get().evmVersion()),
 			m_ast->root(),
-			/*disableExternalCalls=*/ !m_simulateExternalCallsToSelf,
+			/*disableExternalCalls=*/ false,
 			/*disableMemoryTracing=*/ false
 		);
 	}
