@@ -54,7 +54,7 @@ class PureInterpreter
 {
 public:
 	/// Executes the Yul interpreter.
-	static void run(
+	static ExecutionResult run(
 		PureInterpreterState& _state,
 		Dialect const& _dialect,
 		Block const& _ast
