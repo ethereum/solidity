@@ -202,6 +202,8 @@ add_library(yul
 	optimiser/VarDeclInitializer.h
 	optimiser/VarNameCleaner.cpp
 	optimiser/VarNameCleaner.h
+	tools/interpreter/Results.h
+	tools/interpreter/PureInterpreterState.h
 	tools/interpreter/PureInterpreter.cpp
 	tools/interpreter/PureInterpreter.h
 	tools/interpreter/PureEVMInstructionInterpreter.cpp
