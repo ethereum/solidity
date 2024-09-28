@@ -50,8 +50,8 @@ namespace solidity::yul::tools::interpreter
  */
 struct Scope
 {
-	/// Used for variables and functions. Value is nullptr for variables.
-	std::map<YulName, FunctionDefinition const*> names;
+	std::map<YulName, FunctionDefinition const&> definedFunctions;
+	std::vector<YulName> declaredVariables;
 	std::map<Block const*, std::unique_ptr<Scope>> subScopes;
 	Scope* parent = nullptr;
 };
