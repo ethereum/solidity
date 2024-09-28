@@ -103,10 +103,8 @@ struct EvaluationOk
 	{
 	}
 
-	EvaluationOk(std::vector<u256> const& _values):
-		values(_values)
-	{
-	}
+	/// Disable lvalue constructor to encourage rvalue usage.
+	EvaluationOk(std::vector<u256> const& _values) = delete;
 
 	EvaluationOk(std::vector<u256>&& _values):
 		values(std::move(_values))
