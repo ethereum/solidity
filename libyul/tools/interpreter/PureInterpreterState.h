@@ -92,6 +92,8 @@ struct PureInterpreterState
 			BOOST_THROW_EXCEPTION(TraceLimitReached());
 		traces.emplace_back(std::in_place_type<TraceType>, args...);
 	}
+
+	void dumpTraces(std::ostream& _out) const;
 };
 
 }

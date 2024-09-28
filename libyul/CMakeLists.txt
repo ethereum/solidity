@@ -204,6 +204,7 @@ add_library(yul
 	optimiser/VarNameCleaner.h
 	tools/interpreter/Results.h
 	tools/interpreter/PureInterpreterState.h
+	tools/interpreter/PureInterpreterState.cpp
 	tools/interpreter/Scope.h
 	tools/interpreter/Scope.cpp
 	tools/interpreter/types.h
