@@ -62,68 +62,68 @@ EvaluationResult PureEVMInstructionInterpreter::eval(
 		return ExplicitlyTerminated();
 	// --------------- arithmetic ---------------
 	case Instruction::ADD:
-		return arg[0] + arg[1];
+		return EvaluationOk(arg[0] + arg[1]);
 	case Instruction::MUL:
-		return arg[0] * arg[1];
+		return EvaluationOk(arg[0] * arg[1]);
 	case Instruction::SUB:
-		return arg[0] - arg[1];
+		return EvaluationOk(arg[0] - arg[1]);
 	case Instruction::DIV:
-		return arg[1] == 0 ? 0 : arg[0] / arg[1];
+		return EvaluationOk(arg[1] == 0 ? 0 : arg[0] / arg[1]);
 	case Instruction::SDIV:
-		return arg[1] == 0 ? 0 : s2u(u2s(arg[0]) / u2s(arg[1]));
+		return EvaluationOk(arg[1] == 0 ? 0 : s2u(u2s(arg[0]) / u2s(arg[1])));
 	case Instruction::MOD:
-		return arg[1] == 0 ? 0 : arg[0] % arg[1];
+		return EvaluationOk(arg[1] == 0 ? 0 : arg[0] % arg[1]);
 	case Instruction::SMOD:
-		return arg[1] == 0 ? 0 : s2u(u2s(arg[0]) % u2s(arg[1]));
+		return EvaluationOk(arg[1] == 0 ? 0 : s2u(u2s(arg[0]) % u2s(arg[1])));
 	case Instruction::EXP:
-		return exp256(arg[0], arg[1]);
+		return EvaluationOk(exp256(arg[0], arg[1]));
 	case Instruction::NOT:
-		return ~arg[0];
+		return EvaluationOk(~arg[0]);
 	case Instruction::LT:
-		return arg[0] < arg[1] ? u256(1) : u256(0);
+		return EvaluationOk(arg[0] < arg[1] ? u256(1) : u256(0));
 	case Instruction::GT:
-		return arg[0] > arg[1] ? u256(1) : u256(0);
+		return EvaluationOk(arg[0] > arg[1] ? u256(1) : u256(0));
 	case Instruction::SLT:
-		return u2s(arg[0]) < u2s(arg[1]) ? u256(1) : u256(0);
+		return EvaluationOk(u2s(arg[0]) < u2s(arg[1]) ? u256(1) : u256(0));
 	case Instruction::SGT:
-		return u2s(arg[0]) > u2s(arg[1]) ? u256(1) : u256(0);
+		return EvaluationOk(u2s(arg[0]) > u2s(arg[1]) ? u256(1) : u256(0));
 	case Instruction::EQ:
-		return arg[0] == arg[1] ? u256(1) : u256(0);
+		return EvaluationOk(arg[0] == arg[1] ? u256(1) : u256(0));
 	case Instruction::ISZERO:
-		return arg[0] == 0 ? u256(1) : u256(0);
+		return EvaluationOk(arg[0] == 0 ? u256(1) : u256(0));
 	case Instruction::AND:
-		return arg[0] & arg[1];
+		return EvaluationOk(arg[0] & arg[1]);
 	case Instruction::OR:
-		return arg[0] | arg[1];
+		return EvaluationOk(arg[0] | arg[1]);
 	case Instruction::XOR:
-		return arg[0] ^ arg[1];
+		return EvaluationOk(arg[0] ^ arg[1]);
 	case Instruction::BYTE:
-		return arg[0] >= 32 ? 0 : (arg[1] >> unsigned(8 * (31 - arg[0]))) & 0xff;
+		return EvaluationOk(arg[0] >= 32 ? 0 : (arg[1] >> unsigned(8 * (31 - arg[0]))) & 0xff);
 	case Instruction::SHL:
-		return arg[0] > 255 ? 0 : (arg[1] << unsigned(arg[0]));
+		return EvaluationOk(arg[0] > 255 ? 0 : (arg[1] << unsigned(arg[0])));
 	case Instruction::SHR:
-		return arg[0] > 255 ? 0 : (arg[1] >> unsigned(arg[0]));
+		return EvaluationOk(arg[0] > 255 ? 0 : (arg[1] >> unsigned(arg[0])));
 	case Instruction::SAR:
 	{
 		static u256 const hibit = u256(1) << 255;
 		if (arg[0] >= 256)
-			return arg[1] & hibit ? u256(-1) : 0;
+			return EvaluationOk(arg[1] & hibit ? u256(-1) : 0);
 		else
 		{
 			unsigned amount = unsigned(arg[0]);
 			u256 v = arg[1] >> amount;
 			if (arg[1] & hibit)
 				v |= u256(-1) << (256 - amount);
-			return v;
+			return EvaluationOk(v);
 		}
 	}
 	case Instruction::ADDMOD:
-		return arg[2] == 0 ? 0 : u256((u512(arg[0]) + u512(arg[1])) % arg[2]);
+		return EvaluationOk(arg[2] == 0 ? 0 : u256((u512(arg[0]) + u512(arg[1])) % arg[2]));
 	case Instruction::MULMOD:
-		return arg[2] == 0 ? 0 : u256((u512(arg[0]) * u512(arg[1])) % arg[2]);
+		return EvaluationOk(arg[2] == 0 ? 0 : u256((u512(arg[0]) * u512(arg[1])) % arg[2]));
 	case Instruction::SIGNEXTEND:
 		if (arg[0] >= 31)
-			return arg[1];
+			return EvaluationOk(arg[1]);
 		else
 		{
 			unsigned testBit = unsigned(arg[0]) * 8 + 7;
@@ -133,7 +133,7 @@ EvaluationResult PureEVMInstructionInterpreter::eval(
 				ret |= ~mask;
 			else
 				ret &= mask;
-			return ret;
+			return EvaluationOk(ret);
 		}
 	// --------------- blockchain stuff ---------------
 	case Instruction::KECCAK256:
@@ -197,7 +197,7 @@ EvaluationResult PureEVMInstructionInterpreter::eval(
 		return ImpureBuiltinEncountered();
 
 	case Instruction::POP:
-		return std::vector<u256>();
+		return EvaluationOk();
 	// --------------- invalid in strict assembly ---------------
 	case Instruction::JUMP:
 	case Instruction::JUMPI:
@@ -269,12 +269,12 @@ EvaluationResult PureEVMInstructionInterpreter::eval(
 	case Instruction::SWAP16:
 	{
 		yulAssert(false, "");
-		return u256();
+		return EvaluationOk(0);
 	}
 	}
 
 	yulAssert(false, "Unknown instruction with opcode " + std::to_string(static_cast<uint8_t>(_instruction)));
-	return u256();
+	return EvaluationOk(0);
 }
 
 EvaluationResult PureEVMInstructionInterpreter::evalBuiltin(
@@ -302,6 +302,6 @@ EvaluationResult PureEVMInstructionInterpreter::evalBuiltin(
 		return ImpureBuiltinEncountered();
 
 	yulAssert(false, "Unknown builtin: " + fun);
-	return u256();
+	return EvaluationOk(0);
 }
 
