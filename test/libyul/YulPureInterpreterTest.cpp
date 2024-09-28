@@ -95,23 +95,17 @@ bool YulPureInterpreterTest::parse(std::ostream& _stream, std::string const& _li
 
 std::string YulPureInterpreterTest::interpret()
 {
-	PureInterpreterState state { m_config };
-
 	std::stringstream resultStream;
-	try
-	{
-		ExecutionResult res = PureInterpreter::run(
-			state,
-			EVMDialect::strictAssemblyForEVMObjects(solidity::test::CommonOptions::get().evmVersion()),
-			m_ast->root()
-		);
-		dumpExecutionResult(resultStream, res);
-	}
-	catch (TraceLimitReached const&)
-	{
-		resultStream << "Trace limit reached!";
-	}
+
+	PureInterpreterState state { m_config };
+	ExecutionResult res = PureInterpreter::run(
+		state,
+		EVMDialect::strictAssemblyForEVMObjects(solidity::test::CommonOptions::get().evmVersion()),
+		m_ast->root()
+	);
+	dumpExecutionResult(resultStream, res);
 	state.dumpTraces(resultStream);
+
 	return resultStream.str();
 }
 
@@ -128,7 +122,8 @@ void YulPureInterpreterTest::dumpExecutionResult(std::ostream& _stream, tools::i
 				[&](RecursionDepthLimitReached) { return "RecursionDepthLimitReached"; },
 				[&](ExpressionNestingLimitReached) { return "ExpressionNestingLimitReached"; },
 				[&](ImpureBuiltinEncountered) { return "ImpureBuiltinEncountered"; },
-				[&](UnlimitedLiteralEncountered) { return "UnlimitedLiteralEncountered"; }
+				[&](UnlimitedLiteralEncountered) { return "UnlimitedLiteralEncountered"; },
+				[&](TraceLimitReached) { return "TraceLimitReached"; }
 			}, terminated);
 		}
 	}, res);

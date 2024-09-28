@@ -274,7 +274,8 @@ EvaluationResult PureInterpreter::operator()(FunctionCall const& _funCall)
 
 	std::unique_ptr<PureInterpreter> interpreter = makeInterpreterCopy(std::move(variables));
 
-	m_state.addTrace<FunctionCallTrace>(fun, argsValues);
+	if (auto terminated = m_state.addTrace<FunctionCallTrace>(fun, argsValues)) return *terminated;
+
 	ExecutionResult funcBodyRes = (*interpreter)(fun.body);
 	if (auto* terminated = std::get_if<ExecutionTerminated>(&funcBodyRes)) return *terminated;
 
@@ -282,7 +283,8 @@ EvaluationResult PureInterpreter::operator()(FunctionCall const& _funCall)
 	returnedValues.reserve(fun.returnVariables.size());
 	for (auto const& retVar: fun.returnVariables)
 		returnedValues.emplace_back(interpreter->valueOfVariable(retVar.name));
-	m_state.addTrace<FunctionReturnTrace>(fun, returnedValues);
+
+	if (auto terminated = m_state.addTrace<FunctionReturnTrace>(fun, returnedValues)) return *terminated;
 
 	return EvaluationOk(std::move(returnedValues));
 }
