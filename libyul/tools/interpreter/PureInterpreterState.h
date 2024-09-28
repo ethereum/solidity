@@ -18,14 +18,57 @@
 
 #pragma once
 
+#include <libyul/ASTForward.h>
+
+#include <libsolutil/Exceptions.h>
+#include <libsolutil/Numeric.h>
+
 #include <cstddef>
+#include <variant>
+#include <vector>
 
 namespace solidity::yul::tools::interpreter
 {
 
+class TraceLimitReached: public util::Exception
+{
+};
+
+struct FunctionCallTrace
+{
+	FunctionDefinition const& definition;
+	std::vector<u256> params;
+
+	FunctionCallTrace(
+		FunctionDefinition const& _definition,
+		std::vector<u256> const& _params
+	):
+		definition(_definition),
+		params(_params)
+	{}
+};
+
+struct FunctionReturnTrace
+{
+	FunctionDefinition const& definition;
+	std::vector<u256> returnedValues;
+
+	FunctionReturnTrace(
+		FunctionDefinition const& _definition,
+		std::vector<u256> const& _returnedValues
+	):
+		definition(_definition),
+		returnedValues(_returnedValues)
+	{}
+};
+
+using LogTraceEntry = std::variant<FunctionCallTrace, FunctionReturnTrace>;
+
 struct PureInterpreterConfig
 {
+	// set to 0 to disable tracing
 	size_t maxTraceSize = 0;
+
 	size_t maxSteps = 0;
 	size_t maxExprNesting = 0;
 	size_t maxRecursionDepth = 0;
@@ -36,6 +79,19 @@ struct PureInterpreterState
 	PureInterpreterConfig const config;
 
 	size_t numSteps = 0;
+	std::vector<LogTraceEntry> traces;
+
+	/// Add a log trace.
+	/// Will do nothing if config.maxTraceSize == 0
+	///	- the log entry will not be constructed in this case
+	template<typename TraceType, typename... Args>
+	void addTrace(const Args&... args)
+	{
+		if (config.maxTraceSize == 0) return;
+		if (traces.size() > config.maxTraceSize)
+			BOOST_THROW_EXCEPTION(TraceLimitReached());
+		traces.emplace_back(std::in_place_type<TraceType>, args...);
+	}
 };
 
 }

@@ -266,12 +266,16 @@ EvaluationResult PureInterpreter::operator()(FunctionCall const& _funCall)
 		variables[fun.returnVariables.at(i).name] = 0;
 
 	std::unique_ptr<PureInterpreter> interpreter = makeInterpreterCopy(std::move(variables));
+
+	m_state.addTrace<FunctionCallTrace>(fun, argsValues);
 	ExecutionResult funcBodyRes = (*interpreter)(fun.body);
 	if (auto* terminated = std::get_if<ExecutionTerminated>(&funcBodyRes)) return *terminated;
 
 	std::vector<u256> returnedValues;
 	for (auto const& retVar: fun.returnVariables)
 		returnedValues.emplace_back(interpreter->valueOfVariable(retVar.name));
+	m_state.addTrace<FunctionReturnTrace>(fun, returnedValues);
+
 	return EvaluationOk(returnedValues);
 }
 
