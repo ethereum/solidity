@@ -93,7 +93,7 @@ ExecutionResult PureInterpreter::operator()(VariableDeclaration const& _declarat
 		YulName varName = _declaration.variables.at(i).name;
 		solAssert(!m_variables.count(varName), "");
 		m_variables[varName] = values.at(i);
-		m_scope->names.emplace(varName, nullptr);
+		m_scope->declaredVariables.emplace_back(varName);
 	}
 	return ExecutionOk { ControlFlowState::Default };
 }
@@ -213,7 +213,7 @@ ExecutionResult PureInterpreter::operator()(Block const& _block)
 		if (std::holds_alternative<FunctionDefinition>(statement))
 		{
 			FunctionDefinition const& funDef = std::get<FunctionDefinition>(statement);
-			m_scope->names.emplace(funDef.name, &funDef);
+			m_scope->definedFunctions.emplace(funDef.name, funDef);
 		}
 
 	for (auto const& statement: _block.statements)
@@ -266,25 +266,24 @@ EvaluationResult PureInterpreter::operator()(FunctionCall const& _funCall)
 
 	Scope* scope = m_scope;
 	for (; scope; scope = scope->parent)
-		if (scope->names.count(_funCall.functionName.name))
+		if (scope->definedFunctions.count(_funCall.functionName.name))
 			break;
 	yulAssert(scope, "");
 
-	FunctionDefinition const* fun = scope->names.at(_funCall.functionName.name);
-	yulAssert(fun, "Function not found.");
-	yulAssert(argsValues.size() == fun->parameters.size(), "");
+	FunctionDefinition const& fun = scope->definedFunctions.at(_funCall.functionName.name);
+	yulAssert(argsValues.size() == fun.parameters.size(), "");
 	std::map<YulName, u256> variables;
-	for (size_t i = 0; i < fun->parameters.size(); ++i)
-		variables[fun->parameters.at(i).name] = argsValues.at(i);
-	for (size_t i = 0; i < fun->returnVariables.size(); ++i)
-		variables[fun->returnVariables.at(i).name] = 0;
+	for (size_t i = 0; i < fun.parameters.size(); ++i)
+		variables[fun.parameters.at(i).name] = argsValues.at(i);
+	for (size_t i = 0; i < fun.returnVariables.size(); ++i)
+		variables[fun.returnVariables.at(i).name] = 0;
 
 	std::unique_ptr<PureInterpreter> interpreter = makeInterpreterCopy(std::move(variables));
-	ExecutionResult funcBodyRes = (*interpreter)(fun->body);
+	ExecutionResult funcBodyRes = (*interpreter)(fun.body);
 	if (auto* terminated = std::get_if<ExecutionTerminated>(&funcBodyRes)) return *terminated;
 
 	std::vector<u256> returnedValues;
-	for (auto const& retVar: fun->returnVariables)
+	for (auto const& retVar: fun.returnVariables)
 		returnedValues.emplace_back(interpreter->valueOfVariable(retVar.name));
 	return EvaluationOk(returnedValues);
 }
@@ -345,6 +344,7 @@ void PureInterpreter::enterScope(Block const& _block)
 		m_scope->subScopes[&_block] = std::make_unique<Scope>(Scope{
 			{},
 			{},
+			{},
 			m_scope
 		});
 	m_scope = m_scope->subScopes[&_block].get();
@@ -352,9 +352,10 @@ void PureInterpreter::enterScope(Block const& _block)
 
 void PureInterpreter::leaveScope()
 {
-	for (auto const& [var, funDeclaration]: m_scope->names)
-		if (!funDeclaration)
-			m_variables.erase(var);
+	for (auto const& varName: m_scope->declaredVariables)
+		m_variables.erase(varName);
+	m_scope->declaredVariables.clear();
+
 	m_scope = m_scope->parent;
 	yulAssert(m_scope, "");
 }
