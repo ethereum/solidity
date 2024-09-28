@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include <libyul/tools/interpreter/PureInterpreterState.h>
 #include <libyul/tools/interpreter/Results.h>
 
 #include <libyul/ASTForward.h>
@@ -43,21 +44,6 @@ struct Dialect;
 
 namespace solidity::yul::tools::interpreter
 {
-
-struct PureInterpreterConfig
-{
-	size_t maxTraceSize = 0;
-	size_t maxSteps = 0;
-	size_t maxExprNesting = 0;
-	size_t maxRecursionDepth = 0;
-};
-
-struct PureInterpreterState
-{
-	PureInterpreterConfig const config;
-
-	size_t numSteps = 0;
-};
 
 /**
  * Scope structure built and maintained during execution.
