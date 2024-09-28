@@ -91,6 +91,10 @@ public:
 	ExecutionResult operator()(Leave const&);
 	ExecutionResult operator()(Block const& _block);
 
+	/// Only execute the statements in order.
+	/// Will not alter the scope.
+	ExecutionResult execute(std::vector<Statement> const& _statements);
+
 	ExecutionResult visit(Statement const& _st);
 
 	// Expression visit methods

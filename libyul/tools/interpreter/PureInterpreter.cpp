@@ -146,9 +146,8 @@ ExecutionResult PureInterpreter::operator()(ForLoop const& _forLoop)
 	enterScope(_forLoop.pre);
 	ScopeGuard g([this]{ leaveScope(); });
 
-	for (auto const& statement: _forLoop.pre.statements)
 	{
-		ExecutionResult execRes = visit(statement);
+		ExecutionResult execRes = execute(_forLoop.pre.statements);
 		if (execRes == ExecutionResult(ExecutionOk { ControlFlowState::Leave }))
 			return execRes;
 	}
@@ -208,7 +207,12 @@ ExecutionResult PureInterpreter::operator()(Block const& _block)
 	enterScope(_block);
 	ScopeGuard guard([this] { leaveScope(); });
 
-	for (auto const& statement: _block.statements)
+	return execute(_block.statements);
+}
+
+ExecutionResult PureInterpreter::execute(std::vector<Statement> const& _statements)
+{
+	for (auto const& statement: _statements)
 	{
 		ExecutionResult statementRes = visit(statement);
 		if (statementRes != ExecutionResult(ExecutionOk {ControlFlowState::Default}))
