@@ -44,7 +44,7 @@ using solidity::util::h256;
 
 using u512 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<512, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
 
-EVMInstructionInterpretedResult PureEVMInstructionInterpreter::eval(
+EvaluationResult PureEVMInstructionInterpreter::eval(
 	evmasm::Instruction _instruction,
 	std::vector<u256> const& _arguments
 )
@@ -80,17 +80,17 @@ EVMInstructionInterpretedResult PureEVMInstructionInterpreter::eval(
 	case Instruction::NOT:
 		return ~arg[0];
 	case Instruction::LT:
-		return arg[0] < arg[1] ? 1 : 0;
+		return arg[0] < arg[1] ? u256(1) : u256(0);
 	case Instruction::GT:
-		return arg[0] > arg[1] ? 1 : 0;
+		return arg[0] > arg[1] ? u256(1) : u256(0);
 	case Instruction::SLT:
-		return u2s(arg[0]) < u2s(arg[1]) ? 1 : 0;
+		return u2s(arg[0]) < u2s(arg[1]) ? u256(1) : u256(0);
 	case Instruction::SGT:
-		return u2s(arg[0]) > u2s(arg[1]) ? 1 : 0;
+		return u2s(arg[0]) > u2s(arg[1]) ? u256(1) : u256(0);
 	case Instruction::EQ:
-		return arg[0] == arg[1] ? 1 : 0;
+		return arg[0] == arg[1] ? u256(1) : u256(0);
 	case Instruction::ISZERO:
-		return arg[0] == 0 ? 1 : 0;
+		return arg[0] == 0 ? u256(1) : u256(0);
 	case Instruction::AND:
 		return arg[0] & arg[1];
 	case Instruction::OR:
@@ -197,7 +197,7 @@ EVMInstructionInterpretedResult PureEVMInstructionInterpreter::eval(
 		return ImpureBuiltinEncountered();
 
 	case Instruction::POP:
-		break;
+		return std::vector<u256>();
 	// --------------- invalid in strict assembly ---------------
 	case Instruction::JUMP:
 	case Instruction::JUMPI:
@@ -269,15 +269,15 @@ EVMInstructionInterpretedResult PureEVMInstructionInterpreter::eval(
 	case Instruction::SWAP16:
 	{
 		yulAssert(false, "");
-		return 0;
+		return u256();
 	}
 	}
 
 	yulAssert(false, "Unknown instruction with opcode " + std::to_string(static_cast<uint8_t>(_instruction)));
-	return 0;
+	return u256();
 }
 
-EVMInstructionInterpretedResult PureEVMInstructionInterpreter::evalBuiltin(
+EvaluationResult PureEVMInstructionInterpreter::evalBuiltin(
 	BuiltinFunctionForEVM const& _fun,
 	std::vector<Expression> const& /* _arguments */,  // This was required to execute some builtin.
 													  // But all of them are impure.
@@ -302,6 +302,6 @@ EVMInstructionInterpretedResult PureEVMInstructionInterpreter::evalBuiltin(
 		return ImpureBuiltinEncountered();
 
 	yulAssert(false, "Unknown builtin: " + fun);
-	return 0;
+	return u256();
 }
 
