@@ -79,7 +79,7 @@ struct PureInterpreterState
 	PureInterpreterConfig const config;
 
 	size_t numSteps = 0;
-	std::vector<LogTraceEntry> traces;
+	std::vector<LogTraceEntry> traces = {};
 
 	/// Add a log trace.
 	/// Will do nothing if config.maxTraceSize == 0
