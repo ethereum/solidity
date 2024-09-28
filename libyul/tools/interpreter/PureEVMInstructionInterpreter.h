@@ -24,7 +24,7 @@
 #include <libyul/ASTForward.h>
 
 #include <libyul/tools/interpreter/Results.h>
-#include <libyul/tools/interpreter/PureInterpreter.h>
+#include <libyul/tools/interpreter/PureInterpreterState.h>
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/FixedHash.h>
