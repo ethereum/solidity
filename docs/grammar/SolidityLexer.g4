@@ -14,6 +14,7 @@ Address: 'address';
 Anonymous: 'anonymous';
 As: 'as';
 Assembly: 'assembly' -> pushMode(AssemblyBlockMode);
+At: 'at'; // not a real keyword
 Bool: 'bool';
 Break: 'break';
 Bytes: 'bytes';
@@ -54,6 +55,7 @@ Indexed: 'indexed';
 Interface: 'interface';
 Internal: 'internal';
 Is: 'is';
+Layout: 'layout'; // not a real keyword
 Library: 'library';
 Mapping: 'mapping';
 Memory: 'memory';
