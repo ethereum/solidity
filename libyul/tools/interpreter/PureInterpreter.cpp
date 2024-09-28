@@ -33,7 +33,6 @@
 #include <libsolutil/FixedHash.h>
 #include <libsolutil/Visitor.h>
 
-#include <range/v3/view/reverse.hpp>
 
 #include <ostream>
 #include <variant>
@@ -303,30 +302,28 @@ EvaluationResult PureInterpreter::evaluateArgs(
 	std::vector<std::optional<LiteralKind>> const* _literalArguments
 )
 {
-	std::vector<u256> values;
-	size_t i = 0;
+	std::vector<u256> values(_expr.size());
+
 	/// Function arguments are evaluated in reverse.
-	for (auto const& expr: _expr | ranges::views::reverse)
+	for (size_t i = _expr.size(); i-- > 0; )
 	{
-		if (!_literalArguments || !_literalArguments->at(_expr.size() - i - 1))
+		auto const& expr = _expr[i];
+		bool isLiteral = _literalArguments && _literalArguments->at(i);
+		if (!isLiteral)
 		{
-			EvaluationResult exprRes = visit(expr);
+			EvaluationResult exprRes = evaluate(expr, 1);
 			if (auto* terminated = std::get_if<ExecutionTerminated>(&exprRes)) return *terminated;
 			std::vector<u256> const& exprValues = std::get<EvaluationOk>(exprRes).values;
-			yulAssert(exprValues.size() == 1, "");
-			values.push_back(exprValues.at(0));
+			values[i] = exprValues.at(0);
 		}
 		else
 		{
 			if (std::get<Literal>(expr).value.unlimited())
 				return UnlimitedLiteralEncountered();
 			else
-				values.push_back(std::get<Literal>(expr).value.value());
+				values[i] = std::get<Literal>(expr).value.value();
 		}
-
-		++i;
 	}
-	std::reverse(values.begin(), values.end());
 	return EvaluationOk(values);
 }
 
