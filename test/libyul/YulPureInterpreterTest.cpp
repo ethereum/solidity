@@ -18,7 +18,7 @@
 
 #include <test/libyul/YulPureInterpreterTest.h>
 
-#include <test/tools/yulInterpreter/Interpreter.h>
+#include <libyul/tools/interpreter/PureInterpreter.h>
 
 #include <test/Common.h>
 
@@ -32,11 +32,10 @@
 #include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libsolutil/AnsiColorized.h>
+#include <libsolutil/Visitor.h>
 
 #include <boost/test/unit_test.hpp>
 #include <boost/algorithm/string.hpp>
-
-#include <fstream>
 
 using namespace solidity;
 using namespace solidity::util;
@@ -45,6 +44,8 @@ using namespace solidity::yul;
 using namespace solidity::yul::test;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
+
+using namespace solidity::yul::tools::interpreter;
 
 YulPureInterpreterTest::YulPureInterpreterTest(std::string const& _filename):
 	EVMVersionRestrictedTestCase(_filename)
@@ -94,25 +95,41 @@ bool YulPureInterpreterTest::parse(std::ostream& _stream, std::string const& _li
 
 std::string YulPureInterpreterTest::interpret()
 {
-	InterpreterState state;
-	state.maxTraceSize = 32;
-	state.maxSteps = 512;
-	state.maxExprNesting = 64;
+	PureInterpreterState state { m_config };
+
+	std::stringstream resultStream;
 	try
 	{
-		Interpreter::run(
+		ExecutionResult res = PureInterpreter::run(
 			state,
 			EVMDialect::strictAssemblyForEVMObjects(solidity::test::CommonOptions::get().evmVersion()),
-			m_ast->root(),
-			/*disableExternalCalls=*/ false,
-			/*disableMemoryTracing=*/ false
+			m_ast->root()
 		);
+		dumpExecutionResult(resultStream, res);
 	}
-	catch (InterpreterTerminatedGeneric const&)
+	catch (TraceLimitReached const&)
 	{
+		resultStream << "Trace limit reached!";
 	}
+	state.dumpTraces(resultStream);
+	return resultStream.str();
+}
 
-	std::stringstream result;
-	state.dumpTraceAndState(result, false);
-	return result.str();
+void YulPureInterpreterTest::dumpExecutionResult(std::ostream& _stream, tools::interpreter::ExecutionResult res)
+{
+	_stream << "Execution result: ";
+	_stream << std::visit(GenericVisitor {
+		[&](ExecutionOk) { return "ExecutionOk"; },
+		[&](ExecutionTerminated terminated) {
+			return std::visit(GenericVisitor{
+				[&](ExplicitlyTerminated) { return "ExplicitlyTerminated"; },
+				[&](ExplicitlyTerminatedWithReturn) { return "ExplicitlyTerminatedWithReturn"; },
+				[&](StepLimitReached) { return "StepLimitReached"; },
+				[&](RecursionDepthLimitReached) { return "RecursionDepthLimitReached"; },
+				[&](ExpressionNestingLimitReached) { return "ExpressionNestingLimitReached"; },
+				[&](ImpureBuiltinEncountered) { return "ImpureBuiltinEncountered"; },
+				[&](UnlimitedLiteralEncountered) { return "UnlimitedLiteralEncountered"; }
+			}, terminated);
+		}
+	}, res);
 }
