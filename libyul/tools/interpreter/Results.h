@@ -57,13 +57,18 @@ class ImpureBuiltinEncountered : public ExecutionTerminatedCommon<ImpureBuiltinE
 {
 };
 
+class UnlimitedLiteralEncountered : public ExecutionTerminatedCommon<UnlimitedLiteralEncountered>
+{
+};
+
 using ExecutionTerminated = std::variant<
 	ExplicitlyTerminated,
 	ExplicitlyTerminatedWithReturn,
 	StepLimitReached,
 	RecursionDepthLimitReached,
 	ExpressionNestingLimitReached,
-	ImpureBuiltinEncountered
+	ImpureBuiltinEncountered,
+	UnlimitedLiteralEncountered
 >;
 
 enum class ControlFlowState

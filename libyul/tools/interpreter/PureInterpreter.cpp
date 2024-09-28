@@ -319,10 +319,7 @@ EvaluationResult PureInterpreter::evaluateArgs(
 		else
 		{
 			if (std::get<Literal>(expr).value.unlimited())
-			{
-				yulAssert(std::get<Literal>(expr).kind == LiteralKind::String);
-				values.push_back(0xdeadbeef);
-			}
+				return UnlimitedLiteralEncountered();
 			else
 				values.push_back(std::get<Literal>(expr).value.value());
 		}
