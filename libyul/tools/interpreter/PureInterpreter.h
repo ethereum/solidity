@@ -23,6 +23,7 @@
 
 #include <libyul/tools/interpreter/PureInterpreterState.h>
 #include <libyul/tools/interpreter/Results.h>
+#include <libyul/tools/interpreter/Scope.h>
 
 #include <libyul/ASTForward.h>
 #include <libyul/YulName.h>
@@ -44,17 +45,6 @@ struct Dialect;
 
 namespace solidity::yul::tools::interpreter
 {
-
-/**
- * Scope structure built and maintained during execution.
- */
-struct Scope
-{
-	std::map<YulName, FunctionDefinition const&> definedFunctions;
-	std::vector<YulName> declaredVariables;
-	std::map<Block const*, std::unique_ptr<Scope>> subScopes;
-	Scope* const parent = nullptr;
-};
 
 /**
  * Yul interpreter.
