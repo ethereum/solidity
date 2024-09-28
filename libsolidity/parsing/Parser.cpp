@@ -370,6 +370,24 @@ std::pair<ContractKind, bool> Parser::parseContractKind()
 	return std::make_pair(kind, abstract);
 }
 
+ASTPointer<Expression> Parser::parseContractStorageBaseLocationExpression()
+{
+	solAssert(m_scanner->currentLiteral() == "layout");
+	expectToken(Token::Identifier);
+	if (
+		m_scanner->currentToken() != Token::Identifier ||
+		m_scanner->currentLiteral() != "at"
+	)
+		m_errorReporter.parserError(
+			1994_error,
+			m_scanner->currentLocation(),
+			"\'layout\' should be followed by \'at <storage-base-expression>\'."
+		);
+
+	advance();
+	return parseExpression();
+}
+
 ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 {
 	RecursionGuard recursionGuard(*this);
@@ -380,16 +398,46 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 	std::vector<ASTPointer<InheritanceSpecifier>> baseContracts;
 	std::vector<ASTPointer<ASTNode>> subNodes;
 	std::pair<ContractKind, bool> contractKind{};
+	ASTPointer<Expression> storageBaseLocationExpression;
 	documentation = parseStructuredDocumentation();
 	contractKind = parseContractKind();
 	std::tie(name, nameLocation) = expectIdentifierWithLocation();
-	if (m_scanner->currentToken() == Token::Is)
-		do
+	while (true)
+	{
+		if (m_scanner->currentToken() == Token::Is)
 		{
-			advance();
-			baseContracts.push_back(parseInheritanceSpecifier());
+			if (baseContracts.size())
+				m_errorReporter.parserError(
+					6668_error,
+					m_scanner->currentLocation(),
+					SecondarySourceLocation().append("First inheritance definition is here", baseContracts[0]->location()),
+					"Base contracts were already defined previously."
+				);
+			do
+			{
+				advance();
+				baseContracts.push_back(parseInheritanceSpecifier());
+			}
+			while (m_scanner->currentToken() == Token::Comma);
 		}
-		while (m_scanner->currentToken() == Token::Comma);
+		else if (
+			m_scanner->currentToken() == Token::Identifier &&
+			m_scanner->currentLiteral() == "layout"
+		)
+		{
+			if (storageBaseLocationExpression)
+				m_errorReporter.parserError(
+					8714_error,
+					m_scanner->currentLocation(),
+					SecondarySourceLocation().append("Another base location was defined here", storageBaseLocationExpression->location()),
+					"Storage base location was already defined previously."
+				);
+
+			storageBaseLocationExpression = parseContractStorageBaseLocationExpression();
+		}
+		else
+			break;
+	}
 	expectToken(Token::LBrace);
 	while (true)
 	{
@@ -443,7 +491,8 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 		baseContracts,
 		subNodes,
 		contractKind.first,
-		contractKind.second
+		contractKind.second,
+		storageBaseLocationExpression
 	);
 }
 

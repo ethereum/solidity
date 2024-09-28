@@ -87,6 +87,7 @@ public:
 	void fatalDeclarationError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
 
 	void parserError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
+	void parserError(ErrorId _error, SourceLocation const& _location, SecondarySourceLocation const& _secondaryLocation, std::string const& _description);
 
 	void fatalParserError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
 
