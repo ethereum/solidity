@@ -93,7 +93,7 @@ ExecutionResult PureInterpreter::operator()(VariableDeclaration const& _declarat
 		YulName varName = _declaration.variables.at(i).name;
 		solAssert(!m_variables.count(varName), "");
 		m_variables[varName] = values.at(i);
-		m_scope->declaredVariables.emplace_back(varName);
+		m_scope->addDeclaredVariable(varName);
 	}
 	return ExecutionOk { ControlFlowState::Default };
 }
@@ -208,14 +208,6 @@ ExecutionResult PureInterpreter::operator()(Block const& _block)
 	enterScope(_block);
 	ScopeGuard guard([this] { leaveScope(); });
 
-	// Register functions.
-	for (auto const& statement: _block.statements)
-		if (std::holds_alternative<FunctionDefinition>(statement))
-		{
-			FunctionDefinition const& funDef = std::get<FunctionDefinition>(statement);
-			m_scope->definedFunctions.emplace(funDef.name, funDef);
-		}
-
 	for (auto const& statement: _block.statements)
 	{
 		ExecutionResult statementRes = visit(statement);
@@ -264,13 +256,8 @@ EvaluationResult PureInterpreter::operator()(FunctionCall const& _funCall)
 		}
 	}
 
-	Scope* scope = m_scope;
-	for (; scope; scope = scope->parent)
-		if (scope->definedFunctions.count(_funCall.functionName.name))
-			break;
-	yulAssert(scope, "");
+	FunctionDefinition const& fun = m_scope->getFunction(_funCall.functionName.name);
 
-	FunctionDefinition const& fun = scope->definedFunctions.at(_funCall.functionName.name);
 	yulAssert(argsValues.size() == fun.parameters.size(), "");
 	std::map<YulName, u256> variables;
 	for (size_t i = 0; i < fun.parameters.size(); ++i)
@@ -340,23 +327,13 @@ EvaluationResult PureInterpreter::evaluateArgs(
 
 void PureInterpreter::enterScope(Block const& _block)
 {
-	if (!m_scope->subScopes.count(&_block))
-		m_scope->subScopes[&_block] = std::make_unique<Scope>(Scope{
-			{},
-			{},
-			{},
-			m_scope
-		});
-	m_scope = m_scope->subScopes[&_block].get();
+	m_scope = m_scope->getSubscope(_block);
 }
 
 void PureInterpreter::leaveScope()
 {
-	for (auto const& varName: m_scope->declaredVariables)
-		m_variables.erase(varName);
-	m_scope->declaredVariables.clear();
-
-	m_scope = m_scope->parent;
+	m_scope->cleanupVariables(m_variables);
+	m_scope = m_scope->parent();
 	yulAssert(m_scope, "");
 }
 
