@@ -66,7 +66,7 @@ ExecutionResult PureInterpreter::operator()(Assignment const& _assignment)
 	EvaluationResult evalRes = evaluate(*_assignment.value, _assignment.variableNames.size());
 	if (auto* terminated = std::get_if<ExecutionTerminated>(&evalRes)) return *terminated;
 
-	std::vector<u256> const& values = std::get<EvaluationOk>(evalRes).values;
+	std::vector<u256> const& values = std::move(std::get<EvaluationOk>(evalRes).values);
 	for (size_t i = 0; i < values.size(); ++i)
 	{
 		YulName varName = _assignment.variableNames.at(i).name;
@@ -78,12 +78,16 @@ ExecutionResult PureInterpreter::operator()(Assignment const& _assignment)
 
 ExecutionResult PureInterpreter::operator()(VariableDeclaration const& _declaration)
 {
-	std::vector<u256> values(_declaration.variables.size(), 0);
+	std::vector<u256> values;
 	if (_declaration.value)
 	{
 		EvaluationResult evalRes = evaluate(*_declaration.value, _declaration.variables.size());
 		if (auto* terminated = std::get_if<ExecutionTerminated>(&evalRes)) return *terminated;
-		values = std::get<EvaluationOk>(evalRes).values;
+		values = std::move(std::get<EvaluationOk>(evalRes).values);
+	}
+	else
+	{
+		values.assign(_declaration.variables.size(), 0);
 	}
 
 	solAssert(values.size() == _declaration.variables.size(), "");
@@ -246,7 +250,7 @@ EvaluationResult PureInterpreter::operator()(FunctionCall const& _funCall)
 	EvaluationResult argsRes = evaluateArgs(_funCall.arguments, literalArguments);
 	if (auto* terminated = std::get_if<ExecutionTerminated>(&argsRes)) return *terminated;
 
-	std::vector<u256> argsValues = std::get<EvaluationOk>(argsRes).values;
+	std::vector<u256> argsValues = std::move(std::get<EvaluationOk>(argsRes).values);
 
 	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
 	{
@@ -275,6 +279,7 @@ EvaluationResult PureInterpreter::operator()(FunctionCall const& _funCall)
 	if (auto* terminated = std::get_if<ExecutionTerminated>(&funcBodyRes)) return *terminated;
 
 	std::vector<u256> returnedValues;
+	returnedValues.reserve(fun.returnVariables.size());
 	for (auto const& retVar: fun.returnVariables)
 		returnedValues.emplace_back(interpreter->valueOfVariable(retVar.name));
 	m_state.addTrace<FunctionReturnTrace>(fun, returnedValues);
