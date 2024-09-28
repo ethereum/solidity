@@ -45,10 +45,6 @@ class StepLimitReached : public ExecutionTerminatedCommon<StepLimitReached>
 {
 };
 
-class TraceLimitReached : public ExecutionTerminatedCommon<TraceLimitReached>
-{
-};
-
 class RecursionDepthLimitReached : public ExecutionTerminatedCommon<RecursionDepthLimitReached>
 {
 };
@@ -65,7 +61,6 @@ using ExecutionTerminated = std::variant<
 	ExplicitlyTerminated,
 	ExplicitlyTerminatedWithReturn,
 	StepLimitReached,
-	TraceLimitReached,
 	RecursionDepthLimitReached,
 	ExpressionNestingLimitReached,
 	ImpureBuiltinEncountered
