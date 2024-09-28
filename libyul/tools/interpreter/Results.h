@@ -107,6 +107,11 @@ struct EvaluationOk
 		values(_values)
 	{
 	}
+
+	EvaluationOk(std::vector<u256>&& _values):
+		values(std::move(_values))
+	{
+	}
 };
 
 using ExecutionResult = std::variant<ExecutionOk, ExecutionTerminated>;
