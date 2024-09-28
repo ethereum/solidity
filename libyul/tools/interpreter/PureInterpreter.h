@@ -24,6 +24,7 @@
 #include <libyul/tools/interpreter/PureInterpreterState.h>
 #include <libyul/tools/interpreter/Results.h>
 #include <libyul/tools/interpreter/Scope.h>
+#include <libyul/tools/interpreter/types.h>
 
 #include <libyul/ASTForward.h>
 #include <libyul/YulName.h>
@@ -64,7 +65,7 @@ public:
 		Dialect const& _dialect,
 		Scope& _scope,
 		size_t _callerRecursionDepth,
-		std::map<YulName, u256> _variables = {}
+		VariableValuesMap _variables = {}
 	):
 		m_dialect(_dialect),
 		m_state(_state),
@@ -103,7 +104,7 @@ public:
 	u256 valueOfVariable(YulName _name) const { return m_variables.at(_name); }
 
 protected:
-	virtual std::unique_ptr<PureInterpreter> makeInterpreterCopy(std::map<YulName, u256> _variables = {}) const
+	virtual std::unique_ptr<PureInterpreter> makeInterpreterCopy(VariableValuesMap _variables = {}) const
 	{
 		return std::make_unique<PureInterpreter>(
 			m_state,
@@ -138,8 +139,8 @@ protected:
 
 	Dialect const& m_dialect;
 	PureInterpreterState& m_state;
-	/// Values of variables.
-	std::map<YulName, u256> m_variables;
+
+	VariableValuesMap m_variables;
 	Scope* m_scope;
 
 	size_t const m_recursionDepth = 0;
