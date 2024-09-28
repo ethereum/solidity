@@ -48,8 +48,6 @@ struct BuiltinFunctionForEVM;
 namespace solidity::yul::tools::interpreter
 {
 
-using EVMInstructionInterpretedResult = std::variant<u256, ExecutionTerminated>;
-
 /**
  * Interprets EVM instructions based on the current state without side-effect.
  */
@@ -62,10 +60,10 @@ public:
 	{}
 
 	/// Evaluate instruction
-	EVMInstructionInterpretedResult eval(evmasm::Instruction _instruction, std::vector<u256> const& _arguments);
+	EvaluationResult eval(evmasm::Instruction _instruction, std::vector<u256> const& _arguments);
 
 	/// Evaluate builtin function
-	EVMInstructionInterpretedResult evalBuiltin(
+	EvaluationResult evalBuiltin(
 		BuiltinFunctionForEVM const& _fun,
 		std::vector<Expression> const& _arguments,
 		std::vector<u256> const& _evaluatedArguments
