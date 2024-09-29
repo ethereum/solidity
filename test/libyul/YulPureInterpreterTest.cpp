@@ -110,13 +110,13 @@ std::string YulPureInterpreterTest::interpret() const
 
 	PureInterpreter interpreter(state, dialect, *subscope, 0);
 	ExecutionResult res = interpreter.execute(block.statements);
-	VariableValuesMap const& outterMostVariables = interpreter.allVariables();
+	VariableValuesMap const& outerMostVariables = interpreter.allVariables();
 
 	dumpExecutionData(
 		resultStream,
 		res,
 		state,
-		outterMostVariables
+		outerMostVariables
 	);
 
 	return resultStream.str();
@@ -126,15 +126,15 @@ void YulPureInterpreterTest::dumpExecutionData(
 	std::ostream& _stream,
 	tools::interpreter::ExecutionResult _res,
 	tools::interpreter::PureInterpreterState const& _state,
-	VariableValuesMap const& _outterMostVariables
+	VariableValuesMap const& _outerMostVariables
 ) const
 {
 	_stream << "Execution result: ";
 	dumpExecutionResult(_stream, _res);
 	_stream << std::endl;
 
-	_stream << "Outter most variable values:" << std::endl;
-	dumpVariables(_stream, _outterMostVariables);
+	_stream << "Outer most variable values:" << std::endl;
+	dumpVariables(_stream, _outerMostVariables);
 	_stream << std::endl;
 
 	_state.dumpTraces(_stream);

@@ -16,7 +16,7 @@
 }
 // ----
 // Execution result: ExecutionOk
-// Outter most variable values:
+// Outer most variable values:
 //
 // Call trace:
 //   [CALL] f(1)

@@ -8,7 +8,7 @@
 // maxSteps: 100
 // ----
 // Execution result: StepLimitReached
-// Outter most variable values:
+// Outer most variable values:
 //   i = 96
 //
 // Call trace:

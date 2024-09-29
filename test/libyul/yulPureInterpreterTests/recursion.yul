@@ -9,7 +9,7 @@
 }
 // ----
 // Execution result: ExecutionOk
-// Outter most variable values:
+// Outer most variable values:
 //   res = 21
 //
 // Call trace:

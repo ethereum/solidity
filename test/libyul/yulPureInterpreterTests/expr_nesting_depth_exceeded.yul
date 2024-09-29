@@ -11,7 +11,7 @@
 // maxExprNesting: 64
 // ----
 // Execution result: ExpressionNestingLimitReached
-// Outter most variable values:
+// Outer most variable values:
 //
 // Call trace:
 //   [CALL] f(0)

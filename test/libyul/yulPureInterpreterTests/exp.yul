@@ -5,7 +5,7 @@
 // printHex: true
 // ----
 // Execution result: ExecutionOk
-// Outter most variable values:
+// Outer most variable values:
 //   res = 0x8e38e38e38e38e38e38e38e38e38e38e38e38e38e38e38e38e38e38e38e38e39
 //
 // Call trace:

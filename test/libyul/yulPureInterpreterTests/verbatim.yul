@@ -7,6 +7,6 @@
 
 // ----
 // Execution result: UnlimitedLiteralEncountered
-// Outter most variable values:
+// Outer most variable values:
 //
 // Call trace:

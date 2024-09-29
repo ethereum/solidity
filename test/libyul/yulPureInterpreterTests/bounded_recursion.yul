@@ -15,7 +15,7 @@
 // maxTraceSize: 0
 // ----
 // Execution result: ExecutionOk
-// Outter most variable values:
+// Outer most variable values:
 //   res = 150
 //
 // Call trace:

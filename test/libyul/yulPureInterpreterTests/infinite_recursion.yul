@@ -8,6 +8,6 @@
 // maxTraceSize: 0
 // ----
 // Execution result: RecursionDepthLimitReached
-// Outter most variable values:
+// Outer most variable values:
 //
 // Call trace:

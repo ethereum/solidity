@@ -7,7 +7,7 @@
 }
 // ----
 // Execution result: ExecutionOk
-// Outter most variable values:
+// Outer most variable values:
 //
 // Call trace:
 //   [CALL] fake_mstore(10, 8192)
