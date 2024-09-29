@@ -147,7 +147,6 @@ void YulPureInterpreterTest::dumpExecutionResult(std::ostream& _stream, tools::i
 		[&](ExecutionTerminated terminated) {
 			return std::visit(GenericVisitor{
 				[&](ExplicitlyTerminated) { return "ExplicitlyTerminated"; },
-				[&](ExplicitlyTerminatedWithReturn) { return "ExplicitlyTerminatedWithReturn"; },
 				[&](StepLimitReached) { return "StepLimitReached"; },
 				[&](RecursionDepthLimitReached) { return "RecursionDepthLimitReached"; },
 				[&](ExpressionNestingLimitReached) { return "ExpressionNestingLimitReached"; },
