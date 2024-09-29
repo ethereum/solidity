@@ -18,7 +18,13 @@ def u256(num: int):
 def u2s(num: int):
     return int(num) - MX if (int(num) >> 255) > 0 else int(num)
 
-def gen_test(fn_name: str, *, param_cnt: int, calc: Callable[[tuple[int, ...]], int], test_numbers: Union[Iterable[int], None] = None):
+def gen_test(
+    fn_name: str,
+    *,
+    param_cnt: int,
+    calc: Callable[[tuple[int, ...]], int],
+    test_numbers: Union[Iterable[int], None] = None
+):
     print('Generating test for', fn_name)
 
     src: list[str] = []
