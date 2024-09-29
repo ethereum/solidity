@@ -35,6 +35,7 @@
 #include <test/libyul/EVMCodeTransformTest.h>
 #include <test/libyul/YulOptimizerTest.h>
 #include <test/libyul/YulInterpreterTest.h>
+#include <test/libyul/YulPureInterpreterTest.h>
 #include <test/libyul/ObjectCompilerTest.h>
 #include <test/libyul/ControlFlowSideEffectsTest.h>
 #include <test/libyul/FunctionSideEffects.h>
@@ -66,6 +67,7 @@ Testsuite const g_interactiveTestsuites[] = {
 	Title                           Path           Subpath                          SMT   NeedsVM Creator function */
 	{"Yul Optimizer",               "libyul",      "yulOptimizerTests",             false, false, &yul::test::YulOptimizerTest::create},
 	{"Yul Interpreter",             "libyul",      "yulInterpreterTests",           false, false, &yul::test::YulInterpreterTest::create},
+	{"Yul Pure Interpreter",        "libyul",      "yulPureInterpreterTests",       false, false, &yul::test::YulPureInterpreterTest::create},
 	{"Yul Object Compiler",         "libyul",      "objectCompiler",                false, false, &yul::test::ObjectCompilerTest::create},
 	{"Yul Control Flow Graph",      "libyul",      "yulControlFlowGraph",           false, false, &yul::test::ControlFlowGraphTest::create},
 	{"Yul SSA Control Flow Graph",  "libyul",      "yulSSAControlFlowGraph",        false, false, &yul::test::SSAControlFlowGraphTest::create},
