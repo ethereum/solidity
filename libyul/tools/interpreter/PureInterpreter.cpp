@@ -248,9 +248,7 @@ EvaluationResult PureInterpreter::operator()(FunctionCall const& _funCall)
 		if (BuiltinFunctionForEVM const* fun = dialect->builtin(_funCall.functionName.name))
 		{
 			PureEVMInstructionInterpreter interpreter(dialect->evmVersion(), m_state);
-			EvaluationResult value = interpreter.evalBuiltin(*fun, _funCall.arguments, argsValues);
-			if (auto* terminated = std::get_if<ExecutionTerminated>(&value)) return *terminated;
-			return value;
+			return interpreter.evalBuiltin(*fun, _funCall.arguments, argsValues);
 		}
 	}
 
