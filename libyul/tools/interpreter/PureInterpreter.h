@@ -102,7 +102,7 @@ public:
 	VariableValuesMap const& allVariables() const { return m_variables; }
 
 protected:
-	virtual std::unique_ptr<PureInterpreter> makeInterpreterCopy(VariableValuesMap _variables = {}) const
+	std::unique_ptr<PureInterpreter> makeInterpreterCopy(VariableValuesMap _variables = {}) const
 	{
 		return std::make_unique<PureInterpreter>(
 			m_state,
@@ -114,7 +114,7 @@ protected:
 	}
 
 	// evaluate the expression and assert that the number of return variable is _numReturnVars
-	virtual EvaluationResult evaluate(Expression const& _expression, size_t _numReturnVars);
+	EvaluationResult evaluate(Expression const& _expression, size_t _numReturnVars);
 
 	/// Evaluates the given expression from right to left and
 	/// stores it in m_value.
