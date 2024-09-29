@@ -58,7 +58,7 @@ def gen_test(
     if evm_version is not None:
         src.append(f'// EVMVersion: {evm_version}')
 
-    with open(fn_name + '.yul', 'w') as f:
+    with open(fn_name + '.yul', 'w', encoding='utf-8') as f:
         print('\n'.join(src), file=f)
 
 def main():
