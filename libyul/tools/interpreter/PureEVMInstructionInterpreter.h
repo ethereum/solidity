@@ -73,7 +73,6 @@ private:
 
 	langutil::EVMVersion m_evmVersion;
 	PureInterpreterState& m_state;
-public:
 };
 
 } // solidity::yul::test
