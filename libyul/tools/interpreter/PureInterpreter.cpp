@@ -60,8 +60,8 @@ ExecutionResult PureInterpreter::operator()(Assignment const& _assignment)
 	for (size_t i = 0; i < values.size(); ++i)
 	{
 		YulName varName = _assignment.variableNames.at(i).name;
-		solAssert(m_variables.count(varName), "");
-		m_variables[varName] = values.at(i);
+		auto [_, isNew] = m_variables.insert_or_assign(varName, values.at(i));
+		solAssert(!isNew, "");
 	}
 	return ExecutionOk { ControlFlowState::Default };
 }
@@ -84,8 +84,8 @@ ExecutionResult PureInterpreter::operator()(VariableDeclaration const& _declarat
 	for (size_t i = 0; i < values.size(); ++i)
 	{
 		YulName varName = _declaration.variables.at(i).name;
-		solAssert(!m_variables.count(varName), "");
-		m_variables[varName] = values.at(i);
+		auto [_, isNew] = m_variables.insert_or_assign(varName, values.at(i));
+		solAssert(isNew, "");
 		m_scope->addDeclaredVariable(varName);
 	}
 	return ExecutionOk { ControlFlowState::Default };
@@ -227,8 +227,9 @@ EvaluationResult PureInterpreter::operator()(Literal const& _literal)
 
 EvaluationResult PureInterpreter::operator()(Identifier const& _identifier)
 {
-	solAssert(m_variables.count(_identifier.name), "");
-	return EvaluationOk(m_variables.at(_identifier.name));
+	auto it = m_variables.find(_identifier.name);
+	solAssert(it != m_variables.end(), "");
+	return EvaluationOk(it->second);
 }
 
 EvaluationResult PureInterpreter::operator()(FunctionCall const& _funCall)
