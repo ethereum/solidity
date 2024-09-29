@@ -4,6 +4,8 @@
     pop(prevrandao())
     x := 2
 }
+// ====
+// EVMVersion: >=paris
 // ----
 // Execution result: ImpureBuiltinEncountered
 // Outer most variable values:

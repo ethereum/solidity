@@ -69,6 +69,7 @@
     check(shl(0xb0f759ae4a259c828ccb7bf5b6c878c6fe6fc5ad76ee960dac2205f393fbd951, 0xb0f759ae4a259c828ccb7bf5b6c878c6fe6fc5ad76ee960dac2205f393fbd951), 0x0)
 }
 // ====
+// EVMVersion: >=constantinople
 // maxTraceSize: 0
 // ----
 // Execution result: ExecutionOk

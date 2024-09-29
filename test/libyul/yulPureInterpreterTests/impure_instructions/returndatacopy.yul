@@ -4,6 +4,8 @@
     returndatacopy(0, 0, 0)
     x := 2
 }
+// ====
+// EVMVersion: >=byzantium
 // ----
 // Execution result: ImpureBuiltinEncountered
 // Outer most variable values:
