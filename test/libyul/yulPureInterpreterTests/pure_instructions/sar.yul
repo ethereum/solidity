@@ -69,6 +69,7 @@
     check(sar(0x7c11c62cefc0b18b2b8c23e44046a0f7f48e2be32bcbc14959b9a929f0d88d9c, 0x7c11c62cefc0b18b2b8c23e44046a0f7f48e2be32bcbc14959b9a929f0d88d9c), 0x0)
 }
 // ====
+// EVMVersion: >=constantinople
 // maxTraceSize: 0
 // ----
 // Execution result: ExecutionOk

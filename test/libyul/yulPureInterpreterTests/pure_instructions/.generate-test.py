@@ -23,7 +23,8 @@ def gen_test(
     *,
     param_cnt: int,
     calc: Callable[[tuple[int, ...]], int],
-    test_numbers: Union[Iterable[int], None] = None
+    test_numbers: Union[Iterable[int], None] = None,
+    evm_version: Union[str, None] = None,
 ):
     print('Generating test for', fn_name)
 
@@ -54,6 +55,8 @@ def gen_test(
 
     src.append('// ====')
     src.append('// maxTraceSize: 0')
+    if evm_version is not None:
+        src.append(f'// EVMVersion: {evm_version}')
 
     with open(fn_name + '.yul', 'w') as f:
         print('\n'.join(src), file=f)
@@ -122,12 +125,15 @@ def main():
              ],
              calc = lambda p: 0 if p[0] >= 32 else (p[1] >> (8 * (31 - p[0]))) & 0xff)
     gen_test('shl',
+             evm_version='>=constantinople',
              param_cnt = 2,
              calc = lambda p: p[1] << p[0] if p[0] < 32 else 0)
     gen_test('shr',
+             evm_version='>=constantinople',
              param_cnt = 2,
              calc = lambda p: p[1] >> p[0])
     gen_test('sar',
+             evm_version='>=constantinople',
              param_cnt = 2,
              calc = sar)
     gen_test('addmod',
