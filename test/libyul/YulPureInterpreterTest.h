@@ -21,6 +21,7 @@
 #include <test/TestCase.h>
 
 #include <libyul/tools/interpreter/PureInterpreterState.h>
+#include <libyul/tools/interpreter/types.h>
 #include <libyul/tools/interpreter/Results.h>
 
 namespace solidity::yul
@@ -46,8 +47,15 @@ public:
 
 private:
 	bool parse(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted);
-	std::string interpret();
-	void dumpExecutionResult(std::ostream& _stream, tools::interpreter::ExecutionResult res);
+	std::string interpret() const;
+	void dumpExecutionData(
+		std::ostream& _stream,
+		tools::interpreter::ExecutionResult _res,
+		tools::interpreter::PureInterpreterState const& _state,
+		tools::interpreter::VariableValuesMap const& _outterMostVariables
+	) const;
+	void dumpExecutionResult(std::ostream& _stream, tools::interpreter::ExecutionResult _res) const;
+	void dumpVariables(std::ostream& _stream, tools::interpreter::VariableValuesMap const& _variables) const;
 
 	std::shared_ptr<AST const> m_ast;
 	std::shared_ptr<AsmAnalysisInfo const> m_analysisInfo;

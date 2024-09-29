@@ -93,25 +93,51 @@ bool YulPureInterpreterTest::parse(std::ostream& _stream, std::string const& _li
 	}
 }
 
-std::string YulPureInterpreterTest::interpret()
+std::string YulPureInterpreterTest::interpret() const
 {
 	std::stringstream resultStream;
 
+	Block const& block = m_ast->root();
+
 	PureInterpreterState state { m_config };
-	ExecutionResult res = PureInterpreter::run(
+	Dialect const& dialect = EVMDialect::strictAssemblyForEVMObjects(solidity::test::CommonOptions::get().evmVersion());
+	tools::interpreter::Scope rootScope;
+	tools::interpreter::Scope* subscope = rootScope.getSubscope(block);
+
+	PureInterpreter interpreter(state, dialect, *subscope, 0);
+	ExecutionResult res = interpreter.execute(block.statements);
+	VariableValuesMap const& outterMostVariables = interpreter.allVariables();
+
+	dumpExecutionData(
+		resultStream,
+		res,
 		state,
-		EVMDialect::strictAssemblyForEVMObjects(solidity::test::CommonOptions::get().evmVersion()),
-		m_ast->root()
+		outterMostVariables
 	);
-	dumpExecutionResult(resultStream, res);
-	state.dumpTraces(resultStream);
 
 	return resultStream.str();
 }
 
-void YulPureInterpreterTest::dumpExecutionResult(std::ostream& _stream, tools::interpreter::ExecutionResult res)
+void YulPureInterpreterTest::dumpExecutionData(
+	std::ostream& _stream,
+	tools::interpreter::ExecutionResult _res,
+	tools::interpreter::PureInterpreterState const& _state,
+	VariableValuesMap const& _outterMostVariables
+) const
 {
 	_stream << "Execution result: ";
+	dumpExecutionResult(_stream, _res);
+	_stream << std::endl;
+
+	_stream << "Outter most variable values:" << std::endl;
+	dumpVariables(_stream, _outterMostVariables);
+	_stream << std::endl;
+
+	_state.dumpTraces(_stream);
+}
+
+void YulPureInterpreterTest::dumpExecutionResult(std::ostream& _stream, tools::interpreter::ExecutionResult _res) const
+{
 	_stream << std::visit(GenericVisitor {
 		[&](ExecutionOk) { return "ExecutionOk"; },
 		[&](ExecutionTerminated terminated) {
@@ -126,5 +152,15 @@ void YulPureInterpreterTest::dumpExecutionResult(std::ostream& _stream, tools::i
 				[&](TraceLimitReached) { return "TraceLimitReached"; }
 			}, terminated);
 		}
-	}, res);
+	}, _res);
+}
+
+void YulPureInterpreterTest::dumpVariables(
+	std::ostream& _stream,
+	tools::interpreter::VariableValuesMap const& _variables
+) const
+{
+	static std::string_view const INDENT = "  ";
+	for (auto const& [name, value]: _variables)
+		_stream << INDENT << name.str() << " = " << value << std::endl;
 }
