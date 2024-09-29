@@ -43,16 +43,6 @@ using namespace solidity::yul::tools::interpreter;
 
 using solidity::util::h256;
 
-ExecutionResult PureInterpreter::run(
-	PureInterpreterState& _state,
-	Dialect const& _dialect,
-	Block const& _ast
-)
-{
-	Scope scope;
-	return PureInterpreter{_state, _dialect, scope, 0}(_ast);
-}
-
 ExecutionResult PureInterpreter::operator()(ExpressionStatement const& _expressionStatement)
 {
 	EvaluationResult res = evaluate(_expressionStatement.expression, 0);
