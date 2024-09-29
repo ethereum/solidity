@@ -2,7 +2,7 @@
 
     function check(a, b)
     { if iszero(eq(a, b)) { revert(0, 0) } }
-    
+
     check(signextend(0x0, 0x0), 0x0)
     check(signextend(0x0, 0x1), 0x1)
     check(signextend(0x0, 0x2), 0x2)

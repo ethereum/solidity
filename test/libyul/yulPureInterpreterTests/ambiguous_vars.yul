@@ -14,6 +14,6 @@
 //
 // Call trace:
 //   [CALL] fake_mstore(32, 2)
-//   │ [RETURN] 
+//   │ [RETURN]
 //   [CALL] fake_mstore(0, 3)
-//   │ [RETURN] 
+//   │ [RETURN]

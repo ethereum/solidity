@@ -66,7 +66,9 @@ void PureInterpreterState::dumpTraces(std::ostream& _out) const
 				bool areIdentical = &stackTrace.back()->definition == &returnTrace.definition;
 				solAssert(areIdentical);
 
-				_out << "[RETURN] ";
+				_out << "[RETURN]";
+				if (!returnTrace.returnedValues.empty())
+					_out << " ";
 				print_values(returnTrace.returnedValues);
 				stackTrace.pop_back();
 			}
