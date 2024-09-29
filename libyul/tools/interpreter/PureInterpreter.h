@@ -53,13 +53,6 @@ namespace solidity::yul::tools::interpreter
 class PureInterpreter
 {
 public:
-	/// Executes the Yul interpreter.
-	static ExecutionResult run(
-		PureInterpreterState& _state,
-		Dialect const& _dialect,
-		Block const& _ast
-	);
-
 	PureInterpreter(
 		PureInterpreterState& _state,
 		Dialect const& _dialect,
