@@ -99,6 +99,7 @@ public:
 	EvaluationResult visit(Expression const& _st);
 
 	u256 valueOfVariable(YulName _name) const { return m_variables.at(_name); }
+	VariableValuesMap const& allVariables() const { return m_variables; }
 
 protected:
 	virtual std::unique_ptr<PureInterpreter> makeInterpreterCopy(VariableValuesMap _variables = {}) const
