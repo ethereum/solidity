@@ -82,12 +82,12 @@ struct PureInterpreterState
 	/// Will do nothing if config.maxTraceSize == 0
 	///	- the log entry will not be constructed in this case
 	template<typename TraceType, typename... Args>
-	std::optional<TraceLimitReached> addTrace(const Args&... args)
+	std::optional<TraceLimitReached> addTrace(Args const&... _args)
 	{
 		if (config.maxTraceSize == 0) return std::nullopt;
 		if (traces.size() > config.maxTraceSize)
 			return TraceLimitReached();
-		traces.emplace_back(std::in_place_type<TraceType>, args...);
+		traces.emplace_back(std::in_place_type<TraceType>, _args...);
 		return std::nullopt;
 	}
 
