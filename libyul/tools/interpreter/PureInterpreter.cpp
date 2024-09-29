@@ -247,7 +247,7 @@ EvaluationResult PureInterpreter::operator()(FunctionCall const& _funCall)
 	{
 		if (BuiltinFunctionForEVM const* fun = dialect->builtin(_funCall.functionName.name))
 		{
-			PureEVMInstructionInterpreter interpreter(dialect->evmVersion(), m_state);
+			PureEVMInstructionInterpreter interpreter(dialect->evmVersion());
 			return interpreter.evalBuiltin(*fun, _funCall.arguments, argsValues);
 		}
 	}

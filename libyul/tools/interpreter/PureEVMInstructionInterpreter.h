@@ -54,9 +54,8 @@ namespace solidity::yul::tools::interpreter
 class PureEVMInstructionInterpreter
 {
 public:
-	explicit PureEVMInstructionInterpreter(langutil::EVMVersion _evmVersion, PureInterpreterState& _state):
-		m_evmVersion(_evmVersion),
-		m_state(_state)
+	explicit PureEVMInstructionInterpreter(langutil::EVMVersion _evmVersion):
+		m_evmVersion(_evmVersion)
 	{}
 
 	/// Evaluate instruction
@@ -72,7 +71,6 @@ public:
 private:
 
 	langutil::EVMVersion m_evmVersion;
-	PureInterpreterState& m_state;
 };
 
 } // solidity::yul::test
