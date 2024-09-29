@@ -34,6 +34,8 @@
 #include <libsolutil/Numeric.h>
 #include <libsolutil/picosha2.h>
 
+#include <boost/algorithm/string.hpp>
+
 using namespace solidity;
 using namespace solidity::evmasm;
 using namespace solidity::yul;
@@ -288,6 +290,9 @@ EvaluationResult PureEVMInstructionInterpreter::evalBuiltin(
 		return eval(*_fun.instruction, _evaluatedArguments);
 
 	std::string fun = _fun.name.str();
+	bool isVerbatim = boost::starts_with(fun, "verbatim");
+	if (isVerbatim)
+		return ImpureBuiltinEncountered();
 
 	static std::set<std::string> const NON_INSTRUCTION_BUILTIN_NAME = {
 		"datasize",
