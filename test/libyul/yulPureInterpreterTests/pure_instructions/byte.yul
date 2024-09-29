@@ -2,7 +2,7 @@
 
     function check(a, b)
     { if iszero(eq(a, b)) { revert(0, 0) } }
-    
+
     check(byte(0x18f76fcc2c24df8c0b6177329e34167b9a0fe7f2f333f87ac1a6b66c94df748, 0x18f76fcc2c24df8c0b6177329e34167b9a0fe7f2f333f87ac1a6b66c94df748), 0x0)
     check(byte(0x18f76fcc2c24df8c0b6177329e34167b9a0fe7f2f333f87ac1a6b66c94df748, 0x276fd280818d7e858e46f4e43dc70433dff8afb24f559451edaecbb103873855), 0x0)
     check(byte(0x18f76fcc2c24df8c0b6177329e34167b9a0fe7f2f333f87ac1a6b66c94df748, 0xc9d108de536b39631e21aa81c0f3e02c2df5e49ec7628625147361ceba089ed2), 0x0)

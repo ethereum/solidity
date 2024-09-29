@@ -19,4 +19,4 @@
 //
 // Call trace:
 //   [CALL] f()
-//   │ [RETURN] 
+//   │ [RETURN]

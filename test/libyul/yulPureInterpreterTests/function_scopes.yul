@@ -25,15 +25,15 @@
 //   │ │ │ [CALL] g(0)
 //   │ │ │ │ [CALL] f(0)
 //   │ │ │ │ │ [CALL] fake_sstore(0, 7)
-//   │ │ │ │ │ │ [RETURN] 
-//   │ │ │ │ │ [RETURN] 
-//   │ │ │ │ [RETURN] 
-//   │ │ │ [RETURN] 
+//   │ │ │ │ │ │ [RETURN]
+//   │ │ │ │ │ [RETURN]
+//   │ │ │ │ [RETURN]
+//   │ │ │ [RETURN]
 //   │ │ [CALL] f(0)
 //   │ │ │ [CALL] fake_sstore(0, 7)
-//   │ │ │ │ [RETURN] 
-//   │ │ │ [RETURN] 
-//   │ │ [RETURN] 
+//   │ │ │ │ [RETURN]
+//   │ │ │ [RETURN]
+//   │ │ [RETURN]
 //   │ [CALL] fake_sstore(1, 8)
-//   │ │ [RETURN] 
-//   │ [RETURN] 
+//   │ │ [RETURN]
+//   │ [RETURN]

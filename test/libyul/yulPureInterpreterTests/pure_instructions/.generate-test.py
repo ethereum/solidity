@@ -26,7 +26,7 @@ def gen_test(fn_name: str, *, param_cnt: int, calc: Callable[[tuple[int, ...]], 
     src.append("""
     function check(a, b)
     { if iszero(eq(a, b)) { revert(0, 0) } }
-    """)
+""")
 
     if test_numbers is None:
         if param_cnt == 1:

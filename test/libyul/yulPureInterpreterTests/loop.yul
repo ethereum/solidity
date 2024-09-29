@@ -11,18 +11,18 @@
 //
 // Call trace:
 //   [CALL] fake_mstore(10, 8192)
-//   │ [RETURN] 
+//   │ [RETURN]
 //   [CALL] fake_mstore(15, 12288)
-//   │ [RETURN] 
+//   │ [RETURN]
 //   [CALL] fake_mstore(20, 16384)
-//   │ [RETURN] 
+//   │ [RETURN]
 //   [CALL] fake_mstore(25, 20480)
-//   │ [RETURN] 
+//   │ [RETURN]
 //   [CALL] fake_mstore(30, 24576)
-//   │ [RETURN] 
+//   │ [RETURN]
 //   [CALL] fake_mstore(35, 28672)
-//   │ [RETURN] 
+//   │ [RETURN]
 //   [CALL] fake_mstore(40, 32768)
-//   │ [RETURN] 
+//   │ [RETURN]
 //   [CALL] fake_mstore(45, 36864)
-//   │ [RETURN] 
+//   │ [RETURN]
