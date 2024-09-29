@@ -7,7 +7,7 @@ object "obj" {
     }
 }
 // "foo" was evaluated before `loadimmutable`
-// Expection for this test should be changed to `ImpureBuiltinEncountered`
+// Expectation for this test should be changed to `ImpureBuiltinEncountered`
 // if in the future if "foo" is evaluated after
 
 // ----

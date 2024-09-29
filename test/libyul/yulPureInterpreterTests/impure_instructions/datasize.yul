@@ -7,7 +7,7 @@ object "obj" {
     }
 }
 // "obj" was evaluated before `datasize`
-// Expection for this test should be changed to `ImpureBuiltinEncountered`
+// Expectation for this test should be changed to `ImpureBuiltinEncountered`
 // if in the future if "obj" is evaluated after
 
 // ----
