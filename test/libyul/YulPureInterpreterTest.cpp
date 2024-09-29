@@ -45,6 +45,8 @@ using namespace solidity::yul::test;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 
+using solidity::util::h256;
+
 using namespace solidity::yul::tools::interpreter;
 
 YulPureInterpreterTest::YulPureInterpreterTest(std::string const& _filename):
@@ -57,6 +59,8 @@ YulPureInterpreterTest::YulPureInterpreterTest(std::string const& _filename):
 	m_config.maxExprNesting = m_reader.sizetSetting("maxExprNesting", 64);
 	m_config.maxSteps = m_reader.sizetSetting("maxSteps", 512);
 	m_config.maxRecursionDepth = m_reader.sizetSetting("maxRecursionDepth", 64);
+
+	m_printHex = m_reader.boolSetting("printHex", false);
 }
 
 TestCase::TestResult YulPureInterpreterTest::run(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted)
@@ -161,6 +165,25 @@ void YulPureInterpreterTest::dumpVariables(
 ) const
 {
 	static std::string_view const INDENT = "  ";
+
+	// _variables are sorted by id. We should sort them by name
+	std::map<std::string, u256> sortedVariables;
 	for (auto const& [name, value]: _variables)
-		_stream << INDENT << name.str() << " = " << value << std::endl;
+		sortedVariables[name.str()] = value;
+
+	for (auto const& [name, value]: sortedVariables)
+	{
+		_stream << INDENT << name << " = ";
+		dumpValue(_stream, value);
+		_stream << std::endl;
+	}
+}
+
+void YulPureInterpreterTest::dumpValue(
+	std::ostream& _stream,
+	u256 _value
+) const
+{
+	if (m_printHex) _stream << "0x" << h256(_value).hex();
+	else _stream << _value;
 }

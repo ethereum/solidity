@@ -56,10 +56,13 @@ private:
 	) const;
 	void dumpExecutionResult(std::ostream& _stream, tools::interpreter::ExecutionResult _res) const;
 	void dumpVariables(std::ostream& _stream, tools::interpreter::VariableValuesMap const& _variables) const;
+	void dumpValue(std::ostream& _stream, u256 _value) const;
 
 	std::shared_ptr<AST const> m_ast;
 	std::shared_ptr<AsmAnalysisInfo const> m_analysisInfo;
 	tools::interpreter::PureInterpreterConfig m_config;
+
+	bool m_printHex;
 };
 
 }
