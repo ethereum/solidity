@@ -1,0 +1,9 @@
+{
+    "language": "Solidity",
+    "sources": {
+        "C": {"content": "contract A {}\n//SPDX-License-Identifier: GPL-3.0\npragma solidity *;"}
+    },
+    "settings": {
+        "outputSelection": {}
+    }
+}

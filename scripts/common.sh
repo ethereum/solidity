@@ -327,7 +327,7 @@ function gnu_grep
 
 function time_to_json_file
 {
-    local output_file="$1"
+    local time_file="$1"
     local cmd=("${@:2}")
     (( $# >= 2 )) || assertFail
 
@@ -340,9 +340,25 @@ function time_to_json_file
     {
         {
             time { "${cmd[@]}" 1>&3 2>&4; }
-        } 2> "$output_file"
+        } 2> "$time_file"
     } 3>&1 4>&2
 
     # Restore original format so that it does not spill outside of the function.
     TIMEFORMAT="$original_timeformat"
+}
+
+function gnu_time_to_json_file
+{
+    local time_file="$1"
+    local cmd=("${@:2}")
+    (( $# >= 2 )) || assertFail
+
+    local gnu_time_path
+    gnu_time_path=$(type -P time)
+
+    "$gnu_time_path" \
+        --output "$time_file" \
+        --quiet \
+        --format '{"real": %e, "user": %U, "sys": %S, "mem": %M, "exit": %x}' \
+            "${cmd[@]}"
 }

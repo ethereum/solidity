@@ -25,9 +25,9 @@
 
 #include <libsolidity/experimental/ast/TypeSystemHelper.h>
 
-#include <libyul/YulStack.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AST.h>
+#include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/optimiser/ASTCopier.h>
 
 #include <libsolidity/experimental/codegen/Common.h>

@@ -782,6 +782,28 @@ void CompilerStack::link()
 	}
 }
 
+YulStack CompilerStack::loadGeneratedIR(std::string const& _ir) const
+{
+	YulStack stack(
+		m_evmVersion,
+		m_eofVersion,
+		YulStack::Language::StrictAssembly,
+		m_optimiserSettings,
+		m_debugInfoSelection,
+		this, // _soliditySourceProvider
+		m_objectOptimizer
+	);
+	bool yulAnalysisSuccessful = stack.parseAndAnalyze("", _ir);
+	solAssert(
+		yulAnalysisSuccessful,
+		_ir + "\n\n"
+		"Invalid IR generated:\n" +
+		SourceReferenceFormatter::formatErrorInformation(stack.errors(), stack) + "\n"
+	);
+
+	return stack;
+}
+
 std::vector<std::string> CompilerStack::contractNames() const
 {
 	solAssert(m_stackState >= Parsed, "Parsing was not successful.");
@@ -808,7 +830,11 @@ evmasm::AssemblyItems const* CompilerStack::assemblyItems(std::string const& _co
 	solAssert(m_stackState == CompilationSuccessful, "Compilation was not successful.");
 
 	Contract const& currentContract = contract(_contractName);
-	return currentContract.evmAssembly ? &currentContract.evmAssembly->items() : nullptr;
+	if (!currentContract.evmAssembly)
+		return nullptr;
+	solUnimplementedAssert(!m_eofVersion.has_value(), "EVM assembly output not implemented for EOF yet.");
+	solAssert(currentContract.evmAssembly->codeSections().size() == 1, "Expected a single code section in legacy codegen.");
+	return &currentContract.evmAssembly->codeSections().front().items;
 }
 
 evmasm::AssemblyItems const* CompilerStack::runtimeAssemblyItems(std::string const& _contractName) const
@@ -816,7 +842,12 @@ evmasm::AssemblyItems const* CompilerStack::runtimeAssemblyItems(std::string con
 	solAssert(m_stackState == CompilationSuccessful, "Compilation was not successful.");
 
 	Contract const& currentContract = contract(_contractName);
-	return currentContract.evmRuntimeAssembly ? &currentContract.evmRuntimeAssembly->items() : nullptr;
+
+	if (!currentContract.evmRuntimeAssembly)
+		return nullptr;
+	solUnimplementedAssert(!m_eofVersion.has_value(), "EVM assembly output not implemented for EOF yet.");
+	solAssert(currentContract.evmRuntimeAssembly->codeSections().size() == 1, "Expected a single code section in legacy codegen.");
+	return &currentContract.evmRuntimeAssembly->codeSections().front().items;
 }
 
 Json CompilerStack::generatedSources(std::string const& _contractName, bool _runtime) const
@@ -925,21 +956,24 @@ std::string const& CompilerStack::yulIR(std::string const& _contractName) const
 	return contract(_contractName).yulIR;
 }
 
-Json const& CompilerStack::yulIRAst(std::string const& _contractName) const
+Json CompilerStack::yulIRAst(std::string const& _contractName) const
 {
 	solAssert(m_stackState == CompilationSuccessful, "Compilation was not successful.");
 	solUnimplementedAssert(!isExperimentalSolidity());
-	return contract(_contractName).yulIRAst;
+
+	// NOTE: Intentionally not using LazyInit. The artifact can get very large and we don't want to
+	// keep it around when compiling a large project containing many contracts.
+	return loadGeneratedIR(contract(_contractName).yulIR).astJson();
 }
 
-Json const& CompilerStack::yulCFGJson(std::string const& _contractName) const
+Json CompilerStack::yulCFGJson(std::string const& _contractName) const
 {
-	if (m_stackState != CompilationSuccessful)
-		solThrow(CompilerError, "Compilation was not successful.");
-
+	solAssert(m_stackState == CompilationSuccessful, "Compilation was not successful.");
 	solUnimplementedAssert(!isExperimentalSolidity());
 
-	return contract(_contractName).yulCFGJson;
+	// NOTE: Intentionally not using LazyInit. The artifact can get very large and we don't want to
+	// keep it around when compiling a large project containing many contracts.
+	return loadGeneratedIR(contract(_contractName).yulIR).cfgJson();
 }
 
 std::string const& CompilerStack::yulIROptimized(std::string const& _contractName) const
@@ -948,11 +982,14 @@ std::string const& CompilerStack::yulIROptimized(std::string const& _contractNam
 	return contract(_contractName).yulIROptimized;
 }
 
-Json const& CompilerStack::yulIROptimizedAst(std::string const& _contractName) const
+Json CompilerStack::yulIROptimizedAst(std::string const& _contractName) const
 {
 	solAssert(m_stackState == CompilationSuccessful, "Compilation was not successful.");
 	solUnimplementedAssert(!isExperimentalSolidity());
-	return contract(_contractName).yulIROptimizedAst;
+
+	// NOTE: Intentionally not using LazyInit. The artifact can get very large and we don't want to
+	// keep it around when compiling a large project containing many contracts.
+	return loadGeneratedIR(contract(_contractName).yulIROptimized).astJson();
 }
 
 evmasm::LinkerObject const& CompilerStack::object(std::string const& _contractName) const
@@ -1507,29 +1544,11 @@ void CompilerStack::generateIR(ContractDefinition const& _contract, bool _unopti
 		);
 	}
 
-	YulStack stack(
-		m_evmVersion,
-		m_eofVersion,
-		YulStack::Language::StrictAssembly,
-		m_optimiserSettings,
-		m_debugInfoSelection,
-		m_objectOptimizer
-	);
-	bool yulAnalysisSuccessful = stack.parseAndAnalyze("", compiledContract.yulIR);
-	solAssert(
-		yulAnalysisSuccessful,
-		compiledContract.yulIR + "\n\n"
-		"Invalid IR generated:\n" +
-		SourceReferenceFormatter::formatErrorInformation(stack.errors(), stack) + "\n"
-	);
-
-	compiledContract.yulIRAst = stack.astJson();
-	compiledContract.yulCFGJson = stack.cfgJson();
+	YulStack stack = loadGeneratedIR(compiledContract.yulIR);
 	if (!_unoptimizedOnly)
 	{
 		stack.optimize();
-		compiledContract.yulIROptimized = stack.print(this);
-		compiledContract.yulIROptimizedAst = stack.astJson();
+		compiledContract.yulIROptimized = stack.print();
 	}
 }
 
@@ -1546,16 +1565,7 @@ void CompilerStack::generateEVMFromIR(ContractDefinition const& _contract)
 		return;
 
 	// Re-parse the Yul IR in EVM dialect
-	yul::YulStack stack(
-		m_evmVersion,
-		m_eofVersion,
-		yul::YulStack::Language::StrictAssembly,
-		m_optimiserSettings,
-		m_debugInfoSelection,
-		m_objectOptimizer
-	);
-	bool analysisSuccessful = stack.parseAndAnalyze("", compiledContract.yulIROptimized);
-	solAssert(analysisSuccessful);
+	YulStack stack = loadGeneratedIR(compiledContract.yulIROptimized);
 
 	//cout << yul::AsmPrinter{}(*stack.parserResult()->code) << endl;
 

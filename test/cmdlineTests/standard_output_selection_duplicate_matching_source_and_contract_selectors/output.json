@@ -1,0 +1,35 @@
+{
+    "contracts": {
+        "*": {
+            "A": {
+                "abi": []
+            }
+        },
+        "C": {
+            "A": {
+                "abi": [],
+                "evm": {
+                    "bytecode": {
+                        "object": "<BYTECODE REMOVED>"
+                    }
+                }
+            }
+        },
+        "D": {
+            "A": {
+                "abi": []
+            }
+        }
+    },
+    "sources": {
+        "*": {
+            "id": 0
+        },
+        "C": {
+            "id": 1
+        },
+        "D": {
+            "id": 2
+        }
+    }
+}

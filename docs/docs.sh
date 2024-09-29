@@ -31,5 +31,8 @@ set -euo pipefail
 script_dir="$(dirname "$0")"
 
 cd "${script_dir}"
-pip3 install -r requirements.txt --upgrade --upgrade-strategy eager
+# TODO `--ignore-installed` now fixes an issue where pip tries to uninstall a Debian installed package, but is unable to
+# TODO since Debian has decided to not use the RECORD file, which then breaks pip.
+# TODO https://github.com/pypa/pip/issues/11631 and https://bugs.launchpad.net/ubuntu/+source/wheel/+bug/2063151
+pip3 install -r requirements.txt --ignore-installed --upgrade --upgrade-strategy eager
 sphinx-build -nW -b html -d _build/doctrees . _build/html

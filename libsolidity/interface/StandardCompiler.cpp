@@ -349,7 +349,7 @@ Json formatLinkReferences(std::map<size_t, std::string> const& linkReferences)
 	return ret;
 }
 
-Json formatImmutableReferences(std::map<u256, std::pair<std::string, std::vector<size_t>>> const& _immutableReferences)
+Json formatImmutableReferences(std::map<u256, evmasm::LinkerObject::ImmutableRefs> const& _immutableReferences)
 {
 	Json ret = Json::object();
 
@@ -1204,7 +1204,7 @@ Json StandardCompiler::importEVMAssembly(StandardCompiler::InputsAndSettings _in
 	if (!isBinaryRequested(_inputsAndSettings.outputSelection))
 		return Json::object();
 
-	evmasm::EVMAssemblyStack stack(_inputsAndSettings.evmVersion);
+	evmasm::EVMAssemblyStack stack(_inputsAndSettings.evmVersion, _inputsAndSettings.eofVersion);
 	std::string const& sourceName = _inputsAndSettings.jsonSources.begin()->first; // result of structured binding can only be used within lambda from C++20 on.
 	Json const& sourceJson = _inputsAndSettings.jsonSources.begin()->second;
 	try

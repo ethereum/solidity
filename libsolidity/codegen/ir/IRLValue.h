@@ -40,7 +40,7 @@ struct IRLValue
 	{
 		VariableDeclaration const* variable = nullptr;
 	};
-	struct Storage
+	struct GenericStorage
 	{
 		std::string const slot;
 		/// unsigned: Used when the offset is known at compile time, uses optimized
@@ -55,6 +55,8 @@ struct IRLValue
 				return std::get<std::string>(offset);
 		}
 	};
+	struct Storage : public GenericStorage {};
+	struct TransientStorage : public GenericStorage {};
 	struct Memory
 	{
 		std::string const address;
@@ -64,7 +66,7 @@ struct IRLValue
 	{
 		std::vector<std::optional<IRLValue>> components;
 	};
-	std::variant<Stack, Immutable, Storage, Memory, Tuple> kind;
+	std::variant<Stack, Immutable, Storage, TransientStorage, Memory, Tuple> kind;
 };
 
 }

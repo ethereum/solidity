@@ -29,18 +29,17 @@
 // Block0_0 [label="\
 // Block 0\nv0, v1 := i()\l\
 // h(v0)\l\
-// h(v1)\l\
 // "];
-// Block0_0Exit [label="MainExit"];
+// Block0_0Exit [label="Terminated"];
 // Block0_0 -> Block0_0Exit;
 // FunctionEntry_f_0 [label="function f:
 //  r := f(v0, v1)"];
 // FunctionEntry_f_0 -> Block1_0;
 // Block1_0 [label="\
-// Block 0\nv2 := add(v1, v0)\l\
-// v3 := sub(v0, v2)\l\
+// Block 0\nv3 := add(v1, v0)\l\
+// v4 := sub(v0, v3)\l\
 // "];
-// Block1_0Exit [label="FunctionReturn[v3]"];
+// Block1_0Exit [label="FunctionReturn[v4]"];
 // Block1_0 -> Block1_0Exit;
 // FunctionEntry_g_0 [label="function g:
 //  g()"];
@@ -55,6 +54,7 @@
 // FunctionEntry_h_0 -> Block3_0;
 // Block3_0 [label="\
 // Block 0\nv2 := f(0, v0)\l\
+// h(v2)\l\
 // "];
 // Block3_0Exit [label="Terminated"];
 // Block3_0 -> Block3_0Exit;

@@ -1,0 +1,141 @@
+{
+    "contracts": {
+        "C": {
+            "A": {
+                "evm": {
+                    "bytecode": {
+                        "object": "<BYTECODE REMOVED>"
+                    }
+                },
+                "ir": "
+/// @use-src 0:\"C\"
+object \"A_1\" {
+    code {
+
+        mstore(64, memoryguard(128))
+        if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+
+        constructor_A_1()
+
+        let _1 := allocate_unbounded()
+        codecopy(_1, dataoffset(\"A_1_deployed\"), datasize(\"A_1_deployed\"))
+
+        return(_1, datasize(\"A_1_deployed\"))
+
+        function allocate_unbounded() -> memPtr {
+            memPtr := mload(64)
+        }
+
+        function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+            revert(0, 0)
+        }
+
+        function constructor_A_1() {
+
+        }
+
+    }
+    /// @use-src 0:\"C\"
+    object \"A_1_deployed\" {
+        code {
+
+            mstore(64, memoryguard(128))
+
+            revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
+
+            function shift_right_224_unsigned(value) -> newValue {
+                newValue :=
+
+                shr(224, value)
+
+            }
+
+            function allocate_unbounded() -> memPtr {
+                memPtr := mload(64)
+            }
+
+            function revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74() {
+                revert(0, 0)
+            }
+
+        }
+
+        data \".metadata\" hex\"<BYTECODE REMOVED>\"
+    }
+
+}
+
+",
+                "irOptimized": "/// @use-src 0:\"C\"
+object \"A_1\" {
+    code {
+        {
+            let _1 := memoryguard(0x80)
+            mstore(64, _1)
+            if callvalue() { revert(0, 0) }
+            let _2 := datasize(\"A_1_deployed\")
+            codecopy(_1, dataoffset(\"A_1_deployed\"), _2)
+            return(_1, _2)
+        }
+    }
+    /// @use-src 0:\"C\"
+    object \"A_1_deployed\" {
+        code { { revert(0, 0) } }
+        data \".metadata\" hex\"<BYTECODE REMOVED>\"
+    }
+}
+"
+            },
+            "B": {
+                "evm": {
+                    "bytecode": {
+                        "object": "<BYTECODE REMOVED>"
+                    }
+                }
+            }
+        },
+        "D": {
+            "A": {
+                "evm": {
+                    "bytecode": {
+                        "object": "<BYTECODE REMOVED>"
+                    }
+                },
+                "irOptimized": "/// @use-src 1:\"D\"
+object \"A_5\" {
+    code {
+        {
+            let _1 := memoryguard(0x80)
+            mstore(64, _1)
+            if callvalue() { revert(0, 0) }
+            let _2 := datasize(\"A_5_deployed\")
+            codecopy(_1, dataoffset(\"A_5_deployed\"), _2)
+            return(_1, _2)
+        }
+    }
+    /// @use-src 1:\"D\"
+    object \"A_5_deployed\" {
+        code { { revert(0, 0) } }
+        data \".metadata\" hex\"<BYTECODE REMOVED>\"
+    }
+}
+"
+            },
+            "B": {
+                "evm": {
+                    "bytecode": {
+                        "object": "<BYTECODE REMOVED>"
+                    }
+                }
+            }
+        }
+    },
+    "sources": {
+        "C": {
+            "id": 0
+        },
+        "D": {
+            "id": 1
+        }
+    }
+}

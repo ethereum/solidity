@@ -17,12 +17,20 @@
 // SPDX-License-Identifier: GPL-3.0
 /**
 * Transformation of a Yul AST into a control flow graph.
+*
+* Based on https://doi.org/10.1007/978-3-642-37051-9_6
+* Braun, Matthias, et al. "Simple and efficient construction of static single assignment form."
+* Compiler Construction: 22nd International Conference, CC 2013,
+* ETAPS 2013, Rome, Italy, March 16-24, 2013. Proceedings 22. Springer Berlin Heidelberg, 2013.
+*
+* We have small deviations in Algorithms 2 and 4, as the paper's presentation leads to trivial phis being spuriously
+* removed from not yet sealed blocks via a call to addPhiOperands in Algorithm 4. Instead, we perform the deletion
+* of trivial phis only after a block has been sealed, i.e., all block's predecessors are present.
 */
 #pragma once
 
-#include <libyul/backends/evm/ControlFlow.h>
-#include <libyul/ControlFlowSideEffects.h>
 #include <libyul/ControlFlowSideEffectsCollector.h>
+#include <libyul/backends/evm/ControlFlow.h>
 #include <libyul/backends/evm/SSAControlFlowGraph.h>
 #include <stack>
 
@@ -32,23 +40,16 @@ namespace solidity::yul
 class SSAControlFlowGraphBuilder
 {
 	SSAControlFlowGraphBuilder(
+		ControlFlow& _controlFlow,
 		SSACFG& _graph,
 		AsmAnalysisInfo const& _analysisInfo,
+		ControlFlowSideEffectsCollector const& _sideEffects,
 		Dialect const& _dialect
 	);
 public:
 	SSAControlFlowGraphBuilder(SSAControlFlowGraphBuilder const&) = delete;
 	SSAControlFlowGraphBuilder& operator=(SSAControlFlowGraphBuilder const&) = delete;
-	static std::unique_ptr<ControlFlow> build(AsmAnalysisInfo const& _analysisInfo, Dialect const& _dialect, Block const& _block);
-	static void buildFunctionGraphs(
-		ControlFlow& _controlFlow,
-		AsmAnalysisInfo const& _info,
-		ControlFlowSideEffectsCollector const& _sideEffects,
-		Dialect const& _dialect,
-		std::vector<std::tuple<Scope::Function const*, FunctionDefinition const*>> const& _functions
-	);
-	static std::vector<std::tuple<Scope::Function const*, FunctionDefinition const*>> buildMainGraph(
-		SSACFG& _cfg,
+	static std::unique_ptr<ControlFlow> build(
 		AsmAnalysisInfo const& _analysisInfo,
 		Dialect const& _dialect,
 		Block const& _block
@@ -73,19 +74,25 @@ public:
 	SSACFG::ValueId operator()(Literal const& _literal);
 
 private:
+	void cleanUnreachable();
+	SSACFG::ValueId tryRemoveTrivialPhi(SSACFG::ValueId _phi);
 	void assign(std::vector<std::reference_wrapper<Scope::Variable const>> _variables, Expression const* _expression);
 	std::vector<SSACFG::ValueId> visitFunctionCall(FunctionCall const& _call);
+	void registerFunctionDefinition(FunctionDefinition const& _functionDefinition);
+	void buildFunctionGraph(Scope::Function const* _function, FunctionDefinition const* _functionDefinition);
 
 	SSACFG::ValueId zero();
 	SSACFG::ValueId readVariable(Scope::Variable const& _variable, SSACFG::BlockId _block);
 	SSACFG::ValueId readVariableRecursive(Scope::Variable const& _variable, SSACFG::BlockId _block);
 	SSACFG::ValueId addPhiOperands(Scope::Variable const& _variable, SSACFG::ValueId _phi);
-	SSACFG::ValueId tryRemoveTrivialPhi(SSACFG::ValueId _phi);
 	void writeVariable(Scope::Variable const& _variable, SSACFG::BlockId _block, SSACFG::ValueId _value);
 
+	ControlFlow& m_controlFlow;
 	SSACFG& m_graph;
 	AsmAnalysisInfo const& m_info;
+	ControlFlowSideEffectsCollector const& m_sideEffects;
 	Dialect const& m_dialect;
+	std::vector<std::tuple<Scope::Function const*, FunctionDefinition const*>> m_functionDefinitions;
 	SSACFG::BlockId m_currentBlock;
 	SSACFG::BasicBlock& currentBlock() { return m_graph.block(m_currentBlock); }
 	Scope* m_scope = nullptr;
@@ -144,7 +151,7 @@ private:
 		SSACFG::BlockId _defaultCase
 	);
 
-	std::vector<std::tuple<Scope::Function const*, FunctionDefinition const*>> m_functionDefinitions;
+	FunctionDefinition const* findFunctionDefinition(Scope::Function const* _function) const;
 };
 
 }

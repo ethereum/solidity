@@ -228,6 +228,7 @@ private:
 
 	/// Assigns the value of @a _value to the lvalue @a _lvalue.
 	void writeToLValue(IRLValue const& _lvalue, IRVariable const& _value);
+
 	/// @returns a fresh IR variable containing the value of the lvalue @a _lvalue.
 	IRVariable readFromLValue(IRLValue const& _lvalue);
 

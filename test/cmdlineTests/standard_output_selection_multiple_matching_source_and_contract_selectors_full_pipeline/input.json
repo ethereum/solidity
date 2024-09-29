@@ -1,0 +1,23 @@
+{
+    "language": "Solidity",
+    "sources": {
+        "C": {"content": "contract A {}\ncontract B {}\n//SPDX-License-Identifier: GPL-3.0\npragma solidity *;"},
+        "D": {"content": "contract A {}\ncontract B {}\n//SPDX-License-Identifier: GPL-3.0\npragma solidity *;"}
+    },
+    "settings": {
+        "optimizer": {"enabled": true},
+        "debug": {"debugInfo": []},
+        "outputSelection": {
+            // This test uses outputs that require all stages of the pipeline to run, possibly via
+            // multiple paths, to make sure the later stages handle more complex output selection correctly.
+            // Currently there are only distinct paths (IR, optimized IR and bytecode generation).
+            "*": {
+                "*": ["evm.bytecode.object"],
+                "A": ["irOptimized"]
+            },
+            "C": {
+                "A": ["ir"]
+            }
+        }
+    }
+}

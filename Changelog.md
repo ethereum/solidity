@@ -4,11 +4,14 @@ Language Features:
 
 
 Compiler Features:
- * Code Generator: Transient storage value type state variables are now supported by the legacy pipeline.
+ * Code Generator: Transient storage value type state variables are now supported.
+ * General: Generate JSON representations of Yul ASTs only on demand to reduce memory usage.
 
 
 Bugfixes:
  * SMTChecker: Fix SMT logic error when assigning to an array of addresses.
+ * Yul AST: Fix shifted native source locations when debug info selection included code snippets.
+
 
 ### 0.8.27 (2024-09-04)
 

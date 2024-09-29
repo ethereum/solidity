@@ -616,7 +616,7 @@ std::string ABIFunctions::abiEncodingFunctionSimpleArray(
 				break;
 			case DataLocation::Storage:
 				if (_from.baseType()->isValueType())
-					templ("arrayElementAccess", m_utils.readFromStorage(*_from.baseType(), 0, false) + "(srcPtr)");
+					templ("arrayElementAccess", m_utils.readFromStorage(*_from.baseType(), 0, false, VariableDeclaration::Location::Unspecified) + "(srcPtr)");
 				else
 					templ("arrayElementAccess", "srcPtr");
 				break;

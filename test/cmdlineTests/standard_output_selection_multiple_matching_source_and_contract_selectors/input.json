@@ -1,0 +1,29 @@
+{
+    "language": "Solidity",
+    "sources": {
+        "":  {"content": "contract A {}\ncontract B {}\n//SPDX-License-Identifier: GPL-3.0\npragma solidity *;"},
+        "*": {"content": "contract A {}\ncontract B {}\n//SPDX-License-Identifier: GPL-3.0\npragma solidity *;"},
+        "C": {"content": "contract A {}\ncontract B {}\n//SPDX-License-Identifier: GPL-3.0\npragma solidity *;"},
+        "D": {"content": "contract A {}\ncontract B {}\n//SPDX-License-Identifier: GPL-3.0\npragma solidity *;"}
+    },
+    "settings": {
+        "outputSelection": {
+            // FIXME: Behavior of "" is inconsistent. Sometimes it matches everything, sometimes only empty name.
+            "": {
+                "":  ["metadata"],                                 // No matches
+                "*": ["transientStorageLayout"],                   // All sources, all contracts
+                "A": ["abi"]                                       // source "", contract A
+            },
+            "*": {
+                "":  ["evm.deployedBytecode.immutableReferences"], // No matches
+                "*": ["evm.bytecode.object"],                      // All sources, all contracts
+                "A": ["evm.bytecode.linkReferences"]               // All sources, contract A
+            },
+            "C": {
+                "":  ["userdoc"],                                  // No matches
+                "*": ["devdoc"],                                   // All contracts in source "C"
+                "A": ["storageLayout"]                             // source "C", contract A
+            }
+        }
+    }
+}

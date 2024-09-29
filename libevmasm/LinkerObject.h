@@ -34,6 +34,7 @@ namespace solidity::evmasm
  */
 struct LinkerObject
 {
+	using ImmutableRefs = std::pair<std::string, std::vector<size_t>>;
 	/// The bytecode.
 	bytes bytecode;
 
@@ -43,7 +44,7 @@ struct LinkerObject
 
 	/// Map from hashes of the identifiers of immutable variables to the full identifier of the immutable and
 	/// to a list of offsets into the bytecode that refer to their values.
-	std::map<u256, std::pair<std::string, std::vector<size_t>>> immutableReferences;
+	std::map<u256, ImmutableRefs> immutableReferences;
 
 	struct FunctionDebugData
 	{

@@ -1,0 +1,55 @@
+
+======= evmasm_transient_storage_state_variable_via_ir/input.sol:C =======
+EVM assembly:
+  0x80
+  dup1
+  0x40
+  mstore
+  jumpi(tag_1, callvalue)
+  dataSize(sub_0)
+  swap1
+  dup2
+  dataOffset(sub_0)
+  dup3
+  codecopy
+  return
+tag_1:
+  0x00
+  dup1
+  revert
+stop
+
+sub_0: assembly {
+      jumpi(tag_1, iszero(lt(calldatasize, 0x04)))
+      0x00
+      dup1
+      revert
+    tag_1:
+      jumpi(tag_3, eq(0x26121ff0, shr(0xe0, calldataload(0x00))))
+      0x00
+      dup1
+      revert
+    tag_3:
+      jumpi(tag_7, callvalue)
+      jumpi(tag_7, slt(add(not(0x03), calldatasize), 0x00))
+      tload(0x00)
+      0x01
+      dup2
+      add
+      dup1
+      swap2
+      gt
+      tag_9
+      jumpi
+      0x00
+      tstore
+      stop
+    tag_9:
+      mstore(0x00, shl(0xe0, 0x4e487b71))
+      mstore(0x04, 0x11)
+      revert(0x00, 0x24)
+    tag_7:
+      0x00
+      dup1
+      revert
+}

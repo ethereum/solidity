@@ -27,7 +27,6 @@
 
 #include <libsolidity/experimental/ast/TypeSystemHelper.h>
 
-#include <libyul/YulStack.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AST.h>
 #include <libyul/optimiser/ASTCopier.h>

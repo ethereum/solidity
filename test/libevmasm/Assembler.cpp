@@ -270,7 +270,8 @@ BOOST_AUTO_TEST_CASE(immutables_and_its_source_maps)
 
 			checkCompilation(assembly);
 
-			std::string const sourceMappings = AssemblyItem::computeSourceMapping(assembly.items(), indices);
+			BOOST_REQUIRE(assembly.codeSections().size() == 1);
+			std::string const sourceMappings = AssemblyItem::computeSourceMapping(assembly.codeSections().at(0).items, indices);
 			auto const numberOfMappings = std::count(sourceMappings.begin(), sourceMappings.end(), ';');
 
 			LinkerObject const& obj = assembly.assemble();
