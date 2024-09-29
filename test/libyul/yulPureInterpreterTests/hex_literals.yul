@@ -6,7 +6,7 @@
 // printHex: true
 // ----
 // Execution result: ExecutionOk
-// Outter most variable values:
+// Outer most variable values:
 //   x = 0x112233445566778899aabbccddeeff6677889900000000000000000000000000
 //   y = 0x1234abcd00000000000000000000000000000000000000000000000000000000
 //

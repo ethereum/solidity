@@ -8,7 +8,7 @@ object "obj" {
 }
 // ----
 // Execution result: ImpureBuiltinEncountered
-// Outter most variable values:
+// Outer most variable values:
 //   x = 1
 //
 // Call trace:

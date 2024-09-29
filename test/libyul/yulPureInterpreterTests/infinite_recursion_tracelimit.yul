@@ -10,7 +10,7 @@
 // maxTraceSize: 10
 // ----
 // Execution result: TraceLimitReached
-// Outter most variable values:
+// Outer most variable values:
 //
 // Call trace:
 //   [CALL] f()

@@ -8,7 +8,7 @@
 // maxSteps: 200
 // ----
 // Execution result: ExecutionOk
-// Outter most variable values:
+// Outer most variable values:
 //   i = 100
 //
 // Call trace:

@@ -10,7 +10,7 @@
 // EVMVersion: >=constantinople
 // ----
 // Execution result: ExecutionOk
-// Outter most variable values:
+// Outer most variable values:
 //   a = 0
 //
 // Call trace:

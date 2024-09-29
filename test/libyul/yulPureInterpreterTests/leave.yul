@@ -12,7 +12,7 @@
 // EVMVersion: >=constantinople
 // ----
 // Execution result: ExecutionOk
-// Outter most variable values:
+// Outer most variable values:
 //   a = 5
 //   b = 1
 //

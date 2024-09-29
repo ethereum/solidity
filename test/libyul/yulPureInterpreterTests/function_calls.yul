@@ -7,7 +7,7 @@
 }
 // ----
 // Execution result: ExecutionOk
-// Outter most variable values:
+// Outer most variable values:
 //   r = 13
 //   t = 42
 //

@@ -52,7 +52,7 @@ private:
 		std::ostream& _stream,
 		tools::interpreter::ExecutionResult _res,
 		tools::interpreter::PureInterpreterState const& _state,
-		tools::interpreter::VariableValuesMap const& _outterMostVariables
+		tools::interpreter::VariableValuesMap const& _outerMostVariables
 	) const;
 	void dumpExecutionResult(std::ostream& _stream, tools::interpreter::ExecutionResult _res) const;
 	void dumpVariables(std::ostream& _stream, tools::interpreter::VariableValuesMap const& _variables) const;

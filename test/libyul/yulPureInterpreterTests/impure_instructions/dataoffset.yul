@@ -12,7 +12,7 @@ object "obj" {
 
 // ----
 // Execution result: UnlimitedLiteralEncountered
-// Outter most variable values:
+// Outer most variable values:
 //   x = 1
 //
 // Call trace:
