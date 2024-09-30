@@ -409,9 +409,11 @@ private:
 	struct Contract
 	{
 		ContractDefinition const* contract = nullptr;
-		std::shared_ptr<Compiler> compiler;
+
 		std::shared_ptr<evmasm::Assembly> evmAssembly;
 		std::shared_ptr<evmasm::Assembly> evmRuntimeAssembly;
+		std::optional<std::string> generatedYulUtilityCode; ///< Extra Yul utility code that was used when compiling the creation assembly
+		std::optional<std::string> runtimeGeneratedYulUtilityCode; ///< Extra Yul utility code that was used when compiling the deployed assembly
 		evmasm::LinkerObject object; ///< Deployment object (includes the runtime sub-object).
 		evmasm::LinkerObject runtimeObject; ///< Runtime object.
 		std::string yulIR; ///< Yul IR code straight from the code generator.
@@ -422,8 +424,6 @@ private:
 		util::LazyInit<Json const> transientStorageLayout;
 		util::LazyInit<Json const> userDocumentation;
 		util::LazyInit<Json const> devDocumentation;
-		util::LazyInit<Json const> generatedSources;
-		util::LazyInit<Json const> runtimeGeneratedSources;
 		mutable std::optional<std::string const> sourceMapping;
 		mutable std::optional<std::string const> runtimeSourceMapping;
 	};
