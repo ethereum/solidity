@@ -2,6 +2,201 @@ Require Import CoqOfSolidity.CoqOfSolidity.
 Require Import CoqOfSolidity.simulations.CoqOfSolidity.
 Import Stdlib.
 
+Ltac Zify.zify_post_hook ::= Z.to_euclidean_division_equations.
+
+Module Q.
+  (* store Qx, Qy, Q'x, Q'y p, a, gx, gy, gx2pow128, gy2pow128  *)
+  Record t : Set := {
+    Qx : U256.t;
+    Qy : U256.t;
+    Q'x : U256.t;
+    Q'y : U256.t;
+    p : U256.t;
+    a : U256.t;
+    gx : U256.t;
+    gy : U256.t;
+    gx2pow128 : U256.t;
+    gy2pow128 : U256.t;
+  }.
+End Q.
+
+Module Curve.
+  Record t : Set := {
+    a : Z;
+    b : Z;
+  }.
+End Curve.
+
+Module Zp.
+  Module Valid.
+    Definition t (p n : Z) : Prop :=
+      0 <= n < p.
+  End Valid.
+End Zp.
+
+(** Affine points, excluding zero *)
+Module PA.
+  Record t : Set := {
+    X : U256.t;
+    Y : U256.t;
+  }.
+
+  Module Valid.
+    Record t (p : U256.t) (P : PA.t) : Prop := {
+      X : Zp.Valid.t p P.(PA.X);
+      Y : Zp.Valid.t p P.(PA.Y);
+    }.
+  End Valid.
+
+  Definition add (a p : Z) (P1 P2 : t) : option t :=
+    (* opposite *)
+    if (P1.(X) =? P2.(X)) && (P1.(Y) =? - P2.(Y)) then
+      None
+    (* double *)
+    else if (P1.(X) =? P2.(X)) && (P1.(Y) =? P2.(Y)) then
+      let lambda := (3 * P1.(X) ^ 2 + a) / (2 * P1.(Y)) in
+      let x := (lambda ^ 2 - 2 * P1.(X)) mod p in
+      Some {|
+        X := x;
+        Y := (lambda * (P1.(X) - x) - P1.(Y)) mod p;
+      |}
+    (* add *)
+    else
+      let lambda := (P2.(Y) - P1.(Y)) / (P2.(X) - P1.(X)) in
+      let x := (lambda ^ 2 - P1.(X) - P2.(X)) mod p in
+      Some {|
+        X := x;
+        Y := (lambda * (P1.(X) - x) - P1.(Y)) mod p;
+      |}.
+End PA.
+
+(** Points, with a dummy value for the zero *)
+Module P.
+  Definition t : Set :=
+    option PA.t.
+
+  Module Valid.
+    Definition t (p : U256.t) (P : P.t) : Prop :=
+      match P with
+      | None => True
+      | Some P => PA.Valid.t p P
+      end.
+  End Valid.
+
+  Definition zero : P.t :=
+    None.
+
+  Definition add (a p : Z) (P1 P2 : t) : t :=
+    match P1, P2 with
+    | None, P | P, None => P
+    | Some P1, Some P2 => PA.add a p P1 P2
+    end.
+
+  Lemma add_zero_l (a p : U256.t) (P : t) :
+    add a p zero P = P.
+  Proof.
+    reflexivity.
+  Qed.
+
+  Lemma add_zero_r (a p : U256.t) (P : t) :
+    add a p P zero = P.
+  Proof.
+    destruct P; reflexivity.
+  Qed.
+
+  Axiom add_commut :
+    forall (a p : U256.t) (P1 P2 : t),
+    add a p P1 P2 =
+    add a p P2 P1.
+
+  Axiom add_commut_nested :
+    forall (a p : U256.t) (P1 P2 P3 : t),
+    add a p (add a p P1 P2) P3 =
+    add a p (add a p P1 P3) P2.
+End P.
+
+(** Points in the ZZ, ZZZ representation *)
+Module PZZ.
+  Record t : Set := {
+    X : U256.t;
+    Y : U256.t;
+    ZZ : U256.t;
+    ZZZ : U256.t;
+  }.
+
+  Module Valid.
+    Record t (p : U256.t) (P : PZZ.t) : Prop := {
+      X : Zp.Valid.t p P.(PZZ.X);
+      Y : Zp.Valid.t p P.(PZZ.Y);
+      ZZ : Zp.Valid.t p P.(PZZ.ZZ);
+      ZZZ : Zp.Valid.t p P.(PZZ.ZZZ);
+      zero : P.(PZZ.ZZ) = 0 <-> P.(PZZ.ZZZ) = 0;
+    }.
+  End Valid.
+
+  Definition zero : PZZ.t := {|
+    PZZ.X := 0;
+    PZZ.Y := 0;
+    PZZ.ZZ := 0;
+    PZZ.ZZZ := 0;
+  |}.
+
+  Definition of_PA (P : PA.t) : PZZ.t := {|
+    PZZ.X := P.(PA.X);
+    PZZ.Y := P.(PA.Y);
+    PZZ.ZZ := 1;
+    PZZ.ZZZ := 1;
+  |}.
+
+  Definition of_P (P : P.t) : PZZ.t :=
+    match P with
+    | None => zero
+    | Some P => of_PA P
+    end.
+
+  (** We do not need to check for [ZZZ] as both should be zero at the same time. *)
+  Definition is_zero (P : PZZ.t) : bool :=
+    P.(ZZ) =? 0.
+
+  Definition to_P (p : Z) (P : PZZ.t) : P.t :=
+    if is_zero P then
+      None
+    else
+      Some {|
+        PA.X := (P.(X) / P.(ZZ)) mod p;
+        PA.Y := (P.(Y) / P.(ZZZ)) mod p;
+      |}.
+
+  Lemma to_P_is_valid (p : U256.t) (P : PZZ.t)
+      (H_p : 2 <= p) :
+    P.Valid.t p (to_P p P).
+  Proof.
+    unfold P.Valid.t, to_P, is_zero; simpl.
+    destruct (ZZ P =? 0) eqn:H_ZZ_eq; simpl; [exact I|].
+    constructor; unfold Zp.Valid.t; simpl; lia.
+  Qed.
+
+  Lemma to_P_of_PA_eq (p : U256.t) (P : PA.t)
+      (H_P : PA.Valid.t p P) :
+    to_P p (of_PA P) = Some P.
+  Proof.
+    unfold to_P, of_PA; simpl.
+    destruct H_P; unfold Zp.Valid.t in *.
+    destruct P; simpl in *.
+    repeat f_equal.
+    all: rewrite Z.mod_small; lia.
+  Qed.
+
+  Lemma to_P_of_P_eq (p : U256.t) (P : P.t)
+      (H_P : P.Valid.t p P) :
+    to_P p (of_P P) = P.
+  Proof.
+    destruct P as [P|].
+    { apply to_P_of_PA_eq, H_P. }
+    { reflexivity. }
+  Qed.
+End PZZ.
+
 (*
 //normalized addition of two point, must not be neutral input
 function ecAddn2(x1, y1, zz1, zzz1, x2, y2, _p) -> _x, _y, _zz, _zzz {
@@ -20,65 +215,38 @@ function ecAddn2(x1, y1, zz1, zzz1, x2, y2, _p) -> _x, _y, _zz, _zzz {
   _y := addmod(x1, mulmod(y1, _y, _p), _p) //R*(Q-X3)
 }
 *)
-Definition ecAddn2 (x1 y1 zz1 zzz1 x2 y2 _p : U256.t) : U256.t * U256.t * U256.t * U256.t :=
-  let y1 := Pure.sub _p y1 in
-  let y2 := Pure.addmod (Pure.mulmod y2 zzz1 _p) y1 _p in
-  let x2 := Pure.addmod (Pure.mulmod x2 zz1 _p) (Pure.sub _p x1) _p in
-  let _x := Pure.mulmod x2 x2 _p in
-  let _y := Pure.mulmod _x x2 _p in
-  let _zz := Pure.mulmod zz1 _x _p in
+Definition ecAddn2 (P1 : PZZ.t) (P2 : PA.t) (p : U256.t) : PZZ.t :=
+  let y1 := Pure.sub p P1.(PZZ.Y) in
+  let y2 := Pure.addmod (Pure.mulmod P2.(PA.Y) P1.(PZZ.ZZZ) p) y1 p in
+  let x2 := Pure.addmod (Pure.mulmod P2.(PA.X) P1.(PZZ.ZZ) p) (Pure.sub p P1.(PZZ.X)) p in
+  let _x := Pure.mulmod x2 x2 p in
+  let _y := Pure.mulmod _x x2 p in
+  let _zz := Pure.mulmod P1.(PZZ.ZZ) _x p in
 
-  let _zzz := Pure.mulmod zzz1 _y _p in
-  let zz1 := Pure.mulmod x1 _x _p in
+  let _zzz := Pure.mulmod P1.(PZZ.ZZZ) _y p in
+  let zz1 := Pure.mulmod P1.(PZZ.X) _x p in
   let _x :=
     Pure.addmod
-      (Pure.addmod (Pure.mulmod y2 y2 _p) (Pure.sub _p _y) _p)
-      (Pure.mulmod (Pure.sub _p 2) zz1 _p)
-      _p in
+      (Pure.addmod (Pure.mulmod y2 y2 p) (Pure.sub p _y) p)
+      (Pure.mulmod (Pure.sub p 2) zz1 p)
+      p in
 
-  let x1 := Pure.mulmod (Pure.addmod zz1 (Pure.sub _p _x) _p) y2 _p in
-  let _y := Pure.addmod x1 (Pure.mulmod y1 _y _p) _p in
+  let x1 := Pure.mulmod (Pure.addmod zz1 (Pure.sub p _x) p) y2 p in
+  let _y := Pure.addmod x1 (Pure.mulmod y1 _y p) p in
 
-  (_x, _y, _zz, _zzz).
-
-Module Q.
-  (* store Qx, Qy, Q'x, Q'y p, a, gx, gy, gx2pow128, gy2pow128  *)
-  Record t : Set := {
-    Qx : U256.t;
-    Qy : U256.t;
-    Q'x : U256.t;
-    Q'y : U256.t;
-    p : U256.t;
-    a : U256.t;
-    gx : U256.t;
-    gy : U256.t;
-    gx2pow128 : U256.t;
-    gy2pow128 : U256.t;
-  }.
-End Q.
-
-Module PZZ.
-  Record t : Set := {
-    X : U256.t;
-    Y : U256.t;
-    ZZ : U256.t;
-    ZZZ : U256.t;
-  }.
-End PZZ.
+  {|
+    PZZ.X := _x;
+    PZZ.Y := _y;
+    PZZ.ZZ := _zz;
+    PZZ.ZZZ := _zzz
+  |}.
 
 Module Ts.
   Definition t : Set := list PZZ.t.
 
-  Definition default : PZZ.t := {|
-    PZZ.X := 0;
-    PZZ.Y := 0;
-    PZZ.ZZ := 0;
-    PZZ.ZZZ := 0;
-  |}.
-
   Fixpoint get (Ts : t) (index : nat) : PZZ.t :=
     match Ts with
-    | nil => default
+    | nil => PZZ.zero
     | T :: Ts =>
       match index with
       | O => T
@@ -108,26 +276,7 @@ Fixpoint for_loop {State : Set}
       state
   end.
 
-(*
-function ecGenMulmuladdX_store(
-    uint256 [10] memory Q,//store Qx, Qy, Q'x, Q'y p, a, gx, gy, gx2pow128, gy2pow128 
-    uint256 scalar_u,
-    uint256 scalar_v
-)   public view returns (uint256 X) {
-*)
-Definition ecGenMulmuladdX_store (Q : Q.t) (scalar_u scalar_v : U256.t) : U256.t :=
-  (*
-    uint256 mask=1<<127;
-    /* I. precomputations phase */
-
-    if(scalar_u==0&&scalar_v==0){
-        return 0;
-    }
-  *)
-  let mask := 2 ^ 127 in
-  if (scalar_u =? 0) && (scalar_v =? 0) then
-    0
-  else
+Definition get_Ts (Q : Q.t) : list PZZ.t :=
   (* let _modulusp:=mload(add(mload(0x40), _Ap)) *)
   let _modulusp := Q.(Q.p) in
   let Ts : Ts.t := [{|
@@ -155,14 +304,13 @@ Definition ecGenMulmuladdX_store (Q : Q.t) (scalar_u scalar_v : U256.t) : U256.t
   (* Y:=mload(add(Q,_gpow2p128_y)) *)
   let Y := Q.(Q.gy2pow128) in
   (* X,Y,ZZ,ZZZ:=ecAddn2( X,Y,1,1, mload(add(Q,_gx)),mload(add(Q,_gy)), _modulusp) //G+G' *)
-  let '(X, Y, ZZ, ZZZ) := ecAddn2 X Y 1 1 Q.(Q.gx) Q.(Q.gy) _modulusp in
+  let T :=
+    ecAddn2
+      (PZZ.of_PA {| PA.X := X; PA.Y := Y |})
+      {| PA.X := Q.(Q.gx); PA.Y := Q.(Q.gy) |}
+      _modulusp in
   (* mstore4(mload(0x40), 384, X,Y,ZZ,ZZZ) // Q, the public key *)
-  let Ts := Ts ++ [{|
-    PZZ.X := X;
-    PZZ.Y := Y;
-    PZZ.ZZ := ZZ;
-    PZZ.ZZZ := ZZZ;
-  |}] in
+  let Ts := Ts ++ [T] in
   (* mstore4(mload(0x40), 512, mload(Q),mload(add(32,Q)),1,1) *)
   let Ts := Ts ++ [{|
     PZZ.X := Q.(Q.Qx);
@@ -171,36 +319,29 @@ Definition ecGenMulmuladdX_store (Q : Q.t) (scalar_u scalar_v : U256.t) : U256.t
     PZZ.ZZZ := 1;
   |}] in
   (* X,Y,ZZ,ZZZ:=ecAddn2( mload(Q),mload(add(Q,32)),1,1, mload(add(Q,_gx)),mload(add(Q,_gy)),_modulusp )//G+Q *)
-  let '(X, Y, ZZ, ZZZ) := ecAddn2 Q.(Q.Qx) Q.(Q.Qy) 1 1 Q.(Q.gx) Q.(Q.gy) _modulusp in
+  let T :=
+    ecAddn2
+      (PZZ.of_PA {| PA.X := Q.(Q.Qx); PA.Y := Q.(Q.Qy) |})
+      {| PA.X := Q.(Q.gx); PA.Y := Q.(Q.gy) |}
+      _modulusp in
   (* mstore4(mload(0x40), 640, X,Y,ZZ,ZZZ) *)
-  let Ts := Ts ++ [{|
-    PZZ.X := X;
-    PZZ.Y := Y;
-    PZZ.ZZ := ZZ;
-    PZZ.ZZZ := ZZZ;
-  |}] in
+  let Ts := Ts ++ [T] in
   (* X:=mload(add(Q,_gpow2p128_x)) *)
   let X := Q.(Q.gx2pow128) in
   (* Y:=mload(add(Q,_gpow2p128_y)) *)
   let Y := Q.(Q.gy2pow128) in
   (* X,Y,ZZ,ZZZ:=ecAddn2(X,Y,1,1,mload(Q),mload(add(Q,32)), _modulusp)//G'+Q *)
-  let '(X, Y, ZZ, ZZZ) := ecAddn2 X Y 1 1 Q.(Q.Qx) Q.(Q.Qy) _modulusp in
+  let T :=
+    ecAddn2
+      (PZZ.of_PA {| PA.X := X; PA.Y := Y |})
+      {| PA.X := Q.(Q.Qx); PA.Y := Q.(Q.Qy) |}
+      _modulusp in
   (* mstore4(mload(0x40), 768, X,Y,ZZ,ZZZ) *)
-  let Ts := Ts ++ [{|
-    PZZ.X := X;
-    PZZ.Y := Y;
-    PZZ.ZZ := ZZ;
-    PZZ.ZZZ := ZZZ;
-  |}] in
+  let Ts := Ts ++ [T] in
   (* X,Y,ZZ,ZZZ:=ecAddn2( X,Y,ZZ,ZZZ, mload(add(Q,_gx)), mload(add(Q,_gy)), _modulusp)//G'+Q+G *)
-  let '(X, Y, ZZ, ZZZ) := ecAddn2 X Y ZZ ZZZ Q.(Q.gx) Q.(Q.gy) _modulusp in
+  let T := ecAddn2 T {| PA.X := Q.(Q.gx); PA.Y := Q.(Q.gy) |} _modulusp in
   (* mstore4(mload(0x40), 896, X,Y,ZZ,ZZZ) *)
-  let Ts := Ts ++ [{|
-    PZZ.X := X;
-    PZZ.Y := Y;
-    PZZ.ZZ := ZZ;
-    PZZ.ZZZ := ZZZ;
-  |}] in
+  let Ts := Ts ++ [T] in
   (* mstore4(mload(0x40), 1024, mload(add(Q, 64)), mload(add(Q, 96)),1,1) //Q'=2^128.Q *)
   let Ts := Ts ++ [{|
     PZZ.X := Q.(Q.Q'x);
@@ -212,13 +353,12 @@ Definition ecGenMulmuladdX_store (Q : Q.t) (scalar_u scalar_v : U256.t) : U256.t
   X,Y,ZZ,ZZZ:=ecAddn2(mload(add(Q, 64)), mload(add(Q, 96)),1,1, mload(add(Q,_gx)),mload(add(Q,_gy)), mload(add(mload(0x40), _Ap))   )//Q'+G
   mstore4(mload(0x40), 1152, X,Y,ZZ,ZZZ)
   *)
-  let '(X, Y, ZZ, ZZZ) := ecAddn2 Q.(Q.Q'x) Q.(Q.Q'y) 1 1 Q.(Q.gx) Q.(Q.gy) _modulusp in
-  let Ts := Ts ++ [{|
-    PZZ.X := X;
-    PZZ.Y := Y;
-    PZZ.ZZ := ZZ;
-    PZZ.ZZZ := ZZZ;
-  |}] in
+  let T :=
+    ecAddn2
+      (PZZ.of_PA {| PA.X := Q.(Q.Q'x); PA.Y := Q.(Q.Q'y) |})
+      {| PA.X := Q.(Q.gx); PA.Y := Q.(Q.gy) |}
+      _modulusp in
+  let Ts := Ts ++ [T] in
   (*
   X:=mload(add(Q,_gpow2p128_x))
   Y:=mload(add(Q,_gpow2p128_y))
@@ -227,71 +367,73 @@ Definition ecGenMulmuladdX_store (Q : Q.t) (scalar_u scalar_v : U256.t) : U256.t
   *)
   let X := Q.(Q.gx2pow128) in
   let Y := Q.(Q.gy2pow128) in
-  let '(X, Y, ZZ, ZZZ) := ecAddn2 Q.(Q.Q'x) Q.(Q.Q'y) 1 1 X Y _modulusp in
-  let Ts := Ts ++ [{|
-    PZZ.X := X;
-    PZZ.Y := Y;
-    PZZ.ZZ := ZZ;
-    PZZ.ZZZ := ZZZ;
-  |}] in
+  let T :=
+    ecAddn2
+      (PZZ.of_PA {| PA.X := Q.(Q.Q'x); PA.Y := Q.(Q.Q'y) |})
+      {| PA.X := X; PA.Y := Y |}
+      _modulusp in
+  let Ts := Ts ++ [T] in
   (*
   X,Y,ZZ,ZZZ:=ecAddn2(X, Y, ZZ, ZZZ, mload(add(Q,_gx)), mload(add(Q,_gy)), mload(add(mload(0x40), _Ap))   )//Q'+G'+G
   mstore4(mload(0x40), 1408, X,Y,ZZ,ZZZ)
   *)
-  let '(X, Y, ZZ, ZZZ) := ecAddn2 X Y ZZ ZZZ Q.(Q.gx) Q.(Q.gy) _modulusp in
-  let Ts := Ts ++ [{|
-    PZZ.X := X;
-    PZZ.Y := Y;
-    PZZ.ZZ := ZZ;
-    PZZ.ZZZ := ZZZ;
-  |}] in
+  let T := ecAddn2 T {| PA.X := Q.(Q.gx); PA.Y := Q.(Q.gy) |} _modulusp in
+  let Ts := Ts ++ [T] in
   (*
   X,Y,ZZ,ZZZ:=ecAddn2( mload(Q),mload(add(Q,32)),1,1, mload(add(Q, 64)), mload(add(Q, 96)), mload(add(mload(0x40), _Ap))   )//Q+Q'
   mstore4(mload(0x40), 1536, X,Y,ZZ,ZZZ)
   *)
-  let '(X, Y, ZZ, ZZZ) := ecAddn2 Q.(Q.Qx) Q.(Q.Qy) 1 1 Q.(Q.Q'x) Q.(Q.Q'y) _modulusp in
-  let Ts := Ts ++ [{|
-    PZZ.X := X;
-    PZZ.Y := Y;
-    PZZ.ZZ := ZZ;
-    PZZ.ZZZ := ZZZ;
-  |}] in
+  let T :=
+    ecAddn2
+      (PZZ.of_PA {| PA.X := Q.(Q.Qx); PA.Y := Q.(Q.Qy) |})
+      {| PA.X := Q.(Q.Q'x); PA.Y := Q.(Q.Q'y) |}
+      _modulusp in
+  let Ts := Ts ++ [T] in
   (*
   X,Y,ZZ,ZZZ:=ecAddn2( X,Y,ZZ,ZZZ, mload(add(Q,_gx)), mload(add(Q,_gy)), mload(add(mload(0x40), _Ap))   )//Q+Q'+G
   mstore4(mload(0x40), 1664, X,Y,ZZ,ZZZ)
   *)
-  let '(X, Y, ZZ, ZZZ) := ecAddn2 X Y ZZ ZZZ Q.(Q.gx) Q.(Q.gy) _modulusp in
-  let Ts := Ts ++ [{|
-    PZZ.X := X;
-    PZZ.Y := Y;
-    PZZ.ZZ := ZZ;
-    PZZ.ZZZ := ZZZ;
-  |}] in
+  let T := ecAddn2 T {| PA.X := Q.(Q.gx); PA.Y := Q.(Q.gy) |} _modulusp in
+  let Ts := Ts ++ [T] in
   (*
   X:= mload(add(768, mload(0x40)) )//G'+Q
   Y:= mload(add(800, mload(0x40)) )
   ZZ:= mload(add(832, mload(0x40)) )
   ZZZ:=mload(add(864, mload(0x40)) )
   *)
-  let '{| PZZ.X := X; PZZ.Y := Y; PZZ.ZZ := ZZ; PZZ.ZZZ := ZZZ |} := Ts.get Ts 6 in
+  let T := Ts.get Ts 6 in
   (* X,Y,ZZ,ZZZ:=ecAddn2( X,Y,ZZ,ZZZ,mload(add(Q, 64)), mload(add(Q, 96)), mload(add(mload(0x40), _Ap))   )//G'+Q+Q'+ *)
-  let '(X, Y, ZZ, ZZZ) := ecAddn2 X Y ZZ ZZZ Q.(Q.Q'x) Q.(Q.Q'y) _modulusp in
+  let T := ecAddn2 T {| PA.X := Q.(Q.Q'x); PA.Y := Q.(Q.Q'y) |} _modulusp in
   (* mstore4(mload(0x40), 1792, X,Y,ZZ,ZZZ) *)
-  let Ts := Ts ++ [{|
-    PZZ.X := X;
-    PZZ.Y := Y;
-    PZZ.ZZ := ZZ;
-    PZZ.ZZZ := ZZZ;
-  |}] in
+  let Ts := Ts ++ [T] in
   (* X,Y,ZZ,ZZZ:=ecAddn2( X,Y,ZZ,ZZZ,mload(add(Q,0xc0)),mload(add(Q,_gy)), mload(add(mload(0x40), _Ap))   )//G'+Q+Q'+G *)
-  let '(X, Y, ZZ, ZZZ) := ecAddn2 X Y ZZ ZZZ Q.(Q.gx) Q.(Q.gy) _modulusp in
+  let T := ecAddn2 T {| PA.X := Q.(Q.gx); PA.Y := Q.(Q.gy) |} _modulusp in
   (* mstore4(mload(0x40), 1920, X,Y,ZZ,ZZZ) *)
-  let Ts := Ts ++ [{|
-    PZZ.X := X;
-    PZZ.Y := Y;
-    PZZ.ZZ := ZZ;
-    PZZ.ZZZ := ZZZ;
-  |}] in
+  let Ts := Ts ++ [T] in
+  Ts.
+
+(*
+function ecGenMulmuladdX_store(
+    uint256 [10] memory Q,//store Qx, Qy, Q'x, Q'y p, a, gx, gy, gx2pow128, gy2pow128 
+    uint256 scalar_u,
+    uint256 scalar_v
+)   public view returns (uint256 X) {
+*)
+Definition ecGenMulmuladdX_store (Q : Q.t) (scalar_u scalar_v : U256.t) : U256.t :=
+  (*
+    uint256 mask=1<<127;
+    /* I. precomputations phase */
+
+    if(scalar_u==0&&scalar_v==0){
+        return 0;
+    }
+  *)
+  let mask := 2 ^ 127 in
+  if (scalar_u =? 0) && (scalar_v =? 0) then
+    0
+  else
+  let _modulusp := Q.(Q.p) in
+  let Ts := get_Ts Q in
   (*
   ZZZ:=0
   for {} iszero(ZZZ) { mask := shr(1, mask) }{

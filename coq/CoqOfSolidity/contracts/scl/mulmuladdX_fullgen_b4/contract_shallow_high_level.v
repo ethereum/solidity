@@ -1,66 +1,18 @@
 Require Import CoqOfSolidity.CoqOfSolidity.
 Require Import CoqOfSolidity.simulations.CoqOfSolidity.
 Import Stdlib.
-
-Ltac Zify.zify_post_hook ::= Z.to_euclidean_division_equations.
-
-Module Zp.
-  Module Valid.
-    Definition t (p n : Z) : Prop :=
-      0 <= n < p.
-  End Valid.
-End Zp.
-
-Module PZZ.
-  Record t : Set := {
-    X : U256.t;
-    Y : U256.t;
-    ZZ : U256.t;
-    ZZZ : U256.t;
-  }.
-
-  Module Valid.
-    Record t (p : U256.t) (P : PZZ.t) : Prop := {
-      X_valid : Zp.Valid.t p P.(X);
-      Y_valid : Zp.Valid.t p P.(Y);
-      ZZ_valid : Zp.Valid.t p P.(ZZ);
-      ZZZ_valid : Zp.Valid.t p P.(ZZZ);
-    }.
-  End Valid.
-End PZZ.
-
-Definition ecAddn2_original (x1 y1 zz1 zzz1 x2 y2 _p : U256.t) :
-    U256.t * U256.t * U256.t * U256.t :=
-  let y1 := Pure.sub _p y1 in
-  let y2 := Pure.addmod (Pure.mulmod y2 zzz1 _p) y1 _p in
-  let x2 := Pure.addmod (Pure.mulmod x2 zz1 _p) (Pure.sub _p x1) _p in
-  let _x := Pure.mulmod x2 x2 _p in
-  let _y := Pure.mulmod _x x2 _p in
-  let _zz := Pure.mulmod zz1 _x _p in
-
-  let _zzz := Pure.mulmod zzz1 _y _p in
-  let zz1 := Pure.mulmod x1 _x _p in
-  let _x :=
-    Pure.addmod
-      (Pure.addmod (Pure.mulmod y2 y2 _p) (Pure.sub _p _y) _p)
-      (Pure.mulmod (Pure.sub _p 2) zz1 _p)
-      _p in
-
-  let x1 := Pure.mulmod (Pure.addmod zz1 (Pure.sub _p _x) _p) y2 _p in
-  let _y := Pure.addmod x1 (Pure.mulmod y1 _y _p) _p in
-
-  (_x, _y, _zz, _zzz).
+Require Import CoqOfSolidity.contracts.scl.mulmuladdX_fullgen_b4.contract_shallow_by_hand.
 
 (** Normalized addition of two point, must not be neutral input. *)
-Definition ecAddn2 (P1 : PZZ.t) (x2 y2 _p : U256.t) : PZZ.t :=
+Definition high_ecAddn2 (P1 : PZZ.t) (P2 : PA.t) (_p : U256.t) : PZZ.t :=
   let x1 := P1.(PZZ.X) in
   let y1 := P1.(PZZ.Y) in
   let zz1 := P1.(PZZ.ZZ) in
   let zzz1 := P1.(PZZ.ZZZ) in
 
   let y1 := _p - y1 in
-  let y2 := (y2 * zzz1) + y1 in
-  let x2 := (x2 * zz1) + (_p - x1) in
+  let y2 := (P2.(PA.Y) * zzz1) + y1 in
+  let x2 := (P2.(PA.X) * zz1) + (_p - x1) in
   let _x := x2 * x2 in
   let _y := _x * x2 in
   let _zz := zz1 * _x in
@@ -81,163 +33,178 @@ Definition ecAddn2 (P1 : PZZ.t) (x2 y2 _p : U256.t) : PZZ.t :=
     PZZ.ZZZ := _zzz mod _p
   |}.
 
-Lemma sub_le_eq (n m : U256.t) :
-  U256.Valid.t n ->
-  U256.Valid.t m ->
-  m <= n ->
-  Pure.sub n m = n - m.
-Proof.
-  unfold U256.Valid.t, Pure.sub.
-  lia.
-Qed.
+Ltac show_equality_modulo :=
+  repeat (
+    (
+      (
+        apply Zplus_eqm ||
+        apply Zmult_eqm ||
+        apply Zopp_eqm
+      );
+      unfold eqm
+    ) ||
+    rewrite Zmod_eqm ||
+    reflexivity
+  ).
 
-(* Lemma add_mod_left_without_mod (a b c : U256.t) :
-  Pure.addmod (a mod c) b c =
-  Pure.addmod a b c.
+Lemma ecAddn2_eq (P1 : PZZ.t) (P2 : PA.t) (p : Z)
+    (H_P1 : PZZ.Valid.t p P1)
+    (H_P2 : PA.Valid.t p P2)
+    (H__p : 2 <= p < 2^256) :
+  ecAddn2 P1 P2 p =
+  high_ecAddn2 P1 P2 p.
 Proof.
-  apply Zplus_mod_idemp_l.
-Qed. *)
-
-(* Lemma add_mod_second_without_mod (a b c : U256.t) :
-  Pure.addmod a (b mod c) c =
-  Pure.addmod a b c. *)
-
-Lemma ecAddn2_original_eq_ecAddn2 (x1 y1 zz1 zzz1 x2 y2 _p : U256.t)
-    (H_x1 : Zp.Valid.t _p x1)
-    (H_y1 : Zp.Valid.t _p y1)
-    (H_zz1 : Zp.Valid.t _p zz1)
-    (H_zzz1 : Zp.Valid.t _p zzz1)
-    (H_x2 : Zp.Valid.t _p x2)
-    (H_y2 : Zp.Valid.t _p y2)
-    (H__p : 2 <= _p < 2^256) :
-  let P1 := {|
-    PZZ.X := x1;
-    PZZ.Y := y1;
-    PZZ.ZZ := zz1;
-    PZZ.ZZZ := zzz1;
-  |} in
-  let P := ecAddn2 P1 x2 y2 _p in
-  ecAddn2_original x1 y1 zz1 zzz1 x2 y2 _p =
-  (P.(PZZ.X), P.(PZZ.Y), P.(PZZ.ZZ), P.(PZZ.ZZZ)).
-Proof.
+  destruct H_P1, H_P2.
   unfold Zp.Valid.t in *.
+  destruct P1, P2; simpl in *.
   unfold
-    ecAddn2_original,
+    ecAddn2,
+    high_ecAddn2,
     Pure.addmod,
     Pure.mulmod,
     Pure.sub;
     simpl in *.
-  (* rewrite sub_le_eq by (unfold U256.Valid.t; lia).
-  rewrite sub_le_eq by (unfold U256.Valid.t; lia). *)
-  (* set (two_pow_256 := Z.pow_pos 2 256) in *. *)
-  (* replace ((_p - y1) mod two_pow_256) with (_p - y1) by lia.
-  replace ((_p - x1) mod two_pow_256) with (_p - x1) by lia.
-  replace ((_p - 2) mod two_pow_256) with (_p - 2) by lia. *)
-  (* repeat (
-    rewrite Zplus_mod_idemp_l ||
-    rewrite Zplus_mod_idemp_r ||
-    rewrite Zmult_mod_idemp_l ||
-    rewrite Zmult_mod_idemp_r
-  ). *)
-  assert (H_foo : forall a, 0 <= a <= _p -> (_p - a) mod Z.pow_pos 2 256 = _p - a)
-    by (intros; lia).
-  repeat rewrite H_foo by lia.
-  (* assert (H_remove_last_two_pow_256 : forall a, (_p - a mod _p) mod two_pow_256 = _p - a mod _p)
+  assert (H_elim_sub_modulo :
+      forall (a : Z),
+      0 <= a <= p ->
+      (p - a) mod Z.pow_pos 2 256 = p - a
+    )
     by lia.
-  repeat rewrite H_remove_last_two_pow_256. *)
+  repeat rewrite H_elim_sub_modulo by lia.
+  f_equal.
+  all: show_equality_modulo.
+Qed.
+
+Lemma high_ecAddn2_is_valid (P1 : PZZ.t) (P2 : PA.t) (_p : U256.t)
+    (H_P1 : PZZ.Valid.t _p P1)
+    (H_P2 : PA.Valid.t _p P2)
+    (H__p : 2 <= _p < 2^256) :
+  PZZ.Valid.t _p (high_ecAddn2 P1 P2 _p).
+Proof.
+  simpl.
+  destruct H_P1; constructor.
+  all: unfold Zp.Valid.t in *; simpl; try lia.
+  admit.
+Admitted.
+
+Ltac cbn_without_arithmetic :=
+  cbn - [Z.eqb Z.add Z.sub Z.mul Z.div Z.modulo].
+
+Lemma high_ecAddn2_is_add (a : Z) (P1 : PZZ.t) (P2 : PA.t) (p : U256.t)
+    (H_P1 : PZZ.Valid.t p P1)
+    (H_P2 : PA.Valid.t p P2)
+    (H__p : 2 <= p < 2^256)
+    (H_P1_not_zero : PZZ.is_zero P1 = false) :
+  PZZ.to_P p (high_ecAddn2 P1 P2 p) =
+  P.add a p (PZZ.to_P p P1) (Some P2).
+Proof.
+  simpl.
+  destruct H_P1.
+  unfold high_ecAddn2, PZZ.to_P, P.add, PA.add;
+    cbn_without_arithmetic.
+  unfold Zp.Valid.t, PZZ.is_zero in *.
+  destruct (P1.(PZZ.ZZ) =? 0) eqn:H_P1_ZZ_eq; cbn_without_arithmetic. {
+    replace P1.(PZZ.ZZ) with 0 by lia; simpl in *.
+    congruence.
+  }
+  admit.
+Admitted.
+
+Axiom P_add_eq_high_ecAddn2 :
+  forall (a p : Z) (P1 : PZZ.t) (P2 : PA.t),
+  P.add a p (PZZ.to_P p P1) (Some P2) =
+  PZZ.to_P p (high_ecAddn2 P1 P2 p).
+
+Module PointsSelector.
+  Record t : Set := {
+    u_low : bool;
+    u_high : bool;
+    v_low : bool;
+    v_high : bool;
+  }.
+
+  Definition to_Z (selector : t) : Z :=
+    let 'Build_t u_low u_high v_low v_high := selector in
+    Z.b2z v_low + 2 * Z.b2z v_high + 4 * Z.b2z u_low + 8 * Z.b2z u_high.
+End PointsSelector.
+
+Definition Tss (p : U256.t) (P P128 Q Q128 : P.t) (selector : PointsSelector.t) : list P.t :=
+  (if selector.(PointsSelector.u_low) then [P] else []) ++
+  (if selector.(PointsSelector.u_high) then [P128] else []) ++
+  (if selector.(PointsSelector.v_low) then [Q] else []) ++
+  (if selector.(PointsSelector.v_high) then [Q128] else []).
+
+Definition high_get_T (a p : U256.t) (P P128 Q Q128 : P.t) :
+    PointsSelector.t -> P.t :=
+  fun selector =>
+  List.fold_left
+    (fun P Q => P.add a p P Q)
+    (Tss p P P128 Q Q128 selector)
+    P.zero.
+
+(* Ltac zero_head a p P :=
+  match P with
+  | P.add _ _ ?P _ => zero_head a p P
+  | ?P => rewrite <- (P.add_zero_l a p P) at 1
+  end. *)
+
+Lemma high_get_T_eq (a p : U256.t) (P P128 Q Q128 : PA.t)
+    (H_P : PA.Valid.t p P)
+    (H_P128 : PA.Valid.t p P128)
+    (H_Q : PA.Valid.t p Q)
+    (H_Q128 : PA.Valid.t p Q128)
+    (selector : PointsSelector.t) :
+  let params : Q.t := {|
+    Q.Qx := P.(PA.X);
+    Q.Qy := P.(PA.Y);
+    Q.Q'x := P128.(PA.X);
+    Q.Q'y := P128.(PA.Y);
+    Q.p := p;
+    Q.a := a;
+    Q.gx := Q.(PA.X);
+    Q.gy := Q.(PA.Y);
+    Q.gx2pow128 := Q128.(PA.X);
+    Q.gy2pow128 := Q128.(PA.Y);
+  |} in
+  let Ts := List.map (PZZ.to_P p) (get_Ts params) in
+  let T := List.nth_error Ts (Z.to_nat (PointsSelector.to_Z selector)) in
+  let high_T := high_get_T a p (Some P) (Some P128) (Some Q) (Some Q128) selector in
+  T = Some high_T.
+Proof.
+  unfold PointsSelector.to_Z, Z.b2z.
+  unfold high_get_T, Tss.
+  unfold get_Ts; cbn - [ecAddn2 PZZ.to_P].
+  repeat rewrite ecAddn2_eq by admit.
   repeat match goal with
-  | |- (_, _) = (_, _) => f_equal
-  end;
-    repeat (
-      (
-        (
-          apply Zplus_eqm ||
-          apply Zmult_eqm ||
-          apply Zopp_eqm
-        );
-        unfold eqm
-      ) ||
-      rewrite Zmod_eqm ||
-      reflexivity
-    ).
-Qed.
-  rewrite H_foo.
-  f_equal.
-  f_equal.
-  f_equal.
-  { repeat (
-      (
-        (
-          apply Zplus_eqm ||
-          apply Zmult_eqm ||
-          apply Zopp_eqm
-        );
-        unfold eqm
-      ) ||
-      rewrite Zmod_eqm ||
-      reflexivity
-    ).
-  }
-  { repeat (
-      (
-        (
-          apply Zplus_eqm ||
-          apply Zmult_eqm ||
-          apply Zopp_eqm
-        );
-        unfold eqm
-      ) ||
-      rewrite Zmod_eqm ||
-      reflexivity
-    ).
-  }
-  { repeat (
-      (
-        (
-          apply Zplus_eqm ||
-          apply Zmult_eqm ||
-          apply Zopp_eqm
-        );
-        unfold eqm
-      ) ||
-      rewrite Zmod_eqm ||
-      reflexivity
-    ).
-  }
-Qed.
-
-
-  repeat f_equal.
-  f_equal.
-  f_equal.
-  injection.
-
-  rewrite H_remove_last_two_pow_256.
-  rewrite H_remove_last_two_pow_256.
-
-  intros.
-  assert (0 <= a mod _p < _p) by lia.
-  assert (0 <= _p - a mod _p < two_pow_256) by lia.
-  lia.
-  match goal with
-  | |- context [(_p - ?x) mod two_pow_256] =>
-    replace ((_p - x) mod two_pow_256) with (_p - x) by lia
+  | |- context [?e] =>
+    match e with
+    | {| PZZ.X := ?P.(PA.X) |} =>
+      change e with (PZZ.of_PA P)
+    | {| PA.X := ?P.(PA.X) |} =>
+      change e with P
+    end
   end.
-  match goal with
-  | |- context [(_p - ?x) mod two_pow_256] =>
-    replace ((_p - x) mod two_pow_256) with (_p - x)
-  end.
-  2: {
-    lia.
-  }
-  set (foo :=
-    ((x2 * zz1 + (_p - x1)) mod _p * ((x2 * zz1 + (_p - x1)) mod _p) * (x2 * zz1 + (_p - x1))) mod _p
+  repeat rewrite <- P_add_eq_high_ecAddn2 with (a := a).
+  repeat rewrite PZZ.to_P_of_PA_eq by assumption.
+
+  destruct selector; Tactics.destruct_all bool.
+  all: unfold Z.to_nat, Pos.to_nat, List.nth_error; cbn - [P.add].
+  all: f_equal; try reflexivity.
+  all: try rewrite P.add_zero_l.
+
+  all: repeat (
+    rewrite P.add_commut with (P1 := Some P128) (P2 := Some P) ||
+    rewrite P.add_commut with (P1 := Some Q)    (P2 := Some P) ||
+    rewrite P.add_commut with (P1 := Some Q128) (P2 := Some P) ||
+    rewrite P.add_commut with (P1 := Some Q)    (P2 := Some P128) ||
+    rewrite P.add_commut with (P1 := Some Q128) (P2 := Some P128) ||
+    rewrite P.add_commut with (P1 := Some Q128) (P2 := Some Q) ||
+    rewrite P.add_commut_nested with (P2 := Some P128) (P3 := Some P) ||
+    rewrite P.add_commut_nested with (P2 := Some Q)    (P3 := Some P) ||
+    rewrite P.add_commut_nested with (P2 := Some Q128) (P3 := Some P) ||
+    rewrite P.add_commut_nested with (P2 := Some Q)    (P3 := Some P128) ||
+    rewrite P.add_commut_nested with (P2 := Some Q128) (P3 := Some P128) ||
+    rewrite P.add_commut_nested with (P2 := Some Q128) (P3 := Some Q)
   ).
-  nia.
-  rewrite Zplus_mod_idemp_r.
-  nia.
-  2: {
-    lia.
-  }
-  unfold Z.pow_pos.
-Qed.
+  all: reflexivity.
+Admitted.
