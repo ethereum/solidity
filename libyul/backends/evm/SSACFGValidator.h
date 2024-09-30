@@ -28,7 +28,7 @@ class SSACFGValidator
 public:
 	static void validate(ControlFlow const& _controlFlow, Block const& _ast, AsmAnalysisInfo const& _analysisInfo, Dialect const& _dialect);
 private:
-	using VariableMapping = std::map<Scope::Variable const*, SSACFG::ValueId>;
+	using VariableMapping = std::map<Scope::Variable const*, std::set<SSACFG::ValueId>>;
     struct Context {
     	AsmAnalysisInfo const& analysisInfo;
 	    Dialect const& dialect;
@@ -37,8 +37,8 @@ private:
     };
 	explicit SSACFGValidator(Context const& _context): m_context(_context)
 	{}
-	std::optional<std::vector<SSACFG::ValueId>> consumeExpression(Expression const& _expression);
-	std::optional<SSACFG::ValueId> consumeUnaryExpression(Expression const& _expression)
+	std::optional<std::vector<std::set<SSACFG::ValueId>>> consumeExpression(Expression const& _expression);
+	std::optional<std::set<SSACFG::ValueId>> consumeUnaryExpression(Expression const& _expression)
 	{
 		if (auto result = consumeExpression(_expression))
 		{
@@ -58,7 +58,7 @@ private:
 	}
 	Scope::Variable const* resolveVariable(YulName _name) const;
 	Scope::Function const* resolveFunction(YulName _name) const;
-	SSACFG::ValueId lookupIdentifier(Identifier const& _identifier) const;
+	std::set<SSACFG::ValueId> const& lookupIdentifier(Identifier const& _identifier) const;
 	SSACFG::ValueId lookupLiteral(Literal const& _literal) const;
 	/// @returns true if the call can continue, false otherwise
 	bool validateCall(std::variant<SSACFG::BuiltinCall, SSACFG::Call> const& _kind, Identifier const& _functionName, size_t _numOutputs) const;
@@ -79,7 +79,7 @@ private:
 	struct LoopInfo
 	{
 		std::set<Scope::Variable const*> loopVariables;
-		std::map<Scope::Variable const*, SSACFG::ValueId> loopExitVariableValues;
+		VariableMapping loopExitVariableValues;
 		SSACFG::BlockId exitBlock;
 		std::optional<VariableMapping> loopPostVariableValues;
 		std::optional<SSACFG::BlockId> postBlock;

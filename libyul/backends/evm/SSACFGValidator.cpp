@@ -91,7 +91,7 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 						yulAssert(
 							m_currentVariableValues.count(resolveVariable(variable.name)),
 							"Could not find variable " + variable.name.str());
-						m_currentVariableValues.at(resolveVariable(variable.name)) = value;
+						m_currentVariableValues.at(resolveVariable(variable.name)) = std::set{value};
 					}
 					return true;
 				}
@@ -111,7 +111,7 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 					for (auto&& [variable, value]: ranges::zip_view(_variableDeclaration.variables, *results))
 					{
 						yulAssert(!m_currentVariableValues.count(resolveVariable(variable.name)));
-						m_currentVariableValues[resolveVariable(variable.name)] = value;
+						m_currentVariableValues[resolveVariable(variable.name)] = std::set{value};
 					}
 					return true;
 				}
@@ -130,13 +130,19 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 				nestedValidator.m_currentVariableValues
 					= functionGraph->arguments
 					  | ranges::views::transform([](auto const& tup)
-												 { return std::make_pair(&std::get<0>(tup).get(), std::get<1>(tup)); })
+												 { return std::make_pair(&std::get<0>(tup).get(), std::set{std::get<1>(tup)}); })
 					  | ranges::to<std::map>;
 				for (auto const& returnVar: functionGraph->returns)
-					nestedValidator.m_currentVariableValues[&returnVar.get()] = {0};
+				{
+					yulAssert(functionGraph->zeroLiteral());
+					nestedValidator.m_currentVariableValues[&returnVar.get()] = std::set{*functionGraph->zeroLiteral()};
+				}
 				nestedValidator.consumeBlock(_function.body);
 				for (auto const& returnVar: functionGraph->returns)
-					yulAssert(nestedValidator.m_currentVariableValues.at(&returnVar.get()).hasValue());
+				{
+					yulAssert(nestedValidator.m_currentVariableValues.at(&returnVar.get()).size() == 1);
+					yulAssert(nestedValidator.m_currentVariableValues.at(&returnVar.get()).begin()->hasValue());
+				}
 				return true;
 			},
 			[&](If const& _if)
@@ -144,7 +150,9 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 				if (auto cond = consumeUnaryExpression(*_if.condition))
 				{
 					auto const& exit = expectConditionalJump();
-					yulAssert(exit.condition == *cond);
+					yulAssert(cond.value().size() == 1 && *cond->begin() == exit.condition);
+					// todo here i should reduce the variable corresponding to the if cond to exit or is it already happening in consumeUnaryExpression??
+					// yulAssert(exit.condition == *cond);
 					auto zeroBranchVariableValues = applyPhis(m_currentBlock, exit.zero);
 
 					advanceToBlock(exit.nonZero);
@@ -174,7 +182,8 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 							&std::get<SSACFG::BuiltinCall>(_operation.kind).builtin.get()
 							== m_context.dialect.equalityFunction());
 						yulAssert(_operation.inputs.size() == 2);
-						yulAssert(_operation.inputs.back() == *cond);
+						yulAssert(cond->size() == 1);
+						yulAssert(_operation.inputs.back() == *cond->begin());
 						yulAssert(_operation.outputs.size() == 1);
 					};
 					yulAssert(currentBlock().operations.size() >= 2, "switch at least has the expression and ghost eq");
@@ -274,7 +283,7 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 				{
 					yulAssert(m_currentVariableValues.count(&variable.get()));
 					yulAssert(value.hasValue());
-					m_currentVariableValues[&variable.get()] = value;
+					m_currentVariableValues[&variable.get()] = std::set{value};
 				}
 				return false;
 			},
@@ -296,7 +305,8 @@ bool SSACFGValidator::consumeConstantForLoop(ForLoop const& _loop, bool _conditi
 
 	if (auto cond = consumeUnaryExpression(*_loop.condition))
 	{
-		auto const* ssaLiteral = std::get_if<SSACFG::LiteralValue>(&m_context.cfg.valueInfo(*cond));
+		yulAssert(cond.value().size() == 1);
+		auto const* ssaLiteral = std::get_if<SSACFG::LiteralValue>(&m_context.cfg.valueInfo(*cond->begin()));
 		yulAssert(ssaLiteral && ssaLiteral->value == std::get<Literal>(*_loop.condition).value.value());
 	}
 	else
@@ -363,7 +373,8 @@ bool SSACFGValidator::consumeDynamicForLoop(ForLoop const& _loop)
 	if (auto cond = consumeUnaryExpression(*_loop.condition))
 	{
 		auto const& exit = expectConditionalJump();
-		yulAssert(!cond.value().hasValue() || exit.condition == cond);
+		yulAssert(cond.value().size() == 1 && *cond->begin() == exit.condition);
+		// yulAssert(!cond.value().hasValue() || exit.condition == cond); // todo what about hasValue, ie stuff that .... i don't even know anymore lol
 		auto loopExitVariableValues = applyPhis(m_currentBlock, exit.zero);
 
 		std::unique_ptr<LoopInfo> loopInfo = std::make_unique<LoopInfo>(LoopInfo{
@@ -404,43 +415,56 @@ bool SSACFGValidator::consumeDynamicForLoop(ForLoop const& _loop)
 	return false;
 }
 
-std::optional<std::vector<SSACFG::ValueId>> SSACFGValidator::consumeExpression(Expression const& _expression)
+std::optional<std::vector<std::set<SSACFG::ValueId>>> SSACFGValidator::consumeExpression(Expression const& _expression)
 {
 	return std::visit(util::GenericVisitor{
-		[&](FunctionCall const& _call) -> std::optional<std::vector<SSACFG::ValueId>>
+		[&](FunctionCall const& _call) -> std::optional<std::vector<std::set<SSACFG::ValueId>>>
 		{
 			BuiltinFunction const* builtin = m_context.dialect.builtin(_call.functionName.name);
 			std::vector<SSACFG::ValueId> arguments;
 			size_t idx = _call.arguments.size();
 			for(auto& _arg: _call.arguments | ranges::view::reverse)
 			{
-				if (builtin && builtin->literalArgument(--idx).has_value())
+				--idx;
+				if (builtin && builtin->literalArgument(idx).has_value())
 					continue;
 				if (auto arg = consumeExpression(_arg))
-					arguments += *arg;
+					if (arg->at(0).size() > 1)
+					{
+						yulAssert(std::holds_alternative<Identifier>(_arg));
+						auto const& currentOpArg = currentBlock().operations.at(m_currentOperation).inputs.at(_call.arguments.size() - idx - 1);
+						yulAssert(arg->at(0).count(currentOpArg));
+						auto const* var = resolveVariable(std::get<Identifier>(_arg).name);
+						m_currentVariableValues[var] = std::set{currentOpArg};
+						arguments.push_back(currentOpArg);
+					}
+					else
+						arguments += *arg.value().begin();
 				else
 					return std::nullopt;
 			}
-			yulAssert(ranges::all_of(arguments, [](SSACFG::ValueId const& _arg) { return _arg.hasValue(); }));
+
 			auto const& currentOp = currentBlock().operations.at(m_currentOperation);
 			if (auto f = std::get_if<SSACFG::Call>(&currentOp.kind); f && !f->canContinue)
 				return std::nullopt;
 			if (auto f = std::get_if<SSACFG::BuiltinCall>(&currentOp.kind); f && !f->builtin.get().controlFlowSideEffects.canContinue)
 				return std::nullopt;
 			++m_currentOperation;
+
+			yulAssert(ranges::all_of(arguments, [](SSACFG::ValueId const& _arg) { return _arg.hasValue(); }));
 			yulAssert(currentOp.inputs == arguments);
 			if (validateCall(currentOp.kind, _call.functionName, currentOp.outputs.size()))
-				return currentOp.outputs;
+				return currentOp.outputs | ranges::views::transform([](auto const& _valueId) { return std::set{_valueId}; }) | ranges::to<std::vector>;
 			else
 				return std::nullopt;
 		},
-		[&](Identifier const& _identifier) -> std::optional<std::vector<SSACFG::ValueId>>
+		[&](Identifier const& _identifier) -> std::optional<std::vector<std::set<SSACFG::ValueId>>>
 		{
 			return {{lookupIdentifier(_identifier)}};
 		},
-		[&](Literal const& _literal) -> std::optional<std::vector<SSACFG::ValueId>>
+		[&](Literal const& _literal) -> std::optional<std::vector<std::set<SSACFG::ValueId>>>
 		{
-			return {{lookupLiteral(_literal)}};
+			return {{{lookupLiteral(_literal)}}};
 		}
 	}, _expression);
 }
@@ -520,7 +544,7 @@ Scope::Function const* SSACFGValidator::resolveFunction(YulName _name) const
 	return function;
 }
 
-SSACFG::ValueId SSACFGValidator::lookupIdentifier(Identifier const& _identifier) const
+std::set<SSACFG::ValueId> const& SSACFGValidator::lookupIdentifier(Identifier const& _identifier) const
 {
 	auto const* var = resolveVariable(_identifier.name);
 	return m_currentVariableValues.at(var);
@@ -538,7 +562,7 @@ SSACFGValidator::VariableMapping SSACFGValidator::applyPhis(SSACFG::BlockId _sou
 	auto const& targetBlock = m_context.cfg.block(_target);
 	auto entryOffset = util::findOffset(targetBlock.entries, _source);
 	yulAssert(entryOffset);
-	std::map<SSACFG::ValueId, SSACFG::ValueId> phiMap;
+	std::map<SSACFG::ValueId, std::set<SSACFG::ValueId>> phiMap;
 	for (auto phi: targetBlock.phis)
 	{
 		yulAssert(phi.hasValue());
@@ -546,10 +570,11 @@ SSACFGValidator::VariableMapping SSACFGValidator::applyPhis(SSACFG::BlockId _sou
 		yulAssert(phiInfo);
 		auto const argumentValueId = phiInfo->arguments.at(*entryOffset);
 		yulAssert(argumentValueId.hasValue());
-		phiMap[argumentValueId] = phi;
+		phiMap[argumentValueId].insert(phi);
 	}
 	VariableMapping result;
-	for (auto& [var, value]: m_currentVariableValues)
-		result[var] = util::valueOrDefault(phiMap, value, value);
+	for (auto& [var, values]: m_currentVariableValues)
+		for (auto const& val: values)
+			result[var] += util::valueOrDefault(phiMap, val, std::set{val}, util::allow_copy);
 	return result;
 }
