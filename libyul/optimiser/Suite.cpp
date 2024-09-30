@@ -99,13 +99,13 @@ namespace
 {
 
 #ifdef PROFILE_OPTIMIZER_STEPS
-void outputPerformanceMetrics(map<string, int64_t> const& _metrics)
+void outputPerformanceMetrics(std::map<std::string, int64_t> const& _metrics)
 {
-	vector<pair<string, int64_t>> durations(_metrics.begin(), _metrics.end());
+	std::vector<std::pair<std::string, int64_t>> durations(_metrics.begin(), _metrics.end());
 	sort(
 		durations.begin(),
 		durations.end(),
-		[](pair<string, int64_t> const& _lhs, pair<string, int64_t> const& _rhs) -> bool
+		[](std::pair<std::string, int64_t> const& _lhs, std::pair<std::string, int64_t> const& _rhs) -> bool
 		{
 			return _lhs.second < _rhs.second;
 		}
@@ -115,18 +115,18 @@ void outputPerformanceMetrics(map<string, int64_t> const& _metrics)
 	for (auto&& [step, durationInMicroseconds]: durations)
 		totalDurationInMicroseconds += durationInMicroseconds;
 
-	cerr << "Performance metrics of optimizer steps" << endl;
-	cerr << "======================================" << endl;
+	std::cerr << "Performance metrics of optimizer steps" << std::endl;
+	std::cerr << "======================================" << std::endl;
 	constexpr double microsecondsInSecond = 1000000;
 	for (auto&& [step, durationInMicroseconds]: durations)
 	{
 		double percentage = 100.0 * static_cast<double>(durationInMicroseconds) / static_cast<double>(totalDurationInMicroseconds);
 		double sec = static_cast<double>(durationInMicroseconds) / microsecondsInSecond;
-		cerr << fmt::format("{:>7.3f}% ({} s): {}", percentage, sec, step) << endl;
+		std::cerr << fmt::format("{:>7.3f}% ({} s): {}", percentage, sec, step) << std::endl;
 	}
 	double totalDurationInSeconds = static_cast<double>(totalDurationInMicroseconds) / microsecondsInSecond;
-	cerr << "--------------------------------------" << endl;
-	cerr << fmt::format("{:>7}% ({:.3f} s)", 100, totalDurationInSeconds) << endl;
+	std::cerr << "--------------------------------------" << std::endl;
+	std::cerr << fmt::format("{:>7}% ({:.3f} s)", 100, totalDurationInSeconds) << std::endl;
 }
 #endif
 
