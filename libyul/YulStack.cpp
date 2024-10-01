@@ -57,7 +57,7 @@ bool YulStack::parse(std::string const& _sourceName, std::string const& _source)
 	{
 		m_charStream = std::make_unique<CharStream>(_source, _sourceName);
 		std::shared_ptr<Scanner> scanner = std::make_shared<Scanner>(*m_charStream);
-		m_parserResult = ObjectParser(m_errorReporter, languageToDialect(m_language, m_evmVersion)).parse(scanner, false);
+		m_parserResult = ObjectParser(m_errorReporter, languageToDialect(m_language, m_evmVersion, m_eofVersion)).parse(scanner, false);
 	}
 	catch (UnimplementedFeatureError const& _error)
 	{
@@ -94,7 +94,7 @@ void YulStack::optimize()
 	{
 		if (
 			!m_optimiserSettings.runYulOptimiser &&
-			yul::MSizeFinder::containsMSize(languageToDialect(m_language, m_evmVersion), *m_parserResult)
+			yul::MSizeFinder::containsMSize(languageToDialect(m_language, m_evmVersion, m_eofVersion), *m_parserResult)
 		)
 			return;
 
@@ -130,6 +130,7 @@ void YulStack::optimize()
 			ObjectOptimizer::Settings{
 				m_language,
 				m_evmVersion,
+				m_eofVersion,
 				optimizeStackAllocation,
 				yulOptimiserSteps,
 				yulOptimiserCleanupSteps,
@@ -163,7 +164,7 @@ bool YulStack::analyzeParsed(Object& _object)
 	AsmAnalyzer analyzer(
 		*_object.analysisInfo,
 		m_errorReporter,
-		languageToDialect(m_language, m_evmVersion),
+		languageToDialect(m_language, m_evmVersion, m_eofVersion),
 		{},
 		_object.qualifiedDataNames()
 	);
@@ -196,7 +197,7 @@ void YulStack::compileEVM(AbstractAssembly& _assembly, bool _optimize) const
 	{
 		case Language::Assembly:
 		case Language::StrictAssembly:
-			dialect = &EVMDialect::strictAssemblyForEVMObjects(m_evmVersion);
+			dialect = &EVMDialect::strictAssemblyForEVMObjects(m_evmVersion, m_eofVersion);
 			break;
 		default:
 			yulAssert(false, "Invalid language.");
@@ -316,7 +317,7 @@ YulStack::assembleEVMWithDeployed(std::optional<std::string_view> _deployName)
 	// it with the minimal steps required to avoid "stack too deep".
 	bool optimize = m_optimiserSettings.optimizeStackAllocation || (
 		!m_optimiserSettings.runYulOptimiser &&
-		!yul::MSizeFinder::containsMSize(languageToDialect(m_language, m_evmVersion), *m_parserResult)
+		!yul::MSizeFinder::containsMSize(languageToDialect(m_language, m_evmVersion, m_eofVersion), *m_parserResult)
 	);
 	try
 	{
@@ -385,7 +386,7 @@ Json YulStack::cfgJson() const
 		// NOTE: The block Ids are reset for each object
 		std::unique_ptr<ControlFlow> controlFlow = SSAControlFlowGraphBuilder::build(
 			*_object.analysisInfo.get(),
-			languageToDialect(m_language, m_evmVersion),
+			languageToDialect(m_language, m_evmVersion, m_eofVersion),
 			_object.code()->root()
 		);
 		YulControlFlowGraphExporter exporter(*controlFlow);

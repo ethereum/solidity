@@ -26,23 +26,26 @@ using namespace solidity;
 using namespace solidity::evmasm;
 using namespace solidity::langutil;
 
-bool EVMVersion::hasOpcode(Instruction _opcode) const
+bool EVMVersion::hasOpcode(Instruction _opcode, std::optional<uint8_t> _eofVersion) const
 {
+	// EOF version can be only defined since prague
+	assert(!_eofVersion.has_value() || this->m_version >= prague());
+
 	switch (_opcode)
 	{
 	case Instruction::RETURNDATACOPY:
 	case Instruction::RETURNDATASIZE:
 		return supportsReturndata();
 	case Instruction::STATICCALL:
-		return hasStaticCall();
+		return !_eofVersion.has_value() && hasStaticCall();
 	case Instruction::SHL:
 	case Instruction::SHR:
 	case Instruction::SAR:
 		return hasBitwiseShifting();
 	case Instruction::CREATE2:
-		return hasCreate2();
+		return !_eofVersion.has_value() && hasCreate2();
 	case Instruction::EXTCODEHASH:
-		return hasExtCodeHash();
+		return !_eofVersion.has_value() && hasExtCodeHash();
 	case Instruction::CHAINID:
 		return hasChainID();
 	case Instruction::SELFBALANCE:
@@ -58,6 +61,21 @@ bool EVMVersion::hasOpcode(Instruction _opcode) const
 	case Instruction::TSTORE:
 	case Instruction::TLOAD:
 		return supportsTransientStorage();
+	// Instructions below are deprecated in EOF
+	case Instruction::CALL:
+	case Instruction::CALLCODE:
+	case Instruction::DELEGATECALL:
+	case Instruction::SELFDESTRUCT:
+	case Instruction::JUMP:
+	case Instruction::JUMPI:
+	case Instruction::PC:
+	case Instruction::CREATE:
+	case Instruction::CODESIZE:
+	case Instruction::CODECOPY:
+	case Instruction::EXTCODESIZE:
+	case Instruction::EXTCODECOPY:
+	case Instruction::GAS:
+		return !_eofVersion.has_value();
 	default:
 		return true;
 	}

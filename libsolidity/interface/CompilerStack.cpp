@@ -357,7 +357,7 @@ bool CompilerStack::parse()
 
 	try
 	{
-		Parser parser{m_errorReporter, m_evmVersion};
+		Parser parser{m_errorReporter, m_evmVersion, m_eofVersion};
 
 		std::vector<std::string> sourcesToParse;
 		for (auto const& s: m_sources)
@@ -427,7 +427,8 @@ bool CompilerStack::parse()
 void CompilerStack::importASTs(std::map<std::string, Json> const& _sources)
 {
 	solAssert(m_stackState == Empty, "Must call importASTs only before the SourcesSet state.");
-	std::map<std::string, ASTPointer<SourceUnit>> reconstructedSources = ASTJsonImporter(m_evmVersion).jsonToSourceUnit(_sources);
+	std::map<std::string, ASTPointer<SourceUnit>> reconstructedSources =
+		ASTJsonImporter(m_evmVersion, m_eofVersion).jsonToSourceUnit(_sources);
 	for (auto& src: reconstructedSources)
 	{
 		solUnimplementedAssert(!src.second->experimentalSolidity());
@@ -896,7 +897,7 @@ Json CompilerStack::generatedSources(std::string const& _contractName, bool _run
 			ErrorList errors;
 			ErrorReporter errorReporter(errors);
 			CharStream charStream(source, sourceName);
-			yul::EVMDialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(m_evmVersion);
+			yul::EVMDialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(m_evmVersion, m_eofVersion);
 			std::shared_ptr<yul::AST> parserResult = yul::Parser{errorReporter, dialect}.parse(charStream);
 			solAssert(parserResult);
 			sources[0]["ast"] = yul::AsmJsonConverter{sourceIndex}(parserResult->root());

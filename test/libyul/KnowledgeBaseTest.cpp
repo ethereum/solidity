@@ -63,7 +63,8 @@ protected:
 		return KnowledgeBase([this](YulName _var) { return util::valueOrNullptr(m_values, _var); });
 	}
 
-	EVMDialect m_dialect{EVMVersion{}, true};
+	// TODO: Add EOF support
+	EVMDialect m_dialect{EVMVersion{}, std::nullopt, true};
 	std::shared_ptr<Object> m_object;
 	SSAValueTracker m_ssaValues;
 	std::map<YulName, AssignedValue> m_values;

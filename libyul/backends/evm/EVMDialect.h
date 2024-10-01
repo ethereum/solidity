@@ -65,7 +65,7 @@ struct BuiltinFunctionForEVM: public BuiltinFunction
 struct EVMDialect: public Dialect
 {
 	/// Constructor, should only be used internally. Use the factory functions below.
-	EVMDialect(langutil::EVMVersion _evmVersion, bool _objectAccess);
+	EVMDialect(langutil::EVMVersion _evmVersion, std::optional<uint8_t> _eofVersion, bool _objectAccess);
 
 	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
 	BuiltinFunctionForEVM const* builtin(YulName _name) const override;
@@ -82,10 +82,11 @@ struct EVMDialect: public Dialect
 	BuiltinFunctionForEVM const* storageLoadFunction() const override { return builtin("sload"_yulname); }
 	YulName hashFunction() const override { return "keccak256"_yulname; }
 
-	static EVMDialect const& strictAssemblyForEVM(langutil::EVMVersion _version);
-	static EVMDialect const& strictAssemblyForEVMObjects(langutil::EVMVersion _version);
+	static EVMDialect const& strictAssemblyForEVM(langutil::EVMVersion _evmVersion, std::optional<uint8_t> _eofVersion);
+	static EVMDialect const& strictAssemblyForEVMObjects(langutil::EVMVersion _evmVersion, std::optional<uint8_t> _eofVersion);
 
 	langutil::EVMVersion evmVersion() const { return m_evmVersion; }
+	std::optional<uint8_t> eofVersion() const { return m_eofVersion; }
 
 	bool providesObjectAccess() const { return m_objectAccess; }
 
@@ -96,6 +97,7 @@ protected:
 
 	bool const m_objectAccess;
 	langutil::EVMVersion const m_evmVersion;
+	std::optional<uint8_t> m_eofVersion;
 	std::map<YulName, BuiltinFunctionForEVM> m_functions;
 	std::map<std::pair<size_t, size_t>, std::shared_ptr<BuiltinFunctionForEVM const>> mutable m_verbatimFunctions;
 	std::set<YulName> m_reserved;

@@ -87,27 +87,30 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	// such as unused write to memory e.g.,
 	// { mstore(0, 1) }
 	// that would be removed by the redundant store eliminator.
+	// TODO: Add EOF support
 	yulFuzzerUtil::TerminationReason termReason = yulFuzzerUtil::interpret(
 		os1,
 		stack.parserResult()->code()->root(),
-		EVMDialect::strictAssemblyForEVMObjects(version),
+		EVMDialect::strictAssemblyForEVMObjects(version, std::nullopt),
 		/*disableMemoryTracing=*/true
 	);
 
 	if (yulFuzzerUtil::resourceLimitsExceeded(termReason))
 		return;
 
+	// TODO: Add EOF support
 	YulOptimizerTestCommon optimizerTest(
 		stack.parserResult(),
-		EVMDialect::strictAssemblyForEVMObjects(version)
+		EVMDialect::strictAssemblyForEVMObjects(version, std::nullopt)
 	);
 	optimizerTest.setStep(optimizerTest.randomOptimiserStep(_input.step()));
 	auto const* astRoot = optimizerTest.run();
 	yulAssert(astRoot != nullptr, "Optimiser error.");
+	// TODO: Add EOF support
 	termReason = yulFuzzerUtil::interpret(
 		os2,
 		*astRoot,
-		EVMDialect::strictAssemblyForEVMObjects(version),
+		EVMDialect::strictAssemblyForEVMObjects(version, std::nullopt),
 		true
 	);
 	if (yulFuzzerUtil::resourceLimitsExceeded(termReason))

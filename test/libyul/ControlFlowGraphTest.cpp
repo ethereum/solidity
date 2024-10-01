@@ -45,7 +45,11 @@ ControlFlowGraphTest::ControlFlowGraphTest(std::string const& _filename):
 {
 	m_source = m_reader.source();
 	auto dialectName = m_reader.stringSetting("dialect", "evm");
-	m_dialect = &dialect(dialectName, solidity::test::CommonOptions::get().evmVersion());
+	m_dialect = &dialect(
+		dialectName,
+		solidity::test::CommonOptions::get().evmVersion(),
+		solidity::test::CommonOptions::get().eofVersion()
+	);
 	m_expectation = m_reader.simpleExpectations();
 }
 

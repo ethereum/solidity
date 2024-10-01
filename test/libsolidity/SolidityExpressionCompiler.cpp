@@ -108,7 +108,11 @@ bytes compileFirstExpression(
 	{
 		ErrorList errors;
 		ErrorReporter errorReporter(errors);
-		sourceUnit = Parser(errorReporter, solidity::test::CommonOptions::get().evmVersion()).parse(stream);
+		sourceUnit = Parser(
+			errorReporter,
+			solidity::test::CommonOptions::get().evmVersion(),
+			solidity::test::CommonOptions::get().eofVersion()
+		).parse(stream);
 		if (!sourceUnit)
 			return bytes();
 	}

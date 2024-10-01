@@ -46,7 +46,10 @@ namespace
 {
 Dialect const& defaultDialect()
 {
-	return yul::EVMDialect::strictAssemblyForEVM(solidity::test::CommonOptions::get().evmVersion());
+	return yul::EVMDialect::strictAssemblyForEVM(
+		solidity::test::CommonOptions::get().evmVersion(),
+		solidity::test::CommonOptions::get().eofVersion()
+	);
 }
 }
 
@@ -101,11 +104,11 @@ std::string yul::test::format(std::string const& _source)
 
 namespace
 {
-std::map<std::string const, yul::Dialect const& (*)(langutil::EVMVersion)> const validDialects = {
+std::map<std::string const, yul::Dialect const& (*)(langutil::EVMVersion, std::optional<uint8_t>)> const validDialects = {
 	{
 		"evm",
-		[](langutil::EVMVersion _evmVersion) -> yul::Dialect const&
-		{ return yul::EVMDialect::strictAssemblyForEVMObjects(_evmVersion); }
+		[](langutil::EVMVersion _evmVersion, std::optional<uint8_t> _eofVersion) -> yul::Dialect const&
+		{ return yul::EVMDialect::strictAssemblyForEVMObjects(_evmVersion, _eofVersion); }
 	}
 };
 
@@ -118,7 +121,7 @@ std::map<std::string const, yul::Dialect const& (*)(langutil::EVMVersion)> const
 }
 }
 
-yul::Dialect const& yul::test::dialect(std::string const& _name, langutil::EVMVersion _evmVersion)
+yul::Dialect const& yul::test::dialect(std::string const& _name, langutil::EVMVersion _evmVersion, std::optional<uint8_t> _eofVersion)
 {
 	if (!validDialects.count(_name))
 		BOOST_THROW_EXCEPTION(std::runtime_error{
@@ -129,5 +132,5 @@ yul::Dialect const& yul::test::dialect(std::string const& _name, langutil::EVMVe
 			"."
 		});
 
-	return validDialects.at(_name)(_evmVersion);
+	return validDialects.at(_name)(_evmVersion, _eofVersion);
 }
