@@ -65,7 +65,7 @@ private:
 
 	SSACFG::BasicBlock::ConditionalJump const& expectConditionalJump() const;
 	SSACFG::BasicBlock::Jump const& expectUnconditionalJump() const;
-	SSACFG::BasicBlock::FunctionReturn const& expectFunctionReturn() const;
+	SSACFG::BasicBlock::FunctionReturn const& expectFunctionReturn();
 	/// Applys the phi functions of @a _target assuming an entry from @a _source.
 	VariableMapping applyPhis(SSACFG::BlockId _source, SSACFG::BlockId _target);
 	void consolidateVariables(VariableMapping const& _variables, std::vector<VariableMapping> const& _toBeConsolidated);

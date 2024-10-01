@@ -47,6 +47,8 @@ bool SSACFGValidator::consumeBlock(Block const& _block)
 	for (auto const& stmt: _block.statements)
 		if (!std::holds_alternative<FunctionDefinition>(stmt) && !consumeStatement(stmt))
 			return false;
+	if (std::holds_alternative<SSACFG::BasicBlock::FunctionReturn>(currentBlock().exit))
+		expectFunctionReturn();
 	return true;
 }
 
@@ -140,7 +142,8 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 				nestedValidator.consumeBlock(_function.body);
 				for (auto const& returnVar: functionGraph->returns)
 				{
-					yulAssert(nestedValidator.m_currentVariableValues.at(&returnVar.get()).size() == 1);
+					auto const& returnValues = nestedValidator.m_currentVariableValues.at(&returnVar.get());
+					yulAssert(returnValues.size() == 1);
 					yulAssert(nestedValidator.m_currentVariableValues.at(&returnVar.get()).begin()->hasValue());
 				}
 				return true;
@@ -253,7 +256,7 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 			{
 				yulAssert(m_currentLoopInfo);
 				auto const& breakJump = expectUnconditionalJump();
-				yulAssert(breakJump.target == m_currentLoopInfo->exitBlock);
+				yulAssert(!m_currentLoopInfo->exitBlock.hasValue() || breakJump.target == m_currentLoopInfo->exitBlock); // can have no value for constant infinite loops
 				m_currentVariableValues = applyPhis(m_currentBlock, breakJump.target);
 				consolidateVariables(m_currentVariableValues, std::vector{m_currentLoopInfo->loopExitVariableValues});
 				return false;
@@ -321,7 +324,7 @@ bool SSACFGValidator::consumeConstantForLoop(ForLoop const& _loop, bool _conditi
 	}
 	else
 	{
-		auto const& jumpToBody = expectUnconditionalJump();
+		// yulAssert(!cond.value().hasValue() || exit.condition == cond); // todo what about hasValue, ie stuff that .... i don't even know anymore lol
 		std::unique_ptr<LoopInfo> loopInfo = std::make_unique<LoopInfo>(LoopInfo{
 			entryVariableValues | ranges::view::keys | ranges::to<std::set<Scope::Variable const*>>,
 			m_currentVariableValues,
@@ -329,7 +332,6 @@ bool SSACFGValidator::consumeConstantForLoop(ForLoop const& _loop, bool _conditi
 			std::nullopt,
 			std::nullopt});
 		std::swap(m_currentLoopInfo, loopInfo);
-		advanceToBlock(jumpToBody.target);
 		if (consumeBlock(_loop.body))
 		{
 			std::swap(m_currentLoopInfo, loopInfo);
@@ -347,7 +349,7 @@ bool SSACFGValidator::consumeConstantForLoop(ForLoop const& _loop, bool _conditi
 				auto const& jumpBackToCondition = expectUnconditionalJump();
 				m_currentVariableValues = applyPhis(m_currentBlock, jumpBackToCondition.target);
 				advanceToBlock(jumpBackToCondition.target);
-				yulAssert(m_currentBlock == jumpToBody.target);
+				yulAssert(m_currentBlock == entryJump.target);
 				consolidateVariables(m_currentVariableValues, {entryVariableValues});
 			}
 		}
@@ -485,11 +487,17 @@ SSACFG::BasicBlock::Jump const& SSACFGValidator::expectUnconditionalJump() const
 	return *exit;
 }
 
-SSACFG::BasicBlock::FunctionReturn const& SSACFGValidator::expectFunctionReturn() const
+SSACFG::BasicBlock::FunctionReturn const& SSACFGValidator::expectFunctionReturn()
 {
 	yulAssert(m_currentOperation == currentBlock().operations.size());
 	auto const* functionReturn = std::get_if<SSACFG::BasicBlock::FunctionReturn>(&currentBlock().exit);
 	yulAssert(functionReturn);
+	for (auto&& [variable, value]: ranges::zip_view(m_context.cfg.returns, functionReturn->returnValues))
+	{
+		yulAssert(value.hasValue());
+		yulAssert(m_currentVariableValues.at(&variable.get()).count(value));
+		m_currentVariableValues[&variable.get()] = std::set{value};
+	}
 	return *functionReturn;
 }
 
