@@ -13,8 +13,9 @@ for ``immutable``, it can still be assigned at construction time.
 
 It is also possible to define ``constant`` variables at the file level.
 
-The compiler does not reserve a storage slot for these variables, and every occurrence is
-replaced by the respective value.
+Every occurrence of such a variable in the source is replaced by its underlying value
+and the compiler does not reserve a storage slot for it.
+It cannot be assigned a slot in transient storage using the ``transient`` keyword either.
 
 Compared to regular state variables, the gas costs of constant and immutable variables
 are much lower. For a constant variable, the expression assigned to it is copied to

@@ -21,8 +21,10 @@ which serves to provide a quick overview.
 State Variables
 ===============
 
-State variables are variables whose values are permanently stored in contract
-storage.
+State variables are variables whose values are either permanently stored in contract
+storage or, alternatively, temporarily stored in transient storage which is cleaned at
+the end of each transaction.
+See :ref:`data locations <locations>` for more details.
 
 .. code-block:: solidity
 
