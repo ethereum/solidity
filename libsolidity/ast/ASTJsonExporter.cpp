@@ -664,11 +664,20 @@ bool ASTJsonExporter::visit(InlineAssembly const& _node)
 	for (Json& it: externalReferences | ranges::views::values)
 		externalReferencesJson.emplace_back(std::move(it));
 
+	auto const& evmDialect = dynamic_cast<solidity::yul::EVMDialect const&>(_node.dialect());
+
 	std::vector<std::pair<std::string, Json>> attributes = {
 		std::make_pair("AST", Json(yul::AsmJsonConverter(sourceIndexFromLocation(_node.location()))(_node.operations().root()))),
 		std::make_pair("externalReferences", std::move(externalReferencesJson)),
-		std::make_pair("evmVersion", dynamic_cast<solidity::yul::EVMDialect const&>(_node.dialect()).evmVersion().name())
+		std::make_pair("evmVersion", evmDialect.evmVersion().name())
 	};
+
+	// TODO: Add test in test/linsolidity/ASTJSON/assembly. This requires adding support for eofVersion in ASTJSONTest
+	if (evmDialect.eofVersion())
+	{
+		solAssert(*evmDialect.eofVersion() > 0);
+		attributes.push_back(std::make_pair("eofVersion", *evmDialect.eofVersion()));
+	}
 
 	if (_node.flags())
 	{

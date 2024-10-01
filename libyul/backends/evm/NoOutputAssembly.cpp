@@ -130,7 +130,7 @@ void NoOutputAssembly::appendImmutableAssignment(std::string const&)
 }
 
 NoOutputEVMDialect::NoOutputEVMDialect(EVMDialect const& _copyFrom):
-	EVMDialect(_copyFrom.evmVersion(), _copyFrom.providesObjectAccess())
+	EVMDialect(_copyFrom.evmVersion(), _copyFrom.eofVersion(), _copyFrom.providesObjectAccess())
 {
 	for (auto& fun: m_functions)
 	{

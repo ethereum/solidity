@@ -40,8 +40,8 @@ namespace solidity::frontend
 class ASTJsonImporter
 {
 public:
-	ASTJsonImporter(langutil::EVMVersion _evmVersion)
-		:m_evmVersion(_evmVersion)
+	ASTJsonImporter(langutil::EVMVersion _evmVersion, std::optional<uint8_t> _eofVersion)
+		:m_evmVersion(_evmVersion), m_eofVersion(_eofVersion)
 	{}
 
 	/// Converts the AST from JSON-format to ASTPointer
@@ -166,6 +166,8 @@ private:
 	std::set<int64_t> m_usedIDs;
 	/// Configured EVM version
 	langutil::EVMVersion m_evmVersion;
+	/// Configured EOF version. Equals std::nullopt if non-EOF
+	std::optional<uint8_t> m_eofVersion;
 };
 
 }

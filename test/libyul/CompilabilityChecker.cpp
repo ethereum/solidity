@@ -38,7 +38,11 @@ std::string check(std::string const& _input)
 	auto parsingResult = yul::test::parse(_input);
 	obj.setCode(parsingResult.first, parsingResult.second);
 	BOOST_REQUIRE(obj.hasCode());
-	auto functions = CompilabilityChecker(EVMDialect::strictAssemblyForEVM(solidity::test::CommonOptions::get().evmVersion()), obj, true).stackDeficit;
+	auto functions = CompilabilityChecker(
+		EVMDialect::strictAssemblyForEVM(
+			solidity::test::CommonOptions::get().evmVersion(),
+			solidity::test::CommonOptions::get().eofVersion()
+		), obj, true).stackDeficit;
 	std::string out;
 	for (auto const& function: functions)
 		out += function.first.str() + ": " + std::to_string(function.second) + " ";

@@ -105,8 +105,9 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		YulAssembler assembler{version, std::nullopt, settings, yul_source};
 		unoptimisedByteCode = assembler.assemble();
 		auto yulObject = assembler.object();
+		// TODO: Add EOF support
 		recursiveFunction = recursiveFunctionExists(
-			EVMDialect::strictAssemblyForEVMObjects(version),
+			EVMDialect::strictAssemblyForEVMObjects(version, std::nullopt),
 			*yulObject
 		);
 	}

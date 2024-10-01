@@ -720,7 +720,16 @@ ASTPointer<InlineAssembly> ASTJsonImporter::createInlineAssembly(Json const& _no
 	astAssert(evmVersion.has_value(), "Invalid EVM version!");
 	astAssert(m_evmVersion == evmVersion, "Imported tree evm version differs from configured evm version!");
 
-	yul::Dialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(evmVersion.value());
+	// TODO: Add test in test/linsolidity/ASTJSON/assembly. This requires adding support for eofVersion in ASTJSONTest
+	std::optional<uint8_t> eofVersion;
+	if (auto const it = _node.find("eofVersion"); it != _node.end())
+	{
+		eofVersion = it->get<uint8_t>();
+		astAssert(eofVersion > 0);
+	}
+	astAssert(m_eofVersion == eofVersion, "Imported tree EOF version differs from configured EOF version!");
+
+	yul::Dialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(evmVersion.value(), eofVersion);
 	ASTPointer<std::vector<ASTPointer<ASTString>>> flags;
 	if (_node.contains("flags"))
 	{

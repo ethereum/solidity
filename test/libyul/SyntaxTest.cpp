@@ -75,5 +75,9 @@ SyntaxTest::SyntaxTest(std::string const& _filename, langutil::EVMVersion _evmVe
 	CommonSyntaxTest(_filename, _evmVersion)
 {
 	std::string dialectName = m_reader.stringSetting("dialect", "evm");
-	m_dialect = &dialect(dialectName, solidity::test::CommonOptions::get().evmVersion());
+	m_dialect = &dialect(
+		dialectName,
+		solidity::test::CommonOptions::get().evmVersion(),
+		solidity::test::CommonOptions::get().eofVersion()
+	);
 }

@@ -54,6 +54,6 @@ parse(std::string const& _source, Dialect const& _dialect, langutil::ErrorList& 
 Block disambiguate(std::string const& _source);
 std::string format(std::string const& _source);
 
-solidity::yul::Dialect const& dialect(std::string const& _name, langutil::EVMVersion _evmVersion);
+solidity::yul::Dialect const& dialect(std::string const& _name, langutil::EVMVersion _evmVersion, std::optional<uint8_t> _eofVersion);
 
 }

@@ -62,7 +62,7 @@ TestCase::TestResult MemoryGuardTest::run(std::ostream& _stream, std::string con
 		ErrorList errors;
 		auto [object, analysisInfo] = yul::test::parse(
 			compiler().yulIR(contractName),
-			EVMDialect::strictAssemblyForEVMObjects(CommonOptions::get().evmVersion()),
+			EVMDialect::strictAssemblyForEVMObjects(CommonOptions::get().evmVersion(), CommonOptions::get().eofVersion()),
 			errors
 		);
 
