@@ -88,7 +88,7 @@ Proof.
 Admitted.
 
 Ltac cbn_without_arithmetic :=
-  cbn - [Z.eqb Z.add Z.sub Z.mul Z.div Z.modulo].
+  cbn - [Z.eqb Z.add Z.sub Z.mul Z.div Z.modulo Z.pow].
 
 Lemma high_ecAddn2_is_add (a : Z) (P1 : PZZ.t) (P2 : PA.t) (p : U256.t)
     (H_P1 : PZZ.Valid.t p P1)
@@ -208,3 +208,94 @@ Proof.
   ).
   all: reflexivity.
 Admitted.
+
+(** * The goal here is to explain the meaning of the body function to get the first significant
+      bit. *)
+Definition s u v mask :=
+  Pure.add
+    (Pure.add
+      (Pure.sub 1 (Pure.iszero (Pure.and u mask)))
+      (Pure.shl 1 (Pure.sub 1 (Pure.iszero (Pure.and (Pure.shr 128 u) mask))))
+    )
+    (Pure.add
+      (Pure.shl 2 (Pure.sub 1 (Pure.iszero (Pure.and v mask))))
+      (Pure.shl 3 (Pure.sub 1 (Pure.iszero (Pure.and (Pure.shr 128 v) mask))))
+    ).
+
+Definition high_s (u v : U256.t) (log_mask : Z) : U256.t :=
+  (Z.b2z (Z.testbit u log_mask)) +
+  (2 * Z.b2z (Z.testbit (u / (2 ^ 128)) log_mask)) +
+  (4 * Z.b2z (Z.testbit v log_mask)) +
+  (8 * Z.b2z (Z.testbit (v / (2 ^ 128)) log_mask)).
+
+Lemma s_eq (u v : U256.t) (log_mask : Z)
+    (H_u : U256.Valid.t u)
+    (H_v : U256.Valid.t v)
+    (H_log_mask : 0 <= log_mask < 128) :
+  s u v (2 ^ log_mask) = high_s u v log_mask.
+Proof.
+  unfold U256.Valid.t in *.
+  unfold s, high_s, Pure.add, Pure.sub, Pure.iszero, Pure.and, Pure.shl, Pure.shr.
+  repeat rewrite Arith2.Z_testbit_alt by lia.
+  assert (H_land_eq :
+      forall (a b : Z),
+      0 <= a ->
+      (Z.land a b =? 0) =
+      negb (0 <? Z.land a b)
+    ). {
+    intros.
+    destruct (Z.land_nonneg a b).
+    lia.
+  }
+  repeat rewrite H_land_eq by lia.
+  repeat destruct (0 <? _); reflexivity.
+Qed.
+
+Definition high_ecDblNeg (a p : Z) (P : PZZ.t) : PZZ.t :=
+  let '{|
+    PZZ.X := X;
+    PZZ.Y := Y;
+    PZZ.ZZ := ZZ;
+    PZZ.ZZZ := ZZZ
+  |} := P in
+
+  let T1 := 2 * Y in
+  let T2 := T1 * T1 in
+  let T3 := X * T2 in
+  let T1 := T1 * T2 in
+  let T4 := a * (ZZ * ZZ) in
+  let T4 := (3 * (X * X)) + T4 in
+  let ZZZ := T1 * ZZZ in
+  let ZZ := T2 * ZZ in
+  let X := p - 2 in
+  let X := (T4 * T4) + (X * T3) in
+  let T2 := T4 * (X + (p - T3)) in
+  let Y := (T1 * Y) + T2 in
+
+  {|
+    PZZ.X := X mod p;
+    PZZ.Y := Y mod p;
+    PZZ.ZZ := ZZ mod p;
+    PZZ.ZZZ := ZZZ mod p
+  |}.
+
+Lemma high_ecDblNeg_eq (a p : Z) (P : PZZ.t)
+    (H_p : 2 <= p < 2^256)
+    (H_P : PZZ.Valid.t p P) :
+  ecDblNeg a p P = high_ecDblNeg a p P.
+Proof.
+  destruct H_P.
+  unfold ecDblNeg, high_ecDblNeg, Pure.addmod, Pure.mulmod, Pure.sub.
+  unfold Zp.Valid.t in *.
+  destruct P; cbn_without_arithmetic.
+  simpl in * |-.
+  assert (H_elim_sub_modulo :
+      forall (a : Z),
+      0 <= a <= p ->
+      (p - a) mod (2 ^ 256) = p - a
+    )
+    by lia.
+  repeat rewrite H_elim_sub_modulo by lia.
+  f_equal.
+  all: show_equality_modulo.
+Qed.

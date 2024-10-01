@@ -413,6 +413,199 @@ Definition get_Ts (Q : Q.t) : list PZZ.t :=
   Ts.
 
 (*
+  {
+  //X,Y,ZZ,ZZZ:=ecDblNeg(X,Y,ZZ,ZZZ), not having it inplace increase by 12K the cost of the function
+
+  let T1 := mulmod(2, Y, _p) //U = 2*Y1, y free
+  let T2 := mulmod(T1, T1, _p) // V=U^2
+  let T3 := mulmod(X, T2, _p) // S = X1*V
+  T1 := mulmod(T1, T2, _p) // W=UV
+  let T4:=mulmod(mload(add(Q,_a)),mulmod(ZZ,ZZ,_p),_p)
+
+  T4 := addmod(mulmod(3, mulmod(X,X,_p),_p),T4,_p)//M=3*X12+aZZ12  
+  ZZZ := mulmod(T1, ZZZ, _p) //zzz3=W*zzz1
+  ZZ := mulmod(T2, ZZ, _p) //zz3=V*ZZ1
+  X:=sub(_p,2)//-2
+  X := addmod(mulmod(T4, T4, _p), mulmod(X, T3, _p), _p) //X3=M^2-2S
+  T2 := mulmod(T4, addmod(X, sub(_p, T3), _p), _p) //-M(S-X3)=M(X3-S)
+  Y := addmod(mulmod(T1, Y, _p), T2, _p) //-Y3= W*Y1-M(S-X3), we replace Y by -Y to avoid a sub in ecAdd
+  //Y:=sub(p,Y)*/
+
+  }
+*)
+Definition ecDblNeg (a p : Z) (P : PZZ.t) : PZZ.t :=
+  let '{|
+    PZZ.X := X;
+    PZZ.Y := Y;
+    PZZ.ZZ := ZZ;
+    PZZ.ZZZ := ZZZ
+  |} := P in
+
+  let T1 := Pure.mulmod 2 Y p in
+  let T2 := Pure.mulmod T1 T1 p in
+  let T3 := Pure.mulmod X T2 p in
+  let T1 := Pure.mulmod T1 T2 p in
+  let T4 := Pure.mulmod a (Pure.mulmod ZZ ZZ p) p in
+  let T4 := Pure.addmod (Pure.mulmod 3 (Pure.mulmod X X p) p) T4 p in
+  let ZZZ := Pure.mulmod T1 ZZZ p in
+  let ZZ := Pure.mulmod T2 ZZ p in
+  let X := Pure.sub p 2 in
+  let X := Pure.addmod
+    (Pure.mulmod T4 T4 p)
+    (Pure.mulmod X T3 p)
+    p in
+  let T2 := Pure.mulmod T4 (Pure.addmod X (Pure.sub p T3) p) p in
+  let Y := Pure.addmod (Pure.mulmod T1 Y p) T2 p in
+
+  {|
+    PZZ.X := X;
+    PZZ.Y := Y;
+    PZZ.ZZ := ZZ;
+    PZZ.ZZZ := ZZZ
+  |}.
+
+Module MainLoop.
+  Definition State : Set :=
+    (U256.t * U256.t * U256.t * U256.t * U256.t * U256.t * U256.t)%type.
+
+  Definition condition (state : State) : bool :=
+    let '(mask, X, Y, ZZ, ZZZ, _y2, _zzz2) := state in
+    mask >? 0.
+
+  Definition next (state : State) : State :=
+    let '(mask, X, Y, ZZ, ZZZ, _y2, _zzz2) := state in
+    let mask := Pure.shr 1 mask in
+    let state := (mask, X, Y, ZZ, ZZZ, _y2, _zzz2) in
+    state.
+
+  Definition body (a p : Z) (u v : U256.t) (Ts : list PZZ.t) (state : State) : State :=
+    let '(mask, X, Y, ZZ, ZZZ, _y2, _zzz2) := state in
+    (*
+    {
+    //X,Y,ZZ,ZZZ:=ecDblNeg(X,Y,ZZ,ZZZ), not having it inplace increase by 12K the cost of the function
+
+    ...
+
+    }
+    *)
+    let '{|
+      PZZ.X := X;
+      PZZ.Y := Y;
+      PZZ.ZZ := ZZ;
+      PZZ.ZZZ := ZZZ
+    |} := ecDblNeg a p {| PZZ.X := X; PZZ.Y := Y; PZZ.ZZ := ZZ; PZZ.ZZZ := ZZZ |} in
+    (*
+    let T1:=add(add(sub(1,iszero(and(scalar_u, mask))), shl(1,sub(1,iszero(and(shr(128, scalar_u), mask))))),
+      add(shl(2,sub(1,iszero(and(scalar_v, mask)))), shl(3,sub(1,iszero(and(shr(128, scalar_v), mask))))))
+    *)
+    let s := Pure.add
+      (Pure.add
+        (Pure.sub 1 (Pure.iszero (Pure.and u mask)))
+        (Pure.shl 1 (Pure.sub 1 (Pure.iszero (Pure.and (Pure.shr 128 u) mask))))
+      )
+      (Pure.add
+        (Pure.shl 2 (Pure.sub 1 (Pure.iszero (Pure.and v mask))))
+        (Pure.shl 3 (Pure.sub 1 (Pure.iszero (Pure.and (Pure.shr 128 v) mask))))
+      ) in
+    (*
+    if iszero(T1) {
+                  Y := sub(_p, Y)
+                  continue
+    }
+    *)
+    if s =? 0 then
+      let Y := Pure.sub p Y in
+      let state := (mask, X, Y, ZZ, ZZZ, _y2, _zzz2) in
+      state
+    else
+    (*
+    T1:=shl(7, T1)//Commputed value address offset
+    let T4:=mload(add(Mem,T1))//X2
+    *)
+    let T4 := (Ts.get Ts (Z.to_nat s)).(PZZ.X) in
+    (* mstore(add(Mem,_y2), addmod(mulmod( mload(add(Mem,add(32,T1))), ZZZ, _p), mulmod(Y,mload(add(Mem, _zzz2)), _p), _p))//R=S2-S1, sub avoided *)
+    let _y2 := Pure.addmod
+      (Pure.mulmod (Ts.get Ts (Z.to_nat s)).(PZZ.Y) ZZZ p)
+      (Pure.mulmod Y _zzz2 p)
+      p in
+    (* T1:=mload(add(Mem,add(64,T1)))//zz2 *)
+    let T1 := (Ts.get Ts (Z.to_nat s)).(PZZ.ZZ) in
+    (* let T2 := addmod(mulmod(T4, ZZ, _p), sub(_p, mulmod(X,T1,_p)), _p)//P=U2-U1 *)
+    let T2 := Pure.addmod
+      (Pure.mulmod T4 ZZ p)
+      (Pure.sub p (Pure.mulmod X T1 p))
+      p in
+    (*
+    //special case ecAdd(P,P)=EcDbl
+    if iszero(mload(add(Mem,_y2))) {
+        if iszero(T2) {
+            T1 := mulmod(sub(_p,2), Y, _p) //U = 2*Y1, y free
+            T2 := mulmod(T1, T1, _p) // V=U^2
+            mstore(add(Mem,_y2), mulmod(X, T2, _p)) // S = X1*V
+
+            T1 := mulmod(T1, T2, _p) // W=UV
+            T4:=mulmod(mload(add(Q,_a)),mulmod(ZZ,ZZ,_p),_p)
+            T4 := addmod(mulmod(3, mulmod(X,X,_p),_p),T4,_p)//M=3*X12+aZZ12   //M
+
+            ZZZ := mulmod(T1, ZZZ, _p) //zzz3=W*zzz1
+            ZZ := mulmod(T2, ZZ, _p) //zz3=V*ZZ1, V free
+
+            X := addmod(mulmod(T4, T4, _p), mulmod(sub(_p,2), mload(add(Mem, _y2)), _p), _p) //X3=M^2-2S
+            T2 := mulmod(T4, addmod(mload(add(Mem, _y2)), sub(_p, X), _p), _p) //M(S-X3)
+
+            Y := addmod(T2, mulmod(T1, Y, _p), _p) //Y3= M(S-X3)-W*Y1
+
+            continue
+        }
+    }
+    *)
+    if (_y2 =? 0) && (T2 =? 0) then
+      let T1 := Pure.mulmod (Pure.sub p 2) Y p in
+      let T2 := Pure.mulmod T1 T1 p in
+      let _y2 := Pure.mulmod X T2 p in
+      let T1 := Pure.mulmod T1 T2 p in
+      let T4 := Pure.mulmod a (Pure.mulmod ZZ ZZ p) p in
+      let T4 := Pure.addmod (Pure.mulmod 3 (Pure.mulmod X X p) p) T4 p in
+      let ZZZ := Pure.mulmod T1 ZZZ p in
+      let ZZ := Pure.mulmod T2 ZZ p in
+      let X := Pure.addmod
+        (Pure.mulmod T4 T4 p)
+        (Pure.mulmod (Pure.sub p 2) _y2 p)
+        p in
+      let T2 := Pure.mulmod T4 (Pure.addmod _y2 (Pure.sub p X) p) p in
+      let Y := Pure.addmod T2 (Pure.mulmod T1 Y p) p in
+      let state := (mask, X, Y, ZZ, ZZZ, _y2, _zzz2) in
+      state
+    else
+    (*
+    T4 := mulmod(T2, T2, _p) //PP
+    T2 := mulmod(T4, T2, _p) //PPP
+    ZZ := mulmod(mulmod(ZZ, T4,_p), T1 ,_p)//zz3=zz1*zz2*PP
+    T1:= mulmod(X,T1, _p)
+    ZZZ := mulmod(mulmod(ZZZ, T2, _p), mload(add(Mem, _zzz2)),_p) // zzz3=zzz1*zzz2*PPP
+    X := addmod(addmod(mulmod(mload(add(Mem, _y2)), mload(add(Mem, _y2)), _p), sub(_p, T2), _p), mulmod( T1 ,mulmod(sub(_p,2), T4, _p),_p ), _p)// R2-PPP-2*U1*PP
+    T4 := mulmod(T1, T4, _p)///Q=U1*PP
+    Y := addmod(mulmod(addmod(T4, sub(_p, X), _p), mload(add(Mem, _y2)), _p), mulmod(mulmod(Y,mload(add(Mem, _zzz2)), _p), T2, _p), _p)// R*(Q-X3)-S1*PPP
+    *)
+    let T4 := Pure.mulmod T2 T2 p in
+    let T2 := Pure.mulmod T4 T2 p in
+    let ZZ := Pure.mulmod (Pure.mulmod ZZ T4 p) T1 p in
+    let T1 := Pure.mulmod X T1 p in
+    let ZZZ := Pure.mulmod (Pure.mulmod ZZZ T2 p) _zzz2 p in
+    let X := Pure.addmod
+      (Pure.addmod (Pure.mulmod _y2 _y2 p) (Pure.sub p T2) p)
+      (Pure.mulmod T1 (Pure.mulmod (Pure.sub p 2) T4 p) p)
+      p in
+    let T4 := Pure.mulmod T1 T4 p in
+    let Y := Pure.addmod
+      (Pure.mulmod (Pure.addmod T4 (Pure.sub p X) p) _y2 p)
+      (Pure.mulmod (Pure.mulmod Y _zzz2 p) T2 p)
+      p in
+    let state := (mask, X, Y, ZZ, ZZZ, _y2, _zzz2) in
+    state.
+End MainLoop.
+
+(*
 function ecGenMulmuladdX_store(
     uint256 [10] memory Q,//store Qx, Qy, Q'x, Q'y p, a, gx, gy, gx2pow128, gy2pow128 
     uint256 scalar_u,
@@ -477,6 +670,7 @@ Definition ecGenMulmuladdX_store (Q : Q.t) (scalar_u scalar_v : U256.t) : U256.t
   let state : State := (mask, s) in
   let state := for_loop 128 state condition next body in
   let '(mask, s) := state in
+
   (*
   X:=mload(add(mload(0x40),shl(7,s)))//X
   Y:=mload(add(mload(0x40),add(32, shl(7,s))))//Y
@@ -501,38 +695,16 @@ Definition ecGenMulmuladdX_store (Q : Q.t) (scalar_u scalar_v : U256.t) : U256.t
     {
     //X,Y,ZZ,ZZZ:=ecDblNeg(X,Y,ZZ,ZZZ), not having it inplace increase by 12K the cost of the function
 
-    let T1 := mulmod(2, Y, _p) //U = 2*Y1, y free
-    let T2 := mulmod(T1, T1, _p) // V=U^2
-    let T3 := mulmod(X, T2, _p) // S = X1*V
-    T1 := mulmod(T1, T2, _p) // W=UV
-    let T4:=mulmod(mload(add(Q,_a)),mulmod(ZZ,ZZ,_p),_p)
-
-    T4 := addmod(mulmod(3, mulmod(X,X,_p),_p),T4,_p)//M=3*X12+aZZ12  
-    ZZZ := mulmod(T1, ZZZ, _p) //zzz3=W*zzz1
-    ZZ := mulmod(T2, ZZ, _p) //zz3=V*ZZ1
-    X:=sub(_p,2)//-2
-    X := addmod(mulmod(T4, T4, _p), mulmod(X, T3, _p), _p) //X3=M^2-2S
-    T2 := mulmod(T4, addmod(X, sub(_p, T3), _p), _p) //-M(S-X3)=M(X3-S)
-    Y := addmod(mulmod(T1, Y, _p), T2, _p) //-Y3= W*Y1-M(S-X3), we replace Y by -Y to avoid a sub in ecAdd
-    //Y:=sub(p,Y)*/
+    ...
 
     }
     *)
-    let T1 := Pure.mulmod 2 Y _modulusp in
-    let T2 := Pure.mulmod T1 T1 _modulusp in
-    let T3 := Pure.mulmod X T2 _modulusp in
-    let T1 := Pure.mulmod T1 T2 _modulusp in
-    let T4 := Pure.mulmod Q.(Q.a) (Pure.mulmod ZZ ZZ _modulusp) _modulusp in
-    let T4 := Pure.addmod (Pure.mulmod 3 (Pure.mulmod X X _modulusp) _modulusp) T4 _modulusp in
-    let ZZZ := Pure.mulmod T1 ZZZ _modulusp in
-    let ZZ := Pure.mulmod T2 ZZ _modulusp in
-    let X := Pure.sub _modulusp 2 in
-    let X := Pure.addmod
-      (Pure.mulmod T4 T4 _modulusp)
-      (Pure.mulmod X T3 _modulusp)
-      _modulusp in
-    let T2 := Pure.mulmod T4 (Pure.addmod X (Pure.sub _modulusp T3) _modulusp) _modulusp in
-    let Y := Pure.addmod (Pure.mulmod T1 Y _modulusp) T2 _modulusp in
+    let '{|
+      PZZ.X := X;
+      PZZ.Y := Y;
+      PZZ.ZZ := ZZ;
+      PZZ.ZZZ := ZZZ
+    |} := ecDblNeg Q.(Q.a) _modulusp {| PZZ.X := X; PZZ.Y := Y; PZZ.ZZ := ZZ; PZZ.ZZZ := ZZZ |} in
     (*
     let T1:=add(add(sub(1,iszero(and(scalar_u, mask))), shl(1,sub(1,iszero(and(shr(128, scalar_u), mask))))),
       add(shl(2,sub(1,iszero(and(scalar_v, mask)))), shl(3,sub(1,iszero(and(shr(128, scalar_v), mask))))))
