@@ -326,7 +326,7 @@ bool SSACFGValidator::consumeConstantForLoop(ForLoop const& _loop, bool _conditi
 	{
 		// yulAssert(!cond.value().hasValue() || exit.condition == cond); // todo what about hasValue, ie stuff that .... i don't even know anymore lol
 		std::unique_ptr<LoopInfo> loopInfo = std::make_unique<LoopInfo>(LoopInfo{
-			entryVariableValues | ranges::view::keys | ranges::to<std::set<Scope::Variable const*>>,
+			entryVariableValues | ranges::views::keys | ranges::to<std::set<Scope::Variable const*>>,
 			m_currentVariableValues,
 			SSACFG::BlockId{},
 			std::nullopt,
@@ -341,7 +341,7 @@ bool SSACFGValidator::consumeConstantForLoop(ForLoop const& _loop, bool _conditi
 			if (loopInfo->postBlock)
 				yulAssert(loopInfo->postBlock == jumpToPost.target);
 			if (loopInfo->loopPostVariableValues)
-				for (auto var: entryVariableValues | ranges::view::keys)
+				for (auto var: entryVariableValues | ranges::views::keys)
 					yulAssert(loopInfo->loopPostVariableValues->at(var) == m_currentVariableValues.at(var));
 			advanceToBlock(jumpToPost.target);
 			if (consumeBlock(_loop.post))
@@ -380,7 +380,7 @@ bool SSACFGValidator::consumeDynamicForLoop(ForLoop const& _loop)
 		auto loopExitVariableValues = applyPhis(m_currentBlock, exit.zero);
 
 		std::unique_ptr<LoopInfo> loopInfo = std::make_unique<LoopInfo>(LoopInfo{
-			entryVariableValues | ranges::view::keys | ranges::to<std::set<Scope::Variable const*>>,
+			entryVariableValues | ranges::views::keys | ranges::to<std::set<Scope::Variable const*>>,
 			loopExitVariableValues,
 			exit.zero,
 			std::nullopt,
@@ -396,7 +396,7 @@ bool SSACFGValidator::consumeDynamicForLoop(ForLoop const& _loop)
 			if (loopInfo->postBlock)
 				yulAssert(loopInfo->postBlock == jumpToPost.target);
 			if (loopInfo->loopPostVariableValues)
-				for (auto var: entryVariableValues | ranges::view::keys)
+				for (auto var: entryVariableValues | ranges::views::keys)
 					yulAssert(loopInfo->loopPostVariableValues->at(var) == m_currentVariableValues.at(var));
 			advanceToBlock(jumpToPost.target);
 			if (consumeBlock(_loop.post))
@@ -425,7 +425,7 @@ std::optional<std::vector<std::set<SSACFG::ValueId>>> SSACFGValidator::consumeEx
 			BuiltinFunction const* builtin = m_context.dialect.builtin(_call.functionName.name);
 			std::vector<SSACFG::ValueId> arguments;
 			size_t idx = _call.arguments.size();
-			for(auto& _arg: _call.arguments | ranges::view::reverse)
+			for(auto& _arg: _call.arguments | ranges::views::reverse)
 			{
 				--idx;
 				if (builtin && builtin->literalArgument(idx).has_value())
