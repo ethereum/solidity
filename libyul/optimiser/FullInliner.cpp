@@ -106,7 +106,7 @@ void FullInliner::run(Pass _pass)
 	for (auto& statement: m_ast.statements)
 		if (std::holds_alternative<FunctionDefinition>(statement))
 			functions.emplace_back(&std::get<FunctionDefinition>(statement));
-	std::stable_sort(functions.begin(), functions.end(), [depths](
+	std::stable_sort(functions.begin(), functions.end(), [&depths](
 		FunctionDefinition const* _a,
 		FunctionDefinition const* _b
 	) {
