@@ -580,7 +580,7 @@ SSACFGValidator::VariableMapping SSACFGValidator::applyPhis(SSACFG::BlockId _sou
 		yulAssert(argumentValueId.hasValue());
 		phiMap[argumentValueId].insert(phi);
 	}
-	VariableMapping result;
+	VariableMapping result = m_currentVariableValues;
 	for (auto& [var, values]: m_currentVariableValues)
 		for (auto const& val: values)
 			result[var] += util::valueOrDefault(phiMap, val, std::set{val}, util::allow_copy);
