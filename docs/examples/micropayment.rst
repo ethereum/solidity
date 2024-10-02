@@ -274,8 +274,8 @@ Opening the Payment Channel
 
 To open the payment channel, Alice deploys the smart contract, attaching
 the Ether to be escrowed and specifying the intended recipient and a
-maximum duration for the channel to exist. This is the function
-``SimplePaymentChannel`` in the contract, at the end of this section.
+maximum duration for the channel to exist. This is the ``constructor``
+in the ``SimplePaymentChannel`` contract, at the end of this section.
 
 Making Payments
 ---------------
