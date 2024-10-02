@@ -1105,9 +1105,9 @@ jobs:
   # Builds in C++20 mode and uses debug build in order to speed up.
   # Do *NOT* store any artifacts or workspace as we don't run tests on this build.
   b_ubu_cxx20:
-    <<: *base_ubuntu2404_large
+    <<: *base_ubuntu2404_xlarge
     environment:
-      <<: *base_ubuntu2404_large_env
+      <<: *base_ubuntu2404_xlarge_env
       CMAKE_BUILD_TYPE: Debug
       CMAKE_OPTIONS: -DCMAKE_CXX_STANDARD=20
       MAKEFLAGS: -j 10
@@ -1859,8 +1859,7 @@ workflows:
 
       # build-only
       - b_docs: *requires_nothing
-      # DISABLED FOR 0.8.18 - b_ubu_cxx20: *requires_nothing
-      # Issue: https://github.com/ethereum/solidity/issues/13868
+      - b_ubu_cxx20: *requires_nothing
       - b_ubu_ossfuzz: *requires_nothing
 
       # OS/X build and tests
