@@ -14,6 +14,10 @@ Bugfixes:
  * Yul AST: Fix shifted native source locations when debug info selection included code snippets.
 
 
+Build system:
+* Removed ``USE_LD_GOLD`` option and default to use the compiler default linker. For custom linkers, ``CMAKE_CXX_FLAGS`` can be used.
+
+
 ### 0.8.27 (2024-09-04)
 
 Language Features:
