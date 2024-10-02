@@ -123,9 +123,15 @@ Module PointsSelector.
     v_high : bool;
   }.
 
+  Definition is_zero (selector : t) : bool :=
+    match selector with
+    | Build_t false false false false => true
+    | _ => false
+    end.
+
   Definition to_Z (selector : t) : Z :=
     let 'Build_t u_low u_high v_low v_high := selector in
-    Z.b2z v_low + 2 * Z.b2z v_high + 4 * Z.b2z u_low + 8 * Z.b2z u_high.
+    Z.b2z u_low + 2 * Z.b2z u_high + 4 * Z.b2z v_low + 8 * Z.b2z v_high.
 End PointsSelector.
 
 Definition Tss (p : U256.t) (P P128 Q Q128 : P.t) (selector : PointsSelector.t) : list P.t :=
@@ -142,12 +148,6 @@ Definition high_get_T (a p : U256.t) (P P128 Q Q128 : P.t) :
     (Tss p P P128 Q Q128 selector)
     P.zero.
 
-(* Ltac zero_head a p P :=
-  match P with
-  | P.add _ _ ?P _ => zero_head a p P
-  | ?P => rewrite <- (P.add_zero_l a p P) at 1
-  end. *)
-
 Lemma high_get_T_eq (a p : U256.t) (P P128 Q Q128 : PA.t)
     (H_P : PA.Valid.t p P)
     (H_P128 : PA.Valid.t p P128)
@@ -155,16 +155,16 @@ Lemma high_get_T_eq (a p : U256.t) (P P128 Q Q128 : PA.t)
     (H_Q128 : PA.Valid.t p Q128)
     (selector : PointsSelector.t) :
   let params : Q.t := {|
-    Q.Qx := P.(PA.X);
-    Q.Qy := P.(PA.Y);
-    Q.Q'x := P128.(PA.X);
-    Q.Q'y := P128.(PA.Y);
+    Q.Qx := Q.(PA.X);
+    Q.Qy := Q.(PA.Y);
+    Q.Q'x := Q128.(PA.X);
+    Q.Q'y := Q128.(PA.Y);
     Q.p := p;
     Q.a := a;
-    Q.gx := Q.(PA.X);
-    Q.gy := Q.(PA.Y);
-    Q.gx2pow128 := Q128.(PA.X);
-    Q.gy2pow128 := Q128.(PA.Y);
+    Q.gx := P.(PA.X);
+    Q.gy := P.(PA.Y);
+    Q.gx2pow128 := P128.(PA.X);
+    Q.gy2pow128 := P128.(PA.Y);
   |} in
   let Ts := List.map (PZZ.to_P p) (get_Ts params) in
   let T := List.nth_error Ts (Z.to_nat (PointsSelector.to_Z selector)) in
@@ -209,33 +209,31 @@ Proof.
   all: reflexivity.
 Admitted.
 
-(** * The goal here is to explain the meaning of the body function to get the first significant
-      bit. *)
-Definition s u v mask :=
-  Pure.add
-    (Pure.add
-      (Pure.sub 1 (Pure.iszero (Pure.and u mask)))
-      (Pure.shl 1 (Pure.sub 1 (Pure.iszero (Pure.and (Pure.shr 128 u) mask))))
-    )
-    (Pure.add
-      (Pure.shl 2 (Pure.sub 1 (Pure.iszero (Pure.and v mask))))
-      (Pure.shl 3 (Pure.sub 1 (Pure.iszero (Pure.and (Pure.shr 128 v) mask))))
-    ).
+Definition high_get_s (u v : U256.t) (log_mask : Z) : PointsSelector.t := {|
+  PointsSelector.u_low := Z.testbit u log_mask;
+  PointsSelector.u_high := Z.testbit (u / (2 ^ 128)) log_mask;
+  PointsSelector.v_low := Z.testbit v log_mask;
+  PointsSelector.v_high := Z.testbit (v / (2 ^ 128)) log_mask;
+|}.
 
-Definition high_s (u v : U256.t) (log_mask : Z) : U256.t :=
-  (Z.b2z (Z.testbit u log_mask)) +
-  (2 * Z.b2z (Z.testbit (u / (2 ^ 128)) log_mask)) +
-  (4 * Z.b2z (Z.testbit v log_mask)) +
-  (8 * Z.b2z (Z.testbit (v / (2 ^ 128)) log_mask)).
-
-Lemma s_eq (u v : U256.t) (log_mask : Z)
+Lemma get_s_eq (u v : U256.t) (log_mask : Z)
     (H_u : U256.Valid.t u)
     (H_v : U256.Valid.t v)
     (H_log_mask : 0 <= log_mask < 128) :
-  s u v (2 ^ log_mask) = high_s u v log_mask.
+  get_s u v (2 ^ log_mask) =
+  PointsSelector.to_Z (high_get_s u v log_mask).
 Proof.
   unfold U256.Valid.t in *.
-  unfold s, high_s, Pure.add, Pure.sub, Pure.iszero, Pure.and, Pure.shl, Pure.shr.
+  unfold
+    get_s,
+    high_get_s,
+    Pure.add,
+    Pure.sub,
+    Pure.iszero,
+    Pure.and,
+    Pure.shl,
+    Pure.shr,
+    PointsSelector.to_Z.
   repeat rewrite Arith2.Z_testbit_alt by lia.
   assert (H_land_eq :
       forall (a b : Z),
@@ -299,3 +297,44 @@ Proof.
   f_equal.
   all: show_equality_modulo.
 Qed.
+
+Module MainLoop.
+  Module State.
+    Module Valid.
+      Record t (p : Z) (state : MainLoop.State.t) : Prop := {
+        mask_valid : 0 <= state.(MainLoop.State.mask) <= 127;
+        P1_valid : PZZ.Valid.t p state.(MainLoop.State.P1);
+        _y2_valid : U256.Valid.t state.(MainLoop.State._y2);
+        _zzz2_valid : U256.Valid.t state.(MainLoop.State._zzz2);
+      }.
+    End Valid.
+  End State.
+
+  Definition high_next (state : MainLoop.State.t) : MainLoop.State.t :=
+    let mask := state.(MainLoop.State.mask) / 2 in
+    state <| MainLoop.State.mask := mask |>.
+
+  Lemma high_next_eq (state : MainLoop.State.t) :
+    MainLoop.next state = high_next state.
+  Proof.
+    reflexivity.
+  Qed.
+
+  Definition high_body (a p : Z) (u v : U256.t) (get_T : PointsSelector.t -> P.t)
+      (state : MainLoop.State.t) : MainLoop.State.t :=
+    let '{|
+      MainLoop.State.mask := mask;
+      MainLoop.State.P1 := P1;
+      MainLoop.State._y2 := _y2;
+      MainLoop.State._zzz2 := _zzz2
+    |} := state in
+    let P1 := high_ecDblNeg a p P1 in
+    let s := high_get_s u v mask in
+    if PointsSelector.is_zero s then
+      let Y := p - P1.(PZZ.Y) in
+      state <| MainLoop.State.P1 := state.(MainLoop.State.P1) <| PZZ.Y := Y |> |>
+    else
+    (* let T4 := (Ts.get Ts (Z.to_nat s)).(PZZ.X) in *)
+    let T4 := (get_T s).(PZZ.X) in
+    state.
+End MainLoop.

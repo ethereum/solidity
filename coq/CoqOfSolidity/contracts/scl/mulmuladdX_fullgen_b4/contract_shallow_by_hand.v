@@ -464,22 +464,42 @@ Definition ecDblNeg (a p : Z) (P : PZZ.t) : PZZ.t :=
     PZZ.ZZZ := ZZZ
   |}.
 
-Module MainLoop.
-  Definition State : Set :=
-    (U256.t * U256.t * U256.t * U256.t * U256.t * U256.t * U256.t)%type.
+Definition get_s u v mask :=
+  Pure.add
+    (Pure.add
+      (Pure.sub 1 (Pure.iszero (Pure.and u mask)))
+      (Pure.shl 1 (Pure.sub 1 (Pure.iszero (Pure.and (Pure.shr 128 u) mask))))
+    )
+    (Pure.add
+      (Pure.shl 2 (Pure.sub 1 (Pure.iszero (Pure.and v mask))))
+      (Pure.shl 3 (Pure.sub 1 (Pure.iszero (Pure.and (Pure.shr 128 v) mask))))
+    ).
 
-  Definition condition (state : State) : bool :=
-    let '(mask, X, Y, ZZ, ZZZ, _y2, _zzz2) := state in
+Module MainLoop.
+  Module State.
+    Record t : Set := {
+      mask : U256.t;
+      P1 : PZZ.t;
+      _y2 : U256.t;
+      _zzz2 : U256.t;
+    }.
+  End State.
+
+  Definition condition (state : State.t) : bool :=
+    let '{| State.mask := mask |} := state in
     mask >? 0.
 
-  Definition next (state : State) : State :=
-    let '(mask, X, Y, ZZ, ZZZ, _y2, _zzz2) := state in
-    let mask := Pure.shr 1 mask in
-    let state := (mask, X, Y, ZZ, ZZZ, _y2, _zzz2) in
-    state.
+  Definition next (state : State.t) : State.t :=
+    let mask := Pure.shr 1 state.(State.mask) in
+    state <| State.mask := mask |>.
 
-  Definition body (a p : Z) (u v : U256.t) (Ts : list PZZ.t) (state : State) : State :=
-    let '(mask, X, Y, ZZ, ZZZ, _y2, _zzz2) := state in
+  Definition body (a p : Z) (u v : U256.t) (Ts : list PZZ.t) (state : State.t) : State.t :=
+    let '{|
+      State.mask := mask;
+      State.P1 := P1;
+      State._y2 := _y2;
+      State._zzz2 := _zzz2
+    |} := state in
     (*
     {
     //X,Y,ZZ,ZZZ:=ecDblNeg(X,Y,ZZ,ZZZ), not having it inplace increase by 12K the cost of the function
@@ -488,25 +508,12 @@ Module MainLoop.
 
     }
     *)
-    let '{|
-      PZZ.X := X;
-      PZZ.Y := Y;
-      PZZ.ZZ := ZZ;
-      PZZ.ZZZ := ZZZ
-    |} := ecDblNeg a p {| PZZ.X := X; PZZ.Y := Y; PZZ.ZZ := ZZ; PZZ.ZZZ := ZZZ |} in
+    let P1 := ecDblNeg a p P1 in
     (*
     let T1:=add(add(sub(1,iszero(and(scalar_u, mask))), shl(1,sub(1,iszero(and(shr(128, scalar_u), mask))))),
       add(shl(2,sub(1,iszero(and(scalar_v, mask)))), shl(3,sub(1,iszero(and(shr(128, scalar_v), mask))))))
     *)
-    let s := Pure.add
-      (Pure.add
-        (Pure.sub 1 (Pure.iszero (Pure.and u mask)))
-        (Pure.shl 1 (Pure.sub 1 (Pure.iszero (Pure.and (Pure.shr 128 u) mask))))
-      )
-      (Pure.add
-        (Pure.shl 2 (Pure.sub 1 (Pure.iszero (Pure.and v mask))))
-        (Pure.shl 3 (Pure.sub 1 (Pure.iszero (Pure.and (Pure.shr 128 v) mask))))
-      ) in
+    let s := get_s u v mask in
     (*
     if iszero(T1) {
                   Y := sub(_p, Y)
@@ -514,8 +521,18 @@ Module MainLoop.
     }
     *)
     if s =? 0 then
-      let Y := Pure.sub p Y in
-      let state := (mask, X, Y, ZZ, ZZZ, _y2, _zzz2) in
+      let Y := Pure.sub p P1.(PZZ.Y) in
+      let state := {|
+        State.mask := mask;
+        State.P1 := {|
+          PZZ.X := P1.(PZZ.X);
+          PZZ.Y := Y;
+          PZZ.ZZ := P1.(PZZ.ZZ);
+          PZZ.ZZZ := P1.(PZZ.ZZZ)
+        |};
+        State._y2 := _y2;
+        State._zzz2 := _zzz2
+      |} in
       state
     else
     (*
@@ -525,15 +542,15 @@ Module MainLoop.
     let T4 := (Ts.get Ts (Z.to_nat s)).(PZZ.X) in
     (* mstore(add(Mem,_y2), addmod(mulmod( mload(add(Mem,add(32,T1))), ZZZ, _p), mulmod(Y,mload(add(Mem, _zzz2)), _p), _p))//R=S2-S1, sub avoided *)
     let _y2 := Pure.addmod
-      (Pure.mulmod (Ts.get Ts (Z.to_nat s)).(PZZ.Y) ZZZ p)
-      (Pure.mulmod Y _zzz2 p)
+      (Pure.mulmod (Ts.get Ts (Z.to_nat s)).(PZZ.Y) P1.(PZZ.ZZZ) p)
+      (Pure.mulmod P1.(PZZ.Y) _zzz2 p)
       p in
     (* T1:=mload(add(Mem,add(64,T1)))//zz2 *)
     let T1 := (Ts.get Ts (Z.to_nat s)).(PZZ.ZZ) in
     (* let T2 := addmod(mulmod(T4, ZZ, _p), sub(_p, mulmod(X,T1,_p)), _p)//P=U2-U1 *)
     let T2 := Pure.addmod
-      (Pure.mulmod T4 ZZ p)
-      (Pure.sub p (Pure.mulmod X T1 p))
+      (Pure.mulmod T4 P1.(PZZ.ZZ) p)
+      (Pure.sub p (Pure.mulmod P1.(PZZ.X) T1 p))
       p in
     (*
     //special case ecAdd(P,P)=EcDbl
@@ -560,21 +577,31 @@ Module MainLoop.
     }
     *)
     if (_y2 =? 0) && (T2 =? 0) then
-      let T1 := Pure.mulmod (Pure.sub p 2) Y p in
+      let T1 := Pure.mulmod (Pure.sub p 2) P1.(PZZ.Y) p in
       let T2 := Pure.mulmod T1 T1 p in
-      let _y2 := Pure.mulmod X T2 p in
+      let _y2 := Pure.mulmod P1.(PZZ.X) T2 p in
       let T1 := Pure.mulmod T1 T2 p in
-      let T4 := Pure.mulmod a (Pure.mulmod ZZ ZZ p) p in
-      let T4 := Pure.addmod (Pure.mulmod 3 (Pure.mulmod X X p) p) T4 p in
-      let ZZZ := Pure.mulmod T1 ZZZ p in
-      let ZZ := Pure.mulmod T2 ZZ p in
+      let T4 := Pure.mulmod a (Pure.mulmod P1.(PZZ.ZZ) P1.(PZZ.ZZ) p) p in
+      let T4 := Pure.addmod (Pure.mulmod 3 (Pure.mulmod P1.(PZZ.X) P1.(PZZ.X) p) p) T4 p in
+      let ZZZ := Pure.mulmod T1 P1.(PZZ.ZZZ) p in
+      let ZZ := Pure.mulmod T2 P1.(PZZ.ZZ) p in
       let X := Pure.addmod
         (Pure.mulmod T4 T4 p)
         (Pure.mulmod (Pure.sub p 2) _y2 p)
         p in
       let T2 := Pure.mulmod T4 (Pure.addmod _y2 (Pure.sub p X) p) p in
-      let Y := Pure.addmod T2 (Pure.mulmod T1 Y p) p in
-      let state := (mask, X, Y, ZZ, ZZZ, _y2, _zzz2) in
+      let Y := Pure.addmod T2 (Pure.mulmod T1 P1.(PZZ.Y) p) p in
+      let state := {|
+        State.mask := mask;
+        State.P1 := {|
+          PZZ.X := X;
+          PZZ.Y := Y;
+          PZZ.ZZ := ZZ;
+          PZZ.ZZZ := ZZZ
+        |};
+        State._y2 := _y2;
+        State._zzz2 := _zzz2
+      |} in
       state
     else
     (*
@@ -589,9 +616,9 @@ Module MainLoop.
     *)
     let T4 := Pure.mulmod T2 T2 p in
     let T2 := Pure.mulmod T4 T2 p in
-    let ZZ := Pure.mulmod (Pure.mulmod ZZ T4 p) T1 p in
-    let T1 := Pure.mulmod X T1 p in
-    let ZZZ := Pure.mulmod (Pure.mulmod ZZZ T2 p) _zzz2 p in
+    let ZZ := Pure.mulmod (Pure.mulmod P1.(PZZ.ZZ) T4 p) T1 p in
+    let T1 := Pure.mulmod P1.(PZZ.X) T1 p in
+    let ZZZ := Pure.mulmod (Pure.mulmod P1.(PZZ.ZZZ) T2 p) _zzz2 p in
     let X := Pure.addmod
       (Pure.addmod (Pure.mulmod _y2 _y2 p) (Pure.sub p T2) p)
       (Pure.mulmod T1 (Pure.mulmod (Pure.sub p 2) T4 p) p)
@@ -599,9 +626,19 @@ Module MainLoop.
     let T4 := Pure.mulmod T1 T4 p in
     let Y := Pure.addmod
       (Pure.mulmod (Pure.addmod T4 (Pure.sub p X) p) _y2 p)
-      (Pure.mulmod (Pure.mulmod Y _zzz2 p) T2 p)
+      (Pure.mulmod (Pure.mulmod P1.(PZZ.Y) _zzz2 p) T2 p)
       p in
-    let state := (mask, X, Y, ZZ, ZZZ, _y2, _zzz2) in
+    let state := {|
+      State.mask := mask;
+      State.P1 := {|
+        PZZ.X := X;
+        PZZ.Y := Y;
+        PZZ.ZZ := ZZ;
+        PZZ.ZZZ := ZZZ
+      |};
+      State._y2 := _y2;
+      State._zzz2 := _zzz2
+    |} in
     state.
 End MainLoop.
 
@@ -817,8 +854,25 @@ Definition ecGenMulmuladdX_store (Q : Q.t) (scalar_u scalar_v : U256.t) : U256.t
   (*  }//endloop *)
   let _y2 := 0 in
   let _zzz2 := 0 in
-  let state : State := (mask, X, Y, ZZ, ZZZ, _y2, _zzz2) in
-  let '(mask, X, Y, ZZ, ZZZ, _y2, _zzz2) := for_loop 128 state condition next body in
+  let state := {|
+    MainLoop.State.mask := mask;
+    MainLoop.State.P1 := {|
+      PZZ.X := X;
+      PZZ.Y := Y;
+      PZZ.ZZ := ZZ;
+      PZZ.ZZZ := ZZZ
+    |};
+    MainLoop.State._y2 := _y2;
+    MainLoop.State._zzz2 := _zzz2
+  |} in
+  let 'MainLoop.State.Build_t mask P1 _y2 _zzz2 :=
+    for_loop
+      128
+      state
+      MainLoop.condition
+      MainLoop.next
+      (MainLoop.body Q.(Q.a) _modulusp scalar_u scalar_v Ts) in
+  let '{| PZZ.X := X; PZZ.Y := Y; PZZ.ZZ := ZZ; PZZ.ZZZ := ZZZ |} := P1 in
 
   (*
   mstore(0x40, _free)
