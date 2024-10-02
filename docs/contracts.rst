@@ -1,6 +1,6 @@
 .. index:: ! contract
 
-.. _contracts:
+.. mainh_contracts:
 
 ##########
 Contracts
