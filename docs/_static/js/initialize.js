@@ -22,10 +22,6 @@ function rearrangeDom() {
   bodyDivs.forEach((div) => wrapperDiv.appendChild(div));
   document.body.prepend(wrapperDiv);
 
-  const rstVersions = document.querySelector(".rst-versions");
-  rstVersions.remove();
-  const wyNavSide = document.querySelector("nav.wy-nav-side");
-  wyNavSide.appendChild(rstVersions);
   const backdrop = document.createElement("div");
   backdrop.classList.add("backdrop");
   wrapperDiv.appendChild(backdrop);

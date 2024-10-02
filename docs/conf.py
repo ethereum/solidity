@@ -24,7 +24,6 @@ from pygments_lexer_solidity import SolidityLexer, YulLexer
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
-
 sys.path.insert(0, os.path.join(ROOT_PATH, 'ext'))
 
 def setup(sphinx):
@@ -136,6 +135,7 @@ html_theme = 'sphinx_rtd_theme'
 html_theme_options = {
     'logo_only': True,
     'display_version': True,
+    'flyout_display': 'hidden',
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
@@ -164,7 +164,7 @@ html_static_path = ['_static']
 
 html_css_files = ["css/toggle.css"]
 
-html_js_files = ["js/constants.js", "js/initialize.js", "js/toggle.js"]
+html_js_files = ["js/constants.js", "js/versions.js", "js/initialize.js", "js/toggle.js"]
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
