@@ -1,2 +1,5 @@
+contracts/erc20/erc20_shallow_proof.v
+contracts/erc20/proofs/erc20.v
 contracts/morpho/morpho_functional.v
+contracts/scl/mulmuladdX_fullgen_b4/contract_iso.v
 contracts/scl/mulmuladdX_fullgen_b4/contract_shallow_proof.v

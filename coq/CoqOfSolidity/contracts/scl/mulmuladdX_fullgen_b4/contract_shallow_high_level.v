@@ -385,7 +385,7 @@ Module MainLoop.
     reflexivity.
   Qed.
 
-  Definition high_body (a p : Z) (P P128 Q Q128 : PA.t) (u v : U256.t)
+  (* Definition high_body (a p : Z) (P P128 Q Q128 : PA.t) (u v : U256.t)
       (get_T : PointsSelector.t -> P.t)
       (state : MainLoop.State.t) :
       MainLoop.State.t :=
@@ -412,5 +412,5 @@ Module MainLoop.
     let _y2 := _y2.(PA.X) in
     let _y2 := p - _y2 in
     let _zzz2 := P1.(PZZ.ZZZ) in
-    state.
+    state. *)
 End MainLoop.

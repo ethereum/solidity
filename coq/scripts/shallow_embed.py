@@ -2,7 +2,7 @@ from collections import defaultdict
 import json
 from pathlib import Path
 import sys
-from typing import Literal, Union
+from typing import Union
 
 
 # Indent each line of the block, except empty lines
@@ -64,8 +64,7 @@ def updated_vars_to_coq(as_pattern: bool, updated_vars: set[str]) -> str:
 
 
 def block_to_coq(
-    mode: Union[Literal["once"], Literal["repeat"], Literal["function"]],
-    return_variables: list,
+    return_variables: Union[None, list],
     node,
 ) -> tuple[str, set[str]]:
     node_type = node.get('nodeType')
@@ -104,12 +103,7 @@ def block_to_coq(
 
         updated_vars -= declared_vars
 
-        if mode == "repeat":
-            prefix = ["fun " + updated_vars_to_coq(True, updated_vars) + " =>"]
-        else:
-            prefix = []
-
-        if mode == "function":
+        if return_variables is not None:
             suffix = "M.pure " + variable_names_to_coq(False, return_variables)
         else:
             suffix = \
@@ -117,7 +111,7 @@ def block_to_coq(
                 updated_vars_to_coq(False, updated_vars) + ")"
 
         return (
-            "\n".join(prefix + statements + [suffix]),
+            "\n".join(statements + [suffix]),
             updated_vars,
         )
 
@@ -131,11 +125,28 @@ def is_pre_empty_block(node) -> bool:
     return node.get('nodeType') == 'YulBlock' and len(node.get('statements', [])) == 0
 
 
+def lift_state_update(
+    block: str,
+    local_updated_vars: set[str],
+    global_updated_vars: set[str]
+) -> str:
+    if local_updated_vars == global_updated_vars:
+        return block
+
+    return \
+        "Shallow.lift_state_update\n" + \
+        indent(
+            "(fun " + updated_vars_to_coq(True, local_updated_vars) + \
+            " => " + updated_vars_to_coq(False, global_updated_vars) + ")"
+        ) + "\n" + \
+        indent("(" + block + ")")
+
+
 def statement_to_coq(node) -> tuple[str, set[str], set[str]]:
     node_type = node.get('nodeType')
 
     if node_type == 'YulBlock':
-        statement, statement_updated_vars = block_to_coq("once", [], node)
+        statement, statement_updated_vars = block_to_coq(None, node)
         return (
             "do~\n" + \
             indent(statement) + "\n" + \
@@ -187,7 +198,7 @@ def statement_to_coq(node) -> tuple[str, set[str], set[str]]:
 
     elif node_type == 'YulIf':
         condition = expression_to_coq(node.get('condition'))
-        then_body, then_updated_vars = block_to_coq('once', [], node.get('body'))
+        then_body, then_updated_vars = block_to_coq(None, node.get('body'))
         return (
             "let~ (* state *) '(_, " + \
             updated_vars_to_coq(False, then_updated_vars) + \
@@ -209,7 +220,7 @@ def statement_to_coq(node) -> tuple[str, set[str], set[str]]:
         cases = [
             (
                 expression_to_coq(case.get('value')),
-                block_to_coq('once', [], case.get('body')),
+                block_to_coq(None, case.get('body')),
             )
             for case in node.get('cases', [])
         ]
@@ -224,14 +235,17 @@ def statement_to_coq(node) -> tuple[str, set[str], set[str]]:
             ") := [[\n" + \
             indent(
                 "(* switch *)\n" + \
-                f"let* δ := [[ {expression} ]] in\n" + \
+                f"let~ δ := [[ {expression} ]] in\n" + \
                 "\nelse ".join(
                     f"if δ =? {value} then\n" +
-                    indent(body) + "\n"
+                    indent(body)
                     for value, (body, _) in cases
                 ) + "\n" + \
                 "else\n" + \
-                indent("M.pure tt")
+                indent(
+                    "M.pure (BlockUnit.Tt, " + \
+                    updated_vars_to_coq(False, commonly_updated_vars) + ")"
+                )
             ) + "\n" + \
             "]] in",
             set(),
@@ -252,30 +266,43 @@ def statement_to_coq(node) -> tuple[str, set[str], set[str]]:
             raise Exception("Non-empty pre block in for loop no handled")
 
         condition = expression_to_coq(node.get('condition'))
-        post, post_updated_vars = block_to_coq('repeat', [], node.get('post'))
-        body, body_updated_vars = block_to_coq('repeat', [], node.get('body'))
-        commonly_updated_vars = post_updated_vars | body_updated_vars
+        post, post_updated_vars = block_to_coq(None, node.get('post'))
+        body, body_updated_vars = block_to_coq(None, node.get('body'))
+        updated_vars = post_updated_vars | body_updated_vars
 
         return (
             "let~ (* state *) '(_, " + \
-            updated_vars_to_coq(False, commonly_updated_vars) + \
-            ") := [[\n" + \
+            updated_vars_to_coq(False, updated_vars) + \
+            ") :=\n" + \
             indent(
                 "(* for loop *)\n" + \
-                "Shallow.for_ (|\n" + \
+                "Shallow.for_\n" + \
                 indent(
+                    "(* init state *)\n" + \
+                    updated_vars_to_coq(False, updated_vars) + "\n" + \
                     "(* condition *)\n" + \
-                    condition + ",\n" + \
+                    "(fun " + updated_vars_to_coq(True, updated_vars) + " => [[\n" + \
+                    indent(condition) + "\n" + \
+                    "]])\n" + \
                     "(* body *)\n" + \
-                    body + ",\n" + \
+                    "(fun " + updated_vars_to_coq(True, updated_vars) + " =>\n" + \
+                    indent(lift_state_update(
+                        body,
+                        body_updated_vars,
+                        updated_vars,
+                    )) + ")\n" + \
                     "(* post *)\n" + \
-                    post
-                ) + "\n" + \
-                "|)"
+                    "(fun " + updated_vars_to_coq(True, updated_vars) + " =>\n" + \
+                    indent(lift_state_update(
+                        post,
+                        post_updated_vars,
+                        updated_vars,
+                    )) + ")"
+                )
             ) + "\n" + \
-            "]] in",
+            "in",
             set(),
-            post_updated_vars | body_updated_vars,
+            updated_vars,
         )
 
     return (
@@ -340,7 +367,7 @@ def function_definition_to_coq(node) -> str:
         for name in param_names
     ])
     return_variables = node.get('returnVariables', [])
-    body, _ = block_to_coq('function', return_variables, node.get('body'))
+    body, _ = block_to_coq(return_variables, node.get('body'))
     return \
         f"Definition {name}{params} : M.t " + \
         function_result_type(len(node.get('returnVariables', []))) + " :=\n" + \
@@ -441,7 +468,7 @@ def top_level_to_coq(node) -> str:
         ]
         body = \
             "Definition body : M.t unit :=\n" + \
-            indent(block_to_coq('function', [], node)[0]) + "."
+            indent(block_to_coq([], node)[0]) + "."
         return ("\n\n").join(functions + [body])
 
     return f"(* Unsupported top-level node type: {node_type} *)"

@@ -199,7 +199,7 @@ Module Erc20_403.
             iszero ~(| (lt ~(| (calldatasize ~(||)), 4 |)) |),
             let~ (* state *) '(_, tt) := [[
               (* switch *)
-              let* δ := [[ shr ~(| 224, (calldataload ~(| 0 |)) |) ]] in
+              let~ δ := [[ shr ~(| 224, (calldataload ~(| 0 |)) |) ]] in
               if δ =? 0x095ea7b3 then
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
@@ -223,7 +223,6 @@ Module Erc20_403.
                 do~ [[ mstore ~(| memPos, 1 |) ]] in
                 do~ [[ return_ ~(| memPos, 32 |) ]] in
                 M.pure (BlockUnit.Tt, tt)
-
               else if δ =? 0x18160ddd then
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
@@ -246,7 +245,6 @@ Module Erc20_403.
                 do~ [[ mstore ~(| memPos_1, _1 |) ]] in
                 do~ [[ return_ ~(| memPos_1, 32 |) ]] in
                 M.pure (BlockUnit.Tt, tt)
-
               else if δ =? 0x23b872dd then
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
@@ -280,7 +278,6 @@ Module Erc20_403.
                 do~ [[ mstore ~(| memPos_2, 1 |) ]] in
                 do~ [[ return_ ~(| memPos_2, 32 |) ]] in
                 M.pure (BlockUnit.Tt, tt)
-
               else if δ =? 0x39509351 then
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
@@ -311,7 +308,6 @@ Module Erc20_403.
                 do~ [[ mstore ~(| memPos_3, 1 |) ]] in
                 do~ [[ return_ ~(| memPos_3, 32 |) ]] in
                 M.pure (BlockUnit.Tt, tt)
-
               else if δ =? 0x70a08231 then
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
@@ -336,7 +332,6 @@ Module Erc20_403.
                 do~ [[ mstore ~(| memPos_4, _2 |) ]] in
                 do~ [[ return_ ~(| memPos_4, 32 |) ]] in
                 M.pure (BlockUnit.Tt, tt)
-
               else if δ =? 0xa457c2d7 then
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
@@ -367,7 +362,6 @@ Module Erc20_403.
                 do~ [[ mstore ~(| memPos_5, 1 |) ]] in
                 do~ [[ return_ ~(| memPos_5, 32 |) ]] in
                 M.pure (BlockUnit.Tt, tt)
-
               else if δ =? 0xa9059cbb then
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
@@ -391,7 +385,6 @@ Module Erc20_403.
                 do~ [[ mstore ~(| memPos_6, 1 |) ]] in
                 do~ [[ return_ ~(| memPos_6, 32 |) ]] in
                 M.pure (BlockUnit.Tt, tt)
-
               else if δ =? 0xdd62ed3e then
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
@@ -423,9 +416,8 @@ Module Erc20_403.
                 do~ [[ mstore ~(| memPos_7, _3 |) ]] in
                 do~ [[ return_ ~(| memPos_7, 32 |) ]] in
                 M.pure (BlockUnit.Tt, tt)
-
               else
-                M.pure tt
+                M.pure (BlockUnit.Tt, tt)
             ]] in
             M.pure (BlockUnit.Tt, tt),
             tt

@@ -540,6 +540,13 @@ End Code.
 
 (* TODO: move this module in a separated file *)
 Module Shallow.
+  Definition lift_state_update {State1 State2 : Set}
+      (f : State1 -> State2)
+      (e : M.t (BlockUnit.t * State1)) :
+      M.t (BlockUnit.t * State2) :=
+    M.let_ e (fun '(output, state) =>
+    pure (output, f state)).
+
   Definition if_ {State : Set}
       (condition : U256.t)
       (success : M.t (BlockUnit.t * State))
@@ -552,7 +559,7 @@ Module Shallow.
 
   Parameter for_ : forall {State : Set},
     State ->
-    (State -> U256.t) ->
+    (State -> M.t U256.t) ->
     (State -> M.t (BlockUnit.t * State)) ->
     (State -> M.t (BlockUnit.t * State)) ->
     M.t (BlockUnit.t * State).
