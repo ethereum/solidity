@@ -3,36 +3,6 @@ Require Import CoqOfSolidity.simulations.CoqOfSolidity.
 Import Stdlib.
 Require Import CoqOfSolidity.contracts.scl.mulmuladdX_fullgen_b4.contract_shallow_by_hand.
 
-(** Normalized addition of two point, must not be neutral input. *)
-Definition high_ecAddn2 (P1 : PZZ.t) (P2 : PA.t) (_p : U256.t) : PZZ.t :=
-  let x1 := P1.(PZZ.X) in
-  let y1 := P1.(PZZ.Y) in
-  let zz1 := P1.(PZZ.ZZ) in
-  let zzz1 := P1.(PZZ.ZZZ) in
-
-  let y1 := _p - y1 in
-  let y2 := (P2.(PA.Y) * zzz1) + y1 in
-  let x2 := (P2.(PA.X) * zz1) + (_p - x1) in
-  let _x := x2 * x2 in
-  let _y := _x * x2 in
-  let _zz := zz1 * _x in
-
-  let _zzz := zzz1 * _y in
-  let zz1 := x1 * _x in
-  let _x :=
-    ((y2 * y2) + (_p - _y)) +
-    ((_p - 2) * zz1) in
-
-  let x1 := (zz1 + (_p - _x)) * y2 in
-  let _y := x1 + (y1 * _y) in
-
-  {|
-    PZZ.X := _x mod _p;
-    PZZ.Y := _y mod _p;
-    PZZ.ZZ := _zz mod _p;
-    PZZ.ZZZ := _zzz mod _p
-  |}.
-
 Ltac show_equality_modulo :=
   repeat (
     (
@@ -47,10 +17,40 @@ Ltac show_equality_modulo :=
     reflexivity
   ).
 
+(** Normalized addition of two point, must not be neutral input. *)
+Definition high_ecAddn2 (P1 : PZZ.t) (P2 : PA.t) (p : U256.t) : PZZ.t :=
+  let x1 := P1.(PZZ.X) in
+  let y1 := P1.(PZZ.Y) in
+  let zz1 := P1.(PZZ.ZZ) in
+  let zzz1 := P1.(PZZ.ZZZ) in
+
+  let y1 := p - y1 in
+  let y2 := (P2.(PA.Y) * zzz1) + y1 in
+  let x2 := (P2.(PA.X) * zz1) + (p - x1) in
+  let _x := x2 * x2 in
+  let _y := _x * x2 in
+  let _zz := zz1 * _x in
+
+  let _zzz := zzz1 * _y in
+  let zz1 := x1 * _x in
+  let _x :=
+    ((y2 * y2) + (p - _y)) +
+    ((p - 2) * zz1) in
+
+  let x1 := (zz1 + (p - _x)) * y2 in
+  let _y := x1 + (y1 * _y) in
+
+  {|
+    PZZ.X := _x mod p;
+    PZZ.Y := _y mod p;
+    PZZ.ZZ := _zz mod p;
+    PZZ.ZZZ := _zzz mod p
+  |}.
+
 Lemma ecAddn2_eq (P1 : PZZ.t) (P2 : PA.t) (p : Z)
     (H_P1 : PZZ.Valid.t p P1)
     (H_P2 : PA.Valid.t p P2)
-    (H__p : 2 <= p < 2^256) :
+    (H_p : 2 <= p < 2^256) :
   ecAddn2 P1 P2 p =
   high_ecAddn2 P1 P2 p.
 Proof.
@@ -75,15 +75,14 @@ Proof.
   all: show_equality_modulo.
 Qed.
 
-Lemma high_ecAddn2_is_valid (P1 : PZZ.t) (P2 : PA.t) (_p : U256.t)
-    (H_P1 : PZZ.Valid.t _p P1)
-    (H_P2 : PA.Valid.t _p P2)
-    (H__p : 2 <= _p < 2^256) :
-  PZZ.Valid.t _p (high_ecAddn2 P1 P2 _p).
+Lemma high_ecAddn2_is_valid (P1 : PZZ.t) (P2 : PA.t) (p : U256.t)
+    (H_P1 : PZZ.Valid.t p P1)
+    (H_P2 : PA.Valid.t p P2)
+    (H__p : 2 <= p < 2^256) :
+  PZZ.Valid.t p (high_ecAddn2 P1 P2 p).
 Proof.
-  simpl.
-  destruct H_P1; constructor.
-  all: unfold Zp.Valid.t in *; simpl; try lia.
+  destruct H_P1, H_P2; constructor; unfold Zp.Valid.t in *; simpl;
+    try lia.
   admit.
 Admitted.
 
@@ -107,6 +106,7 @@ Proof.
     replace P1.(PZZ.ZZ) with 0 by lia; simpl in *.
     congruence.
   }
+  clear H_P1_not_zero.
   admit.
 Admitted.
 
@@ -134,21 +134,100 @@ Module PointsSelector.
     Z.b2z u_low + 2 * Z.b2z u_high + 4 * Z.b2z v_low + 8 * Z.b2z v_high.
 End PointsSelector.
 
-Definition Tss (p : U256.t) (P P128 Q Q128 : P.t) (selector : PointsSelector.t) : list P.t :=
-  (if selector.(PointsSelector.u_low) then [P] else []) ++
-  (if selector.(PointsSelector.u_high) then [P128] else []) ++
-  (if selector.(PointsSelector.v_low) then [Q] else []) ++
-  (if selector.(PointsSelector.v_high) then [Q128] else []).
+(** We make explicit the list of points that we add to be sure to be in the same order as in the
+    source code. *)
+Definition Tss (p : U256.t) (P P128 Q Q128 : PA.t) (selector : PointsSelector.t) : list PA.t :=
+  let '{|
+    PointsSelector.u_low := u_low;
+    PointsSelector.u_high := u_high;
+    PointsSelector.v_low := v_low;
+    PointsSelector.v_high := v_high
+  |} := selector in
+  match u_low, u_high, v_low, v_high with
+  | false, false, false, false => []
+  | false, false, false, true => [Q128]
+  | false, false, true, false => [Q]
+  | false, false, true, true => [Q; Q128]
+  | false, true, false, false => [P128]
+  | false, true, false, true => [Q128; P128]
+  | false, true, true, false => [P128; Q]
+  | false, true, true, true => [P128; Q; Q128]
+  | true, false, false, false => [P]
+  | true, false, false, true => [Q128; P]
+  | true, false, true, false => [Q; P]
+  | true, false, true, true => [Q; Q128; P]
+  | true, true, false, false => [P128; P]
+  | true, true, false, true => [Q128; P128; P]
+  | true, true, true, false => [P128; Q; P]
+  | true, true, true, true => [P128; Q; Q128; P]
+  end.
 
-Definition high_get_T (a p : U256.t) (P P128 Q Q128 : P.t) :
+(** Add all the elements in the list or return zero, without ever adding zero itself as the
+    operation is not defined. *)
+Fixpoint high_sum_or_zero (p : U256.t) (Qs : list PA.t) : PZZ.t :=
+  match Qs with
+  | [] => PZZ.zero
+  | [Q] => PZZ.of_PA Q
+  | Q :: Qs => high_ecAddn2 (high_sum_or_zero p Qs) Q p
+  end.
+
+Definition high_get_T (a p : U256.t) (P P128 Q Q128 : PA.t) (selector : PointsSelector.t) : PZZ.t :=
+  high_sum_or_zero p (List.rev (Tss p P P128 Q Q128 selector)).
+
+Lemma high_get_T_eq (a p : U256.t) (P P128 Q Q128 : PA.t)
+    (H_p : 2 <= p < 2 ^ 256)
+    (H_P : PA.Valid.t p P)
+    (H_P128 : PA.Valid.t p P128)
+    (H_Q : PA.Valid.t p Q)
+    (H_Q128 : PA.Valid.t p Q128)
+    (selector : PointsSelector.t) :
+  let params : Q.t := {|
+    Q.Qx := Q.(PA.X);
+    Q.Qy := Q.(PA.Y);
+    Q.Q'x := Q128.(PA.X);
+    Q.Q'y := Q128.(PA.Y);
+    Q.p := p;
+    Q.a := a;
+    Q.gx := P.(PA.X);
+    Q.gy := P.(PA.Y);
+    Q.gx2pow128 := P128.(PA.X);
+    Q.gy2pow128 := P128.(PA.Y);
+  |} in
+  let Ts := get_Ts params in
+  List.nth_error Ts (Z.to_nat (PointsSelector.to_Z selector)) =
+  Some (high_get_T a p P P128 Q Q128 selector).
+Proof.
+  unfold PointsSelector.to_Z, Z.b2z.
+  unfold high_get_T, Tss.
+  unfold get_Ts; cbn - [ecAddn2].
+  repeat rewrite ecAddn2_eq.
+  all: repeat apply high_ecAddn2_is_valid.
+  all: try easy.
+  all: try now apply PZZ.of_PA_is_valid.
+  repeat match goal with
+  | |- context [?e] =>
+    match e with
+    | {| PZZ.X := ?P.(PA.X) |} =>
+      change e with (PZZ.of_PA P)
+    | {| PA.X := ?P.(PA.X) |} =>
+      change e with P
+    end
+  end.
+  destruct selector; Tactics.destruct_all bool.
+  all: unfold Z.to_nat, Pos.to_nat, List.nth_error; cbn.
+  all: reflexivity.
+Qed.
+
+Definition alg_get_T (a p : U256.t) (P P128 Q Q128 : PA.t) :
     PointsSelector.t -> P.t :=
   fun selector =>
   List.fold_left
-    (fun P Q => P.add a p P Q)
+    (fun P Q => P.add a p P (Some Q))
     (Tss p P P128 Q Q128 selector)
     P.zero.
 
-Lemma high_get_T_eq (a p : U256.t) (P P128 Q Q128 : PA.t)
+Lemma alg_get_T_eq (a p : U256.t) (P P128 Q Q128 : PA.t)
+    (H_p : 2 <= p < 2 ^ 256)
     (H_P : PA.Valid.t p P)
     (H_P128 : PA.Valid.t p P128)
     (H_Q : PA.Valid.t p Q)
@@ -167,14 +246,17 @@ Lemma high_get_T_eq (a p : U256.t) (P P128 Q Q128 : PA.t)
     Q.gy2pow128 := P128.(PA.Y);
   |} in
   let Ts := List.map (PZZ.to_P p) (get_Ts params) in
-  let T := List.nth_error Ts (Z.to_nat (PointsSelector.to_Z selector)) in
-  let high_T := high_get_T a p (Some P) (Some P128) (Some Q) (Some Q128) selector in
-  T = Some high_T.
+  List.nth_error Ts (Z.to_nat (PointsSelector.to_Z selector)) =
+  Some (alg_get_T a p P P128 Q Q128 selector).
 Proof.
   unfold PointsSelector.to_Z, Z.b2z.
-  unfold high_get_T, Tss.
+  unfold alg_get_T, Tss.
   unfold get_Ts; cbn - [ecAddn2 PZZ.to_P].
-  repeat rewrite ecAddn2_eq by admit.
+  repeat rewrite ecAddn2_eq.
+  all: repeat apply high_ecAddn2_is_valid.
+  all: try easy.
+  all: try now apply PZZ.of_PA_is_valid.
+  repeat rewrite ecAddn2_eq.
   repeat match goal with
   | |- context [?e] =>
     match e with
@@ -186,28 +268,11 @@ Proof.
   end.
   repeat rewrite <- P_add_eq_high_ecAddn2 with (a := a).
   repeat rewrite PZZ.to_P_of_PA_eq by assumption.
-
   destruct selector; Tactics.destruct_all bool.
   all: unfold Z.to_nat, Pos.to_nat, List.nth_error; cbn - [P.add].
-  all: f_equal; try reflexivity.
   all: try rewrite P.add_zero_l.
-
-  all: repeat (
-    rewrite P.add_commut with (P1 := Some P128) (P2 := Some P) ||
-    rewrite P.add_commut with (P1 := Some Q)    (P2 := Some P) ||
-    rewrite P.add_commut with (P1 := Some Q128) (P2 := Some P) ||
-    rewrite P.add_commut with (P1 := Some Q)    (P2 := Some P128) ||
-    rewrite P.add_commut with (P1 := Some Q128) (P2 := Some P128) ||
-    rewrite P.add_commut with (P1 := Some Q128) (P2 := Some Q) ||
-    rewrite P.add_commut_nested with (P2 := Some P128) (P3 := Some P) ||
-    rewrite P.add_commut_nested with (P2 := Some Q)    (P3 := Some P) ||
-    rewrite P.add_commut_nested with (P2 := Some Q128) (P3 := Some P) ||
-    rewrite P.add_commut_nested with (P2 := Some Q)    (P3 := Some P128) ||
-    rewrite P.add_commut_nested with (P2 := Some Q128) (P3 := Some P128) ||
-    rewrite P.add_commut_nested with (P2 := Some Q128) (P3 := Some Q)
-  ).
   all: reflexivity.
-Admitted.
+Qed.
 
 Definition high_get_s (u v : U256.t) (log_mask : Z) : PointsSelector.t := {|
   PointsSelector.u_low := Z.testbit u log_mask;
@@ -320,8 +385,10 @@ Module MainLoop.
     reflexivity.
   Qed.
 
-  Definition high_body (a p : Z) (u v : U256.t) (get_T : PointsSelector.t -> P.t)
-      (state : MainLoop.State.t) : MainLoop.State.t :=
+  Definition high_body (a p : Z) (P P128 Q Q128 : PA.t) (u v : U256.t)
+      (get_T : PointsSelector.t -> P.t)
+      (state : MainLoop.State.t) :
+      MainLoop.State.t :=
     let '{|
       MainLoop.State.mask := mask;
       MainLoop.State.P1 := P1;
@@ -334,7 +401,16 @@ Module MainLoop.
       let Y := p - P1.(PZZ.Y) in
       state <| MainLoop.State.P1 := state.(MainLoop.State.P1) <| PZZ.Y := Y |> |>
     else
-    (* let T4 := (Ts.get Ts (Z.to_nat s)).(PZZ.X) in *)
-    let T4 := (get_T s).(PZZ.X) in
+    let T4 := (high_get_T a p P P128 Q Q128 s).(PZZ.X) in
+    (* let _y2 := Pure.addmod
+      (Pure.mulmod (Ts.get Ts (Z.to_nat s)).(PZZ.Y) P1.(PZZ.ZZZ) p)
+      (Pure.mulmod P1.(PZZ.Y) _zzz2 p)
+      p in *)
+    let _y2 := get_T s in
+    let _y2 := PZZ.to_P p _y2 in
+    let _y2 := P.add a p _y2 (Some P1) in
+    let _y2 := _y2.(PA.X) in
+    let _y2 := p - _y2 in
+    let _zzz2 := P1.(PZZ.ZZZ) in
     state.
 End MainLoop.

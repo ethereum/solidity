@@ -8,12 +8,12 @@ Module Erc20_403.
     let~ sum := [[ add ~(| x, 0x14 |) ]] in
     let~ (* state *) '(_, tt) := [[
       Shallow.if_ (|
-        tt,
         gt ~(| x, sum |),
         do~ [[ mstore ~(| 0, (shl ~(| 224, 0x4e487b71 |)) |) ]] in
         do~ [[ mstore ~(| 4, 0x11 |) ]] in
         do~ [[ revert ~(| 0, 0x24 |) ]] in
-        M.pure (BlockUnit.Tt, tt)
+        M.pure (BlockUnit.Tt, tt),
+        tt
       |)
     ]] in
     M.pure sum.
@@ -24,22 +24,22 @@ Module Erc20_403.
       do~ [[ mstore ~(| 64, _1 |) ]] in
       let~ (* state *) '(_, tt) := [[
         Shallow.if_ (|
-          tt,
           callvalue ~(||),
           do~ [[ revert ~(| 0, 0 |) ]] in
-          M.pure (BlockUnit.Tt, tt)
+          M.pure (BlockUnit.Tt, tt),
+          tt
         |)
       ]] in
       let~ (* state *) '(_, tt) := [[
         Shallow.if_ (|
-          tt,
           iszero ~(| (caller ~(||)) |),
           do~ [[ mstore ~(| _1, (shl ~(| 229, 4594637 |)) |) ]] in
           do~ [[ mstore ~(| (add ~(| _1, 4 |)), 32 |) ]] in
           do~ [[ mstore ~(| (add ~(| _1, 36 |)), 31 |) ]] in
           do~ [[ mstore ~(| (add ~(| _1, 68 |)), 0x45726332303a206d696e7420746f20746865207a65726f206164647265737300 (* Erc20: mint to the zero address *) |) ]] in
           do~ [[ revert ~(| _1, 100 |) ]] in
-          M.pure (BlockUnit.Tt, tt)
+          M.pure (BlockUnit.Tt, tt),
+          tt
         |)
       ]] in
       do~ [[ sstore ~(| 0x02, (checked_add_uint256 ~(| (sload ~(| 0x02 |)) |)) |) ]] in
@@ -65,10 +65,10 @@ Module Erc20_403.
       let~ value := [[ calldataload ~(| 4 |) ]] in
       let~ (* state *) '(_, tt) := [[
         Shallow.if_ (|
-          tt,
           iszero ~(| (eq ~(| value, (and ~(| value, (sub ~(| (shl ~(| 160, 1 |)), 1 |)) |)) |)) |),
           do~ [[ revert ~(| 0, 0 |) ]] in
-          M.pure (BlockUnit.Tt, tt)
+          M.pure (BlockUnit.Tt, tt),
+          tt
         |)
       ]] in
       M.pure value.
@@ -77,10 +77,10 @@ Module Erc20_403.
       let~ value := [[ calldataload ~(| 36 |) ]] in
       let~ (* state *) '(_, tt) := [[
         Shallow.if_ (|
-          tt,
           iszero ~(| (eq ~(| value, (and ~(| value, (sub ~(| (shl ~(| 160, 1 |)), 1 |)) |)) |)) |),
           do~ [[ revert ~(| 0, 0 |) ]] in
-          M.pure (BlockUnit.Tt, tt)
+          M.pure (BlockUnit.Tt, tt),
+          tt
         |)
       ]] in
       M.pure value.
@@ -89,12 +89,12 @@ Module Erc20_403.
       let~ sum := [[ add ~(| x, y |) ]] in
       let~ (* state *) '(_, tt) := [[
         Shallow.if_ (|
-          tt,
           gt ~(| x, sum |),
           do~ [[ mstore ~(| 0, (shl ~(| 224, 0x4e487b71 |)) |) ]] in
           do~ [[ mstore ~(| 4, 0x11 |) ]] in
           do~ [[ revert ~(| 0, 0x24 |) ]] in
-          M.pure (BlockUnit.Tt, tt)
+          M.pure (BlockUnit.Tt, tt),
+          tt
         |)
       ]] in
       M.pure sum.
@@ -103,12 +103,12 @@ Module Erc20_403.
       let~ diff := [[ sub ~(| x, y |) ]] in
       let~ (* state *) '(_, tt) := [[
         Shallow.if_ (|
-          tt,
           gt ~(| diff, x |),
           do~ [[ mstore ~(| 0, (shl ~(| 224, 0x4e487b71 |)) |) ]] in
           do~ [[ mstore ~(| 4, 0x11 |) ]] in
           do~ [[ revert ~(| 0, 0x24 |) ]] in
-          M.pure (BlockUnit.Tt, tt)
+          M.pure (BlockUnit.Tt, tt),
+          tt
         |)
       ]] in
       M.pure diff.
@@ -117,7 +117,6 @@ Module Erc20_403.
       let~ _1 := [[ and ~(| var_owner, (sub ~(| (shl ~(| 160, 1 |)), 1 |)) |) ]] in
       let~ (* state *) '(_, tt) := [[
         Shallow.if_ (|
-          tt,
           iszero ~(| _1 |),
           let~ memPtr := [[ mload ~(| 64 |) ]] in
           do~ [[ mstore ~(| memPtr, (shl ~(| 229, 4594637 |)) |) ]] in
@@ -126,13 +125,13 @@ Module Erc20_403.
           do~ [[ mstore ~(| (add ~(| memPtr, 68 |)), 0x45726332303a20617070726f76652066726f6d20746865207a65726f20616464 (* Erc20: approve from the zero add *) |) ]] in
           do~ [[ mstore ~(| (add ~(| memPtr, 100 |)), 0x7265737300000000000000000000000000000000000000000000000000000000 (* ress *) |) ]] in
           do~ [[ revert ~(| memPtr, 132 |) ]] in
-          M.pure (BlockUnit.Tt, tt)
+          M.pure (BlockUnit.Tt, tt),
+          tt
         |)
       ]] in
       let~ _2 := [[ and ~(| var_spender, (sub ~(| (shl ~(| 160, 1 |)), 1 |)) |) ]] in
       let~ (* state *) '(_, tt) := [[
         Shallow.if_ (|
-          tt,
           iszero ~(| _2 |),
           let~ memPtr_1 := [[ mload ~(| 64 |) ]] in
           do~ [[ mstore ~(| memPtr_1, (shl ~(| 229, 4594637 |)) |) ]] in
@@ -141,7 +140,8 @@ Module Erc20_403.
           do~ [[ mstore ~(| (add ~(| memPtr_1, 68 |)), 0x45726332303a20617070726f766520746f20746865207a65726f206164647265 (* Erc20: approve to the zero addre *) |) ]] in
           do~ [[ mstore ~(| (add ~(| memPtr_1, 100 |)), 0x7373000000000000000000000000000000000000000000000000000000000000 (* ss *) |) ]] in
           do~ [[ revert ~(| memPtr_1, 132 |) ]] in
-          M.pure (BlockUnit.Tt, tt)
+          M.pure (BlockUnit.Tt, tt),
+          tt
         |)
       ]] in
       do~ [[ mstore ~(| 0x00, _1 |) ]] in
@@ -161,7 +161,6 @@ Module Erc20_403.
       let~ _1 := [[ and ~(| var_to, (sub ~(| (shl ~(| 160, 1 |)), 1 |)) |) ]] in
       let~ (* state *) '(_, tt) := [[
         Shallow.if_ (|
-          tt,
           iszero ~(| _1 |),
           let~ memPtr := [[ mload ~(| 64 |) ]] in
           do~ [[ mstore ~(| memPtr, (shl ~(| 229, 4594637 |)) |) ]] in
@@ -170,7 +169,8 @@ Module Erc20_403.
           do~ [[ mstore ~(| (add ~(| memPtr, 68 |)), 0x45726332303a207472616e7366657220746f20746865207a65726f2061646472 (* Erc20: transfer to the zero addr *) |) ]] in
           do~ [[ mstore ~(| (add ~(| memPtr, 100 |)), 0x6573730000000000000000000000000000000000000000000000000000000000 (* ess *) |) ]] in
           do~ [[ revert ~(| memPtr, 132 |) ]] in
-          M.pure (BlockUnit.Tt, tt)
+          M.pure (BlockUnit.Tt, tt),
+          tt
         |)
       ]] in
       let~ _2 := [[ and ~(| var_from, (sub ~(| (shl ~(| 160, 1 |)), 1 |)) |) ]] in
@@ -196,26 +196,25 @@ Module Erc20_403.
         do~ [[ mstore ~(| 64, (memoryguard ~(| 0x80 |)) |) ]] in
         let~ (* state *) '(_, tt) := [[
           Shallow.if_ (|
-            tt,
             iszero ~(| (lt ~(| (calldatasize ~(||)), 4 |)) |),
-            let~ (* state *) 'tt := [[
+            let~ (* state *) '(_, tt) := [[
               (* switch *)
               let* δ := [[ shr ~(| 224, (calldataload ~(| 0 |)) |) ]] in
               if δ =? 0x095ea7b3 then
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
-                    tt,
                     callvalue ~(||),
                     do~ [[ revert ~(| 0, 0 |) ]] in
-                    M.pure (BlockUnit.Tt, tt)
+                    M.pure (BlockUnit.Tt, tt),
+                    tt
                   |)
                 ]] in
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
-                    tt,
                     slt ~(| (add ~(| (calldatasize ~(||)), (not ~(| 3 |)) |)), 64 |),
                     do~ [[ revert ~(| 0, 0 |) ]] in
-                    M.pure (BlockUnit.Tt, tt)
+                    M.pure (BlockUnit.Tt, tt),
+                    tt
                   |)
                 ]] in
                 let~ value0 := [[ abi_decode_address ~(||) ]] in
@@ -228,18 +227,18 @@ Module Erc20_403.
               else if δ =? 0x18160ddd then
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
-                    tt,
                     callvalue ~(||),
                     do~ [[ revert ~(| 0, 0 |) ]] in
-                    M.pure (BlockUnit.Tt, tt)
+                    M.pure (BlockUnit.Tt, tt),
+                    tt
                   |)
                 ]] in
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
-                    tt,
                     slt ~(| (add ~(| (calldatasize ~(||)), (not ~(| 3 |)) |)), 0 |),
                     do~ [[ revert ~(| 0, 0 |) ]] in
-                    M.pure (BlockUnit.Tt, tt)
+                    M.pure (BlockUnit.Tt, tt),
+                    tt
                   |)
                 ]] in
                 let~ _1 := [[ sload ~(| 0x02 |) ]] in
@@ -251,18 +250,18 @@ Module Erc20_403.
               else if δ =? 0x23b872dd then
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
-                    tt,
                     callvalue ~(||),
                     do~ [[ revert ~(| 0, 0 |) ]] in
-                    M.pure (BlockUnit.Tt, tt)
+                    M.pure (BlockUnit.Tt, tt),
+                    tt
                   |)
                 ]] in
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
-                    tt,
                     slt ~(| (add ~(| (calldatasize ~(||)), (not ~(| 3 |)) |)), 96 |),
                     do~ [[ revert ~(| 0, 0 |) ]] in
-                    M.pure (BlockUnit.Tt, tt)
+                    M.pure (BlockUnit.Tt, tt),
+                    tt
                   |)
                 ]] in
                 let~ value0_1 := [[ abi_decode_address ~(||) ]] in
@@ -285,18 +284,18 @@ Module Erc20_403.
               else if δ =? 0x39509351 then
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
-                    tt,
                     callvalue ~(||),
                     do~ [[ revert ~(| 0, 0 |) ]] in
-                    M.pure (BlockUnit.Tt, tt)
+                    M.pure (BlockUnit.Tt, tt),
+                    tt
                   |)
                 ]] in
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
-                    tt,
                     slt ~(| (add ~(| (calldatasize ~(||)), (not ~(| 3 |)) |)), 64 |),
                     do~ [[ revert ~(| 0, 0 |) ]] in
-                    M.pure (BlockUnit.Tt, tt)
+                    M.pure (BlockUnit.Tt, tt),
+                    tt
                   |)
                 ]] in
                 let~ value0_2 := [[ abi_decode_address ~(||) ]] in
@@ -316,18 +315,18 @@ Module Erc20_403.
               else if δ =? 0x70a08231 then
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
-                    tt,
                     callvalue ~(||),
                     do~ [[ revert ~(| 0, 0 |) ]] in
-                    M.pure (BlockUnit.Tt, tt)
+                    M.pure (BlockUnit.Tt, tt),
+                    tt
                   |)
                 ]] in
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
-                    tt,
                     slt ~(| (add ~(| (calldatasize ~(||)), (not ~(| 3 |)) |)), 32 |),
                     do~ [[ revert ~(| 0, 0 |) ]] in
-                    M.pure (BlockUnit.Tt, tt)
+                    M.pure (BlockUnit.Tt, tt),
+                    tt
                   |)
                 ]] in
                 do~ [[ mstore ~(| 0, (and ~(| (abi_decode_address ~(||)), (sub ~(| (shl ~(| 160, 1 |)), 1 |)) |)) |) ]] in
@@ -341,18 +340,18 @@ Module Erc20_403.
               else if δ =? 0xa457c2d7 then
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
-                    tt,
                     callvalue ~(||),
                     do~ [[ revert ~(| 0, 0 |) ]] in
-                    M.pure (BlockUnit.Tt, tt)
+                    M.pure (BlockUnit.Tt, tt),
+                    tt
                   |)
                 ]] in
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
-                    tt,
                     slt ~(| (add ~(| (calldatasize ~(||)), (not ~(| 3 |)) |)), 64 |),
                     do~ [[ revert ~(| 0, 0 |) ]] in
-                    M.pure (BlockUnit.Tt, tt)
+                    M.pure (BlockUnit.Tt, tt),
+                    tt
                   |)
                 ]] in
                 let~ value0_3 := [[ abi_decode_address ~(||) ]] in
@@ -372,18 +371,18 @@ Module Erc20_403.
               else if δ =? 0xa9059cbb then
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
-                    tt,
                     callvalue ~(||),
                     do~ [[ revert ~(| 0, 0 |) ]] in
-                    M.pure (BlockUnit.Tt, tt)
+                    M.pure (BlockUnit.Tt, tt),
+                    tt
                   |)
                 ]] in
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
-                    tt,
                     slt ~(| (add ~(| (calldatasize ~(||)), (not ~(| 3 |)) |)), 64 |),
                     do~ [[ revert ~(| 0, 0 |) ]] in
-                    M.pure (BlockUnit.Tt, tt)
+                    M.pure (BlockUnit.Tt, tt),
+                    tt
                   |)
                 ]] in
                 let~ value0_4 := [[ abi_decode_address ~(||) ]] in
@@ -396,18 +395,18 @@ Module Erc20_403.
               else if δ =? 0xdd62ed3e then
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
-                    tt,
                     callvalue ~(||),
                     do~ [[ revert ~(| 0, 0 |) ]] in
-                    M.pure (BlockUnit.Tt, tt)
+                    M.pure (BlockUnit.Tt, tt),
+                    tt
                   |)
                 ]] in
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
-                    tt,
                     slt ~(| (add ~(| (calldatasize ~(||)), (not ~(| 3 |)) |)), 64 |),
                     do~ [[ revert ~(| 0, 0 |) ]] in
-                    M.pure (BlockUnit.Tt, tt)
+                    M.pure (BlockUnit.Tt, tt),
+                    tt
                   |)
                 ]] in
                 let~ value0_5 := [[ abi_decode_address ~(||) ]] in
@@ -428,7 +427,8 @@ Module Erc20_403.
               else
                 M.pure tt
             ]] in
-            M.pure (BlockUnit.Tt, tt)
+            M.pure (BlockUnit.Tt, tt),
+            tt
           |)
         ]] in
         do~ [[ revert ~(| 0, 0 |) ]] in

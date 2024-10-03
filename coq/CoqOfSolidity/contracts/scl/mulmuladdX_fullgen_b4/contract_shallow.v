@@ -10,10 +10,10 @@ Module Contract_91.
       do~ [[ mstore ~(| 64, _1 |) ]] in
       let~ (* state *) '(_, tt) := [[
         Shallow.if_ (|
-          tt,
           callvalue ~(||),
           do~ [[ revert ~(| 0, 0 |) ]] in
-          M.pure (BlockUnit.Tt, tt)
+          M.pure (BlockUnit.Tt, tt),
+          tt
         |)
       ]] in
       let~ _2 := [[ datasize ~(| 0x436f6e74726163745f39315f6465706c6f796564000000000000000000000000 (* Contract_91_deployed *) |) ]] in
@@ -56,17 +56,17 @@ Module Contract_91.
       let~ (* state *) '(_, expr) := [[
         Shallow.if_ (|
           expr,
-          expr,
           let~ expr := [[ iszero ~(| (mload ~(| 0x0160 |)) |) ]] in
-          M.pure (BlockUnit.Tt, expr)
+          M.pure (BlockUnit.Tt, expr),
+          expr
         |)
       ]] in
       let~ (* state *) '(_, tt) := [[
         Shallow.if_ (|
-          tt,
           expr,
           do~ [[ mstore ~(| 0xa0, 0 |) ]] in
-          M.pure (BlockUnit.Leave, tt)
+          M.pure (BlockUnit.Leave, tt),
+          tt
         |)
       ]] in
       do~ [[ mstore ~(| 0x0100, 0 |) ]] in
@@ -189,20 +189,21 @@ Module Contract_91.
       do~ [[ mstore ~(| (add ~(| _32, 1984 |)), var_ZZ_11 |) ]] in
       do~ [[ mstore ~(| (add ~(| _32, 2016 |)), var_ZZZ_11 |) ]] in
       do~ [[ mstore ~(| 0xe0, 0 |) ]] in
-      do~
+      let~ (* state *) '(_, tt) := [[
         (* for loop *)
-        (* pre *)
-        M.pure (BlockUnit.Tt, tt)
-        M.for_unit
+        Shallow.for_ (|
           (* condition *)
-          [[ iszero ~(| (mload ~(| 0xe0 |)) |) ]]
+          iszero ~(| (mload ~(| 0xe0 |)) |),
           (* body *)
-          (do~ [[ mstore ~(| 0xe0, (add ~(| (add ~(| (sub ~(| 1, (iszero ~(| (and ~(| (mload ~(| 0x0120 |)), (mload ~(| 0x01a0 |)) |)) |)) |)), (shl ~(| 1, (sub ~(| 1, (iszero ~(| (and ~(| (shr ~(| 128, (mload ~(| 0x0120 |)) |)), (mload ~(| 0x01a0 |)) |)) |)) |)) |)) |)), (add ~(| (shl ~(| 2, (sub ~(| 1, (iszero ~(| (and ~(| (mload ~(| 0x0160 |)), (mload ~(| 0x01a0 |)) |)) |)) |)) |)), (shl ~(| 3, (sub ~(| 1, (iszero ~(| (and ~(| (shr ~(| 128, (mload ~(| 0x0160 |)) |)), (mload ~(| 0x01a0 |)) |)) |)) |)) |)) |)) |)) |) ]] in
-          M.pure (BlockUnit.Tt, tt))
+          fun 'tt =>
+          do~ [[ mstore ~(| 0xe0, (add ~(| (add ~(| (sub ~(| 1, (iszero ~(| (and ~(| (mload ~(| 0x0120 |)), (mload ~(| 0x01a0 |)) |)) |)) |)), (shl ~(| 1, (sub ~(| 1, (iszero ~(| (and ~(| (shr ~(| 128, (mload ~(| 0x0120 |)) |)), (mload ~(| 0x01a0 |)) |)) |)) |)) |)) |)), (add ~(| (shl ~(| 2, (sub ~(| 1, (iszero ~(| (and ~(| (mload ~(| 0x0160 |)), (mload ~(| 0x01a0 |)) |)) |)) |)) |)), (shl ~(| 3, (sub ~(| 1, (iszero ~(| (and ~(| (shr ~(| 128, (mload ~(| 0x0160 |)) |)), (mload ~(| 0x01a0 |)) |)) |)) |)) |)) |)) |)) |) ]] in
+          M.pure (BlockUnit.Tt, tt),
           (* post *)
-          (do~ [[ mstore ~(| 0x01a0, (shr ~(| 1, (mload ~(| 0x01a0 |)) |)) |) ]] in
-          M.pure (BlockUnit.Tt, tt))
-      in
+          fun 'tt =>
+          do~ [[ mstore ~(| 0x01a0, (shr ~(| 1, (mload ~(| 0x01a0 |)) |)) |) ]] in
+          M.pure (BlockUnit.Tt, tt)
+        |)
+      ]] in
       do~ [[ mstore ~(| 0x0180, (mload ~(| 0x40 |)) |) ]] in
       let~ _33 := [[ add ~(| (mload ~(| 0x0180 |)), (shl ~(| 7, (mload ~(| 0xe0 |)) |)) |) ]] in
       do~ [[ mstore ~(| 0xa0, (mload ~(| _33 |)) |) ]] in
@@ -210,15 +211,14 @@ Module Contract_91.
       do~ [[ mstore ~(| 0x01c0, (mload ~(| (add ~(| _33, 0x40 |)) |)) |) ]] in
       do~ [[ mstore ~(| 0xe0, (mload ~(| (add ~(| _33, 96 |)) |)) |) ]] in
       do~ [[ mstore ~(| 0x01e0, (mload ~(| (add ~(| (mload ~(| 0x0180 |)), 2080 |)) |)) |) ]] in
-      do~
+      let~ (* state *) '(_, tt) := [[
         (* for loop *)
-        (* pre *)
-        M.pure (BlockUnit.Tt, tt)
-        M.for_unit
+        Shallow.for_ (|
           (* condition *)
-          [[ mload ~(| 0x01a0 |) ]]
+          mload ~(| 0x01a0 |),
           (* body *)
-          (do~ [[ mstore ~(| 0xc0, (mulmod ~(| (mload ~(| 0xa0 |)), (mulmod ~(| (mulmod ~(| 2, (mload ~(| 0x0100 |)), (mload ~(| 0x01e0 |)) |)), (mulmod ~(| 2, (mload ~(| 0x0100 |)), (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x01e0 |)) |)) |) ]] in
+          fun 'tt =>
+          do~ [[ mstore ~(| 0xc0, (mulmod ~(| (mload ~(| 0xa0 |)), (mulmod ~(| (mulmod ~(| 2, (mload ~(| 0x0100 |)), (mload ~(| 0x01e0 |)) |)), (mulmod ~(| 2, (mload ~(| 0x0100 |)), (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x01e0 |)) |)) |) ]] in
           let~ usr'dollar'T4 := [[ addmod ~(| (mulmod ~(| 3, (mulmod ~(| (mload ~(| 0xa0 |)), (mload ~(| 0xa0 |)), (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x01e0 |)) |)), (mulmod ~(| (mload ~(| (add ~(| (mload ~(| 0x0140 |)), 160 |)) |)), (mulmod ~(| (mload ~(| 0x01c0 |)), (mload ~(| 0x01c0 |)), (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x01e0 |)) |) ]] in
           do~ [[ mstore ~(| 0xe0, (mulmod ~(| (mulmod ~(| (mulmod ~(| 2, (mload ~(| 0x0100 |)), (mload ~(| 0x01e0 |)) |)), (mulmod ~(| (mulmod ~(| 2, (mload ~(| 0x0100 |)), (mload ~(| 0x01e0 |)) |)), (mulmod ~(| 2, (mload ~(| 0x0100 |)), (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x01e0 |)) |)), (mload ~(| 0xe0 |)), (mload ~(| 0x01e0 |)) |)) |) ]] in
           do~ [[ mstore ~(| 0x01c0, (mulmod ~(| (mulmod ~(| (mulmod ~(| 2, (mload ~(| 0x0100 |)), (mload ~(| 0x01e0 |)) |)), (mulmod ~(| 2, (mload ~(| 0x0100 |)), (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x01c0 |)), (mload ~(| 0x01e0 |)) |)) |) ]] in
@@ -227,11 +227,10 @@ Module Contract_91.
           let~ usr'dollar'T1 := [[ add ~(| (add ~(| (sub ~(| 1, (iszero ~(| (and ~(| (mload ~(| 0x0120 |)), (mload ~(| 0x01a0 |)) |)) |)) |)), (shl ~(| 1, (sub ~(| 1, (iszero ~(| (and ~(| (shr ~(| 128, (mload ~(| 0x0120 |)) |)), (mload ~(| 0x01a0 |)) |)) |)) |)) |)) |)), (add ~(| (shl ~(| 2, (sub ~(| 1, (iszero ~(| (and ~(| (mload ~(| 0x0160 |)), (mload ~(| 0x01a0 |)) |)) |)) |)) |)), (shl ~(| 3, (sub ~(| 1, (iszero ~(| (and ~(| (shr ~(| 128, (mload ~(| 0x0160 |)) |)), (mload ~(| 0x01a0 |)) |)) |)) |)) |)) |)) |) ]] in
           let~ (* state *) '(_, tt) := [[
             Shallow.if_ (|
-              tt,
               iszero ~(| usr'dollar'T1 |),
               do~ [[ mstore ~(| 0x0100, (sub ~(| (mload ~(| 0x01e0 |)), (mload ~(| 0x0100 |)) |)) |) ]] in
-              M.continue
-              M.pure (BlockUnit.Tt, tt)
+              M.pure (BlockUnit.Continue, tt),
+              tt
             |)
           ]] in
           let~ usr'dollar'T4_1 := [[ mload ~(| (add ~(| (mload ~(| 0x0180 |)), (shl ~(| 7, usr'dollar'T1 |)) |)) |) ]] in
@@ -240,14 +239,13 @@ Module Contract_91.
           do~ [[ mstore ~(| (add ~(| (mload ~(| 0x0180 |)), 2144 |)), _35 |) ]] in
           let~ (* state *) '(_, tt) := [[
             Shallow.if_ (|
-              tt,
               iszero ~(| (mload ~(| 0x01c0 |)) |),
               do~ [[ mstore ~(| 0xa0, usr'dollar'T4_1 |) ]] in
               do~ [[ mstore ~(| 0x0100, (mload ~(| (add ~(| (add ~(| (mload ~(| 0x0180 |)), (shl ~(| 7, usr'dollar'T1 |)) |)), 32 |)) |)) |) ]] in
               do~ [[ mstore ~(| 0x01c0, (mload ~(| (add ~(| (add ~(| (mload ~(| 0x0180 |)), (shl ~(| 7, usr'dollar'T1 |)) |)), 0x40 |)) |)) |) ]] in
               do~ [[ mstore ~(| 0xe0, (mload ~(| _34 |)) |) ]] in
-              M.continue
-              M.pure (BlockUnit.Tt, tt)
+              M.pure (BlockUnit.Continue, tt),
+              tt
             |)
           ]] in
           let~ _36 := [[ addmod ~(| (mulmod ~(| (mload ~(| (add ~(| (add ~(| (mload ~(| 0x0180 |)), (shl ~(| 7, usr'dollar'T1 |)) |)), 32 |)) |)), (mload ~(| 0xe0 |)), (mload ~(| 0x01e0 |)) |)), (mulmod ~(| (mload ~(| 0x0100 |)), _35, (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x01e0 |)) |) ]] in
@@ -256,11 +254,9 @@ Module Contract_91.
           let~ usr'dollar'T2 := [[ addmod ~(| (mulmod ~(| usr'dollar'T4_1, (mload ~(| 0x01c0 |)), (mload ~(| 0x01e0 |)) |)), (sub ~(| (mload ~(| 0x01e0 |)), (mulmod ~(| (mload ~(| 0xa0 |)), usr'dollar'T1_1, (mload ~(| 0x01e0 |)) |)) |)), (mload ~(| 0x01e0 |)) |) ]] in
           let~ (* state *) '(_, (usr'dollar'T2, usr'dollar'T4_1)) := [[
             Shallow.if_ (|
-              (usr'dollar'T2, usr'dollar'T4_1),
               iszero ~(| _36 |),
               let~ (* state *) '(_, (usr'dollar'T2, usr'dollar'T4_1)) := [[
                 Shallow.if_ (|
-                  (usr'dollar'T2, usr'dollar'T4_1),
                   iszero ~(| usr'dollar'T2 |),
                   do~ [[ mstore ~(| 0x80, (mulmod ~(| (mload ~(| 0xa0 |)), (mulmod ~(| (mulmod ~(| (add ~(| (mload ~(| 0x01e0 |)), (not ~(| 1 |)) |)), (mload ~(| 0x0100 |)), (mload ~(| 0x01e0 |)) |)), (mulmod ~(| (add ~(| (mload ~(| 0x01e0 |)), (not ~(| 1 |)) |)), (mload ~(| 0x0100 |)), (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x01e0 |)) |)) |) ]] in
                   do~ [[ mstore ~(| (add ~(| (mload ~(| 0x0180 |)), 2112 |)), (mload ~(| 0x80 |)) |) ]] in
@@ -270,11 +266,12 @@ Module Contract_91.
                   do~ [[ mstore ~(| 0xa0, (addmod ~(| (mulmod ~(| usr'dollar'T4_1, usr'dollar'T4_1, (mload ~(| 0x01e0 |)) |)), (mulmod ~(| (add ~(| (mload ~(| 0x01e0 |)), (not ~(| 1 |)) |)), (mload ~(| 0x80 |)), (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x01e0 |)) |)) |) ]] in
                   let~ usr'dollar'T2 := [[ mulmod ~(| usr'dollar'T4_1, (addmod ~(| (mload ~(| 0x80 |)), (sub ~(| (mload ~(| 0x01e0 |)), (mload ~(| 0xa0 |)) |)), (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x01e0 |)) |) ]] in
                   do~ [[ mstore ~(| 0x0100, (addmod ~(| usr'dollar'T2, (mulmod ~(| (mulmod ~(| (mulmod ~(| (add ~(| (mload ~(| 0x01e0 |)), (not ~(| 1 |)) |)), (mload ~(| 0x0100 |)), (mload ~(| 0x01e0 |)) |)), (mulmod ~(| (mulmod ~(| (add ~(| (mload ~(| 0x01e0 |)), (not ~(| 1 |)) |)), (mload ~(| 0x0100 |)), (mload ~(| 0x01e0 |)) |)), (mulmod ~(| (add ~(| (mload ~(| 0x01e0 |)), (not ~(| 1 |)) |)), (mload ~(| 0x0100 |)), (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x0100 |)), (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x01e0 |)) |)) |) ]] in
-                  M.continue
-                  M.pure (BlockUnit.Tt, (usr'dollar'T2, usr'dollar'T4_1))
+                  M.pure (BlockUnit.Continue, (usr'dollar'T2, usr'dollar'T4_1)),
+                  (usr'dollar'T2, usr'dollar'T4_1)
                 |)
               ]] in
-              M.pure (BlockUnit.Tt, (usr'dollar'T2, usr'dollar'T4_1))
+              M.pure (BlockUnit.Tt, (usr'dollar'T2, usr'dollar'T4_1)),
+              (usr'dollar'T2, usr'dollar'T4_1)
             |)
           ]] in
           do~ [[ mstore ~(| 0x01c0, (mulmod ~(| (mulmod ~(| (mload ~(| 0x01c0 |)), (mulmod ~(| usr'dollar'T2, usr'dollar'T2, (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x01e0 |)) |)), usr'dollar'T1_1, (mload ~(| 0x01e0 |)) |)) |) ]] in
@@ -283,11 +280,13 @@ Module Contract_91.
           let~ _37 := [[ mload ~(| (add ~(| (mload ~(| 0x0180 |)), 2112 |)) |) ]] in
           do~ [[ mstore ~(| 0xa0, (addmod ~(| (addmod ~(| (mulmod ~(| _37, _37, (mload ~(| 0x01e0 |)) |)), (sub ~(| (mload ~(| 0x01e0 |)), (mulmod ~(| (mulmod ~(| usr'dollar'T2, usr'dollar'T2, (mload ~(| 0x01e0 |)) |)), usr'dollar'T2, (mload ~(| 0x01e0 |)) |)) |)), (mload ~(| 0x01e0 |)) |)), (mulmod ~(| usr'dollar'T1_2, (mulmod ~(| (add ~(| (mload ~(| 0x01e0 |)), (not ~(| 1 |)) |)), (mulmod ~(| usr'dollar'T2, usr'dollar'T2, (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x01e0 |)) |)) |) ]] in
           do~ [[ mstore ~(| 0x0100, (addmod ~(| (mulmod ~(| (addmod ~(| (mulmod ~(| usr'dollar'T1_2, (mulmod ~(| usr'dollar'T2, usr'dollar'T2, (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x01e0 |)) |)), (sub ~(| (mload ~(| 0x01e0 |)), (mload ~(| 0xa0 |)) |)), (mload ~(| 0x01e0 |)) |)), _37, (mload ~(| 0x01e0 |)) |)), (mulmod ~(| (mulmod ~(| (mload ~(| 0x0100 |)), _35, (mload ~(| 0x01e0 |)) |)), (mulmod ~(| (mulmod ~(| usr'dollar'T2, usr'dollar'T2, (mload ~(| 0x01e0 |)) |)), usr'dollar'T2, (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x01e0 |)) |)), (mload ~(| 0x01e0 |)) |)) |) ]] in
-          M.pure (BlockUnit.Tt, tt))
+          M.pure (BlockUnit.Tt, tt),
           (* post *)
-          (do~ [[ mstore ~(| 0x01a0, (shr ~(| 1, (mload ~(| 0x01a0 |)) |)) |) ]] in
-          M.pure (BlockUnit.Tt, tt))
-      in
+          fun 'tt =>
+          do~ [[ mstore ~(| 0x01a0, (shr ~(| 1, (mload ~(| 0x01a0 |)) |)) |) ]] in
+          M.pure (BlockUnit.Tt, tt)
+        |)
+      ]] in
       do~ [[ mstore ~(| 0x40, 2176 |) ]] in
       do~ [[ mstore ~(| 2272, (mload ~(| 0x01c0 |)) |) ]] in
       do~ [[ mstore ~(| 2176, 32 |) ]] in
@@ -297,11 +296,11 @@ Module Contract_91.
       do~ [[ mstore ~(| 2336, (mload ~(| 0x01e0 |)) |) ]] in
       let~ (* state *) '(_, tt) := [[
         Shallow.if_ (|
-          tt,
           iszero ~(| (staticcall ~(| (not ~(| 0 |)), 0x05, 2176, 192, 2176, 32 |)) |),
           do~ [[ mstore ~(| 0x40, 2047 |) ]] in
           do~ [[ revert ~(| 0x40, 32 |) ]] in
-          M.pure (BlockUnit.Tt, tt)
+          M.pure (BlockUnit.Tt, tt),
+          tt
         |)
       ]] in
       do~ [[ mstore ~(| 0xa0, (mulmod ~(| (mload ~(| 0xa0 |)), (mload ~(| 2176 |)), (mload ~(| 0x01e0 |)) |)) |) ]] in
@@ -321,81 +320,82 @@ Module Contract_91.
         let~ _1 := [[ memoryguard ~(| 0x0200 |) ]] in
         let~ (* state *) '(_, tt) := [[
           Shallow.if_ (|
-            tt,
             iszero ~(| (lt ~(| (calldatasize ~(||)), 4 |)) |),
             let~ (* state *) '(_, tt) := [[
               Shallow.if_ (|
-                tt,
                 eq ~(| 0x81a379ec, (shr ~(| 224, (calldataload ~(| 0 |)) |)) |),
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
-                    tt,
                     callvalue ~(||),
                     do~ [[ revert ~(| 0, 0 |) ]] in
-                    M.pure (BlockUnit.Tt, tt)
+                    M.pure (BlockUnit.Tt, tt),
+                    tt
                   |)
                 ]] in
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
-                    tt,
                     slt ~(| (add ~(| (calldatasize ~(||)), (not ~(| 3 |)) |)), 384 |),
                     do~ [[ revert ~(| 0, 0 |) ]] in
-                    M.pure (BlockUnit.Tt, tt)
+                    M.pure (BlockUnit.Tt, tt),
+                    tt
                   |)
                 ]] in
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
-                    tt,
                     iszero ~(| (slt ~(| 35, (calldatasize ~(||)) |)) |),
                     do~ [[ revert ~(| 0, 0 |) ]] in
-                    M.pure (BlockUnit.Tt, tt)
+                    M.pure (BlockUnit.Tt, tt),
+                    tt
                   |)
                 ]] in
                 let~ newFreePtr := [[ add ~(| _1, 320 |) ]] in
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
-                    tt,
                     or ~(| (gt ~(| newFreePtr, 0xffffffffffffffff |)), (lt ~(| newFreePtr, _1 |)) |),
                     do~ [[ mstore ~(| 0, (shl ~(| 224, 0x4e487b71 |)) |) ]] in
                     do~ [[ mstore ~(| 4, 0x41 |) ]] in
                     do~ [[ revert ~(| 0, 0x24 |) ]] in
-                    M.pure (BlockUnit.Tt, tt)
+                    M.pure (BlockUnit.Tt, tt),
+                    tt
                   |)
                 ]] in
                 do~ [[ mstore ~(| 64, newFreePtr |) ]] in
                 let~ dst := [[ _1 ]] in
                 let~ (* state *) '(_, tt) := [[
                   Shallow.if_ (|
-                    tt,
                     gt ~(| 324, (calldatasize ~(||)) |),
                     do~ [[ revert ~(| 0, 0 |) ]] in
-                    M.pure (BlockUnit.Tt, tt)
+                    M.pure (BlockUnit.Tt, tt),
+                    tt
                   |)
                 ]] in
                 let~ src := [[ 4 ]] in
-                do~
+                let~ (* state *) '(_, (dst, src)) := [[
                   (* for loop *)
-                  (* pre *)
-                  M.pure (BlockUnit.Tt, tt)
-                  M.for_unit
+                  Shallow.for_ (|
                     (* condition *)
-                    [[ lt ~(| src, 324 |) ]]
+                    lt ~(| src, 324 |),
                     (* body *)
-                    (do~ [[ mstore ~(| dst, (calldataload ~(| src |)) |) ]] in
+                    fun dst =>
+                    do~ [[ mstore ~(| dst, (calldataload ~(| src |)) |) ]] in
                     let~ dst := [[ add ~(| dst, 0x20 |) ]] in
-                    M.pure (BlockUnit.Tt, (dst, src)))
+                    M.pure (BlockUnit.Tt, dst),
                     (* post *)
-                    (let~ src := [[ add ~(| src, 0x20 |) ]] in
-                    M.pure (BlockUnit.Tt, (dst, src)))
-                in
+                    fun src =>
+                    let~ src := [[ add ~(| src, 0x20 |) ]] in
+                    M.pure (BlockUnit.Tt, src)
+                  |)
+                ]] in
                 let~ ret := [[ fun_ecGenMulmuladdX_store ~(| _1, (calldataload ~(| 324 |)), (calldataload ~(| 356 |)) |) ]] in
                 let~ memPos := [[ mload ~(| 64 |) ]] in
                 do~ [[ mstore ~(| memPos, ret |) ]] in
                 do~ [[ return_ ~(| memPos, 0x20 |) ]] in
-                M.pure (BlockUnit.Tt, tt)
+                M.pure (BlockUnit.Tt, tt),
+                tt
               |)
             ]] in
-            M.pure (BlockUnit.Tt, tt)
+            M.pure (BlockUnit.Tt, tt),
+            tt
           |)
         ]] in
         do~ [[ revert ~(| 0, 0 |) ]] in

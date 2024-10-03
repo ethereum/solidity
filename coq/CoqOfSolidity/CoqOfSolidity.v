@@ -274,11 +274,11 @@ Module M.
     | _ => LowM.Impossible "if: expected a single value as condition"
     end.
 
-  (* Definition if_unit (condition : U256.t) (success : t unit) : t unit :=
+  Definition if_unit (condition : U256.t) (success : t unit) : t unit :=
     if condition =? 0 then
       pure tt
     else
-      success. *)
+      success.
 
   Definition declare (names : list string) (values : option (list U256.t)) : t BlockUnit.t :=
     let values_with_default :=
@@ -541,12 +541,19 @@ End Code.
 (* TODO: move this module in a separated file *)
 Module Shallow.
   Definition if_ {State : Set}
-      (state : State)
       (condition : U256.t)
-      (success : M.t (BlockUnit.t * State)) :
+      (success : M.t (BlockUnit.t * State))
+      (failure : State) :
       M.t (BlockUnit.t * State) :=
     if condition =? 0 then
-      pure (BlockUnit.Tt, state)
+      pure (BlockUnit.Tt, failure)
     else
       success.
+
+  Parameter for_ : forall {State : Set},
+    State ->
+    (State -> U256.t) ->
+    (State -> M.t (BlockUnit.t * State)) ->
+    (State -> M.t (BlockUnit.t * State)) ->
+    M.t (BlockUnit.t * State).
 End Shallow.

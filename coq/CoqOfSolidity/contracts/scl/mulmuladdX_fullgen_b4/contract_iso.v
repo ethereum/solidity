@@ -2,6 +2,155 @@ Require Import CoqOfSolidity.CoqOfSolidity.
 Require Import CoqOfSolidity.simulations.CoqOfSolidity.
 Import Stdlib.
 
+Module Contract_91.
+  (*
+    code {
+        {
+            /// @src 0:2011:14164  "contract Contract {..."
+            let _1 := memoryguard(0x80)
+            mstore(64, _1)
+            if callvalue() { revert(0, 0) }
+            let _2 := datasize("Contract_91_deployed")
+            codecopy(_1, dataoffset("Contract_91_deployed"), _2)
+            return(_1, _2)
+        }
+    }
+  *)
+  Definition code : M.t unit :=
+    let~ _1 := [[ memoryguard ~(| 0x80 |) ]] in
+    do~ [[
+      M.if_unit (| callvalue ~(||),
+        do~ [[ revert ~(| 0, 0 |) ]] in
+        M.pure tt
+      |)
+    ]] in
+    let~ _2 := [[ datasize ~(| Literal.string 0x436f6e74726163745f39315f6465706c6f796564000000000000000000000000 |) ]] in
+    do~ [[
+      codecopy ~(| _1, dataoffset ~(| Literal.string 0x436f6e74726163745f39315f6465706c6f796564000000000000000000000000 |), _2 |)
+    ]] in
+    do~ [[ return_ ~(| _1, _2 |) ]] in
+    M.pure tt.
+
+  Module Contract_91_deployed.
+    (*
+      function fun_ecGenMulmuladdX_store(var_Q_mpos, var_scalar_u, var_scalar_v) -> var_X
+      /// @ast-id 90
+      {
+          mstore(0x0140, var_Q_mpos)
+          mstore(0x0120, var_scalar_u)
+          mstore(0x0160, var_scalar_v)
+          mstore(0xa0, 0)
+          /// @ast-id 90
+          /** @ast-id 90 */ /** @ast-id 90 */ fun_ecGenMulmuladdX_store_2814()
+          /// @ast-id 90
+          /** @ast-id 90 */ var_X := /** @ast-id 90 */ /** @ast-id 90 */ mload(/** @ast-id 90 */ 0xa0)
+      }
+    *)
+    Definition fun_ecGenMulmuladdX_store (var_Q_mpos var_scalar_u var_scalar_v : U256.t) :
+        M.t U256.t :=
+      do~ [[ mstore ~(| 0x0140, var_Q_mpos |) ]] in
+      do~ [[ mstore ~(| 0x0120, var_scalar_u |) ]] in
+      do~ [[ mstore ~(| 0x0160, var_scalar_v |) ]] in
+      do~ [[ mstore ~(| 0xa0, 0 |) ]] in
+      do~ [[ fun_ecGenMulmuladdX_store_2814 ~(||) ]] in
+      do~ [[ mload ~(| 0xa0 |) ]] in
+      M.pure tt.
+
+    (*
+      code {
+          {
+              /// @src 0:2011:14164  "contract Contract {..."
+              let _1 := memoryguard(0x0200)
+              if iszero(lt(calldatasize(), 4))
+              {
+                  if eq(0x81a379ec, shr(224, calldataload(0)))
+                  {
+                      if callvalue() { revert(0, 0) }
+                      if slt(add(calldatasize(), not(3)), 384) { revert(0, 0) }
+                      if iszero(slt(35, calldatasize())) { revert(0, 0) }
+                      let newFreePtr := add(_1, 320)
+                      if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, _1))
+                      {
+                          mstore(0, shl(224, 0x4e487b71))
+                          mstore(4, 0x41)
+                          revert(0, 0x24)
+                      }
+                      mstore(64, newFreePtr)
+                      let dst := _1
+                      if gt(324, calldatasize()) { revert(0, 0) }
+                      let src := 4
+                      for { } lt(src, 324) { src := add(src, 0x20) }
+                      {
+                          mstore(dst, calldataload(src))
+                          dst := add(dst, 0x20)
+                      }
+                      let ret := fun_ecGenMulmuladdX_store(_1, calldataload(324), calldataload(356))
+                      let memPos := mload(64)
+                      mstore(memPos, ret)
+                      return(memPos, 0x20)
+                  }
+              }
+              revert(0, 0)
+          }
+    *)
+    Definition code :=
+      do~ [[
+        let~ _1 := [[ memoryguard ~(| 0x0200 |) ]] in
+        do~ [[
+          M.if_unit (| iszero ~(| lt ~(| calldatasize ~(||), 4 |) |),
+            [[
+              M.if_unit (| eq ~(| 0x81a379ec, shr ~(| 224, calldataload ~(| 0 |) |) |),
+                do~ [[
+                  M.if_unit (| callvalue ~(||),
+                    do~ [[ revert ~(| 0, 0 |) ]] in
+                    M.pure tt
+                  |)
+                ]] in
+                do~ [[
+                  M.if_unit (| slt ~(| add ~(| calldatasize ~(||), not ~(| 3 |) |), 384 |),
+                    do~ [[ revert ~(| 0, 0 |) ]] in
+                    M.pure tt
+                  |)
+                ]] in
+                do~ [[
+                  M.if_unit (| iszero ~(| slt ~(| 35, calldatasize ~(||) |) |),
+                    do~ [[ revert ~(| 0, 0 |) ]] in
+                    M.pure tt
+                  |)
+                ]] in
+                let~ newFreePtr := [[ add ~(| _1, 320 |) ]] in
+                do~ [[
+                  M.if_unit (| or ~(| gt ~(| newFreePtr, 0xffffffffffffffff |), lt ~(| newFreePtr, _1 |) |),
+                    do~ [[ mstore ~(| 0, shl ~(| 224, 0x4e487b71 |) |) ]] in
+                    do~ [[ mstore ~(| 4, 0x41 |) ]] in
+                    do~ [[ revert ~(| 0, 0x24 |) ]] in
+                    M.pure tt
+                  |)
+                ]] in
+                do~ [[ mstore ~(| 64, newFreePtr |) ]] in
+                let~ dst := [[ _1 ]] in
+                do~ [[
+                  M.if_unit (| gt ~(| 324, calldatasize ~(||) |),
+                    do~ [[ revert ~(| 0, 0 |) ]] in
+                    M.pure tt
+                  |)
+                ]] in
+                let~ src := [[ 4 ]] in
+                (* for loop: TODO *)
+                let~ ret := [[ fun_ecGenMulmuladdX_store ~(| _1, calldataload ~(| 324 |), calldataload ~(| 356 |) |) ]] in
+                let~ memPos := [[ mload ~(| 64 |) ]] in
+                do~ [[ mstore ~(| memPos, ret |) ]] in
+                do~ [[ return_ ~(| memPos, 0x20 |) ]] in
+                M.pure tt
+              |)
+            ]]
+          |)
+      ]] in
+      do~ [[ revert ~(| 0, 0 |) ]] in
+      M.pure tt
+    ]] in
+    M.pure tt.
+
 Ltac Zify.zify_post_hook ::= Z.to_euclidean_division_equations.
 
 Module Q.
