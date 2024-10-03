@@ -424,6 +424,74 @@ Module M.
     end.
 End M.
 
+(* TODO: move this module in a separated file? *)
+Module Shallow.
+  (* Definition do_ {A : Set} (e : M.t unit) (body : BlockUnit.t -> M.t A) : BlockUnit.t -> M.t A :=
+    fun mode =>
+    match mode with
+    | BlockUnit.Tt =>
+      do* e in
+      body mode
+    | _ =>
+      body mode
+    end.
+
+  Definition let_ {A B : Set} (e : M.t A) (body : A -> BlockUnit.t -> M.t B) :
+      BlockUnit.t -> M.t B :=
+    fun mode =>
+    match mode with
+    | BlockUnit.Tt =>
+      let* value := e in
+      body value mode
+    | _ =>
+
+    end. *)
+
+  Definition t (State : Set) : Set :=
+    M.t (BlockUnit.t * State).
+
+  (* Definition do_ {State : Set} (expression : t State) (body : State -> t State) : t State :=
+    let~ value := expression in
+    match value with
+    | (BlockUnit.Tt, state) => body state
+    | _ => M.pure value
+    end. *)
+
+  Definition let_state {State1 State2 : Set}
+      (expression : t State1) (body : State1 -> State2 * t State2) :
+      t State2 :=
+    M.strong_let_ expression (fun value =>
+    let '(mode, state1) := value in
+    match mode with
+    | BlockUnit.Tt => snd (body state1)
+    | _ => M.pure (mode, fst (body state1))
+    end).
+
+  Definition lift_state_update {State1 State2 : Set}
+      (f : State1 -> State2)
+      (e : M.t (BlockUnit.t * State1)) :
+      M.t (BlockUnit.t * State2) :=
+    M.let_ e (fun '(output, state) =>
+    M.pure (output, f state)).
+
+  Definition if_ {State : Set}
+      (condition : U256.t)
+      (success : M.t (BlockUnit.t * State))
+      (failure : State) :
+      M.t (BlockUnit.t * State) :=
+    if condition =? 0 then
+      M.pure (BlockUnit.Tt, failure)
+    else
+      success.
+
+  Parameter for_ : forall {State : Set},
+    State ->
+    (State -> M.t U256.t) ->
+    (State -> M.t (BlockUnit.t * State)) ->
+    (State -> M.t (BlockUnit.t * State)) ->
+    M.t (BlockUnit.t * State).
+End Shallow.
+
 Module Notations.
   Notation "'let*' x ':=' e 'in' k" :=
     (M.let_ e (fun x => k))
@@ -436,6 +504,14 @@ Module Notations.
   Notation "'let~' ' p ':=' e 'in' k" :=
     (M.strong_let_ e (fun p => k))
     (at level 200, p pattern, e at level 200, k at level 200).
+
+  Notation "'let_state~' x ':=' e 'default~' state 'in' k" :=
+    (Shallow.let_state e (fun x => (state, k)))
+    (at level 200, x ident, e at level 200, state at level 200, k at level 200).
+
+  Notation "'let_state~' ' p ':=' e 'default~' state 'in' k" :=
+    (Shallow.let_state e (fun p => (state, k)))
+    (at level 200, p pattern, e at level 200, state at level 200, k at level 200).
 
   Notation "'do*' a 'in' b" :=
     (M.let_ a (fun _ => b))
@@ -537,30 +613,3 @@ Module Code.
       ) codes in
     constr_of_list codes_of_right_type.
 End Code.
-
-(* TODO: move this module in a separated file *)
-Module Shallow.
-  Definition lift_state_update {State1 State2 : Set}
-      (f : State1 -> State2)
-      (e : M.t (BlockUnit.t * State1)) :
-      M.t (BlockUnit.t * State2) :=
-    M.let_ e (fun '(output, state) =>
-    pure (output, f state)).
-
-  Definition if_ {State : Set}
-      (condition : U256.t)
-      (success : M.t (BlockUnit.t * State))
-      (failure : State) :
-      M.t (BlockUnit.t * State) :=
-    if condition =? 0 then
-      pure (BlockUnit.Tt, failure)
-    else
-      success.
-
-  Parameter for_ : forall {State : Set},
-    State ->
-    (State -> M.t U256.t) ->
-    (State -> M.t (BlockUnit.t * State)) ->
-    (State -> M.t (BlockUnit.t * State)) ->
-    M.t (BlockUnit.t * State).
-End Shallow.
