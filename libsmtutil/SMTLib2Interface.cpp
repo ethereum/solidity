@@ -189,28 +189,36 @@ std::string SMTLib2Interface::toSExpr(solidity::smtutil::Expression const& _expr
 
 std::string SMTLib2Interface::checkSatAndGetValuesCommand(std::vector<Expression> const& _expressionsToEvaluate)
 {
-	std::string command;
-	if (_expressionsToEvaluate.empty())
-		command = "(check-sat)\n";
-	else
-	{
-		// TODO make sure these are unique
-		for (size_t i = 0; i < _expressionsToEvaluate.size(); i++)
-		{
-			auto const& e = _expressionsToEvaluate.at(i);
-			smtAssert(e.sort->kind == Kind::Int || e.sort->kind == Kind::Bool, "Invalid sort for expression to evaluate.");
-			command += "(declare-const |EVALEXPR_" + std::to_string(i) + "| " + (e.sort->kind == Kind::Int ? "Int" : "Bool") + ")\n";
-			command += "(assert (= |EVALEXPR_" + std::to_string(i) + "| " + toSExpr(e) + "))\n";
-		}
-		command += "(check-sat)\n";
-		command += "(get-value (";
-		for (size_t i = 0; i < _expressionsToEvaluate.size(); i++)
-			command += "|EVALEXPR_" + std::to_string(i) + "| ";
-		command += "))\n";
-	}
+    std::string command;
+    if (_expressionsToEvaluate.empty())
+        command = "(check-sat)\n";
+    else
+    {
+        // Reserve space for efficiency
+        size_t numExpressions = _expressionsToEvaluate.size();
+        command.reserve(command.size() + numExpressions * 100); // Estimate space needed
 
-	return command;
+        for (size_t i = 0; i < numExpressions; i++)
+        {
+            auto const& e = _expressionsToEvaluate.at(i);
+            smtAssert(e.sort->kind == Kind::Int || e.sort->kind == Kind::Bool, "Invalid sort for expression to evaluate.");
+            command += "(declare-const |EVALEXPR_" + std::to_string(i) + "| " + 
+                        (e.sort->kind == Kind::Int ? "Int" : "Bool") + ")\n" +
+                        "(assert (= |EVALEXPR_" + std::to_string(i) + "| " + toSExpr(e) + "))\n";
+        }
+        
+        command += "(check-sat)\n";
+        command += "(get-value (";
+        
+        for (size_t i = 0; i < numExpressions; i++)
+            command += "|EVALEXPR_" + std::to_string(i) + "| ";
+
+        command += "))\n";
+    }
+
+    return command;
 }
+
 
 std::string SMTLib2Interface::querySolver(std::string const& _input)
 {
