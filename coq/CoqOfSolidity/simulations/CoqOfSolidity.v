@@ -1518,6 +1518,31 @@ Module RunO.
     intros -> ->.
     now constructor.
   Qed.
+
+  (** Apply the [simpl] tactic on the expressions of the reduction relation, the finale state, but not
+      the initial state. *)
+  Ltac simpl_goal :=
+    match goal with
+    | |- {{? _, _, _ | ?expr1 ⇓ ?expr2 | ?state_end ?}} =>
+      let expr1' := eval simpl in expr1 in
+      change expr1 with expr1';
+      let expr2' := eval simpl in expr2 in
+      change expr2 with expr2';
+      let state_end' := eval simpl in state_end in
+      change state_end with state_end'
+    end.
+
+  (** ** Very short shortcuts for commonly used tactics. *)
+  Ltac p := apply RunO.Pure.
+  Ltac pn := apply RunO.PureNone.
+  Ltac pe := apply RunO.PureEq.
+  Ltac pr := eapply RunO.Primitive; [reflexivity |].
+  Ltac prn := eapply RunO.PrimitiveNone.
+  Ltac l := eapply RunO.Let.
+  Ltac lu := apply RunO.LetUnfold.
+  Ltac c := eapply RunO.Call.
+  Ltac cu := apply RunO.CallUnfold.
+  Ltac s := fold @LowM.let_; simpl_goal.
 End RunO.
 
 Import RunO.
@@ -2179,3 +2204,10 @@ End Test.
 
 Definition declared_vars (state : State.t) : list (list (string * U256.t)) :=
   state.(State.stack).
+
+Definition wrap_state_with_revert {A : Set} (state : State.t) (output : Result.t A) :
+    option State.t :=
+  match output with
+  | Result.Revert _ _ => None
+  | _ => Some state
+  end.

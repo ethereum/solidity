@@ -337,13 +337,7 @@ def expression_to_coq(node) -> str:
 
     if node_type == 'YulFunctionCall':
         func_name = variable_name_to_coq(node['functionName'])
-        args: list[str] = [
-            paren(
-                arg.get('nodeType') == 'YulFunctionCall',
-                expression_to_coq(arg),
-            )
-            for arg in node.get('arguments', [])
-        ]
+        args: list[str] = [expression_to_coq(arg) for arg in node.get('arguments', [])]
         args_left = "~(|"
         args_right = "|)"
         return func_name + " " + \
@@ -386,7 +380,6 @@ def function_definition_to_coq(node) -> str:
         " (" + name + " : U256.t)"
         for name in param_names
     ])
-    return_variables = node.get('returnVariables', [])
     body, _ = block_to_coq(None, node.get('body'))
     return \
         f"Definition {name}{params} : M.t " + \

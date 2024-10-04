@@ -199,7 +199,7 @@ Module M.
       (e1 : t A)
       (e2 : A -> t B) :
       t B :=
-    LowM.let_ e1 (fun result =>
+    let_ e1 (fun result =>
     match result with
     | Result.Ok value => e2 value
     | Result.Return p s => LowM.Pure (Result.Return p s)

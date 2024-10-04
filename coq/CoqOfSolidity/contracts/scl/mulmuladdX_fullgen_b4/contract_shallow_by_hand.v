@@ -1,5 +1,6 @@
 Require Import CoqOfSolidity.CoqOfSolidity.
 Require Import CoqOfSolidity.simulations.CoqOfSolidity.
+Require Import CoqOfSolidity.contracts.scl.mulmuladdX_fullgen_b4.contract_shallow.
 Import Stdlib.
 
 Ltac Zify.zify_post_hook ::= Z.to_euclidean_division_equations.
@@ -224,49 +225,111 @@ Module PZZ.
   Qed.
 End PZZ.
 
-(*
-//normalized addition of two point, must not be neutral input
-function ecAddn2(x1, y1, zz1, zzz1, x2, y2, _p) -> _x, _y, _zz, _zzz {
-  y1 := sub(_p, y1)
-  y2 := addmod(mulmod(y2, zzz1, _p), y1, _p)
-  x2 := addmod(mulmod(x2, zz1, _p), sub(_p, x1), _p)
-  _x := mulmod(x2, x2, _p) //PP = P^2
-  _y := mulmod(_x, x2, _p) //PPP = P*PP
-  _zz := mulmod(zz1, _x, _p) ////ZZ3 = ZZ1*PP
-
-  _zzz := mulmod(zzz1, _y, _p) ////ZZZ3 = ZZZ1*PPP
-  zz1 := mulmod(x1, _x, _p) //Q = X1*PP
-  _x := addmod(addmod(mulmod(y2, y2, _p), sub(_p, _y), _p), mulmod(sub(_p,2), zz1, _p), _p) //R^2-PPP-2*Q
-
-  x1:=mulmod(addmod(zz1, sub(_p, _x), _p), y2, _p)//necessary split not to explose stack
-  _y := addmod(x1, mulmod(y1, _y, _p), _p) //R*(Q-X3)
-}
-*)
 Definition ecAddn2 (P1 : PZZ.t) (P2 : PA.t) (p : U256.t) : PZZ.t :=
-  let y1 := Pure.sub p P1.(PZZ.Y) in
-  let y2 := Pure.addmod (Pure.mulmod P2.(PA.Y) P1.(PZZ.ZZZ) p) y1 p in
-  let x2 := Pure.addmod (Pure.mulmod P2.(PA.X) P1.(PZZ.ZZ) p) (Pure.sub p P1.(PZZ.X)) p in
-  let _x := Pure.mulmod x2 x2 p in
-  let _y := Pure.mulmod _x x2 p in
-  let _zz := Pure.mulmod P1.(PZZ.ZZ) _x p in
+  let usr'dollar'x1 := P1.(PZZ.X) in
+  let usr'dollar'y1 := P1.(PZZ.Y) in
+  let usr'dollar'zz1 := P1.(PZZ.ZZ) in
+  let usr'dollar'zzz1 := P1.(PZZ.ZZZ) in
+  let usr'dollar'x2 := P2.(PA.X) in
+  let usr'dollar'y2 := P2.(PA.Y) in
+  let usr'dollar'_p := p in
 
-  let _zzz := Pure.mulmod P1.(PZZ.ZZZ) _y p in
-  let zz1 := Pure.mulmod P1.(PZZ.X) _x p in
-  let _x :=
+  let usr'dollar'y2_1 :=
     Pure.addmod
-      (Pure.addmod (Pure.mulmod y2 y2 p) (Pure.sub p _y) p)
-      (Pure.mulmod (Pure.sub p 2) zz1 p)
-      p in
-
-  let x1 := Pure.mulmod (Pure.addmod zz1 (Pure.sub p _x) p) y2 p in
-  let _y := Pure.addmod x1 (Pure.mulmod y1 _y p) p in
+      (Pure.mulmod usr'dollar'y2 usr'dollar'zzz1 usr'dollar'_p)
+      (Pure.sub usr'dollar'_p usr'dollar'y1)
+      usr'dollar'_p in
+  let usr'dollar'x2_1 :=
+    Pure.addmod
+      (Pure.mulmod usr'dollar'x2 usr'dollar'zz1 usr'dollar'_p)
+      (Pure.sub usr'dollar'_p usr'dollar'x1)
+      usr'dollar'_p in
+  let usr_x_1 :=
+    Pure.mulmod usr'dollar'x2_1 usr'dollar'x2_1 usr'dollar'_p in
+  let usr_y_1 :=
+    Pure.mulmod usr_x_1 usr'dollar'x2_1 usr'dollar'_p in
+  let usr_zz :=
+    Pure.mulmod usr'dollar'zz1 usr_x_1 usr'dollar'_p in
+  let usr_zzz :=
+    Pure.mulmod usr'dollar'zzz1 usr_y_1 usr'dollar'_p in
+  let usr'dollar'zz1_1 :=
+    Pure.mulmod usr'dollar'x1 usr_x_1 usr'dollar'_p in
+  let usr_x :=
+    Pure.addmod
+      (Pure.addmod
+        (Pure.mulmod usr'dollar'y2_1 usr'dollar'y2_1 usr'dollar'_p)
+        (Pure.sub usr'dollar'_p usr_y_1)
+        usr'dollar'_p)
+      (Pure.mulmod
+        (Pure.add usr'dollar'_p (Pure.not 1))
+        usr'dollar'zz1_1
+        usr'dollar'_p)
+      usr'dollar'_p in
+  let usr_y :=
+    Pure.addmod
+      (Pure.mulmod
+        (Pure.addmod
+          usr'dollar'zz1_1
+          (Pure.sub usr'dollar'_p usr_x)
+          usr'dollar'_p)
+        usr'dollar'y2_1
+        usr'dollar'_p)
+      (Pure.mulmod
+        (Pure.sub usr'dollar'_p usr'dollar'y1)
+        usr_y_1
+        usr'dollar'_p)
+      usr'dollar'_p in
 
   {|
-    PZZ.X := _x;
-    PZZ.Y := _y;
-    PZZ.ZZ := _zz;
-    PZZ.ZZZ := _zzz
+    PZZ.X := usr_x;
+    PZZ.Y := usr_y;
+    PZZ.ZZ := usr_zz;
+    PZZ.ZZZ := usr_zzz
   |}.
+
+Import RunO.
+
+Lemma run_usr'dollar'ecAddn2 codes environment state
+    (P1 : PZZ.t) (P2 : PA.t) (p : U256.t) :
+  let output := ecAddn2 P1 P2 p in
+  let output := Result.Ok (output.(PZZ.X), output.(PZZ.Y), output.(PZZ.ZZ), output.(PZZ.ZZZ)) in
+  {{? codes, environment, Some state |
+    Contract_91.Contract_91_deployed.usr'dollar'ecAddn2
+      P1.(PZZ.X) P1.(PZZ.Y) P1.(PZZ.ZZ) P1.(PZZ.ZZZ)
+      P2.(PA.X) P2.(PA.Y)
+      p ⇓
+    output
+  | Some state ?}}.
+Proof.
+  simpl.
+  unfold Contract_91.Contract_91_deployed.usr'dollar'ecAddn2.
+  l. {
+    repeat (l; [repeat cu; p|]).
+    p.
+  }
+  p.
+Qed.
+
+Lemma run_usr'dollar'ecAddn2_2189 codes environment state
+    (P1 P2 : PA.t) (p : U256.t) :
+  let output := ecAddn2 (PZZ.of_PA P1) P2 p in
+  let output := Result.Ok (output.(PZZ.X), output.(PZZ.Y), output.(PZZ.ZZ), output.(PZZ.ZZZ)) in
+  {{? codes, environment, Some state |
+    Contract_91.Contract_91_deployed.usr'dollar'ecAddn2_2189
+      P1.(PA.X) P1.(PA.Y)
+      P2.(PA.X) P2.(PA.Y)
+      p ⇓
+    output
+  | Some state ?}}.
+Proof.
+  simpl.
+  unfold Contract_91.Contract_91_deployed.usr'dollar'ecAddn2_2189.
+  l. {
+    repeat (l; [repeat cu; p|]).
+    p.
+  }
+  p.
+Qed.
 
 Module Ts.
   Definition t : Set := list PZZ.t.

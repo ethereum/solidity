@@ -71,6 +71,36 @@ Proof.
     )
     by lia.
   repeat rewrite H_elim_sub_modulo by lia.
+  replace (Pure.add p (Pure.not 1)) with (p - 2)
+    by (unfold Pure.add, Pure.not; lia).
+  f_equal.
+  all: show_equality_modulo.
+Qed.
+
+Lemma ecAddn2_eq (P1 : PZZ.t) (P2 : PA.t) (p : Z)
+    (H_P1 : PZZ.Valid.t p P1)
+    (H_P2 : PA.Valid.t p P2)
+    (H_p : 2 <= p < 2^256) :
+  ecAddn2 P1 P2 p =
+  high_ecAddn2 P1 P2 p.
+Proof.
+  destruct H_P1, H_P2.
+  unfold Zp.Valid.t in *.
+  destruct P1, P2; simpl in *.
+  unfold
+    ecAddn2,
+    high_ecAddn2,
+    Pure.addmod,
+    Pure.mulmod,
+    Pure.sub;
+    simpl in *.
+  assert (H_elim_sub_modulo :
+      forall (a : Z),
+      0 <= a <= p ->
+      (p - a) mod Z.pow_pos 2 256 = p - a
+    )
+    by lia.
+  repeat rewrite H_elim_sub_modulo by lia.
   f_equal.
   all: show_equality_modulo.
 Qed.
