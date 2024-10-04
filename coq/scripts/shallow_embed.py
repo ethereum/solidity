@@ -387,11 +387,16 @@ def function_definition_to_coq(node) -> str:
         for name in param_names
     ])
     return_variables = node.get('returnVariables', [])
-    body, _ = block_to_coq(return_variables, node.get('body'))
+    body, _ = block_to_coq(None, node.get('body'))
     return \
         f"Definition {name}{params} : M.t " + \
         function_result_type(len(node.get('returnVariables', []))) + " :=\n" + \
-        indent(body) + "."
+        indent(
+            "let~ '(_, result) :=" + "\n" + \
+            indent(body) + "\n" + \
+            "in\n" + \
+            "M.pure result"
+        ) + "."
 
 
 # Get the names of the functions called in a function.

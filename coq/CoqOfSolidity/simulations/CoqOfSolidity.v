@@ -1362,11 +1362,11 @@ Fixpoint eval {A : Set}
       let function := Codes.get_function codes environment name in
       (letS? results := eval fuel codes environment (function arguments) in
       eval fuel codes environment (k results)) state
-    | LowM.Loop body break_with k =>
-      letS? output := eval fuel codes environment body in
+    | LowM.Loop init body break_with k =>
+      letS? output := eval fuel codes environment (body init) in
       match break_with output with
-      | None => eval fuel codes environment (LowM.Loop body break_with k)
-      | Some output => eval fuel codes environment (k output)
+      | inl new_init => eval fuel codes environment (LowM.Loop new_init body break_with k)
+      | inr output => eval fuel codes environment (k output)
       end
     | LowM.CallContract address value input k => fun state =>
       if value >? environment.(Environment.callvalue) then

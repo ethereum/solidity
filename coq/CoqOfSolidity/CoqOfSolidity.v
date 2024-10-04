@@ -138,11 +138,13 @@ Module LowM.
       (name : string)
       (arguments : list U256.t)
       (k : Result.t (list U256.t) -> t A)
-  | Loop {B : Set}
-      (body : t B)
-      (** The final value to return if we decide to break of the loop. *)
-      (break_with : B -> option B)
-      (k : B -> t A)
+  | Loop {In Out : Set}
+      (init : In)
+      (body : In -> t Out)
+      (** The final value to return if we decide to break of the loop, otherwise what to continue
+          with. *)
+      (break_with : Out -> In + Out)
+      (k : Out -> t A)
   | CallContract
       (address : U256.t)
       (value : U256.t)
@@ -156,7 +158,7 @@ Module LowM.
   Arguments Pure {_}.
   Arguments Primitive {_ _}.
   Arguments CallFunction {_}.
-  Arguments Loop {_ _}.
+  Arguments Loop {_ _ _}.
   Arguments CallContract {_}.
   Arguments Let {_ _}.
   Arguments Call {_ _}.
@@ -170,8 +172,8 @@ Module LowM.
       Primitive primitive (fun result => let_ (k result) e2)
     | CallFunction name arguments k =>
       CallFunction name arguments (fun result => let_ (k result) e2)
-    | Loop body break_with k =>
-      Loop body break_with (fun result => let_ (k result) e2)
+    | Loop input body break_with k =>
+      Loop input body break_with (fun result => let_ (k result) e2)
     | CallContract contract value input k =>
       CallContract contract value input (fun result => let_ (k result) e2)
     | Let e1 k =>
@@ -345,7 +347,7 @@ Module M.
     ).
 
   Definition for_ (condition : t (list U256.t)) (after body : t BlockUnit.t) : t BlockUnit.t :=
-    let loop_body : t BlockUnit.t :=
+    let loop_body (_ : unit) : t BlockUnit.t :=
       strong_let_ condition (fun condition =>
       match condition with
       | [0] => pure BlockUnit.Break
@@ -358,19 +360,17 @@ Module M.
         )
       | _ => LowM.Impossible "for: expected a single value as condition"
       end) in
-    let break_with (result : Result.t BlockUnit.t) : option (Result.t BlockUnit.t) :=
+    let break_with (result : Result.t BlockUnit.t) : unit + Result.t BlockUnit.t :=
       match result with
       | Result.Ok output =>
         match output with
-        | BlockUnit.Break => Some (Result.Ok BlockUnit.Tt)
-        | BlockUnit.Leave => Some (Result.Ok BlockUnit.Leave)
-        | BlockUnit.Tt | BlockUnit.Continue => None
+        | BlockUnit.Break => inr (Result.Ok BlockUnit.Tt)
+        | BlockUnit.Leave => inr (Result.Ok BlockUnit.Leave)
+        | BlockUnit.Tt | BlockUnit.Continue => inl tt
         end
-      | _ => Some result
+      | _ => inr result
       end in
-    LowM.Loop loop_body break_with LowM.Pure.
-
-  Parameter for_unit : t U256.t -> t unit -> t unit -> t unit.
+    LowM.Loop tt loop_body break_with LowM.Pure.
 
   Definition break : t BlockUnit.t :=
     pure BlockUnit.Break.
@@ -426,36 +426,8 @@ End M.
 
 (* TODO: move this module in a separated file? *)
 Module Shallow.
-  (* Definition do_ {A : Set} (e : M.t unit) (body : BlockUnit.t -> M.t A) : BlockUnit.t -> M.t A :=
-    fun mode =>
-    match mode with
-    | BlockUnit.Tt =>
-      do* e in
-      body mode
-    | _ =>
-      body mode
-    end.
-
-  Definition let_ {A B : Set} (e : M.t A) (body : A -> BlockUnit.t -> M.t B) :
-      BlockUnit.t -> M.t B :=
-    fun mode =>
-    match mode with
-    | BlockUnit.Tt =>
-      let* value := e in
-      body value mode
-    | _ =>
-
-    end. *)
-
   Definition t (State : Set) : Set :=
     M.t (BlockUnit.t * State).
-
-  (* Definition do_ {State : Set} (expression : t State) (body : State -> t State) : t State :=
-    let~ value := expression in
-    match value with
-    | (BlockUnit.Tt, state) => body state
-    | _ => M.pure value
-    end. *)
 
   Definition let_state {State1 State2 : Set}
       (expression : t State1) (body : State1 -> State2 * t State2) :
@@ -484,12 +456,34 @@ Module Shallow.
     else
       success.
 
-  Parameter for_ : forall {State : Set},
-    State ->
-    (State -> M.t U256.t) ->
-    (State -> M.t (BlockUnit.t * State)) ->
-    (State -> M.t (BlockUnit.t * State)) ->
-    M.t (BlockUnit.t * State).
+  Definition for_ {State : Set}
+      (init_state : State)
+      (condition : State -> M.t U256.t)
+      (body : State -> M.t (BlockUnit.t * State))
+      (post : State -> M.t (BlockUnit.t * State)) :
+      M.t (BlockUnit.t * State) :=
+    let loop_body (state : State) : M.t (BlockUnit.t * State) :=
+      M.strong_let_ (condition state) (fun condition =>
+      if condition =? 0 then
+        M.pure (BlockUnit.Break, state)
+      else
+        M.strong_let_ (body state) (fun '(output, state) =>
+        match output with
+        | BlockUnit.Tt | BlockUnit.Continue => post state
+        | BlockUnit.Break | BlockUnit.Leave => M.pure (output, state)
+        end)) in
+    let break_with (result : Result.t (BlockUnit.t * State)) :
+        State + Result.t (BlockUnit.t * State) :=
+      match result with
+      | Result.Ok (output, state) =>
+        match output with
+        | BlockUnit.Break => inr (Result.Ok (BlockUnit.Tt, state))
+        | BlockUnit.Leave => inr (Result.Ok (BlockUnit.Leave, state))
+        | BlockUnit.Tt | BlockUnit.Continue => inl state
+        end
+      | _ => inr result
+      end in
+    LowM.Loop init_state loop_body break_with LowM.Pure.
 End Shallow.
 
 Module Notations.
