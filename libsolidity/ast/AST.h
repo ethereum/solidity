@@ -572,6 +572,8 @@ public:
 	/// Returns the ether receiver function or nullptr if no receive function was specified.
 	FunctionDefinition const* receiveFunction() const;
 
+	ASTPointer<Expression> const& storageBaseLocationExpression() const { return m_storageBaseLocationExpression; }
+
 	std::string fullyQualifiedName() const { return sourceUnitName() + ":" + name(); }
 
 	Type const* type() const override;
