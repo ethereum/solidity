@@ -434,6 +434,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 				);
 
 			storageBaseLocationExpression = parseContractStorageBaseLocationExpression();
+			subNodes.push_back(storageBaseLocationExpression);
 		}
 		else
 			break;
