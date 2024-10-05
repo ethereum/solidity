@@ -367,8 +367,6 @@ Definition main (sender : Address.t) (callvalue : U256.t) (s : Storage.t) (paylo
   | Payload.Allowance owner spender => Result.Success (getAllowance s owner spender, s)
   end.
 
-Parameter keccak256_tuple2 : U256.t -> U256.t -> U256.t.
-
 (** This function describes the internal memory of the smart contract after a successful run. It
     shows some implementation details, that probably depend on how the smart contract is
     compiled. This is not interesting for specifying the smart contract but we still need this

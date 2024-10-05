@@ -2211,3 +2211,6 @@ Definition wrap_state_with_revert {A : Set} (state : State.t) (output : Result.t
   | Result.Revert _ _ => None
   | _ => Some state
   end.
+
+(** Useful to write some simulation. We should give it an explicit value. *)
+Parameter keccak256_tuple2 : U256.t -> U256.t -> U256.t.

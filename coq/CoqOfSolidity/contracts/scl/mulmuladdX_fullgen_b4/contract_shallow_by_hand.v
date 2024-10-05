@@ -1,7 +1,9 @@
 Require Import CoqOfSolidity.CoqOfSolidity.
+Require Import CoqOfSolidity.proofs.CoqOfSolidity.
 Require Import CoqOfSolidity.simulations.CoqOfSolidity.
 Require Import CoqOfSolidity.contracts.scl.mulmuladdX_fullgen_b4.contract_shallow.
 Import Stdlib.
+Import RunO.
 
 Ltac Zify.zify_post_hook ::= Z.to_euclidean_division_equations.
 
@@ -287,17 +289,16 @@ Definition ecAddn2 (P1 : PZZ.t) (P2 : PA.t) (p : U256.t) : PZZ.t :=
     PZZ.ZZZ := usr_zzz
   |}.
 
-Import RunO.
-
 Lemma run_usr'dollar'ecAddn2 codes environment state
-    (P1 : PZZ.t) (P2 : PA.t) (p : U256.t) :
-  let output := ecAddn2 P1 P2 p in
+    (P1_X P1_Y P1_ZZ P1_ZZZ P2_X P2_Y : U256.t) (p : U256.t) :
+  let output :=
+    ecAddn2
+      {| PZZ.X := P1_X; PZZ.Y := P1_Y; PZZ.ZZ := P1_ZZ; PZZ.ZZZ := P1_ZZZ |}
+      {| PA.X := P2_X; PA.Y := P2_Y |}
+      p in
   let output := Result.Ok (output.(PZZ.X), output.(PZZ.Y), output.(PZZ.ZZ), output.(PZZ.ZZZ)) in
   {{? codes, environment, Some state |
-    Contract_91.Contract_91_deployed.usr'dollar'ecAddn2
-      P1.(PZZ.X) P1.(PZZ.Y) P1.(PZZ.ZZ) P1.(PZZ.ZZZ)
-      P2.(PA.X) P2.(PA.Y)
-      p ⇓
+    Contract_91.Contract_91_deployed.usr'dollar'ecAddn2 P1_X P1_Y P1_ZZ P1_ZZZ P2_X P2_Y p ⇓
     output
   | Some state ?}}.
 Proof.
@@ -311,14 +312,15 @@ Proof.
 Qed.
 
 Lemma run_usr'dollar'ecAddn2_2189 codes environment state
-    (P1 P2 : PA.t) (p : U256.t) :
-  let output := ecAddn2 (PZZ.of_PA P1) P2 p in
+    (P1_X P1_Y P2_X P2_Y : U256.t) (p : U256.t) :
+  let output :=
+    ecAddn2
+      {| PZZ.X := P1_X; PZZ.Y := P1_Y; PZZ.ZZ := 1; PZZ.ZZZ := 1 |}
+      {| PA.X := P2_X; PA.Y := P2_Y |}
+      p in
   let output := Result.Ok (output.(PZZ.X), output.(PZZ.Y), output.(PZZ.ZZ), output.(PZZ.ZZZ)) in
   {{? codes, environment, Some state |
-    Contract_91.Contract_91_deployed.usr'dollar'ecAddn2_2189
-      P1.(PA.X) P1.(PA.Y)
-      P2.(PA.X) P2.(PA.Y)
-      p ⇓
+    Contract_91.Contract_91_deployed.usr'dollar'ecAddn2_2189 P1_X P1_Y P2_X P2_Y p ⇓
     output
   | Some state ?}}.
 Proof.
@@ -501,6 +503,8 @@ Definition get_Ts (Q : Q.t) : list PZZ.t :=
   (* mstore4(mload(0x40), 1920, X,Y,ZZ,ZZZ) *)
   let Ts := Ts ++ [T] in
   Ts.
+
+
 
 (*
   {
@@ -731,6 +735,331 @@ Module MainLoop.
     |} in
     state.
 End MainLoop.
+
+Definition sim_fun_ecGenMulmuladdX_store_2814_beginning (Q : Q.t) (scalar_u scalar_v : U256.t) :
+    unit :=
+  (*
+    uint256 mask=1<<127;
+    /* I. precomputations phase */
+
+    if(scalar_u==0&&scalar_v==0){
+        return 0;
+    }
+  *)
+  let mask := 2 ^ 127 in
+  if (scalar_u =? 0) && (scalar_v =? 0) then
+    tt
+  else
+  let _modulusp := Q.(Q.p) in
+  let Ts := get_Ts Q in
+  tt.
+
+Ltac load_store_line :=
+  with_strategy opaque [ecAddn2] (
+    (* We do that to avoid an exponential increase of the output *)
+    try set (ecAddn2 _ _ _) in |- *;
+    l; [repeat (
+      c; [
+        p ||
+        apply_run_mload ||
+        apply_run_mstore ||
+        apply run_usr'dollar'ecAddn2 ||
+        apply run_usr'dollar'ecAddn2_2189
+      |];
+      CanonizeState.execute;
+      s
+    ); p|];
+    s;
+    try p
+  ).
+
+Lemma run_fun_ecGenMulmuladdX_store_2814_beginning codes environment state
+    (
+      mem0 mem1 mem3 mem4 mem5 mem6 mem7 mem8
+      mem12 mem13 mem14 :
+      U256.t
+    )
+    (Q : Q.t) (scalar_u scalar_v : U256.t) :
+  let memoryguard : U256.t := 0 in
+  let location_Q : U256.t := 32 * 15 in
+  let memory_start : list U256.t :=
+    [
+      mem0; mem1; memoryguard; mem3; mem4; mem5; mem6; mem7; mem8; scalar_u;
+      location_Q; scalar_v; mem12; mem13; mem14;
+      Q.(Q.Qx);
+      Q.(Q.Qy);
+      Q.(Q.Q'x);
+      Q.(Q.Q'y);
+      Q.(Q.p);
+      Q.(Q.a);
+      Q.(Q.gx);
+      Q.(Q.gy);
+      Q.(Q.gx2pow128);
+      Q.(Q.gy2pow128)
+    ] ++ List.repeat 0 200 in
+  let state_start :=
+      make_state environment state memory_start [] in
+  let memory_end : list U256.t :=
+    [1; 2; 3; 4; 5; 6] in
+  let state_end :=
+    make_state environment state memory_end [] in
+  (* let output := sim_fun_ecGenMulmuladdX_store_2814_beginning Q scalar_u scalar_v in *)
+  let output := Result.Ok tt in
+  {{? codes, environment, Some state_start |
+    Contract_91.Contract_91_deployed.fun_ecGenMulmuladdX_store_2814 ⇓
+    output
+  | Some state_end ?}}.
+Proof.
+  simpl.
+  unfold Contract_91.Contract_91_deployed.fun_ecGenMulmuladdX_store_2814_beginning.
+  l. {
+    repeat load_store_line.
+    (* l. {
+      c. {
+        apply_run_mstore.
+      }
+      CanonizeState.execute.
+      p.
+    }
+    l. {
+      cu; s.
+      c. {
+        apply_run_mstore.
+      }
+      CanonizeState.execute.
+      p.
+    }
+    l. {
+      c. {
+        apply_run_mload.
+      }
+      s.
+      cu; p.
+    } *)
+    l. {
+      unfold Shallow.if_, Pure.iszero.
+      instantiate (2 := Result.Ok (BlockUnit.Tt, if scalar_u =? 0 then _ else _)).
+      destruct (scalar_u =? 0); s; [|p].
+      load_store_line.
+      (* l. {
+        c. {
+          apply_run_mload.
+        }
+        s.
+        cu; p.
+      }
+      s.
+      p. *)
+    }
+    s.
+    lu.
+    match goal with
+    | |- context [Shallow.if_ ?condition] =>
+      replace condition with (Z.b2z ((scalar_u =? 0) && (scalar_v =? 0)))
+    end.
+    2: {
+      unfold Pure.iszero.
+      now repeat destruct (_ =? 0).
+    }
+    match goal with
+    | |- context [Shallow.if_ (Z.b2z ?condition)] =>
+      destruct condition; s
+    end.
+    { load_store_line. }
+      (* p.
+      lu; c. {
+        apply_run_mstore.
+      }
+      p. *)
+    (* } *)
+    { repeat load_store_line.
+      
+
+
+
+
+
+      Time with_strategy opaque [ecAddn2] do 10 load_store_line.
+      Time with_strategy opaque [ecAddn2] do 10 load_store_line.
+      Time with_strategy opaque [ecAddn2] do 10 load_store_line.
+      Time with_strategy opaque [ecAddn2] do 10 load_store_line.
+      Time with_strategy opaque [ecAddn2] do 10 load_store_line.
+      Time with_strategy opaque [ecAddn2] do 10 load_store_line.
+      Time with_strategy opaque [ecAddn2] repeat load_store_line.
+      repeat set (ecAddn2 _ _) in |- *.
+      set (ecAddn2 _ _) in |- *.
+      
+    repeat load_store_line.
+      l. {
+        c. {
+          apply_run_mload.
+        }
+        c. {
+          apply_run_mload.
+        }
+        c. {
+          apply run_usr'dollar'ecAddn2_2189.
+        }
+        p.
+      }
+      with_strategy opaque [ecAddn2] repeat load_store_line.
+      set (GA := {| PA.X := Q.(Q.gx); PA.Y := Q.(Q.gy) |}).
+      set (G'ZZ :=
+        {| PZZ.X := Q.(Q.gx2pow128); PZZ.Y := Q.(Q.gy2pow128); PZZ.ZZ := 1; PZZ.ZZZ := 1 |}).
+      l. {
+        c. {
+          apply_run_mload.
+        }
+        c. {
+          apply_run_mload.
+        }
+        c. {
+          apply_run_mload.
+        }
+        c. {
+          apply run_usr'dollar'ecAddn2_2189.
+        }
+        p.
+      }
+      with_strategy opaque [ecAddn2] repeat load_store_line.
+        }
+      }
+      Compute 
+      load_store_line.
+      load_store_line.
+      load_store_line.
+      load_store_line.
+      load_store_line.
+      load_store_line.
+      load_store_line.
+      load_store_line.
+      load_store_line.
+      load_store_line.
+      load_store_line.
+      load_store_line.
+      load_store_line.
+      load_store_line.
+      load_store_line.
+    
+    
+    
+      l. {
+        c. {
+          apply_run_mstore.
+        }
+        p.
+      }
+      CanonizeState.execute.
+      l. {
+        c. {
+          apply_run_mstore.
+        }
+        p.
+      }
+      CanonizeState.execute.
+      l. {
+        c. {
+          apply_run_mstore.
+        }
+        p.
+      }
+      CanonizeState.execute.
+      l. {
+        c. {
+          apply_run_mload.
+        }
+        p.
+      }
+      l. {
+        cu; s.
+        change (Pure.add 0 2048) with 2048.
+        c. {
+          apply_run_mstore.
+        }
+        CanonizeState.execute.
+        p.
+      }
+      l. {
+        cu; s.
+        c. {
+          apply_run_mload.
+        }
+        s.
+        cu; s.
+        c. {
+          apply_run_mload.
+        }
+        s.
+        c. {
+          apply_run_mstore.
+        }
+        CanonizeState.execute.
+        p.
+      }
+      l. {
+        c. {
+          apply_run_mload.
+        }
+        p.
+      }
+      (* let~ usr_modulusp := [[ mload ~(| add ~(| _2, 2080 |) |) ]] in *)
+      l. {
+        cu; s.
+        c. {
+          apply_run_mload.
+        }
+        p.
+      }
+      (* let~ _3 := [[ add ~(| mload ~(| 0x0140 |), 224 |) ]] in *)
+      l. {
+        c. {
+          apply_run_mload.
+        }
+        cu; p.
+      }
+      (* let~ _4 := [[ mload ~(| _3 |) ]] in *)
+      l. {
+        c. {
+          apply_run_mload.
+        }
+        p.
+      }
+      (* let~ _5 := [[ add ~(| mload ~(| 0x0140 |), 192 |) ]] in *)
+      l. {
+        c. {
+          apply_run_mload.
+        }
+        cu; p.
+      }
+      (* do~ [[ mstore ~(| add ~(| 128, _2 |), mload ~(| _5 |) |) ]] in *)
+        l; [repeat (
+          c; [
+            p ||
+            apply_run_mload ||
+            apply_run_mstore
+          |];
+          CanonizeState.execute;
+          s
+        )|].
+        match goal with
+        | |- context[]
+        end.
+        cu; s.
+        c. {
+          apply_run_mload.
+        }
+        c. {
+          apply_run_mstore.
+        }
+        CanonizeState.execute.
+        p.
+      }
+      (* let~ _6 := [[ add ~(| mload ~(| 0x0140 |), 160 |) ]] in *)
+    }
+    repeat (l; [repeat cu; p|]).
+    p.
+  }
+Qed.
 
 (*
 function ecGenMulmuladdX_store(

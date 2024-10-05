@@ -55,6 +55,150 @@ Module Contract_91.
       in
       M.pure result.
 
+      Definition fun_ecGenMulmuladdX_store_2814_beginning : M.t unit :=
+        let~ '(_, result) :=
+          do~ [[ mstore ~(| 0xa0, 0 |) ]] in
+          do~ [[ mstore ~(| 0x01a0, shl ~(| 127, 1 |) |) ]] in
+          let~ expr := [[ iszero ~(| mload ~(| 0x0120 |) |) ]] in
+          let_state~ expr := [[
+            Shallow.if_ (|
+              expr,
+              let~ expr := [[ iszero ~(| mload ~(| 0x0160 |) |) ]] in
+              M.pure (BlockUnit.Tt, expr),
+              expr
+            |)
+          ]] default~ tt in
+          let_state~ 'tt := [[
+            Shallow.if_ (|
+              expr,
+              do~ [[ mstore ~(| 0xa0, 0 |) ]] in
+              M.pure (BlockUnit.Leave, tt),
+              tt
+            |)
+          ]] default~ tt in
+          do~ [[ mstore ~(| 0x0100, 0 |) ]] in
+          do~ [[ mstore ~(| 0xe0, 0 |) ]] in
+          do~ [[ mstore ~(| 0x01c0, 0 |) ]] in
+          let~ _1 := [[ mload ~(| 0x40 |) ]] in
+          do~ [[ mstore ~(| 0x40, add ~(| _1, 2048 |) |) ]] in
+          do~ [[ mstore ~(| add ~(| _1, 4128 |), mload ~(| add ~(| mload ~(| 0x0140 |), 128 |) |) |) ]] in
+          let~ _2 := [[ mload ~(| 0x40 |) ]] in
+          let~ usr_modulusp := [[ mload ~(| add ~(| _2, 2080 |) |) ]] in
+          let~ _3 := [[ add ~(| mload ~(| 0x0140 |), 224 |) ]] in
+          let~ _4 := [[ mload ~(| _3 |) ]] in
+          let~ _5 := [[ add ~(| mload ~(| 0x0140 |), 192 |) ]] in
+          do~ [[ mstore ~(| add ~(| 128, _2 |), mload ~(| _5 |) |) ]] in
+          do~ [[ mstore ~(| add ~(| _2, 160 |), _4 |) ]] in
+          do~ [[ mstore ~(| add ~(| _2, 192 |), 1 |) ]] in
+          do~ [[ mstore ~(| add ~(| _2, 224 |), 1 |) ]] in
+          let~ _6 := [[ add ~(| mload ~(| 0x0140 |), 288 |) ]] in
+          let~ _7 := [[ mload ~(| _6 |) ]] in
+          let~ _8 := [[ add ~(| mload ~(| 0x0140 |), 256 |) ]] in
+          let~ _9 := [[ mload ~(| _8 |) ]] in
+          let~ _10 := [[ mload ~(| 0x40 |) ]] in
+          do~ [[ mstore ~(| add ~(| 256, _10 |), _9 |) ]] in
+          do~ [[ mstore ~(| add ~(| _10, 288 |), _7 |) ]] in
+          do~ [[ mstore ~(| add ~(| _10, 320 |), 1 |) ]] in
+          do~ [[ mstore ~(| add ~(| _10, 352 |), 1 |) ]] in
+          let~ var_X := [[ mload ~(| _8 |) ]] in
+          let~ var_Y := [[ mload ~(| _6 |) ]] in
+          let~ '(var_X_1, var_Y_1, var_ZZ, var_ZZZ) := [[ usr'dollar'ecAddn2_2189 ~(| var_X, var_Y, mload ~(| _5 |), mload ~(| _3 |), usr_modulusp |) ]] in
+          let~ _11 := [[ mload ~(| 0x40 |) ]] in
+          do~ [[ mstore ~(| add ~(| 384, _11 |), var_X_1 |) ]] in
+          do~ [[ mstore ~(| add ~(| _11, 416 |), var_Y_1 |) ]] in
+          do~ [[ mstore ~(| add ~(| _11, 448 |), var_ZZ |) ]] in
+          do~ [[ mstore ~(| add ~(| _11, 480 |), var_ZZZ |) ]] in
+          let~ _12 := [[ mload ~(| add ~(| 32, mload ~(| 0x0140 |) |) |) ]] in
+          let~ _13 := [[ mload ~(| mload ~(| 0x0140 |) |) ]] in
+          let~ _14 := [[ mload ~(| 0x40 |) ]] in
+          do~ [[ mstore ~(| add ~(| 512, _14 |), _13 |) ]] in
+          do~ [[ mstore ~(| add ~(| _14, 544 |), _12 |) ]] in
+          do~ [[ mstore ~(| add ~(| _14, 576 |), 1 |) ]] in
+          do~ [[ mstore ~(| add ~(| _14, 608 |), 1 |) ]] in
+          let~ _15 := [[ mload ~(| _3 |) ]] in
+          let~ _16 := [[ mload ~(| _5 |) ]] in
+          let~ _17 := [[ add ~(| mload ~(| 0x0140 |), 32 |) ]] in
+          let~ '(var_X_2, var_Y_2, var_ZZ_1, var_ZZZ_1) := [[ usr'dollar'ecAddn2_2189 ~(| mload ~(| mload ~(| 0x0140 |) |), mload ~(| _17 |), _16, _15, usr_modulusp |) ]] in
+          let~ _18 := [[ mload ~(| 0x40 |) ]] in
+          do~ [[ mstore ~(| add ~(| 640, _18 |), var_X_2 |) ]] in
+          do~ [[ mstore ~(| add ~(| _18, 672 |), var_Y_2 |) ]] in
+          do~ [[ mstore ~(| add ~(| _18, 704 |), var_ZZ_1 |) ]] in
+          do~ [[ mstore ~(| add ~(| _18, 736 |), var_ZZZ_1 |) ]] in
+          let~ var_X_3 := [[ mload ~(| _8 |) ]] in
+          let~ var_Y_3 := [[ mload ~(| _6 |) ]] in
+          let~ '(var_X_4, var_Y_4, var_ZZ_2, var_ZZZ_2) := [[ usr'dollar'ecAddn2_2189 ~(| var_X_3, var_Y_3, mload ~(| mload ~(| 0x0140 |) |), mload ~(| _17 |), usr_modulusp |) ]] in
+          let~ _19 := [[ mload ~(| 0x40 |) ]] in
+          do~ [[ mstore ~(| add ~(| 768, _19 |), var_X_4 |) ]] in
+          do~ [[ mstore ~(| add ~(| _19, 800 |), var_Y_4 |) ]] in
+          do~ [[ mstore ~(| add ~(| _19, 832 |), var_ZZ_2 |) ]] in
+          do~ [[ mstore ~(| add ~(| _19, 864 |), var_ZZZ_2 |) ]] in
+          let~ '(var_X_5, var_Y_5, var_ZZ_3, var_ZZZ_3) := [[ usr'dollar'ecAddn2 ~(| var_X_4, var_Y_4, var_ZZ_2, var_ZZZ_2, mload ~(| _5 |), mload ~(| _3 |), usr_modulusp |) ]] in
+          let~ _20 := [[ mload ~(| 0x40 |) ]] in
+          do~ [[ mstore ~(| add ~(| 896, _20 |), var_X_5 |) ]] in
+          do~ [[ mstore ~(| add ~(| _20, 928 |), var_Y_5 |) ]] in
+          do~ [[ mstore ~(| add ~(| _20, 960 |), var_ZZ_3 |) ]] in
+          do~ [[ mstore ~(| add ~(| _20, 992 |), var_ZZZ_3 |) ]] in
+          let~ _21 := [[ add ~(| mload ~(| 0x0140 |), 96 |) ]] in
+          let~ _22 := [[ mload ~(| _21 |) ]] in
+          let~ _23 := [[ add ~(| mload ~(| 0x0140 |), 0x40 |) ]] in
+          let~ _24 := [[ mload ~(| _23 |) ]] in
+          let~ _25 := [[ mload ~(| 0x40 |) ]] in
+          do~ [[ mstore ~(| add ~(| 1024, _25 |), _24 |) ]] in
+          do~ [[ mstore ~(| add ~(| _25, 1056 |), _22 |) ]] in
+          do~ [[ mstore ~(| add ~(| _25, 1088 |), 1 |) ]] in
+          do~ [[ mstore ~(| add ~(| _25, 1120 |), 1 |) ]] in
+          let~ _26 := [[ mload ~(| 0x40 |) ]] in
+          let~ '(var_X_6, var_Y_6, var_ZZ_4, var_ZZZ_4) := [[ usr'dollar'ecAddn2_2189 ~(| mload ~(| _23 |), mload ~(| _21 |), mload ~(| _5 |), mload ~(| _3 |), mload ~(| add ~(| _26, 2080 |) |) |) ]] in
+          do~ [[ mstore ~(| add ~(| 1152, _26 |), var_X_6 |) ]] in
+          do~ [[ mstore ~(| add ~(| _26, 1184 |), var_Y_6 |) ]] in
+          do~ [[ mstore ~(| add ~(| _26, 1216 |), var_ZZ_4 |) ]] in
+          do~ [[ mstore ~(| add ~(| _26, 1248 |), var_ZZZ_4 |) ]] in
+          let~ var_X_7 := [[ mload ~(| _8 |) ]] in
+          let~ var_Y_7 := [[ mload ~(| _6 |) ]] in
+          let~ _27 := [[ mload ~(| 0x40 |) ]] in
+          let~ '(var_X_8, var_Y_8, var_ZZ_5, var_ZZZ_5) := [[ usr'dollar'ecAddn2_2189 ~(| mload ~(| _23 |), mload ~(| _21 |), var_X_7, var_Y_7, mload ~(| add ~(| _27, 2080 |) |) |) ]] in
+          do~ [[ mstore ~(| add ~(| 1280, _27 |), var_X_8 |) ]] in
+          do~ [[ mstore ~(| add ~(| _27, 1312 |), var_Y_8 |) ]] in
+          do~ [[ mstore ~(| add ~(| _27, 1344 |), var_ZZ_5 |) ]] in
+          do~ [[ mstore ~(| add ~(| _27, 1376 |), var_ZZZ_5 |) ]] in
+          let~ _28 := [[ mload ~(| 0x40 |) ]] in
+          let~ '(var_X_9, var_Y_9, var_ZZ_6, var_ZZZ_6) := [[ usr'dollar'ecAddn2 ~(| var_X_8, var_Y_8, var_ZZ_5, var_ZZZ_5, mload ~(| _5 |), mload ~(| _3 |), mload ~(| add ~(| _28, 2080 |) |) |) ]] in
+          do~ [[ mstore ~(| add ~(| 1408, _28 |), var_X_9 |) ]] in
+          do~ [[ mstore ~(| add ~(| _28, 1440 |), var_Y_9 |) ]] in
+          do~ [[ mstore ~(| add ~(| _28, 1472 |), var_ZZ_6 |) ]] in
+          do~ [[ mstore ~(| add ~(| _28, 1504 |), var_ZZZ_6 |) ]] in
+          let~ _29 := [[ mload ~(| 0x40 |) ]] in
+          let~ '(var_X_10, var_Y_10, var_ZZ_7, var_ZZZ_7) := [[ usr'dollar'ecAddn2_2189 ~(| mload ~(| mload ~(| 0x0140 |) |), mload ~(| _17 |), mload ~(| _23 |), mload ~(| _21 |), mload ~(| add ~(| _29, 2080 |) |) |) ]] in
+          do~ [[ mstore ~(| add ~(| 1536, _29 |), var_X_10 |) ]] in
+          do~ [[ mstore ~(| add ~(| _29, 1568 |), var_Y_10 |) ]] in
+          do~ [[ mstore ~(| add ~(| _29, 1600 |), var_ZZ_7 |) ]] in
+          do~ [[ mstore ~(| add ~(| _29, 1632 |), var_ZZZ_7 |) ]] in
+          let~ _30 := [[ mload ~(| 0x40 |) ]] in
+          let~ '(var_X_11, var_Y_11, var_ZZ_8, var_ZZZ_8) := [[ usr'dollar'ecAddn2 ~(| var_X_10, var_Y_10, var_ZZ_7, var_ZZZ_7, mload ~(| _5 |), mload ~(| _3 |), mload ~(| add ~(| _30, 2080 |) |) |) ]] in
+          do~ [[ mstore ~(| add ~(| 1664, _30 |), var_X_11 |) ]] in
+          do~ [[ mstore ~(| add ~(| _30, 1696 |), var_Y_11 |) ]] in
+          do~ [[ mstore ~(| add ~(| _30, 1728 |), var_ZZ_8 |) ]] in
+          do~ [[ mstore ~(| add ~(| _30, 1760 |), var_ZZZ_8 |) ]] in
+          let~ _31 := [[ mload ~(| 0x40 |) ]] in
+          let~ var_X_12 := [[ mload ~(| add ~(| 768, _31 |) |) ]] in
+          let~ var_Y_12 := [[ mload ~(| add ~(| 800, _31 |) |) ]] in
+          let~ var_ZZ_9 := [[ mload ~(| add ~(| 832, _31 |) |) ]] in
+          let~ var_ZZZ_9 := [[ mload ~(| add ~(| 864, _31 |) |) ]] in
+          let~ '(var_X_13, var_Y_13, var_ZZ_10, var_ZZZ_10) := [[ usr'dollar'ecAddn2 ~(| var_X_12, var_Y_12, var_ZZ_9, var_ZZZ_9, mload ~(| _23 |), mload ~(| _21 |), mload ~(| add ~(| _31, 2080 |) |) |) ]] in
+          do~ [[ mstore ~(| add ~(| 1792, _31 |), var_X_13 |) ]] in
+          do~ [[ mstore ~(| add ~(| _31, 1824 |), var_Y_13 |) ]] in
+          do~ [[ mstore ~(| add ~(| _31, 1856 |), var_ZZ_10 |) ]] in
+          do~ [[ mstore ~(| add ~(| _31, 1888 |), var_ZZZ_10 |) ]] in
+          let~ _32 := [[ mload ~(| 0x40 |) ]] in
+          let~ '(var_X_14, var_Y_14, var_ZZ_11, var_ZZZ_11) := [[ usr'dollar'ecAddn2 ~(| var_X_13, var_Y_13, var_ZZ_10, var_ZZZ_10, mload ~(| _5 |), mload ~(| _3 |), mload ~(| add ~(| _32, 2080 |) |) |) ]] in
+          do~ [[ mstore ~(| add ~(| 1920, _32 |), var_X_14 |) ]] in
+          do~ [[ mstore ~(| add ~(| _32, 1952 |), var_Y_14 |) ]] in
+          do~ [[ mstore ~(| add ~(| _32, 1984 |), var_ZZ_11 |) ]] in
+          do~ [[ mstore ~(| add ~(| _32, 2016 |), var_ZZZ_11 |) ]] in
+          do~ [[ mstore ~(| 0xe0, 0 |) ]] in
+          M.pure (BlockUnit.Tt, tt) in
+        M.pure result.
+
     Definition fun_ecGenMulmuladdX_store_2814 : M.t unit :=
       let~ '(_, result) :=
         do~ [[ mstore ~(| 0xa0, 0 |) ]] in
