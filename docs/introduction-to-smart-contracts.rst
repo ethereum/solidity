@@ -429,7 +429,7 @@ Each account has a data area called **storage**, which is persistent between fun
 and transactions.
 Storage is a key-value store that maps 256-bit words to 256-bit words.
 It is not possible to enumerate storage from within a contract, it is
-comparatively costly to read, and even more to initialise and modify storage. Because of this cost,
+comparatively costly to read, and even more to initialize and modify storage. Because of this cost,
 you should minimize what you store in persistent storage to what the contract needs to run.
 Store data like derived calculations, caching, and aggregates outside of the contract.
 A contract can neither read nor write to any storage apart from its own.
@@ -596,11 +596,11 @@ contracts, the Ether is forever lost.
 .. warning::
     From ``EVM >= Cancun`` onwards, ``selfdestruct`` will **only** send all Ether in the account to the given recipient and not destroy the contract.
     However, when ``selfdestruct`` is called in the same transaction that creates the contract calling it,
-    the behaviour of ``selfdestruct`` before Cancun hardfork (i.e., ``EVM <= Shanghai``) is preserved and will destroy the current contract,
+    the behavior of ``selfdestruct`` before Cancun hardfork (i.e., ``EVM <= Shanghai``) is preserved and will destroy the current contract,
     deleting any data, including storage keys, code and the account itself.
     See `EIP-6780 <https://eips.ethereum.org/EIPS/eip-6780>`_ for more details.
 
-    The new behaviour is the result of a network-wide change that affects all contracts present on
+    The new behavior is the result of a network-wide change that affects all contracts present on
     the Ethereum mainnet and testnets.
     It is important to note that this change is dependent on the EVM version of the chain on which
     the contract is deployed.
