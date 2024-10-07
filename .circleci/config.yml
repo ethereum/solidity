@@ -528,6 +528,14 @@ defaults:
         MAKEFLAGS: -j 2
         CPUs: 2
 
+  - base_ubuntu_clang_large: &base_ubuntu_clang_large
+      <<: *base_ubuntu_clang
+      resource_class: large
+      environment: &base_ubuntu_clang_small_env
+        <<: *base_ubuntu_clang_env
+        MAKEFLAGS: -j 5
+        CPUs: 5
+
   - base_ubuntu2004: &base_ubuntu2004
       docker:
         - image: << pipeline.parameters.ubuntu-2004-docker-image >>
@@ -1119,7 +1127,7 @@ jobs:
       - matrix_notify_failure_unless_pr
 
   b_ubu_ossfuzz: &b_ubu_ossfuzz
-    <<: *base_ubuntu_clang
+    <<: *base_ubuntu_clang_large
     steps:
       - checkout
       - setup_prerelease_commit_hash
