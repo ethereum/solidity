@@ -38,6 +38,13 @@ def setup(sphinx):
 
 # -- General configuration ------------------------------------------------
 
+html_context = {
+    "display_github": True,
+    "github_user": "ethereum",
+    "github_repo": "solidity",
+    "github_version": os.getenv("READTHEDOCS_VERSION", "develop"),
+    "conf_py_path": "/docs/",
+}
 # If your documentation needs a minimal Sphinx version, state it here.
 #needs_sphinx = '1.0'
 

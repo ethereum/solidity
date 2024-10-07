@@ -150,7 +150,12 @@ const updateActiveNavLink = () => {
 document.addEventListener("locationchange", updateActiveNavLink);
 
 function updateGitHubEditPath() {
-  // Replaces the version number in the GitHub edit path with "develop"
+  // Replaces the version number in the GitHub edit path with "develop" if it exists.
+  // This is to ensure that the edit path always points to the `develop` branch instead of the specific version branch.
+  // Note that it will fail silently if the anchor element is not found, i.e. the page is not editable or
+  // if the sphinx_rtd_theme is updated to a version that changes the anchor element.
+  // See: https://github.com/readthedocs/sphinx_rtd_theme/blob/a1c2147b17cbf0e57b7d7a6450ad4d9a5ff362cf/sphinx_rtd_theme/breadcrumbs.html#L35
+  // TODO: We should consider a more robust way to handle this in the future.
   const gitHubEditAnchor = document.querySelector(".wy-breadcrumbs-aside > a");
   if (!gitHubEditAnchor) return;
 
