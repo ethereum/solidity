@@ -335,12 +335,7 @@ bool SSACFGValidator::consumeConstantForLoop(ForLoop const& _loop, bool _conditi
 		return false;
 
 	if (_conditionIsZero)
-	{
-		auto const& loopExit = expectUnconditionalJump();
-		m_currentVariableValues = applyPhis(m_currentBlock, loopExit.target);
-		advanceToBlock(loopExit.target);
 		return true;
-	}
 	else
 	{
 		// yulAssert(!cond.value().hasValue() || exit.condition == cond); // todo what about hasValue, ie stuff that .... i don't even know anymore lol
