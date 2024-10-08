@@ -268,13 +268,11 @@ EvaluationResult PureEVMInstructionInterpreter::eval(
 	case Instruction::SWAP15:
 	case Instruction::SWAP16:
 	{
-		yulAssert(false, "");
-		return EvaluationOk(0);
+		yulAssert(false, "Instruction not allowed in strict assembly.");
 	}
 	}
 
-	yulAssert(false, "Unknown instruction with opcode " + std::to_string(static_cast<uint8_t>(_instruction)));
-	return EvaluationOk(0);
+	util::unreachable();
 }
 
 EvaluationResult PureEVMInstructionInterpreter::evalBuiltin(
