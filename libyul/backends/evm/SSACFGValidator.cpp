@@ -21,6 +21,7 @@
 #include <libsolutil/Visitor.h>
 
 #include <range/v3/algorithm/all_of.hpp>
+#include <range/v3/algorithm/set_algorithm.hpp>
 #include <range/v3/to_container.hpp>
 #include <range/v3/view/drop_last.hpp>
 #include <range/v3/view/reverse.hpp>
@@ -54,11 +55,26 @@ bool SSACFGValidator::consumeBlock(Block const& _block)
 
 void SSACFGValidator::consolidateVariables(VariableMapping const& _variables, std::vector<VariableMapping> const& _toBeConsolidated)
 {
+	static constexpr auto intersectionEmpty = [](std::set<SSACFG::ValueId> const& _set1, std::set<SSACFG::ValueId> const& _set2)
+	{
+		auto it1 = _set1.begin();
+		auto it2 = _set2.begin();
+		while (it1 != _set1.end() && it2 != _set2.end())
+		{
+			if (*it1 < *it2)
+				++it1;
+			else if (*it2 < *it1)
+				++it2;
+			else
+				return false;
+		}
+		return true;
+	};
 	for (auto const& [var, valueId]: _variables)
 	{
 		for (auto const& parent: _toBeConsolidated)
 		{
-			if (!parent.count(var) || valueId != parent.at(var))
+			if (!parent.count(var) || intersectionEmpty(valueId, parent.at(var)))
 				// set to no value, should be asserted against if that variable is consumed (eg as function arg)
 				m_currentVariableValues[var] = {};
 		}
@@ -104,7 +120,10 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 				if (!_variableDeclaration.value)
 				{
 					for (auto&& variable: _variableDeclaration.variables)
-						m_currentVariableValues[resolveVariable(variable.name)] = {};
+					{
+						yulAssert(m_context.cfg.zeroLiteral());
+						m_currentVariableValues[resolveVariable(variable.name)] = {*m_context.cfg.zeroLiteral()};
+					}
 					return true;
 				}
 				if (auto results = consumeExpression(*_variableDeclaration.value))
