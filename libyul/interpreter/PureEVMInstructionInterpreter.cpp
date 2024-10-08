@@ -44,8 +44,6 @@ using namespace solidity::yul::interpreter;
 using solidity::util::h160;
 using solidity::util::h256;
 
-using u512 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<512, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
-
 EvaluationResult PureEVMInstructionInterpreter::eval(
 	evmasm::Instruction _instruction,
 	std::vector<u256> const& _arguments
