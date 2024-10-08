@@ -29,7 +29,8 @@ using namespace solidity::yul::interpreter;
 Scope* Scope::getSubscope(Block const& _block)
 {
 	auto [it, isNew] = m_subScopes.try_emplace(&_block, nullptr);
-	if (!isNew) return it->second.get();
+	if (!isNew)
+		return it->second.get();
 
 	it->second = std::make_unique<Scope>(this);
 	Scope* subscope = it->second.get();
