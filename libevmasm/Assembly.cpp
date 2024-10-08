@@ -1130,6 +1130,8 @@ LinkerObject const& Assembly::assembleLegacy() const
 
 	for (AssemblyItem const& item: items)
 	{
+		ret.offsets.emplace_back(ret.bytecode.size());
+
 		// store position of the invalid jump destination
 		if (item.type() != Tag && m_tagPositionsInBytecode[0] == std::numeric_limits<size_t>::max())
 			m_tagPositionsInBytecode[0] = ret.bytecode.size();

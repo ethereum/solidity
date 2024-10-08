@@ -38,6 +38,8 @@ struct LinkerObject
 	/// The bytecode.
 	bytes bytecode;
 
+	std::vector<size_t> offsets;
+
 	/// Map from offsets in bytecode to library identifiers. The addresses starting at those offsets
 	/// need to be replaced by the actual addresses by the linker.
 	std::map<size_t, std::string> linkReferences;
