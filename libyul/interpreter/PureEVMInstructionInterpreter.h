@@ -63,7 +63,7 @@ public:
 
 	/// Evaluate builtin function
 	EvaluationResult evalBuiltin(
-		BuiltinFunctionForEVM const& _fun,
+		BuiltinFunctionForEVM const& _builtinFunction,
 		std::vector<Expression> const& _arguments,
 		std::vector<u256> const& _evaluatedArguments
 	);

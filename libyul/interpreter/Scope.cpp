@@ -36,8 +36,8 @@ Scope* Scope::getSubscope(Block const& _block)
 	Scope* subscope = it->second.get();
 
 	for (auto const& statement: _block.statements)
-		if (auto const* funDef = std::get_if<FunctionDefinition>(&statement))
-			subscope->m_definedFunctions.emplace(funDef->name, *funDef);
+		if (auto const* functionDefinition = std::get_if<FunctionDefinition>(&statement))
+			subscope->m_definedFunctions.emplace(functionDefinition->name, *functionDefinition);
 
 	return subscope;
 }

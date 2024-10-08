@@ -37,15 +37,15 @@ void PureInterpreterState::dumpTraces(std::ostream& _out) const
 	_out << "Call trace:\n";
 	std::vector<FunctionCallTrace const*> stackTrace;
 
-	auto print_values = [&](std::vector<u256> const& vec)
+	auto print_values = [&](std::vector<u256> const& values)
 	{
 		bool isFirst = true;
-		for (auto x: vec)
+		for (u256 value: values)
 		{
 			if (!isFirst)
 				_out << ", ";
 			isFirst = false;
-			_out << x;
+			_out << value;
 		}
 	};
 

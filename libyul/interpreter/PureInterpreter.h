@@ -88,15 +88,15 @@ public:
 	/// Will not alter the scope.
 	ExecutionResult execute(std::vector<Statement> const& _statements);
 
-	ExecutionResult visit(Statement const& _st);
+	ExecutionResult visit(Statement const& _statement);
 
 	// Expression visit methods
 
 	EvaluationResult operator()(Literal const&);
 	EvaluationResult operator()(Identifier const&);
-	EvaluationResult operator()(FunctionCall const& _funCall);
+	EvaluationResult operator()(FunctionCall const& _functionCall);
 
-	EvaluationResult visit(Expression const& _st);
+	EvaluationResult visit(Expression const& _expression);
 
 	u256 valueOfVariable(YulName _name) const { return m_variables.at(_name); }
 	VariableValuesMap const& allVariables() const { return m_variables; }
@@ -119,7 +119,7 @@ protected:
 	/// Evaluates the given expression from right to left and
 	/// stores it in m_value.
 	EvaluationResult evaluateArgs(
-		std::vector<Expression> const& _expr,
+		std::vector<Expression> const& _arguments,
 		std::vector<std::optional<LiteralKind>> const* _literalArguments
 	);
 
