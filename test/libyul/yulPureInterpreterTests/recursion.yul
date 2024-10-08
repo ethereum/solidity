@@ -1,11 +1,13 @@
 {
-  function fib(i) -> y {
-    y := 1
-    if gt(i, 2) {
-      y := add(fib(sub(i, 1)), fib(sub(i, 2)))
+    function fib(i) -> y
+    {
+        y := 1
+        if gt(i, 2)
+        {
+            y := add(fib(sub(i, 1)), fib(sub(i, 2)))
+        }
     }
-  }
-  let res := fib(8)
+    let res := fib(8)
 }
 // ----
 // Execution result: ExecutionOk

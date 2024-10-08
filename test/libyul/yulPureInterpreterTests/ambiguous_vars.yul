@@ -1,11 +1,11 @@
 {
-  function fake_mstore(pos, val) { }
-  {
-     let a := 0x20
-     fake_mstore(a, 2)
-  }
-  let a
-  fake_mstore(a, 3)
+    function fake_mstore(pos, val) { }
+    {
+        let a := 0x20
+        fake_mstore(a, 2)
+    }
+    let a
+    fake_mstore(a, 3)
 }
 // ----
 // Execution result: ExecutionOk

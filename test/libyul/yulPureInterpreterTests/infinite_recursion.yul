@@ -1,8 +1,8 @@
 {
-  function f() {
+    function f() {
+        f()
+    }
     f()
-  }
-  f()
 }
 // ====
 // maxTraceSize: 0

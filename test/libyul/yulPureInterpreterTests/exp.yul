@@ -1,5 +1,5 @@
 {
-  let res := exp(3,not(1))
+    let res := exp(3,not(1))
 }
 // ====
 // printHex: true
