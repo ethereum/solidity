@@ -63,5 +63,5 @@ FunctionDefinition const& Scope::getFunction(YulName const& _functionName) const
 		if (it != scope->m_definedFunctions.end())
 			return it->second;
 	}
-	solAssert(false, "");
+	solAssert(false);
 }
