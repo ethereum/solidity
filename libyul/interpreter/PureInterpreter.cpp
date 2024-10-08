@@ -48,7 +48,7 @@ ExecutionResult PureInterpreter::operator()(ExpressionStatement const& _expressi
 	EvaluationResult res = evaluate(_expressionStatement.expression, 0);
 	if (auto* terminated = std::get_if<ExecutionTerminated>(&res))
 		return *terminated;
-	return ExecutionOk{ ControlFlowState::Default };
+	return ExecutionOk{ControlFlowState::Default};
 }
 
 ExecutionResult PureInterpreter::operator()(Assignment const& _assignment)
@@ -65,7 +65,7 @@ ExecutionResult PureInterpreter::operator()(Assignment const& _assignment)
 		auto [_, isNew] = m_variables.insert_or_assign(varName, values.at(i));
 		solAssert(!isNew, "");
 	}
-	return ExecutionOk { ControlFlowState::Default };
+	return ExecutionOk{ControlFlowState::Default};
 }
 
 ExecutionResult PureInterpreter::operator()(VariableDeclaration const& _declaration)
@@ -91,7 +91,7 @@ ExecutionResult PureInterpreter::operator()(VariableDeclaration const& _declarat
 		solAssert(isNew, "");
 		m_scope->addDeclaredVariable(varName);
 	}
-	return ExecutionOk { ControlFlowState::Default };
+	return ExecutionOk{ControlFlowState::Default};
 }
 
 ExecutionResult PureInterpreter::operator()(If const& _if)
@@ -103,7 +103,7 @@ ExecutionResult PureInterpreter::operator()(If const& _if)
 
 	if (std::get<EvaluationOk>(conditionRes).values.at(0) != 0)
 		return (*this)(_if.body);
-	return ExecutionOk { ControlFlowState::Default };
+	return ExecutionOk{ControlFlowState::Default};
 }
 
 ExecutionResult PureInterpreter::operator()(Switch const& _switch)
@@ -131,12 +131,12 @@ ExecutionResult PureInterpreter::operator()(Switch const& _switch)
 		if (caseMatched)
 			return (*this)(c.body);
 	}
-	return ExecutionOk { ControlFlowState::Default };
+	return ExecutionOk{ControlFlowState::Default};
 }
 
 ExecutionResult PureInterpreter::operator()(FunctionDefinition const&)
 {
-	return ExecutionOk{ ControlFlowState::Default };
+	return ExecutionOk{ControlFlowState::Default};
 }
 
 ExecutionResult PureInterpreter::operator()(ForLoop const& _forLoop)
@@ -148,7 +148,7 @@ ExecutionResult PureInterpreter::operator()(ForLoop const& _forLoop)
 
 	{
 		ExecutionResult execRes = execute(_forLoop.pre.statements);
-		if (execRes == ExecutionResult(ExecutionOk { ControlFlowState::Leave }))
+		if (execRes == ExecutionResult(ExecutionOk{ControlFlowState::Leave}))
 			return execRes;
 	}
 	while (true)
@@ -171,39 +171,39 @@ ExecutionResult PureInterpreter::operator()(ForLoop const& _forLoop)
 			ExecutionResult bodyRes = (*this)(_forLoop.body);
 			if (
 				std::holds_alternative<ExecutionTerminated>(bodyRes) ||
-				bodyRes == ExecutionResult(ExecutionOk{ ControlFlowState::Leave })
+				bodyRes == ExecutionResult(ExecutionOk{ControlFlowState::Leave})
 			)
 				return bodyRes;
 
-			if (bodyRes == ExecutionResult(ExecutionOk{ ControlFlowState::Break }))
-				return ExecutionOk { ControlFlowState::Default };
+			if (bodyRes == ExecutionResult(ExecutionOk{ControlFlowState::Break}))
+				return ExecutionOk{ControlFlowState::Default};
 		}
 
 		{
 			ExecutionResult postRes = (*this)(_forLoop.post);
 			if (
 				std::holds_alternative<ExecutionTerminated>(postRes) ||
-				postRes == ExecutionResult(ExecutionOk{ ControlFlowState::Leave })
+				postRes == ExecutionResult(ExecutionOk{ControlFlowState::Leave})
 			)
 				return postRes;
 		}
 	}
-	return ExecutionOk { ControlFlowState::Default };
+	return ExecutionOk{ControlFlowState::Default};
 }
 
 ExecutionResult PureInterpreter::operator()(Break const&)
 {
-	return ExecutionOk{ ControlFlowState::Break };
+	return ExecutionOk{ControlFlowState::Break};
 }
 
 ExecutionResult PureInterpreter::operator()(Continue const&)
 {
-	return ExecutionOk{ ControlFlowState::Continue };
+	return ExecutionOk{ControlFlowState::Continue};
 }
 
 ExecutionResult PureInterpreter::operator()(Leave const&)
 {
-	return ExecutionOk{ ControlFlowState::Leave };
+	return ExecutionOk{ControlFlowState::Leave};
 }
 
 ExecutionResult PureInterpreter::operator()(Block const& _block)
@@ -219,10 +219,10 @@ ExecutionResult PureInterpreter::execute(std::vector<Statement> const& _statemen
 	for (auto const& statement: _statements)
 	{
 		ExecutionResult statementRes = visit(statement);
-		if (statementRes != ExecutionResult(ExecutionOk {ControlFlowState::Default}))
+		if (statementRes != ExecutionResult(ExecutionOk{ControlFlowState::Default}))
 			return statementRes;
 	}
-	return ExecutionOk{ ControlFlowState::Default };
+	return ExecutionOk{ControlFlowState::Default};
 }
 
 ExecutionResult PureInterpreter::visit(Statement const& _st)
