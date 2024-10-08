@@ -528,6 +528,14 @@ defaults:
         MAKEFLAGS: -j 2
         CPUs: 2
 
+  - base_ubuntu_clang_large: &base_ubuntu_clang_large
+      <<: *base_ubuntu_clang
+      resource_class: large
+      environment: &base_ubuntu_clang_small_env
+        <<: *base_ubuntu_clang_env
+        MAKEFLAGS: -j 5
+        CPUs: 5
+
   - base_ubuntu2004: &base_ubuntu2004
       docker:
         - image: << pipeline.parameters.ubuntu-2004-docker-image >>
@@ -1073,6 +1081,7 @@ jobs:
       <<: *base_ubuntu2404_env
       COVERAGE: ON
       CMAKE_BUILD_TYPE: Debug
+      CMAKE_OPTIONS: -DCMAKE_CXX_FLAGS=-fuse-ld=gold
     steps:
       - checkout
       - run_build
@@ -1105,19 +1114,20 @@ jobs:
   # Builds in C++20 mode and uses debug build in order to speed up.
   # Do *NOT* store any artifacts or workspace as we don't run tests on this build.
   b_ubu_cxx20:
-    <<: *base_ubuntu2404_xlarge
+    <<: *base_ubuntu2404_large
     environment:
-      <<: *base_ubuntu2404_xlarge_env
+      <<: *base_ubuntu2404_large_env
       CMAKE_BUILD_TYPE: Debug
-      CMAKE_OPTIONS: -DCMAKE_CXX_STANDARD=20
-      MAKEFLAGS: -j 10
+      # gold is more memory-efficient than the default, allows us to stay with the "large" resource class without OOM errors
+      CMAKE_OPTIONS: -DCMAKE_CXX_STANDARD=20 -DCMAKE_CXX_FLAGS=-fuse-ld=gold
+      MAKEFLAGS: -j 6
     steps:
       - checkout
       - run_build
       - matrix_notify_failure_unless_pr
 
   b_ubu_ossfuzz: &b_ubu_ossfuzz
-    <<: *base_ubuntu_clang
+    <<: *base_ubuntu_clang_large
     steps:
       - checkout
       - setup_prerelease_commit_hash
