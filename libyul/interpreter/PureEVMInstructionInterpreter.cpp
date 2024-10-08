@@ -280,7 +280,6 @@ EvaluationResult PureEVMInstructionInterpreter::eval(
 EvaluationResult PureEVMInstructionInterpreter::evalBuiltin(
 	BuiltinFunctionForEVM const& _fun,
 	std::vector<Expression> const& /* _arguments */,  // This was required to execute some builtin.
-													  // But all of them are impure.
 	std::vector<u256> const& _evaluatedArguments
 )
 {
