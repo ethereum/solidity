@@ -1,8 +1,8 @@
 {
-  function f() {
+    function f() {
+        f()
+    }
     f()
-  }
-  f()
 }
 // Setting so that trace limit hit first
 // ====

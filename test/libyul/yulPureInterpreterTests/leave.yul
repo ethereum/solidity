@@ -1,12 +1,17 @@
 {
-  function f() -> x, y
-  {
-    for { x := 0 } lt(x, 10) { x := add(x, 1) } {
-      if eq(x, 5) { y := 1 leave }
+    function f() -> x, y
+    {
+        for { x := 0 } lt(x, 10) { x := add(x, 1) }
+        {
+            if eq(x, 5)
+            {
+                y := 1
+                leave
+            }
+        }
+        x := 9
     }
-    x := 9
-  }
-  let a, b := f()
+    let a, b := f()
 }
 // ====
 // EVMVersion: >=constantinople

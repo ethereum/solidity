@@ -1,9 +1,9 @@
 {
     let x
     switch 7
-        case 7 { x := 1 }
-        case 3 { x := 2 }
-        default { x := 3 }
+    case 7 { x := 1 }
+    case 3 { x := 2 }
+    default { x := 3 }
 }
 // ----
 // Execution result: ExecutionOk

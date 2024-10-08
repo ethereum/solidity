@@ -1,13 +1,16 @@
 {
-  function f(x) -> y {
-    if lt(x, 150) {
-      y := f(add(x, 1))
+    function f(x) -> y
+    {
+        if lt(x, 150)
+        {
+            y := f(add(x, 1))
+        }
+        if eq(x, 150)
+        {
+            y := x
+        }
     }
-    if eq(x, 150) {
-      y := x
-    }
-  }
-  let res := f(0)
+    let res := f(0)
 }
 
 // ====

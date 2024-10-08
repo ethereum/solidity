@@ -1,10 +1,10 @@
 {
-  function f() -> x
-  {
-    for { leave x := 2 } eq(x, 0) { } {
+    function f() -> x
+    {
+        for { leave x := 2 } eq(x, 0) { }
+        { }
     }
-  }
-  let a := f()
+    let a := f()
 }
 // ====
 // EVMVersion: >=constantinople

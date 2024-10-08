@@ -2,14 +2,18 @@
     function fake_sstore(pos, val) {}
 
     f(1)
-    function f(i) {
+    function f(i)
+    {
         if i { g(1) }
-        function g(j) {
+
+        function g(j)
+        {
             if j { h() }
+
             f(0)
-            function h() {
-                g(0)
-            }
+
+            function h()
+            { g(0) }
         }
         fake_sstore(i, add(i, 7))
     }
