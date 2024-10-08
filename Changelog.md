@@ -1,7 +1,7 @@
-### 0.8.28 (unreleased)
+### 0.8.28 (2024-10-09)
 
 Language Features:
- * Transient storage value type state variables are now fully supported.
+ * Transient storage state variables of value types are now fully supported.
 
 
 Compiler Features:
