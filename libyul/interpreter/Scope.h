@@ -17,7 +17,7 @@
 // SPDX-License-Identifier: GPL-3.0
 #pragma once
 
-#include <libyul/tools/interpreter/types.h>
+#include <libyul/interpreter/types.h>
 
 #include <libyul/ASTForward.h>
 #include <libyul/YulName.h>
@@ -27,7 +27,7 @@
 #include <map>
 #include <vector>
 
-namespace solidity::yul::tools::interpreter
+namespace solidity::yul::interpreter
 {
 
 /**

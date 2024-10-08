@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <libyul/tools/interpreter/Results.h>
+#include <libyul/interpreter/Results.h>
 
 #include <libyul/ASTForward.h>
 
@@ -28,7 +28,7 @@
 #include <variant>
 #include <vector>
 
-namespace solidity::yul::tools::interpreter
+namespace solidity::yul::interpreter
 {
 
 struct FunctionCallTrace

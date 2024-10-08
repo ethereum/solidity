@@ -18,7 +18,7 @@
 
 #include <test/libyul/YulPureInterpreterTest.h>
 
-#include <libyul/tools/interpreter/PureInterpreter.h>
+#include <libyul/interpreter/PureInterpreter.h>
 
 #include <test/Common.h>
 
@@ -47,7 +47,7 @@ using namespace solidity::frontend::test;
 
 using solidity::util::h256;
 
-using namespace solidity::yul::tools::interpreter;
+using namespace solidity::yul::interpreter;
 
 YulPureInterpreterTest::YulPureInterpreterTest(std::string const& _filename):
 	EVMVersionRestrictedTestCase(_filename)
@@ -105,8 +105,8 @@ std::string YulPureInterpreterTest::interpret() const
 
 	PureInterpreterState state { m_config };
 	Dialect const& dialect = EVMDialect::strictAssemblyForEVMObjects(solidity::test::CommonOptions::get().evmVersion());
-	tools::interpreter::Scope rootScope;
-	tools::interpreter::Scope* subscope = rootScope.getSubscope(block);
+	interpreter::Scope rootScope;
+	interpreter::Scope* subscope = rootScope.getSubscope(block);
 
 	PureInterpreter interpreter(state, dialect, *subscope, 0);
 	ExecutionResult res = interpreter.execute(block.statements);
@@ -124,8 +124,8 @@ std::string YulPureInterpreterTest::interpret() const
 
 void YulPureInterpreterTest::dumpExecutionData(
 	std::ostream& _stream,
-	tools::interpreter::ExecutionResult _res,
-	tools::interpreter::PureInterpreterState const& _state,
+	interpreter::ExecutionResult _res,
+	interpreter::PureInterpreterState const& _state,
 	VariableValuesMap const& _outerMostVariables
 ) const
 {
@@ -140,7 +140,7 @@ void YulPureInterpreterTest::dumpExecutionData(
 	_state.dumpTraces(_stream);
 }
 
-void YulPureInterpreterTest::dumpExecutionResult(std::ostream& _stream, tools::interpreter::ExecutionResult _res) const
+void YulPureInterpreterTest::dumpExecutionResult(std::ostream& _stream, interpreter::ExecutionResult _res) const
 {
 	_stream << std::visit(GenericVisitor {
 		[&](ExecutionOk) { return "ExecutionOk"; },
@@ -160,7 +160,7 @@ void YulPureInterpreterTest::dumpExecutionResult(std::ostream& _stream, tools::i
 
 void YulPureInterpreterTest::dumpVariables(
 	std::ostream& _stream,
-	tools::interpreter::VariableValuesMap const& _variables
+	interpreter::VariableValuesMap const& _variables
 ) const
 {
 	static std::string_view const INDENT = "  ";

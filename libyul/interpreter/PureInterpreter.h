@@ -21,10 +21,10 @@
 
 #pragma once
 
-#include <libyul/tools/interpreter/PureInterpreterState.h>
-#include <libyul/tools/interpreter/Results.h>
-#include <libyul/tools/interpreter/Scope.h>
-#include <libyul/tools/interpreter/types.h>
+#include <libyul/interpreter/PureInterpreterState.h>
+#include <libyul/interpreter/Results.h>
+#include <libyul/interpreter/Scope.h>
+#include <libyul/interpreter/types.h>
 
 #include <libyul/ASTForward.h>
 #include <libyul/YulName.h>
@@ -44,7 +44,7 @@ namespace solidity::yul
 struct Dialect;
 }
 
-namespace solidity::yul::tools::interpreter
+namespace solidity::yul::interpreter
 {
 
 /**

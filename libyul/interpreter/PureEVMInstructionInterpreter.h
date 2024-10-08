@@ -23,8 +23,8 @@
 
 #include <libyul/ASTForward.h>
 
-#include <libyul/tools/interpreter/Results.h>
-#include <libyul/tools/interpreter/PureInterpreterState.h>
+#include <libyul/interpreter/Results.h>
+#include <libyul/interpreter/PureInterpreterState.h>
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/FixedHash.h>
@@ -45,7 +45,7 @@ class YulString;
 struct BuiltinFunctionForEVM;
 }
 
-namespace solidity::yul::tools::interpreter
+namespace solidity::yul::interpreter
 {
 
 /**

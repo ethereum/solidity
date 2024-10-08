@@ -16,7 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include <libyul/tools/interpreter/Scope.h>
+#include <libyul/interpreter/Scope.h>
 
 #include <liblangutil/Exceptions.h>
 
@@ -24,7 +24,7 @@
 
 using namespace solidity;
 using namespace solidity::yul;
-using namespace solidity::yul::tools::interpreter;
+using namespace solidity::yul::interpreter;
 
 Scope* Scope::getSubscope(Block const& _block)
 {
