@@ -556,7 +556,7 @@ topics, issues or feature implementations are debated in detail. The invitation 
 
 We are also sharing feedback surveys and other content that is relevant to language design in the forum.
 
-If you want to know where the team is standing in terms of implementing new features, you can follow the implementation status in the `Solidity GitHub project <https://github.com/ethereum/solidity/projects>`_.
+If you want to know where the team is standing in terms of implementing new features, you can follow the implementation status in the `Solidity GitHub project <https://github.com/orgs/ethereum/projects/17>`_.
 Issues in the design backlog need further specification and will either be discussed in a language design call or in a regular team call. You can
 see the upcoming changes for the next breaking release by changing from the default branch (`develop`) to the `breaking branch <https://github.com/ethereum/solidity/tree/breaking>`_.
 
