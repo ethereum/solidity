@@ -19,9 +19,9 @@
  * Yul interpreter.
  */
 
-#include <libyul/tools/interpreter/PureInterpreter.h>
+#include <libyul/interpreter/PureInterpreter.h>
 
-#include <libyul/tools/interpreter/PureEVMInstructionInterpreter.h>
+#include <libyul/interpreter/PureEVMInstructionInterpreter.h>
 
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
@@ -39,7 +39,7 @@
 
 using namespace solidity;
 using namespace solidity::yul;
-using namespace solidity::yul::tools::interpreter;
+using namespace solidity::yul::interpreter;
 
 using solidity::util::h256;
 

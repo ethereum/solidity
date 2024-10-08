@@ -23,7 +23,7 @@
 
 #include <map>
 
-namespace solidity::yul::tools::interpreter
+namespace solidity::yul::interpreter
 {
 
 using VariableValuesMap = std::map<YulName, u256>;

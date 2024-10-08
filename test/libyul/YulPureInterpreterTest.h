@@ -20,9 +20,9 @@
 
 #include <test/TestCase.h>
 
-#include <libyul/tools/interpreter/PureInterpreterState.h>
-#include <libyul/tools/interpreter/types.h>
-#include <libyul/tools/interpreter/Results.h>
+#include <libyul/interpreter/PureInterpreterState.h>
+#include <libyul/interpreter/types.h>
+#include <libyul/interpreter/Results.h>
 
 namespace solidity::yul
 {
@@ -50,17 +50,17 @@ private:
 	std::string interpret() const;
 	void dumpExecutionData(
 		std::ostream& _stream,
-		tools::interpreter::ExecutionResult _res,
-		tools::interpreter::PureInterpreterState const& _state,
-		tools::interpreter::VariableValuesMap const& _outerMostVariables
+		interpreter::ExecutionResult _res,
+		interpreter::PureInterpreterState const& _state,
+		interpreter::VariableValuesMap const& _outerMostVariables
 	) const;
-	void dumpExecutionResult(std::ostream& _stream, tools::interpreter::ExecutionResult _res) const;
-	void dumpVariables(std::ostream& _stream, tools::interpreter::VariableValuesMap const& _variables) const;
+	void dumpExecutionResult(std::ostream& _stream, interpreter::ExecutionResult _res) const;
+	void dumpVariables(std::ostream& _stream, interpreter::VariableValuesMap const& _variables) const;
 	void dumpValue(std::ostream& _stream, u256 _value) const;
 
 	std::shared_ptr<AST const> m_ast;
 	std::shared_ptr<AsmAnalysisInfo const> m_analysisInfo;
-	tools::interpreter::PureInterpreterConfig m_config;
+	interpreter::PureInterpreterConfig m_config;
 
 	bool m_printHex;
 };

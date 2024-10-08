@@ -16,7 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include <libyul/tools/interpreter/PureInterpreter.h>
+#include <libyul/interpreter/PureInterpreter.h>
 
 #include <libyul/AST.h>
 
@@ -27,7 +27,7 @@
 #include <string_view>
 #include <variant>
 
-using namespace solidity::yul::tools::interpreter;
+using namespace solidity::yul::interpreter;
 
 void PureInterpreterState::dumpTraces(std::ostream& _out) const
 {

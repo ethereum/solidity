@@ -22,7 +22,7 @@
 
 #include <variant>
 
-namespace solidity::yul::tools::interpreter
+namespace solidity::yul::interpreter
 {
 
 template<typename T>
