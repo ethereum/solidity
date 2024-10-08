@@ -670,11 +670,6 @@ defaults:
       requires:
         - b_archlinux
 
-  - requires_b_ubu_codecov: &requires_b_ubu_codecov
-      <<: *on_all_tags_and_branches
-      requires:
-        - b_ubu_codecov
-
   - requires_b_osx: &requires_b_osx
       <<: *on_all_tags_and_branches
       requires:
@@ -1072,43 +1067,6 @@ jobs:
           root: build
           paths:
             - solc/solc-static-linux
-      - matrix_notify_failure_unless_pr
-
-  b_ubu_codecov:
-    # Runs ~30% faster on large but we only run it nightly so efficiency matters more.
-    <<: *base_ubuntu2404
-    environment:
-      <<: *base_ubuntu2404_env
-      COVERAGE: ON
-      CMAKE_BUILD_TYPE: Debug
-      CMAKE_OPTIONS: -DCMAKE_CXX_FLAGS=-fuse-ld=gold
-    steps:
-      - checkout
-      - run_build
-      - persist_executables_to_workspace
-      - matrix_notify_failure_unless_pr
-
-  t_ubu_codecov:
-    <<: *base_ubuntu2404_large
-    environment:
-      <<: *base_ubuntu2404_large_env
-      EVM: << pipeline.parameters.evm-version >>
-      OPTIMIZE: 1
-    steps:
-      - checkout
-      - attach_workspace:
-          at: build
-      - run:
-          name: "soltest: Syntax Tests"
-          command: build/test/soltest -t 'syntaxTest*' -- --testpath test
-      - run:
-          name: "Code Coverage: Syntax Tests"
-          command: codecov --flags syntax --gcov-root build
-      - run_soltest
-      - run:
-          name: "Coverage: All"
-          command: codecov --flags all --gcov-root build
-      - store_artifacts_test_results
       - matrix_notify_failure_unless_pr
 
   # Builds in C++20 mode and uses debug build in order to speed up.
@@ -2007,10 +1965,6 @@ workflows:
           <<: *on_develop
 
     jobs:
-      # Code Coverage enabled build and tests
-      - b_ubu_codecov: *requires_nothing
-      - t_ubu_codecov: *requires_b_ubu_codecov
-
       # ASan build and tests
       - b_ubu_asan: *requires_nothing
       - b_ubu_san_clang: *job_b_ubu_asan_clang
