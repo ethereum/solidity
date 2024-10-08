@@ -23,14 +23,15 @@
 
 #pragma once
 
+#include <liblangutil/Exceptions.h>
 #include <libsolidity/ast/ASTEnums.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/parsing/Token.h>
-#include <liblangutil/Exceptions.h>
 
 #include <libsolutil/Common.h>
 #include <libsolutil/Numeric.h>
 #include <libsolutil/CommonIO.h>
+#include <libsolutil/JSON.h>
 #include <libsolutil/LazyInit.h>
 #include <libsolutil/Result.h>
 
@@ -409,6 +410,7 @@ public:
 		bool _unary
 	) const;
 
+	virtual std::optional<Json> ethdebug() const;
 private:
 	/// @returns a member list containing all members added to this type by `using for` directives.
 	static MemberList::MemberMap attachedFunctions(Type const& _type, ASTNode const& _scope);

@@ -366,7 +366,6 @@ std::multimap<std::string, FunctionDefinition const*> const& ContractDefinition:
 	});
 }
 
-
 TypeNameAnnotation& TypeName::annotation() const
 {
 	return initAnnotation<TypeNameAnnotation>();
@@ -399,6 +398,13 @@ StructDeclarationAnnotation& StructDefinition::annotation() const
 	return initAnnotation<StructDeclarationAnnotation>();
 }
 
+std::optional<Json> StructDefinition::ethdebug() const
+{
+	Json result = Json::object();
+	result["kind"] = "struct";
+	return result;
+}
+
 Type const* EnumValue::type() const
 {
 	auto parentDef = dynamic_cast<EnumDefinition const*>(scope());
@@ -414,6 +420,17 @@ Type const* EnumDefinition::type() const
 TypeDeclarationAnnotation& EnumDefinition::annotation() const
 {
 	return initAnnotation<TypeDeclarationAnnotation>();
+}
+
+std::optional<Json> EnumDefinition::ethdebug() const
+{
+	Json result = Json::object();
+	result["kind"] = "enum";
+	Json values = Json::array();
+	for (auto const& value: members())
+		values.push_back(value->name());
+	result["values"] = values;
+	return result;
 }
 
 bool FunctionDefinition::libraryFunction() const
@@ -541,6 +558,57 @@ FunctionDefinition const& FunctionDefinition::resolveVirtual(
 
 	solAssert(false, "Virtual function " + name() + " not found.");
 	return *this; // not reached
+}
+
+std::optional<Json> FunctionDefinition::ethdebug() const
+{
+	Json result = Json::object();
+	if (isOrdinary())
+		result["kind"] = "function";
+	else if (isConstructor())
+		result["kind"] = "constructor";
+	else if (isFallback())
+		result["kind"] = "fallback";
+	else
+		solAssert(false);
+
+	if (!noVisibilitySpecified())
+	{
+		switch (visibility())
+		{
+		case solidity::frontend::Visibility::Default:
+		case solidity::frontend::Visibility::Private:
+		case solidity::frontend::Visibility::Internal:
+			result["internal"] = true;
+			break;
+		case solidity::frontend::Visibility::Public:
+		case solidity::frontend::Visibility::External:
+			result["external"] = true;
+			break;
+		}
+	}
+
+	Json definition = Json::object();
+	definition["name"] = name();
+	result["definition"] = definition;
+
+	Json parameters = Json::array();
+	for (auto const& param: this->parameters())
+	{
+		solAssert(param->ethdebug().has_value());
+		parameters.emplace_back(*param->ethdebug());
+	}
+	result["parameters"] = parameters;
+
+	Json returns = Json::array();
+	for (auto const& param: returnParameters())
+	{
+		solAssert(param->ethdebug().has_value());
+		returns.emplace_back(*param->ethdebug());
+	}
+	result["returns"] = returns;
+
+	return result;
 }
 
 Type const* ModifierDefinition::type() const
@@ -876,6 +944,15 @@ FunctionTypePointer VariableDeclaration::functionType(bool _internal) const
 VariableDeclarationAnnotation& VariableDeclaration::annotation() const
 {
 	return initAnnotation<VariableDeclarationAnnotation>();
+}
+
+std::optional<Json> VariableDeclaration::ethdebug() const
+{
+	solAssert(type()->ethdebug().has_value());
+	Json result = Json::object();
+	result["name"] = name();
+	result["type"] = *type()->ethdebug();
+	return  result;
 }
 
 StatementAnnotation& Statement::annotation() const
