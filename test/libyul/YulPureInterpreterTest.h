@@ -50,11 +50,11 @@ private:
 	std::string interpret() const;
 	void dumpExecutionData(
 		std::ostream& _stream,
-		interpreter::ExecutionResult _res,
+		interpreter::ExecutionResult _result,
 		interpreter::PureInterpreterState const& _state,
 		interpreter::VariableValuesMap const& _outerMostVariables
 	) const;
-	void dumpExecutionResult(std::ostream& _stream, interpreter::ExecutionResult _res) const;
+	void dumpExecutionResult(std::ostream& _stream, interpreter::ExecutionResult _result) const;
 	void dumpVariables(std::ostream& _stream, interpreter::VariableValuesMap const& _variables) const;
 	void dumpValue(std::ostream& _stream, u256 _value) const;
 

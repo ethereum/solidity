@@ -104,8 +104,8 @@ struct EvaluationOk
 	{
 	}
 
-	explicit EvaluationOk(u256 _x):
-		values{_x}
+	explicit EvaluationOk(u256 _value):
+		values{_value}
 	{
 	}
 

@@ -276,16 +276,16 @@ EvaluationResult PureEVMInstructionInterpreter::eval(
 }
 
 EvaluationResult PureEVMInstructionInterpreter::evalBuiltin(
-	BuiltinFunctionForEVM const& _fun,
+	BuiltinFunctionForEVM const& _builtinFunction,
 	std::vector<Expression> const& /* _arguments */,  // This was required to execute some builtin.
 	std::vector<u256> const& _evaluatedArguments
 )
 {
-	if (_fun.instruction)
-		return eval(*_fun.instruction, _evaluatedArguments);
+	if (_builtinFunction.instruction)
+		return eval(*_builtinFunction.instruction, _evaluatedArguments);
 
-	std::string fun = _fun.name.str();
-	bool isVerbatim = boost::starts_with(fun, "verbatim");
+	std::string functionName = _builtinFunction.name.str();
+	bool isVerbatim = boost::starts_with(functionName, "verbatim");
 	if (isVerbatim)
 		return ImpureBuiltinEncountered();
 
@@ -298,10 +298,10 @@ EvaluationResult PureEVMInstructionInterpreter::evalBuiltin(
 		"setimmutable",
 		"linkersymbol"
 	};
-	if (NON_INSTRUCTION_BUILTIN_NAME.count(fun))
+	if (NON_INSTRUCTION_BUILTIN_NAME.count(functionName))
 		return ImpureBuiltinEncountered();
 
-	yulAssert(false, "Unknown builtin: " + fun);
+	yulAssert(false, "Unknown builtin: " + functionName);
 	return EvaluationOk(0);
 }
 

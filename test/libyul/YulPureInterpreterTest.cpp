@@ -109,12 +109,12 @@ std::string YulPureInterpreterTest::interpret() const
 	interpreter::Scope* subscope = rootScope.getSubscope(block);
 
 	PureInterpreter interpreter(state, dialect, *subscope, 0);
-	ExecutionResult res = interpreter.execute(block.statements);
+	ExecutionResult result = interpreter.execute(block.statements);
 	VariableValuesMap const& outerMostVariables = interpreter.allVariables();
 
 	dumpExecutionData(
 		resultStream,
-		res,
+		result,
 		state,
 		outerMostVariables
 	);
@@ -124,13 +124,13 @@ std::string YulPureInterpreterTest::interpret() const
 
 void YulPureInterpreterTest::dumpExecutionData(
 	std::ostream& _stream,
-	interpreter::ExecutionResult _res,
+	interpreter::ExecutionResult _result,
 	interpreter::PureInterpreterState const& _state,
 	VariableValuesMap const& _outerMostVariables
 ) const
 {
 	_stream << "Execution result: ";
-	dumpExecutionResult(_stream, _res);
+	dumpExecutionResult(_stream, _result);
 	_stream << std::endl;
 
 	_stream << "Outer most variable values:" << std::endl;
@@ -140,7 +140,7 @@ void YulPureInterpreterTest::dumpExecutionData(
 	_state.dumpTraces(_stream);
 }
 
-void YulPureInterpreterTest::dumpExecutionResult(std::ostream& _stream, interpreter::ExecutionResult _res) const
+void YulPureInterpreterTest::dumpExecutionResult(std::ostream& _stream, interpreter::ExecutionResult _result) const
 {
 	_stream << std::visit(GenericVisitor {
 		[&](ExecutionOk) { return "ExecutionOk"; },
@@ -155,7 +155,7 @@ void YulPureInterpreterTest::dumpExecutionResult(std::ostream& _stream, interpre
 				[&](TraceLimitReached) { return "TraceLimitReached"; }
 			}, terminated);
 		}
-	}, _res);
+	}, _result);
 }
 
 void YulPureInterpreterTest::dumpVariables(

@@ -45,8 +45,8 @@ using solidity::util::h256;
 
 ExecutionResult PureInterpreter::operator()(ExpressionStatement const& _expressionStatement)
 {
-	EvaluationResult res = evaluate(_expressionStatement.expression, 0);
-	if (auto* terminated = std::get_if<ExecutionTerminated>(&res))
+	EvaluationResult result = evaluate(_expressionStatement.expression, 0);
+	if (auto* terminated = std::get_if<ExecutionTerminated>(&result))
 		return *terminated;
 	return ExecutionOk{ControlFlowState::Default};
 }
@@ -54,11 +54,11 @@ ExecutionResult PureInterpreter::operator()(ExpressionStatement const& _expressi
 ExecutionResult PureInterpreter::operator()(Assignment const& _assignment)
 {
 	solAssert(_assignment.value);
-	EvaluationResult evalRes = evaluate(*_assignment.value, _assignment.variableNames.size());
-	if (auto* terminated = std::get_if<ExecutionTerminated>(&evalRes))
+	EvaluationResult evalResult = evaluate(*_assignment.value, _assignment.variableNames.size());
+	if (auto* terminated = std::get_if<ExecutionTerminated>(&evalResult))
 		return *terminated;
 
-	std::vector<u256> const& values = std::move(std::get<EvaluationOk>(evalRes).values);
+	std::vector<u256> const& values = std::move(std::get<EvaluationOk>(evalResult).values);
 	for (size_t i = 0; i < values.size(); ++i)
 	{
 		YulName varName = _assignment.variableNames.at(i).name;
@@ -73,10 +73,10 @@ ExecutionResult PureInterpreter::operator()(VariableDeclaration const& _declarat
 	std::vector<u256> values;
 	if (_declaration.value)
 	{
-		EvaluationResult evalRes = evaluate(*_declaration.value, _declaration.variables.size());
-		if (auto* terminated = std::get_if<ExecutionTerminated>(&evalRes))
+		EvaluationResult evalResult = evaluate(*_declaration.value, _declaration.variables.size());
+		if (auto* terminated = std::get_if<ExecutionTerminated>(&evalResult))
 			return *terminated;
-		values = std::move(std::get<EvaluationOk>(evalRes).values);
+		values = std::move(std::get<EvaluationOk>(evalResult).values);
 	}
 	else
 	{
@@ -97,11 +97,11 @@ ExecutionResult PureInterpreter::operator()(VariableDeclaration const& _declarat
 ExecutionResult PureInterpreter::operator()(If const& _if)
 {
 	solAssert(_if.condition);
-	EvaluationResult conditionRes = evaluate(*_if.condition, 1);
-	if (auto* terminated = std::get_if<ExecutionTerminated>(&conditionRes))
+	EvaluationResult conditionResult = evaluate(*_if.condition, 1);
+	if (auto* terminated = std::get_if<ExecutionTerminated>(&conditionResult))
 		return *terminated;
 
-	if (std::get<EvaluationOk>(conditionRes).values.at(0) != 0)
+	if (std::get<EvaluationOk>(conditionResult).values.at(0) != 0)
 		return (*this)(_if.body);
 	return ExecutionOk{ControlFlowState::Default};
 }
@@ -111,25 +111,25 @@ ExecutionResult PureInterpreter::operator()(Switch const& _switch)
 	solAssert(_switch.expression);
 	solAssert(!_switch.cases.empty());
 
-	EvaluationResult expressionRes = evaluate(*_switch.expression, 1);
-	if (auto* terminated = std::get_if<ExecutionTerminated>(&expressionRes))
+	EvaluationResult expressionResult = evaluate(*_switch.expression, 1);
+	if (auto* terminated = std::get_if<ExecutionTerminated>(&expressionResult))
 		return *terminated;
 
-	u256 val = std::get<EvaluationOk>(expressionRes).values.at(0);
-	for (auto const& c: _switch.cases)
+	u256 expressionValue = std::get<EvaluationOk>(expressionResult).values.at(0);
+	for (auto const& currentCase: _switch.cases)
 	{
 		bool caseMatched = false;
 		// Default case has to be last.
-		if (!c.value) caseMatched = true;
+		if (!currentCase.value) caseMatched = true;
 		else
 		{
-			EvaluationResult caseRes = evaluate(*c.value, 1);
-			if (auto* terminated = std::get_if<ExecutionTerminated>(&caseRes))
+			EvaluationResult caseResult = evaluate(*currentCase.value, 1);
+			if (auto* terminated = std::get_if<ExecutionTerminated>(&caseResult))
 				return *terminated;
-			caseMatched = std::get<EvaluationOk>(caseRes).values.at(0) == val;
+			caseMatched = std::get<EvaluationOk>(caseResult).values.at(0) == expressionValue;
 		}
 		if (caseMatched)
-			return (*this)(c.body);
+			return (*this)(currentCase.body);
 	}
 	return ExecutionOk{ControlFlowState::Default};
 }
@@ -147,17 +147,17 @@ ExecutionResult PureInterpreter::operator()(ForLoop const& _forLoop)
 	ScopeGuard g([this]{ leaveScope(); });
 
 	{
-		ExecutionResult execRes = execute(_forLoop.pre.statements);
-		if (execRes == ExecutionResult(ExecutionOk{ControlFlowState::Leave}))
-			return execRes;
+		ExecutionResult preResult = execute(_forLoop.pre.statements);
+		if (preResult == ExecutionResult(ExecutionOk{ControlFlowState::Leave}))
+			return preResult;
 	}
 	while (true)
 	{
 		{
-			EvaluationResult conditionRes = evaluate(*_forLoop.condition, 1);
-			if (auto* terminated = std::get_if<ExecutionTerminated>(&conditionRes))
+			EvaluationResult conditionResult = evaluate(*_forLoop.condition, 1);
+			if (auto* terminated = std::get_if<ExecutionTerminated>(&conditionResult))
 				return *terminated;
-			if (std::get<EvaluationOk>(conditionRes).values.at(0) == 0)
+			if (std::get<EvaluationOk>(conditionResult).values.at(0) == 0)
 				break;
 		}
 
@@ -168,24 +168,24 @@ ExecutionResult PureInterpreter::operator()(ForLoop const& _forLoop)
 				return *terminated;
 
 		{
-			ExecutionResult bodyRes = (*this)(_forLoop.body);
+			ExecutionResult bodyResult = (*this)(_forLoop.body);
 			if (
-				std::holds_alternative<ExecutionTerminated>(bodyRes) ||
-				bodyRes == ExecutionResult(ExecutionOk{ControlFlowState::Leave})
+				std::holds_alternative<ExecutionTerminated>(bodyResult) ||
+				bodyResult == ExecutionResult(ExecutionOk{ControlFlowState::Leave})
 			)
-				return bodyRes;
+				return bodyResult;
 
-			if (bodyRes == ExecutionResult(ExecutionOk{ControlFlowState::Break}))
+			if (bodyResult == ExecutionResult(ExecutionOk{ControlFlowState::Break}))
 				return ExecutionOk{ControlFlowState::Default};
 		}
 
 		{
-			ExecutionResult postRes = (*this)(_forLoop.post);
+			ExecutionResult postResult = (*this)(_forLoop.post);
 			if (
-				std::holds_alternative<ExecutionTerminated>(postRes) ||
-				postRes == ExecutionResult(ExecutionOk{ControlFlowState::Leave})
+				std::holds_alternative<ExecutionTerminated>(postResult) ||
+				postResult == ExecutionResult(ExecutionOk{ControlFlowState::Leave})
 			)
-				return postRes;
+				return postResult;
 		}
 	}
 	return ExecutionOk{ControlFlowState::Default};
@@ -225,11 +225,11 @@ ExecutionResult PureInterpreter::execute(std::vector<Statement> const& _statemen
 	return ExecutionOk{ControlFlowState::Default};
 }
 
-ExecutionResult PureInterpreter::visit(Statement const& _st)
+ExecutionResult PureInterpreter::visit(Statement const& _statement)
 {
 	if (auto terminated = incrementStatementStep())
 		return *terminated;
-	return std::visit(*this, _st);
+	return std::visit(*this, _statement);
 }
 
 EvaluationResult PureInterpreter::operator()(Literal const& _literal)
@@ -244,13 +244,13 @@ EvaluationResult PureInterpreter::operator()(Identifier const& _identifier)
 	return EvaluationOk(it->second);
 }
 
-EvaluationResult PureInterpreter::operator()(FunctionCall const& _funCall)
+EvaluationResult PureInterpreter::operator()(FunctionCall const& _functionCall)
 {
 	std::vector<std::optional<LiteralKind>> const* literalArguments = nullptr;
-	if (BuiltinFunction const* builtin = m_dialect.builtin(_funCall.functionName.name))
+	if (BuiltinFunction const* builtin = m_dialect.builtin(_functionCall.functionName.name))
 		if (!builtin->literalArguments.empty())
 			literalArguments = &builtin->literalArguments;
-	EvaluationResult argsRes = evaluateArgs(_funCall.arguments, literalArguments);
+	EvaluationResult argsRes = evaluateArgs(_functionCall.arguments, literalArguments);
 	if (auto* terminated = std::get_if<ExecutionTerminated>(&argsRes))
 		return *terminated;
 
@@ -258,73 +258,73 @@ EvaluationResult PureInterpreter::operator()(FunctionCall const& _funCall)
 
 	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
 	{
-		if (BuiltinFunctionForEVM const* fun = dialect->builtin(_funCall.functionName.name))
+		if (BuiltinFunctionForEVM const* builtinFunction = dialect->builtin(_functionCall.functionName.name))
 		{
 			PureEVMInstructionInterpreter interpreter(dialect->evmVersion());
-			return interpreter.evalBuiltin(*fun, _funCall.arguments, argsValues);
+			return interpreter.evalBuiltin(*builtinFunction, _functionCall.arguments, argsValues);
 		}
 	}
 
-	FunctionDefinition const& fun = m_scope->getFunction(_funCall.functionName.name);
+	FunctionDefinition const& functionDefinition = m_scope->getFunction(_functionCall.functionName.name);
 
-	yulAssert(argsValues.size() == fun.parameters.size());
+	yulAssert(argsValues.size() == functionDefinition.parameters.size());
 	VariableValuesMap variables;
-	for (size_t i = 0; i < fun.parameters.size(); ++i)
-		variables[fun.parameters.at(i).name] = argsValues.at(i);
-	for (size_t i = 0; i < fun.returnVariables.size(); ++i)
-		variables[fun.returnVariables.at(i).name] = 0;
+	for (size_t i = 0; i < functionDefinition.parameters.size(); ++i)
+		variables[functionDefinition.parameters.at(i).name] = argsValues.at(i);
+	for (size_t i = 0; i < functionDefinition.returnVariables.size(); ++i)
+		variables[functionDefinition.returnVariables.at(i).name] = 0;
 
 	std::unique_ptr<PureInterpreter> interpreter = makeInterpreterCopy(std::move(variables));
 
-	if (auto terminated = m_state.addTrace<FunctionCallTrace>(fun, argsValues))
+	if (auto terminated = m_state.addTrace<FunctionCallTrace>(functionDefinition, argsValues))
 		return *terminated;
 
-	ExecutionResult funcBodyRes = (*interpreter)(fun.body);
-	if (auto* terminated = std::get_if<ExecutionTerminated>(&funcBodyRes))
+	ExecutionResult functionBodyResult = (*interpreter)(functionDefinition.body);
+	if (auto* terminated = std::get_if<ExecutionTerminated>(&functionBodyResult))
 		return *terminated;
 
 	std::vector<u256> returnedValues;
-	returnedValues.reserve(fun.returnVariables.size());
-	for (auto const& retVar: fun.returnVariables)
+	returnedValues.reserve(functionDefinition.returnVariables.size());
+	for (auto const& retVar: functionDefinition.returnVariables)
 		returnedValues.emplace_back(interpreter->valueOfVariable(retVar.name));
 
-	if (auto terminated = m_state.addTrace<FunctionReturnTrace>(fun, returnedValues))
+	if (auto terminated = m_state.addTrace<FunctionReturnTrace>(functionDefinition, returnedValues))
 		return *terminated;
 
 	return EvaluationOk(std::move(returnedValues));
 }
 
-EvaluationResult PureInterpreter::visit(Expression const& _st)
+EvaluationResult PureInterpreter::visit(Expression const& _expression)
 {
 	if (auto terminated = incrementExpressionStep())
 		return *terminated;
-	return std::visit(*this, _st);
+	return std::visit(*this, _expression);
 }
 
 EvaluationResult PureInterpreter::evaluate(Expression const& _expression, size_t _numReturnVars)
 {
-	EvaluationResult res = visit(_expression);
-	if (auto* resOk = std::get_if<EvaluationOk>(&res))
+	EvaluationResult result = visit(_expression);
+	if (auto* resOk = std::get_if<EvaluationOk>(&result))
 		yulAssert(resOk->values.size() == _numReturnVars);
 
-	return res;
+	return result;
 }
 
 EvaluationResult PureInterpreter::evaluateArgs(
-	std::vector<Expression> const& _expr,
+	std::vector<Expression> const& _arguments,
 	std::vector<std::optional<LiteralKind>> const* _literalArguments
 )
 {
-	std::vector<u256> values(_expr.size());
+	std::vector<u256> values(_arguments.size());
 
 	/// Function arguments are evaluated in reverse.
-	for (size_t i = _expr.size(); i-- > 0; )
+	for (size_t i = _arguments.size(); i-- > 0; )
 	{
-		auto const& expr = _expr[i];
+		auto const& currentArgument = _arguments[i];
 		bool isLiteral = _literalArguments && _literalArguments->at(i);
 		if (!isLiteral)
 		{
-			EvaluationResult exprRes = evaluate(expr, 1);
+			EvaluationResult exprRes = evaluate(currentArgument, 1);
 			if (auto* terminated = std::get_if<ExecutionTerminated>(&exprRes))
 				return *terminated;
 			std::vector<u256> const& exprValues = std::get<EvaluationOk>(exprRes).values;
@@ -332,10 +332,10 @@ EvaluationResult PureInterpreter::evaluateArgs(
 		}
 		else
 		{
-			if (std::get<Literal>(expr).value.unlimited())
+			if (std::get<Literal>(currentArgument).value.unlimited())
 				return UnlimitedLiteralEncountered();
 			else
-				values[i] = std::get<Literal>(expr).value.value();
+				values[i] = std::get<Literal>(currentArgument).value.value();
 		}
 	}
 	return EvaluationOk(std::move(values));
