@@ -53,7 +53,7 @@ ExecutionResult PureInterpreter::operator()(ExpressionStatement const& _expressi
 
 ExecutionResult PureInterpreter::operator()(Assignment const& _assignment)
 {
-	solAssert(_assignment.value, "");
+	solAssert(_assignment.value);
 	EvaluationResult evalRes = evaluate(*_assignment.value, _assignment.variableNames.size());
 	if (auto* terminated = std::get_if<ExecutionTerminated>(&evalRes))
 		return *terminated;
@@ -63,7 +63,7 @@ ExecutionResult PureInterpreter::operator()(Assignment const& _assignment)
 	{
 		YulName varName = _assignment.variableNames.at(i).name;
 		auto [_, isNew] = m_variables.insert_or_assign(varName, values.at(i));
-		solAssert(!isNew, "");
+		solAssert(!isNew);
 	}
 	return ExecutionOk{ControlFlowState::Default};
 }
@@ -83,12 +83,12 @@ ExecutionResult PureInterpreter::operator()(VariableDeclaration const& _declarat
 		values.assign(_declaration.variables.size(), 0);
 	}
 
-	solAssert(values.size() == _declaration.variables.size(), "");
+	solAssert(values.size() == _declaration.variables.size());
 	for (size_t i = 0; i < values.size(); ++i)
 	{
 		YulName varName = _declaration.variables.at(i).name;
 		auto [_, isNew] = m_variables.insert_or_assign(varName, values.at(i));
-		solAssert(isNew, "");
+		solAssert(isNew);
 		m_scope->addDeclaredVariable(varName);
 	}
 	return ExecutionOk{ControlFlowState::Default};
@@ -96,7 +96,7 @@ ExecutionResult PureInterpreter::operator()(VariableDeclaration const& _declarat
 
 ExecutionResult PureInterpreter::operator()(If const& _if)
 {
-	solAssert(_if.condition, "");
+	solAssert(_if.condition);
 	EvaluationResult conditionRes = evaluate(*_if.condition, 1);
 	if (auto* terminated = std::get_if<ExecutionTerminated>(&conditionRes))
 		return *terminated;
@@ -108,8 +108,8 @@ ExecutionResult PureInterpreter::operator()(If const& _if)
 
 ExecutionResult PureInterpreter::operator()(Switch const& _switch)
 {
-	solAssert(_switch.expression, "");
-	solAssert(!_switch.cases.empty(), "");
+	solAssert(_switch.expression);
+	solAssert(!_switch.cases.empty());
 
 	EvaluationResult expressionRes = evaluate(*_switch.expression, 1);
 	if (auto* terminated = std::get_if<ExecutionTerminated>(&expressionRes))
@@ -141,7 +141,7 @@ ExecutionResult PureInterpreter::operator()(FunctionDefinition const&)
 
 ExecutionResult PureInterpreter::operator()(ForLoop const& _forLoop)
 {
-	solAssert(_forLoop.condition, "");
+	solAssert(_forLoop.condition);
 
 	enterScope(_forLoop.pre);
 	ScopeGuard g([this]{ leaveScope(); });
@@ -240,7 +240,7 @@ EvaluationResult PureInterpreter::operator()(Literal const& _literal)
 EvaluationResult PureInterpreter::operator()(Identifier const& _identifier)
 {
 	auto it = m_variables.find(_identifier.name);
-	solAssert(it != m_variables.end(), "");
+	solAssert(it != m_variables.end());
 	return EvaluationOk(it->second);
 }
 
@@ -267,7 +267,7 @@ EvaluationResult PureInterpreter::operator()(FunctionCall const& _funCall)
 
 	FunctionDefinition const& fun = m_scope->getFunction(_funCall.functionName.name);
 
-	yulAssert(argsValues.size() == fun.parameters.size(), "");
+	yulAssert(argsValues.size() == fun.parameters.size());
 	VariableValuesMap variables;
 	for (size_t i = 0; i < fun.parameters.size(); ++i)
 		variables[fun.parameters.at(i).name] = argsValues.at(i);
@@ -305,7 +305,7 @@ EvaluationResult PureInterpreter::evaluate(Expression const& _expression, size_t
 {
 	EvaluationResult res = visit(_expression);
 	if (auto* resOk = std::get_if<EvaluationOk>(&res))
-		yulAssert(resOk->values.size() == _numReturnVars, "");
+		yulAssert(resOk->values.size() == _numReturnVars);
 
 	return res;
 }
@@ -350,7 +350,7 @@ void PureInterpreter::leaveScope()
 {
 	m_scope->cleanupVariables(m_variables);
 	m_scope = m_scope->parent();
-	yulAssert(m_scope, "");
+	yulAssert(m_scope);
 }
 
 std::optional<ExecutionTerminated> PureInterpreter::incrementStatementStep()

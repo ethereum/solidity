@@ -53,7 +53,7 @@ EvaluationResult PureEVMInstructionInterpreter::eval(
 	using evmasm::Instruction;
 
 	auto info = instructionInfo(_instruction, m_evmVersion);
-	yulAssert(static_cast<size_t>(info.args) == _arguments.size(), "");
+	yulAssert(static_cast<size_t>(info.args) == _arguments.size());
 
 	auto const& arg = _arguments;
 	switch (_instruction)
