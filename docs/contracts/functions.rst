@@ -267,7 +267,7 @@ This behavior is also in line with the ``STATICCALL`` opcode.
 
 .. note::
   Prior to version 0.4.17 the compiler did not enforce that ``pure`` is not reading the state.
-  It is a compile-time type check, which can be circumvented doing invalid explicit conversions
+  It is a compile-time type check, which can be circumvented by doing invalid explicit conversions
   between contract types, because the compiler can verify that the type of the contract does
   not do state-changing operations, but it cannot check that the contract that will be called
   at runtime is actually of that type.
