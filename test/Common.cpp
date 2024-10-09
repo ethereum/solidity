@@ -155,6 +155,8 @@ void CommonOptions::validate() const
 			std::cout << "- ABI coder: v1 (default: v2)" << std::endl;
 		std::cout << std::endl << "DO NOT COMMIT THE UPDATED EXPECTATIONS." << std::endl << std::endl;
 	}
+
+	assertThrow(!eofVersion().has_value() || evmVersion() >= langutil::EVMVersion::prague(), ConfigException, "EOF is unavailable before Prague fork.");
 }
 
 bool CommonOptions::parse(int argc, char const* const* argv)
