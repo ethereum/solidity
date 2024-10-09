@@ -41,7 +41,7 @@ protected:
     const bytes& call(const std::string& sig, Args const&... arguments)
     {
         auto const& ret = m_framework.callContractFunctionWithValue(sig, m_nextValue, arguments...);
-        m_nextValue = 0;  // Reset next value after the call
+        m_nextValue = 0; // Reset next value after the call
         return ret;
     }
 
