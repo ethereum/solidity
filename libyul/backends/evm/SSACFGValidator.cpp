@@ -22,12 +22,60 @@
 
 #include <range/v3/algorithm/all_of.hpp>
 #include <range/v3/algorithm/set_algorithm.hpp>
+#include <range/v3/algorithm/transform.hpp>
 #include <range/v3/to_container.hpp>
 #include <range/v3/view/drop_last.hpp>
 #include <range/v3/view/reverse.hpp>
 #include <range/v3/view/zip.hpp>
 
+#include <fmt/ranges.h>
+
 using namespace solidity::yul;
+
+namespace
+{
+
+template<typename Set>
+bool intersectionEmpty(Set const& _set1, Set const& _set2)
+{
+	auto it1 = _set1.begin();
+	auto it2 = _set2.begin();
+	while (it1 != _set1.end() && it2 != _set2.end())
+	{
+		if (*it1 < *it2)
+			++it1;
+		else if (*it2 < *it1)
+			++it2;
+		else
+			return false;
+	}
+	return true;
+}
+
+}
+
+std::string SSACFGValidator::debug(VariableMapping const& _mapping) const
+{
+	std::stringstream ss;
+	for (auto const& [var, values]: _mapping)
+	{
+		ss << "Variable " << var->name.str() << ": {";
+		auto const valToString = [&](SSACFG::ValueId const& _val)
+		{
+			auto const& info = m_context.cfg.valueInfo(_val);
+			auto const rhs = std::visit(util::GenericVisitor{
+				[](SSACFG::LiteralValue const& _literal) -> std::string { return _literal.value.str(); },
+				[](SSACFG::PhiValue const&) -> std::string { return "phi";},
+				[](SSACFG::VariableValue const&) -> std::string { return "var"; },
+				[](SSACFG::UnreachableValue const&) -> std::string { return "unreachable"; },
+			}, info);
+			return fmt::format("v{} = {}", _val.value, rhs);
+		};
+		ss << fmt::format("{}", fmt::join(values | ranges::views::transform(valToString), ","));
+		ss << "}\n";
+	}
+	return ss.str();
+}
 
 void SSACFGValidator::validate(ControlFlow const& _controlFlow, Block const& _ast, AsmAnalysisInfo const& _analysisInfo, Dialect const& _dialect)
 {
@@ -55,21 +103,6 @@ bool SSACFGValidator::consumeBlock(Block const& _block)
 
 void SSACFGValidator::consolidateVariables(VariableMapping const& _variables, std::vector<VariableMapping> const& _toBeConsolidated)
 {
-	static constexpr auto intersectionEmpty = [](std::set<SSACFG::ValueId> const& _set1, std::set<SSACFG::ValueId> const& _set2)
-	{
-		auto it1 = _set1.begin();
-		auto it2 = _set2.begin();
-		while (it1 != _set1.end() && it2 != _set2.end())
-		{
-			if (*it1 < *it2)
-				++it1;
-			else if (*it2 < *it1)
-				++it2;
-			else
-				return false;
-		}
-		return true;
-	};
 	for (auto const& [var, valueId]: _variables)
 	{
 		for (auto const& parent: _toBeConsolidated)
@@ -389,7 +422,9 @@ bool SSACFGValidator::consumeDynamicForLoop(ForLoop const& _loop)
 	if (auto cond = consumeUnaryExpression(*_loop.condition))
 	{
 		auto const& exit = expectConditionalJump();
-		yulAssert(cond.value().size() == 1 && *cond->begin() == exit.condition);
+		yulAssert(cond.value().count(exit.condition));
+		if (auto const* identifier = std::get_if<Identifier>(&*_loop.condition))
+			m_currentVariableValues.at(resolveVariable(identifier->name)) = std::set{exit.condition};
 		// yulAssert(!cond.value().hasValue() || exit.condition == cond); // todo what about hasValue, ie stuff that .... i don't even know anymore lol
 		auto loopExitVariableValues = applyPhis(m_currentBlock, exit.zero);
 
@@ -406,12 +441,15 @@ bool SSACFGValidator::consumeDynamicForLoop(ForLoop const& _loop)
 			std::swap(m_currentLoopInfo, loopInfo);
 
 			auto const& jumpToPost = expectUnconditionalJump();
-			m_currentVariableValues = applyPhis(m_currentBlock, jumpToPost.target);
+  			m_currentVariableValues = applyPhis(m_currentBlock, jumpToPost.target);
 			if (loopInfo->postBlock)
 				yulAssert(loopInfo->postBlock == jumpToPost.target);
+			// in case of continue, loop post variable values contain the possible values for each variable as
+			// the loop is 'continue'd. in this case, we have more possible current values per variable, also
+			// possibly non-intersecting sets of them
 			if (loopInfo->loopPostVariableValues)
 				for (auto var: entryVariableValues | ranges::views::keys)
-					yulAssert(loopInfo->loopPostVariableValues->at(var) == m_currentVariableValues.at(var));
+					m_currentVariableValues.at(var) += loopInfo->loopPostVariableValues->at(var);
 			advanceToBlock(jumpToPost.target);
 			if (consumeBlock(_loop.post))
 			{

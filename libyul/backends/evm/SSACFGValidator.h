@@ -70,6 +70,7 @@ private:
 	VariableMapping applyPhis(SSACFG::BlockId _source, SSACFG::BlockId _target);
 	void consolidateVariables(VariableMapping const& _variables, std::vector<VariableMapping> const& _toBeConsolidated);
 	void advanceToBlock(SSACFG::BlockId _target);
+	std::string debug(VariableMapping const& _mapping) const;
 
 	Context const& m_context;
 	Scope* m_scope = nullptr;
