@@ -70,7 +70,10 @@ public:
 		m_dataNames(std::move(_dataNames))
 	{
 		if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&m_dialect))
+		{
 			m_evmVersion = evmDialect->evmVersion();
+			m_eofVersion = evmDialect->eofVersion();
+		}
 	}
 
 	bool analyze(Block const& _block);
@@ -125,6 +128,7 @@ private:
 	AsmAnalysisInfo& m_info;
 	langutil::ErrorReporter& m_errorReporter;
 	langutil::EVMVersion m_evmVersion;
+	std::optional<uint8_t> m_eofVersion;
 	Dialect const& m_dialect;
 	/// Names of data objects to be referenced by builtin functions with literal arguments.
 	std::set<std::string> m_dataNames;
