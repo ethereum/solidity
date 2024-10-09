@@ -496,12 +496,12 @@ defaults:
 
   - base_osx: &base_osx
       macos:
-        xcode: "15.0.0"
-      resource_class: macos.m1.medium.gen1
+        xcode: "16.0.0"
+      resource_class: m2pro.medium
       environment: &base_osx_env
         TERM: xterm
-        MAKEFLAGS: -j5
-        CPUs: 5
+        MAKEFLAGS: -j7
+        CPUs: 7
 
   - base_python_small: &base_python_small
       docker:
