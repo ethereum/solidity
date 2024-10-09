@@ -25,13 +25,13 @@ class ContractInterface
 {
 public:
     // Constructor to initialize the ExecutionFramework reference
-    ContractInterface(ExecutionFramework& framework) 
+    ContractInterface(ExecutionFramework& framework)
         : m_framework(framework), m_nextValue(0) {}
 
     // Set the next value for contract calls
-    void setNextValue(const u256& value) 
-    { 
-        m_nextValue = value; 
+    void setNextValue(const u256& value)
+    {
+        m_nextValue = value;
     }
 
 protected:
