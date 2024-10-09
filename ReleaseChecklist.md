@@ -116,6 +116,7 @@ At least a day before the release:
  - [ ] Wait for the CI runs on the tag itself.
  - [ ] Take the ``solc-x.y.z.tgz`` artifact from ``build-package`` run on the tagged commit in circle-ci.
        Inspect the tarball to ensure that it contains an up-to-date compiler binary (``soljson.js``).
+       See the section "Testing version of soljson.js": https://github.com/ethereum/solidity/wiki/Building-solc%E2%80%90js-from-source#testing-version-of-soljsonjs
  - [ ] Run ``npm publish solc-x.y.z.tgz`` to publish the newly created tarball.
 
 ### Post-release
