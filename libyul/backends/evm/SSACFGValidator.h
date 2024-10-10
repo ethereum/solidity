@@ -35,7 +35,7 @@ private:
     	ControlFlow const& controlFlow;
     	SSACFG const& cfg;
     };
-	explicit SSACFGValidator(Context const& _context): m_context(_context)
+	explicit SSACFGValidator(Context const& _context): m_context(_context), m_valueIdToVariable(_context.cfg.numValueIds())
 	{}
 	std::optional<std::vector<std::set<SSACFG::ValueId>>> consumeExpression(Expression const& _expression);
 	std::optional<std::set<SSACFG::ValueId>> consumeUnaryExpression(Expression const& _expression)
@@ -62,6 +62,7 @@ private:
 	SSACFG::ValueId lookupLiteral(Literal const& _literal) const;
 	/// @returns true if the call can continue, false otherwise
 	bool validateCall(std::variant<SSACFG::BuiltinCall, SSACFG::Call> const& _kind, Identifier const& _functionName, size_t _numOutputs) const;
+	void validatePhis(SSACFG::BlockId const& _blockId) const;
 
 	SSACFG::BasicBlock::ConditionalJump const& expectConditionalJump() const;
 	SSACFG::BasicBlock::Jump const& expectUnconditionalJump() const;
@@ -77,6 +78,7 @@ private:
     SSACFG::BlockId m_currentBlock;
 	size_t m_currentOperation = std::numeric_limits<size_t>::max();
 	VariableMapping m_currentVariableValues;
+	std::vector<Scope::Variable const*> m_valueIdToVariable;
 	struct LoopInfo
 	{
 		std::set<Scope::Variable const*> loopVariables;

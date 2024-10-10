@@ -35,8 +35,8 @@ using namespace solidity::yul;
 namespace
 {
 
-template<typename Set>
-bool intersectionEmpty(Set const& _set1, Set const& _set2)
+template<typename Set1, typename Set2>
+bool intersectionEmpty(Set1 const& _set1, Set2 const& _set2)
 {
 	auto it1 = _set1.begin();
 	auto it2 = _set2.begin();
@@ -71,7 +71,7 @@ std::string SSACFGValidator::debug(VariableMapping const& _mapping) const
 			}, info);
 			return fmt::format("v{} = {}", _val.value, rhs);
 		};
-		ss << fmt::format("{}", fmt::join(values | ranges::views::transform(valToString), ","));
+		ss << fmt::format("{}", fmt::join(values | ranges::views::transform(valToString), ", "));
 		ss << "}\n";
 	}
 	return ss.str();
@@ -107,9 +107,10 @@ void SSACFGValidator::consolidateVariables(VariableMapping const& _variables, st
 	{
 		for (auto const& parent: _toBeConsolidated)
 		{
-			if (!parent.count(var) || intersectionEmpty(valueId, parent.at(var)))
+			m_currentVariableValues[var] += parent.at(var);
+			/*if (!parent.count(var) || intersectionEmpty(valueId, parent.at(var)))
 				// set to no value, should be asserted against if that variable is consumed (eg as function arg)
-				m_currentVariableValues[var] = {};
+				m_currentVariableValues[var] = {};*/
 		}
 	}
 }
@@ -205,7 +206,9 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 				if (auto cond = consumeUnaryExpression(*_if.condition))
 				{
 					auto const& exit = expectConditionalJump();
-					yulAssert(cond.value().size() == 1 && *cond->begin() == exit.condition);
+					// yulAssert(cond.value().size() == 1 && *cond->begin() == exit.condition);
+					yulAssert(!intersectionEmpty(cond.value(), std::set{exit.condition}));
+					// todo here the variable must match exit condition, restrict set to that
 					// todo here i should reduce the variable corresponding to the if cond to exit or is it already happening in consumeUnaryExpression??
 					// yulAssert(exit.condition == *cond);
 					auto zeroBranchVariableValues = applyPhis(m_currentBlock, exit.zero);
@@ -475,27 +478,36 @@ std::optional<std::vector<std::set<SSACFG::ValueId>>> SSACFGValidator::consumeEx
 		[&](FunctionCall const& _call) -> std::optional<std::vector<std::set<SSACFG::ValueId>>>
 		{
 			BuiltinFunction const* builtin = m_context.dialect.builtin(_call.functionName.name);
-			std::vector<SSACFG::ValueId> arguments;
 			size_t idx = _call.arguments.size();
+			std::vector<std::tuple<size_t, Expression const*, std::vector<std::set<SSACFG::ValueId>>>> gatheredArguments;
 			for(auto& _arg: _call.arguments | ranges::views::reverse)
 			{
 				--idx;
 				if (builtin && builtin->literalArgument(idx).has_value())
 					continue;
 				if (auto arg = consumeExpression(_arg))
-					if (arg->at(0).size() > 1)
-					{
-						yulAssert(std::holds_alternative<Identifier>(_arg));
-						auto const& currentOpArg = currentBlock().operations.at(m_currentOperation).inputs.at(_call.arguments.size() - idx - 1);
-						yulAssert(arg->at(0).count(currentOpArg));
-						auto const* var = resolveVariable(std::get<Identifier>(_arg).name);
-						m_currentVariableValues[var] = std::set{currentOpArg};
-						arguments.push_back(currentOpArg);
-					}
-					else
-						arguments += *arg.value().begin();
+					gatheredArguments.emplace_back(idx, &_arg, *arg);
 				else
 					return std::nullopt;
+			}
+
+			std::vector<SSACFG::ValueId> arguments;
+			for (auto const& [idx, _arg, arg]: gatheredArguments)
+			{
+				if (arg.at(0).size() > 1)
+				{
+					yulAssert(std::holds_alternative<Identifier>(*_arg));
+					auto const& currentOpArg = currentBlock().operations.at(m_currentOperation).inputs.at(_call.arguments.size() - idx - 1);
+					yulAssert(arg.at(0).count(currentOpArg));
+					auto const* var = resolveVariable(std::get<Identifier>(*_arg).name);
+					m_currentVariableValues[var] = std::set{currentOpArg};
+					arguments.push_back(currentOpArg);
+				}
+				else
+				{
+					yulAssert(arg.size() == 1 && arg.front().size() == 1);
+					arguments.push_back(*arg.front().begin());
+				}
 			}
 
 			auto const& currentOp = currentBlock().operations.at(m_currentOperation);
@@ -637,4 +649,17 @@ SSACFGValidator::VariableMapping SSACFGValidator::applyPhis(SSACFG::BlockId _sou
 		for (auto const& val: values)
 			result[var] += util::valueOrDefault(phiMap, val, std::set{val}, util::allow_copy);
 	return result;
+}
+
+void SSACFGValidator::validatePhis(SSACFG::BlockId const& _blockId) const
+{
+	auto const& block = m_context.cfg.block(_blockId);
+	for (auto const& phi: block.phis)
+	{
+		yulAssert(phi.hasValue());
+		auto const* phiInfo = std::get_if<SSACFG::PhiValue>(&m_context.cfg.valueInfo(phi));
+		yulAssert(phiInfo);
+		// todo check for each arg that it refers to the same ast variable
+		// phiInfo->arguments
+	}
 }
