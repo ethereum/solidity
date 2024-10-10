@@ -101,6 +101,9 @@ Solidity Tools
 * `abi-to-sol <https://github.com/gnidan/abi-to-sol>`_
     Tool to generate Solidity interface source from a given ABI JSON.
 
+* `Aderyn <https://github.com/Cyfrin/aderyn>`_
+    Rust-based solidity smart contract static analyzer designed to help find vulnerabilities in Solidity code bases.
+
 * `Doxity <https://github.com/DigixGlobal/doxity>`_
     Documentation Generator for Solidity.
 
