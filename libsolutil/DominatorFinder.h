@@ -66,6 +66,7 @@ public:
 		m_immediateDominators(findDominators(_entry))
 	{
 		buildDominatorTree();
+		findDominanceFrontier();
 	}
 
 	std::vector<VId> const& verticesIdsInDFSOrder() const
@@ -174,6 +175,11 @@ public:
 	std::vector<VId> dominatorsOf(V const& _v) const
 	{
 		return dominatorsOf(_v.id);
+	}
+
+	std::map<VId, std::vector<VId>> const& dominanceFrontier() const
+	{
+		return m_dominanceFrontier;
 	}
 
 private:
@@ -374,6 +380,41 @@ private:
 		}
 	}
 
+	/// Iteratively find the dominance frontier of each vertex.
+	/// The dominance frontier of a vertex ``w`` contains the first vertices reachable from ``w`` that
+	/// ``w`` does not dominate.
+	///
+	/// The algorithm iterates over the vertices in reverse DFS order, and for each vertex ``v`` with more than one predecessor ``w``,
+	/// it adds the vertex ``v`` to the dominance frontier of ``w`` if``w`` does not strictly dominates ``v``.
+	void findDominanceFrontier()
+	{
+		solAssert(!m_verticesInDFSOrder.empty());
+		solAssert(!m_immediateDominators.empty());
+
+		for (DfsIndex vIdx = m_verticesInDFSOrder.size()-1; vIdx > 0; --vIdx)
+		{
+			if (m_predecessors[vIdx].size() == 1)
+			{
+				solAssert(m_immediateDominators[vIdx].value_or(0) == *m_predecessors[vIdx].begin());
+				continue;
+			}
+			// The vertex ``vIdx`` is a join point in the graph if it has more than one predecessor.
+			solAssert(m_immediateDominators[vIdx].has_value());
+			for (DfsIndex wIdx: m_predecessors[vIdx])
+				/// For all dominators of ``wIdx``, if ``vIdx`` is in ``df(wIdx)``,
+				/// then ``vIdx`` must also be in ``df(idom(wIdx))``, except when ``idom(wIdx)`` is the immediate dominator of ``vIdx``.
+				while (wIdx != m_immediateDominators[vIdx].value())
+				{
+					solAssert(wIdx > 0);
+					auto& wDf = m_dominanceFrontier[m_verticesInDFSOrder[wIdx]];
+					if (std::find(wDf.begin(), wDf.end(), m_verticesInDFSOrder[vIdx]) == wDf.end())
+						wDf.emplace_back(m_verticesInDFSOrder[vIdx]);
+					solAssert(m_immediateDominators[wIdx].has_value());
+					wIdx = m_immediateDominators[wIdx].value();
+				}
+		}
+	}
+
 	// predecessors(w): The set of vertices ``v`` such that (``v``, ``w``) is an edge of the graph.
 	std::vector<std::set<DfsIndex>> m_predecessors;
 
@@ -408,5 +449,9 @@ private:
 	///
 	/// DFS index -> dominates DFS index
 	std::vector<std::optional<DfsIndex>> m_immediateDominators;
+
+	/// The dominance frontier set by vertex Id.
+	/// The key is the vertex id and the value is the set of vertices in the dominance frontier of the vertex.
+	std::map<VId, std::vector<VId>> m_dominanceFrontier;
 };
 }
