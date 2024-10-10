@@ -15,11 +15,12 @@ General Resources
 * `Awesome Solidity <https://github.com/bkrem/awesome-solidity>`_
 * `Solidity by Example <https://solidity-by-example.org/>`_
 * `Solidity Documentation Community Translations <https://github.com/solidity-docs>`_
+* `Cyfrin Updraft - The Leading Educative Platform for Blockchain Developers <https://updraft.cyfrin.io/>`_
 
 Integrated (Ethereum) Development Environments
 ==============================================
 
-    * `Brownie <https://eth-brownie.readthedocs.io/en/stable/>`_
+    * `Brownie (Deprecated) <https://eth-brownie.readthedocs.io/en/stable/>`_
         Python-based development and testing framework for smart contracts targeting the Ethereum Virtual Machine.
 
     * `Dapp <https://dapp.tools/>`_
@@ -91,6 +92,9 @@ Solidity Tools
 
 * `abi-to-sol <https://github.com/gnidan/abi-to-sol>`_
     Tool to generate Solidity interface source from a given ABI JSON.
+
+* `Aderyn <https://github.com/Cyfrin/aderyn>`_
+    Rust-based solidity smart contract static analyzer designed to help protocol engineers and security researchers find vulnerabilities in Solidity code bases.
 
 * `Doxity <https://github.com/DigixGlobal/doxity>`_
     Documentation Generator for Solidity.
