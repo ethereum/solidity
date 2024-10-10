@@ -65,7 +65,7 @@ public:
 		RevertStrings _revertStrings,
 		CompilerContext* _runtimeContext = nullptr
 	):
-		m_asm(std::make_shared<evmasm::Assembly>(_evmVersion, _runtimeContext != nullptr, std::string{})),
+		m_asm(std::make_shared<evmasm::Assembly>(_evmVersion, _runtimeContext != nullptr, std::nullopt, std::string{})),
 		m_evmVersion(_evmVersion),
 		m_revertStrings(_revertStrings),
 		m_reservedMemory{0},
@@ -277,7 +277,7 @@ public:
 	/// Otherwise returns "revert(0, 0)".
 	std::string revertReasonIfDebug(std::string const& _message = "");
 
-	void optimizeYul(yul::Object& _object, yul::EVMDialect const& _dialect, OptimiserSettings const& _optimiserSetting, std::set<yul::YulString> const& _externalIdentifiers = {});
+	void optimizeYul(yul::Object& _object, yul::EVMDialect const& _dialect, OptimiserSettings const& _optimiserSetting, std::set<yul::YulName> const& _externalIdentifiers = {});
 
 	/// Appends arbitrary data to the end of the bytecode.
 	void appendToAuxiliaryData(bytes const& _data) { m_asm->appendToAuxiliaryData(_data); }

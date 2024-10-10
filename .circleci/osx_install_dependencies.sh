@@ -112,26 +112,10 @@ then
   rm -rf "$z3_dir"
 
   # evmone
-  evmone_version="0.11.0"
-  if [[ $(uname -m) == 'arm64' ]]
-  then
-    # evmone does not provide any builds for apple silicon yet. so lets just build it locally.
-    # be aware that we are only building the arm version here, we don't build a universal binary.
-    git clone https://github.com/ethereum/evmone.git
-    cd evmone
-    git checkout "v${evmone_version}"
-    git submodule update --init
-    cmake -S . -B build
-    cmake --build build
-    cd build
-    sudo make install
-    cd ../..
-    rm -rf evmone
-  else
-    evmone_package="evmone-${evmone_version}-darwin-x86_64.tar.gz"
-    wget "https://github.com/ethereum/evmone/releases/download/v${evmone_version}/${evmone_package}"
-    validate_checksum "$evmone_package" 83ed20676681d9a31bd30cac399ab7c615ccab8adb8087cc2c7e9cd22b4d2efc
-    tar xzpf "$evmone_package" -C /usr/local
-    rm "$evmone_package"
-  fi
+  evmone_version="0.12.0"
+  evmone_package="evmone-${evmone_version}-darwin-arm64.tar.gz"
+  wget "https://github.com/ethereum/evmone/releases/download/v${evmone_version}/${evmone_package}"
+  validate_checksum "$evmone_package" e164e0d2b985cc1cca07b501538b2e804bf872d1d8d531f9241d518a886234a6
+  sudo tar xzpf "$evmone_package" -C /usr/local
+  rm "$evmone_package"
 fi

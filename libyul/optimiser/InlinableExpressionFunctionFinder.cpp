@@ -43,7 +43,7 @@ void InlinableExpressionFunctionFinder::operator()(FunctionDefinition const& _fu
 {
 	if (_function.returnVariables.size() == 1 && _function.body.statements.size() == 1)
 	{
-		YulString retVariable = _function.returnVariables.front().name;
+		YulName retVariable = _function.returnVariables.front().name;
 		Statement const& bodyStatement = _function.body.statements.front();
 		if (std::holds_alternative<Assignment>(bodyStatement))
 		{
@@ -56,7 +56,7 @@ void InlinableExpressionFunctionFinder::operator()(FunctionDefinition const& _fu
 				// would not be valid here if we were searching inside a functionally inlinable
 				// function body.
 				assertThrow(m_disallowedIdentifiers.empty() && !m_foundDisallowedIdentifier, OptimizerException, "");
-				m_disallowedIdentifiers = std::set<YulString>{retVariable, _function.name};
+				m_disallowedIdentifiers = std::set<YulName>{retVariable, _function.name};
 				std::visit(*this, *assignment.value);
 				if (!m_foundDisallowedIdentifier)
 					m_inlinableFunctions[_function.name] = &_function;

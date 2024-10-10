@@ -43,10 +43,11 @@ ModelChecker::ModelChecker(
 	ReadCallback::Callback const& _smtCallback
 ):
 	m_errorReporter(_errorReporter),
+	m_provedSafeReporter(m_provedSafeLogs),
 	m_settings(std::move(_settings)),
 	m_context(),
-	m_bmc(m_context, m_uniqueErrorReporter, m_unsupportedErrorReporter, _smtlib2Responses, _smtCallback, m_settings, _charStreamProvider),
-	m_chc(m_context, m_uniqueErrorReporter, m_unsupportedErrorReporter, _smtlib2Responses, _smtCallback, m_settings, _charStreamProvider)
+	m_bmc(m_context, m_uniqueErrorReporter, m_unsupportedErrorReporter, m_provedSafeReporter, _smtlib2Responses, _smtCallback, m_settings, _charStreamProvider),
+	m_chc(m_context, m_uniqueErrorReporter, m_unsupportedErrorReporter, m_provedSafeReporter, _smtlib2Responses, _smtCallback, m_settings, _charStreamProvider)
 {
 }
 
@@ -151,6 +152,12 @@ void ModelChecker::analyze(SourceUnit const& _source)
 
 	m_errorReporter.append(m_uniqueErrorReporter.errors());
 	m_uniqueErrorReporter.clear();
+
+	if (m_settings.showProvedSafe)
+	{
+		m_errorReporter.append(m_provedSafeReporter.errors());
+		m_provedSafeReporter.clear();
+	}
 }
 
 std::vector<std::string> ModelChecker::unhandledQueries()

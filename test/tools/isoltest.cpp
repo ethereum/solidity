@@ -191,22 +191,10 @@ TestTool::Result TestTool::process()
 		else
 			return Result::Skipped;
 	}
-	catch (boost::exception const& _e)
-	{
-		AnsiColorized(std::cout, formatted, {BOLD, RED}) <<
-			"Exception during test: " << boost::diagnostic_information(_e) << std::endl;
-		return Result::Exception;
-	}
-	catch (std::exception const& _e)
-	{
-		AnsiColorized(std::cout, formatted, {BOLD, RED}) <<
-			"Exception during test: " << boost::diagnostic_information(_e) << std::endl;
-		return Result::Exception;
-	}
 	catch (...)
 	{
 		AnsiColorized(std::cout, formatted, {BOLD, RED}) <<
-			"Unknown exception during test: " << boost::current_exception_diagnostic_information() << std::endl;
+			"Unhandled exception during test: " << boost::current_exception_diagnostic_information() << std::endl;
 		return Result::Exception;
 	}
 }

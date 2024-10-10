@@ -70,7 +70,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::FunctionCall const& _call)
 	// Validate stack.
 	{
 		yulAssert(m_assembly.stackHeight() == static_cast<int>(m_stack.size()), "");
-		yulAssert(m_stack.size() >= _call.function.get().arguments.size() + (_call.canContinue ? 1 : 0), "");
+		yulAssert(m_stack.size() >= _call.function.get().numArguments + (_call.canContinue ? 1 : 0), "");
 		// Assert that we got the correct arguments on stack for the call.
 		for (auto&& [arg, slot]: ranges::zip_view(
 			_call.functionCall.get().arguments | ranges::views::reverse,
@@ -92,7 +92,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::FunctionCall const& _call)
 		m_assembly.setSourceLocation(originLocationOf(_call));
 		m_assembly.appendJumpTo(
 			getFunctionLabel(_call.function),
-			static_cast<int>(_call.function.get().returns.size() - _call.function.get().arguments.size()) - (_call.canContinue ? 1 : 0),
+			static_cast<int>(_call.function.get().numReturns) - static_cast<int>(_call.function.get().numArguments) - (_call.canContinue ? 1 : 0),
 			AbstractAssembly::JumpType::IntoFunction
 		);
 		if (_call.canContinue)
@@ -102,10 +102,10 @@ void OptimizedEVMCodeTransform::operator()(CFG::FunctionCall const& _call)
 	// Update stack.
 	{
 		// Remove arguments and return label from m_stack.
-		for (size_t i = 0; i < _call.function.get().arguments.size() + (_call.canContinue ? 1 : 0); ++i)
+		for (size_t i = 0; i < _call.function.get().numArguments + (_call.canContinue ? 1 : 0); ++i)
 			m_stack.pop_back();
 		// Push return values to m_stack.
-		for (size_t index: ranges::views::iota(0u, _call.function.get().returns.size()))
+		for (size_t index: ranges::views::iota(0u, _call.function.get().numReturns))
 			m_stack.emplace_back(TemporarySlot{_call.functionCall, index});
 		yulAssert(m_assembly.stackHeight() == static_cast<int>(m_stack.size()), "");
 	}
@@ -147,7 +147,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::BuiltinCall const& _call)
 		for (size_t i = 0; i < _call.arguments; ++i)
 			m_stack.pop_back();
 		// Push return values to m_stack.
-		for (size_t index: ranges::views::iota(0u, _call.builtin.get().returns.size()))
+		for (size_t index: ranges::views::iota(0u, _call.builtin.get().numReturns))
 			m_stack.emplace_back(TemporarySlot{_call.functionCall, index});
 		yulAssert(m_assembly.stackHeight() == static_cast<int>(m_stack.size()), "");
 	}
@@ -185,7 +185,7 @@ OptimizedEVMCodeTransform::OptimizedEVMCodeTransform(
 	m_stackLayout(_stackLayout),
 	m_functionLabels([&](){
 		std::map<CFG::FunctionInfo const*, AbstractAssembly::LabelID> functionLabels;
-		std::set<YulString> assignedFunctionNames;
+		std::set<YulName> assignedFunctionNames;
 		for (Scope::Function const* function: m_dfg.functions)
 		{
 			CFG::FunctionInfo const& functionInfo = m_dfg.functionInfo.at(function);
@@ -196,8 +196,8 @@ OptimizedEVMCodeTransform::OptimizedEVMCodeTransform(
 			functionLabels[&functionInfo] = useNamedLabel ?
 				m_assembly.namedLabel(
 					function->name.str(),
-					function->arguments.size(),
-					function->returns.size(),
+					function->numArguments,
+					function->numReturns,
 					functionInfo.debugData ? functionInfo.debugData->astID : std::nullopt
 				) :
 				m_assembly.newLabelId();
@@ -224,7 +224,7 @@ void OptimizedEVMCodeTransform::validateSlot(StackSlot const& _slot, Expression 
 	std::visit(util::GenericVisitor{
 		[&](yul::Literal const& _literal) {
 			auto* literalSlot = std::get_if<LiteralSlot>(&_slot);
-			yulAssert(literalSlot && valueOfLiteral(_literal) == literalSlot->value, "");
+			yulAssert(literalSlot && _literal.value.value() == literalSlot->value, "");
 		},
 		[&](yul::Identifier const& _identifier) {
 			auto* variableSlot = std::get_if<VariableSlot>(&_slot);
@@ -242,7 +242,7 @@ void OptimizedEVMCodeTransform::createStackLayout(langutil::DebugData::ConstPtr 
 	static constexpr auto slotVariableName = [](StackSlot const& _slot) {
 		return std::visit(util::GenericVisitor{
 			[](VariableSlot const& _var) { return _var.variable.get().name; },
-			[](auto const&) { return YulString{}; }
+			[](auto const&) { return YulName{}; }
 		}, _slot);
 	};
 
@@ -264,18 +264,18 @@ void OptimizedEVMCodeTransform::createStackLayout(langutil::DebugData::ConstPtr 
 			{
 				int deficit = static_cast<int>(_i) - 16;
 				StackSlot const& deepSlot = m_stack.at(m_stack.size() - _i - 1);
-				YulString varNameDeep = slotVariableName(deepSlot);
-				YulString varNameTop = slotVariableName(m_stack.back());
+				YulName varNameDeep = slotVariableName(deepSlot);
+				YulName varNameTop = slotVariableName(m_stack.back());
 				std::string msg =
 					"Cannot swap " + (varNameDeep.empty() ? "Slot " + stackSlotToString(deepSlot) : "Variable " + varNameDeep.str()) +
 					" with " + (varNameTop.empty() ? "Slot " + stackSlotToString(m_stack.back()) : "Variable " + varNameTop.str()) +
 					": too deep in the stack by " + std::to_string(deficit) + " slots in " + stackToString(m_stack);
 				m_stackErrors.emplace_back(StackTooDeepError(
-					m_currentFunctionInfo ? m_currentFunctionInfo->function.name : YulString{},
+					m_currentFunctionInfo ? m_currentFunctionInfo->function.name : YulName{},
 					varNameDeep.empty() ? varNameTop : varNameDeep,
 					deficit,
 					msg
-				));
+				) << langutil::errinfo_sourceLocation(sourceLocation));
 				m_assembly.markAsInvalid();
 			}
 		},
@@ -295,12 +295,12 @@ void OptimizedEVMCodeTransform::createStackLayout(langutil::DebugData::ConstPtr 
 				else if (!canBeFreelyGenerated(_slot))
 				{
 					int deficit = static_cast<int>(*depth - 15);
-					YulString varName = slotVariableName(_slot);
+					YulName varName = slotVariableName(_slot);
 					std::string msg =
 						(varName.empty() ? "Slot " + stackSlotToString(_slot) : "Variable " + varName.str())
 						+ " is " + std::to_string(*depth - 15) + " too deep in the stack " + stackToString(m_stack);
 					m_stackErrors.emplace_back(StackTooDeepError(
-						m_currentFunctionInfo ? m_currentFunctionInfo->function.name : YulString{},
+						m_currentFunctionInfo ? m_currentFunctionInfo->function.name : YulName{},
 						varName,
 						deficit,
 						msg

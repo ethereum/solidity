@@ -1,21 +1,79 @@
-### 0.8.27 (unreleased)
+### 0.8.29 (unreleased)
 
 Language Features:
 
 
 Compiler Features:
- * Error Reporting: Unimplemented features are now properly reported as errors instead of being handled as if they were bugs.
- * EVM: Support for the EVM version "Prague".
- * SMTChecker: Add CHC engine check for underflow and overflow in unary minus operation.
- * SMTChecker: Replace CVC4 as a possible BMC backend with cvc5.
 
 
 Bugfixes:
- * SMTChecker: Fix error that reports invalid number of verified checks for BMC engine.
+
+
+### 0.8.28 (2024-10-09)
+
+Language Features:
+ * Transient storage state variables of value types are now fully supported.
+
+
+Compiler Features:
+ * General: Generate JSON representations of Yul ASTs only on demand to reduce memory usage.
+ * Standard JSON Interface: Bytecode or IR can now be requested for a subset of all contracts without triggering unnecessary code generation for other contracts.
+
+
+Bugfixes:
+ * SMTChecker: Fix SMT logic error when assigning to an array of addresses.
+ * Yul AST: Fix shifted native source locations when debug info selection included code snippets.
+
+
+Build system:
+* Removed ``USE_LD_GOLD`` option and default to use the compiler default linker. For custom linkers, ``CMAKE_CXX_FLAGS`` can be used.
+
+
+### 0.8.27 (2024-09-04)
+
+Language Features:
+ * Accept declarations of state variables with ``transient`` data location (parser support only, no code generation yet).
+ * Make ``require(bool, Error)`` available when using the legacy pipeline.
+ * Yul: Parsing rules for source location comments have been relaxed: Whitespace between the location components as well as single-quoted code snippets are now allowed.
+
+
+Compiler Features:
+ * Commandline Interface: Add ``--transient-storage-layout`` output.
+ * Commandline Interface: Allow the use of ``--asm-json`` output option in assembler mode to export EVM assembly of the contracts in JSON format.
+ * Commandline Interface: Do not perform IR optimization when only unoptimized IR is requested.
+ * Constant Optimizer: Uses ``PUSH0`` if supported by the selected evm version.
+ * Error Reporting: Unimplemented features are now properly reported as errors instead of being handled as if they were bugs.
+ * EVM: Support for the EVM version "Prague".
+ * Peephole Optimizer: ``PUSH0``, when supported, is duplicated explicitly instead of using ``DUP1``.
+ * Peephole Optimizer: Remove identical code snippets that terminate the control flow if they occur one after another.
+ * SMTChecker: Add CHC engine check for underflow and overflow in unary minus operation.
+ * SMTChecker: Replace CVC4 as a possible BMC backend with cvc5.
+ * Standard JSON Interface: Add ``transientStorageLayout`` output.
+ * Standard JSON Interface: Do not perform IR optimization when only unoptimized IR is requested.
+ * Yul: Drop the deprecated typed Yul dialect that was only accessible via ``--yul`` in the CLI.
+ * Yul: The presence of types in untyped Yul dialects is now a parser error.
+ * Yul Optimizer: Caching of optimized IR to speed up optimization of contracts with bytecode dependencies.
+ * Yul Optimizer: The optimizer now treats some previously unrecognized identical literals as identical.
+
+
+Bugfixes:
+ * Assembler: Fix ICE caused by imprecise calculation of required size of tags in bytecode when code size is above 255.
+ * Parser: Fix spuriously emitted parser error for unary plus operations when used as binary operator in some cases.
+ * SMTChecker: Fix error that reports invalid number of verified checks for BMC and CHC engines.
+ * SMTChecker: Fix formatting of unary minus expressions in invariants.
+ * SMTChecker: Fix internal compiler error when reporting proved targets for BMC engine.
+ * SMTChecker: Fix SMT logic error when assigning to an array of contracts or functions.
+ * Standard JSON Interface: For Yul input, properly produce output artifacts in case of warnings.
  * TypeChecker: Fix segfault when assigning nested tuple to tuple.
+ * Yul IR Code Generation: Deterministic order of Yul subobjects.
+ * Yul Optimizer: Fix Yul source locations always referring to unoptimized source, even in optimized outputs.
+ * Yul Optimizer: Fix warnings being generated twice when there are no errors.
  * Yul Optimizer: Name simplification could lead to forbidden identifiers with a leading and/or trailing dot, e.g., ``x._`` would get simplified into ``x.``.
+ * Yul Parser: Fix segfault when parsing very long location comments.
  * NatSpec: Correct devdoc method returns in documentation.
 
+Build System:
+ * Change build system to use git submodules for some dependencies (nlohmann-json, fmtlib & range-v3).
 
 ### 0.8.26 (2024-05-21)
 

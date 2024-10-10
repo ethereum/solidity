@@ -29,7 +29,7 @@
 //         let length := calldataload(_1)
 //         let i := 0
 //         let _2 := calldataload(7)
-//         for { } true { i := add(i, 1) }
+//         for { } 1 { i := add(i, 1) }
 //         {
 //             let _3 := iszero(lt(i, length))
 //             if _3 { break }

@@ -1,9 +1,7 @@
 {
-    function f() -> x:u256 { x := 2:u256 }
-    let y:u256 := f()
+    function f() -> x { x := 2 }
+    let y := f()
 }
-// ====
-// dialect: yul
 // ----
 // step: expressionInliner
 //

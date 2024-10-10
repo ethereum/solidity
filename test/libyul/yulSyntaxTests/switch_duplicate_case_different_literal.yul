@@ -1,9 +1,7 @@
 {
-	switch 0:u256
-	case 0:u256 {}
-	case "":u256 {}
+	switch 0
+	case 0 {}
+	case "" {}
 }
-// ====
-// dialect: evmTyped
 // ----
-// DeclarationError 6792: (34-49): Duplicate case "0" defined.
+// DeclarationError 6792: (24-34): Duplicate case "" defined.

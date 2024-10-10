@@ -22,7 +22,7 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/ASTForward.h>
-#include <libyul/YulString.h>
+#include <libyul/YulName.h>
 
 namespace solidity::yul
 {
@@ -55,8 +55,13 @@ protected:
 		hash32(static_cast<uint32_t>(_value >> 32));
 	}
 
-
 	uint64_t m_hash = fnvEmptyHash;
+};
+
+class ASTHasherBase: public HasherBase
+{
+protected:
+	void hashLiteral(solidity::yul::Literal const& _literal);
 };
 
 /**
@@ -73,7 +78,7 @@ protected:
  *
  * Prerequisite: Disambiguator, ForLoopInitRewriter
  */
-class BlockHasher: public ASTWalker, public HasherBase
+class BlockHasher: public ASTWalker, public ASTHasherBase
 {
 public:
 
@@ -107,8 +112,8 @@ private:
 		size_t id = 0;
 		bool isExternal = false;
 	};
-	std::map<YulString, VariableReference> m_variableReferences;
-	std::vector<YulString> m_externalReferences;
+	std::map<YulName, VariableReference> m_variableReferences;
+	std::vector<YulName> m_externalReferences;
 	size_t m_externalIdentifierCount = 0;
 	size_t m_internalIdentifierCount = 0;
 };
@@ -120,7 +125,7 @@ private:
  * have a different name and the same if the name matches.
  * This means this hasher should only be used on disambiguated sources.
  */
-class ExpressionHasher: public ASTWalker, public HasherBase
+class ExpressionHasher: public ASTWalker, public ASTHasherBase
 {
 public:
 	/// Computes a hash of an expression that (in contrast to the behaviour of the class)

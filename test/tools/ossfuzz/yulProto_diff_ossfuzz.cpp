@@ -26,6 +26,7 @@
 
 #include <src/libfuzzer/libfuzzer_macro.h>
 
+#include <libyul/AST.h>
 #include <libyul/YulStack.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/Exceptions.h>
@@ -71,7 +72,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	// Parse protobuf mutated YUL code
 	if (
 		!stack.parseAndAnalyze("source", yul_source) ||
-		!stack.parserResult()->code ||
+		!stack.parserResult()->code() ||
 		!stack.parserResult()->analysisInfo ||
 		Error::containsErrors(stack.errors())
 	)
@@ -86,27 +87,30 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	// such as unused write to memory e.g.,
 	// { mstore(0, 1) }
 	// that would be removed by the redundant store eliminator.
+	// TODO: Add EOF support
 	yulFuzzerUtil::TerminationReason termReason = yulFuzzerUtil::interpret(
 		os1,
-		stack.parserResult()->code,
-		EVMDialect::strictAssemblyForEVMObjects(version),
+		stack.parserResult()->code()->root(),
+		EVMDialect::strictAssemblyForEVMObjects(version, std::nullopt),
 		/*disableMemoryTracing=*/true
 	);
 
 	if (yulFuzzerUtil::resourceLimitsExceeded(termReason))
 		return;
 
+	// TODO: Add EOF support
 	YulOptimizerTestCommon optimizerTest(
 		stack.parserResult(),
-		EVMDialect::strictAssemblyForEVMObjects(version)
+		EVMDialect::strictAssemblyForEVMObjects(version, std::nullopt)
 	);
 	optimizerTest.setStep(optimizerTest.randomOptimiserStep(_input.step()));
-	std::shared_ptr<solidity::yul::Block> astBlock = optimizerTest.run();
-	yulAssert(astBlock != nullptr, "Optimiser error.");
+	auto const* astRoot = optimizerTest.run();
+	yulAssert(astRoot != nullptr, "Optimiser error.");
+	// TODO: Add EOF support
 	termReason = yulFuzzerUtil::interpret(
 		os2,
-		astBlock,
-		EVMDialect::strictAssemblyForEVMObjects(version),
+		*astRoot,
+		EVMDialect::strictAssemblyForEVMObjects(version, std::nullopt),
 		true
 	);
 	if (yulFuzzerUtil::resourceLimitsExceeded(termReason))

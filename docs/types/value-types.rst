@@ -7,6 +7,12 @@ Value Types
 The following are called value types because their variables will always be passed by value, i.e. they are always copied when they
 are used as function arguments or in assignments.
 
+Unlike :ref:`reference types <reference-types>`, value type declarations do not
+specify a data location since they are small enough to be stored on the stack.
+The only exception are :ref:`state variables <structure-state-variables>`.
+Those are by default located in storage, but can also be marked as
+:ref:`transient <transient-storage>`, :ref:`constant or immutable <constants>`.
+
 .. index:: ! bool, ! true, ! false
 
 Booleans

@@ -170,13 +170,9 @@ frontend::ReadCallback::Result FileRepository::readFile(std::string const& _kind
 		m_sourceCodes[_sourceUnitName] = contents;
 		return ReadCallback::Result{true, std::move(contents)};
 	}
-	catch (std::exception const& _exception)
-	{
-		return ReadCallback::Result{false, "Exception in read callback: " + boost::diagnostic_information(_exception)};
-	}
 	catch (...)
 	{
-		return ReadCallback::Result{false, "Unknown exception in read callback: " + boost::current_exception_diagnostic_information()};
+		return ReadCallback::Result{false, "Exception in read callback: " + boost::current_exception_diagnostic_information()};
 	}
 }
 

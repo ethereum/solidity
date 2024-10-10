@@ -236,7 +236,7 @@ bool ReferencesResolver::visit(UsingForDirective const& _usingFor)
 bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 {
 	m_yulAnnotation = &_inlineAssembly.annotation();
-	(*this)(_inlineAssembly.operations());
+	(*this)(_inlineAssembly.operations().root());
 	m_yulAnnotation = nullptr;
 
 	return false;
@@ -272,7 +272,7 @@ void ReferencesResolver::operator()(yul::FunctionDefinition const& _function)
 {
 	solAssert(nativeLocationOf(_function) == originLocationOf(_function), "");
 	validateYulIdentifierName(_function.name, nativeLocationOf(_function));
-	for (yul::TypedName const& varName: _function.parameters + _function.returnVariables)
+	for (yul::NameWithDebugData const& varName: _function.parameters + _function.returnVariables)
 	{
 		solAssert(nativeLocationOf(varName) == originLocationOf(varName), "");
 		validateYulIdentifierName(varName.name, nativeLocationOf(varName));
@@ -370,7 +370,7 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 			m_errorReporter.declarationError(
 				9467_error,
 				nativeLocationOf(_identifier),
-				"Identifier not found. Use \".slot\" and \".offset\" to access storage variables."
+				"Identifier not found. Use \".slot\" and \".offset\" to access storage or transient storage variables."
 			);
 		return;
 	}
@@ -488,7 +488,7 @@ void ReferencesResolver::resolveInheritDoc(StructuredDocumentation const& _docum
 	}
 }
 
-void ReferencesResolver::validateYulIdentifierName(yul::YulString _name, SourceLocation const& _location)
+void ReferencesResolver::validateYulIdentifierName(yul::YulName _name, SourceLocation const& _location)
 {
 	if (util::contains(_name.str(), '.'))
 		m_errorReporter.declarationError(

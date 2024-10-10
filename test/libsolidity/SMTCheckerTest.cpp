@@ -25,8 +25,11 @@ using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
+using namespace solidity::test;
 
-SMTCheckerTest::SMTCheckerTest(std::string const& _filename): SyntaxTest(_filename, EVMVersion{})
+SMTCheckerTest::SMTCheckerTest(std::string const& _filename):
+	SyntaxTest(_filename, EVMVersion{}),
+	universalCallback(nullptr, smtCommand)
 {
 	auto contract = m_reader.stringSetting("SMTContract", "");
 	if (!contract.empty())
@@ -104,8 +107,6 @@ SMTCheckerTest::SMTCheckerTest(std::string const& _filename): SyntaxTest(_filena
 				filtered.emplace_back(e);
 		return filtered;
 	};
-	if (m_modelCheckerSettings.invariants.invariants.empty())
-		m_expectations = removeInv(std::move(m_expectations));
 
 	auto const& ignoreInv = m_reader.stringSetting("SMTIgnoreInv", "yes");
 	if (ignoreInv == "no")
@@ -114,6 +115,9 @@ SMTCheckerTest::SMTCheckerTest(std::string const& _filename): SyntaxTest(_filena
 		m_modelCheckerSettings.invariants = ModelCheckerInvariants::None();
 	else
 		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SMT invariant choice."));
+
+	if (m_modelCheckerSettings.invariants.invariants.empty())
+		m_expectations = removeInv(std::move(m_expectations));
 
 	auto const& ignoreOSSetting = m_reader.stringSetting("SMTIgnoreOS", "none");
 	for (std::string const& os: ignoreOSSetting | ranges::views::split(',') | ranges::to<std::vector<std::string>>())
@@ -167,4 +171,8 @@ void SMTCheckerTest::printUpdatedExpectations(std::ostream &_stream, const std::
 		printErrorList(_stream, m_unfilteredErrorList, _linePrefix, false);
 	else
 		CommonSyntaxTest::printUpdatedExpectations(_stream, _linePrefix);
+}
+
+std::unique_ptr<CompilerStack> SMTCheckerTest::createStack() const {
+	return std::make_unique<CompilerStack>(universalCallback.callback());
 }

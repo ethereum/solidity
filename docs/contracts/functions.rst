@@ -174,7 +174,7 @@ Functions can be declared ``view`` in which case they promise not to modify the 
 
 The following statements are considered modifying the state:
 
-#. Writing to state variables.
+#. Writing to state variables (storage and transient storage).
 #. :ref:`Emitting events <events>`.
 #. :ref:`Creating other contracts <creating-contracts>`.
 #. Using ``selfdestruct``.
@@ -226,7 +226,7 @@ This means that reading from ``immutable`` variables can be a non-pure operation
 
 In addition to the list of state modifying statements explained above, the following are considered reading from the state:
 
-#. Reading from state variables.
+#. Reading from state variables (storage and transient storage).
 #. Accessing ``address(this).balance`` or ``<address>.balance``.
 #. Accessing any of the members of ``block``, ``tx``, ``msg`` (with the exception of ``msg.sig`` and ``msg.data``).
 #. Calling any function not marked ``pure``.
@@ -267,7 +267,7 @@ This behavior is also in line with the ``STATICCALL`` opcode.
 
 .. note::
   Prior to version 0.4.17 the compiler did not enforce that ``pure`` is not reading the state.
-  It is a compile-time type check, which can be circumvented doing invalid explicit conversions
+  It is a compile-time type check, which can be circumvented by doing invalid explicit conversions
   between contract types, because the compiler can verify that the type of the contract does
   not do state-changing operations, but it cannot check that the contract that will be called
   at runtime is actually of that type.

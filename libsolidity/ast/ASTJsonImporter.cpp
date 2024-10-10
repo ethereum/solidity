@@ -720,7 +720,16 @@ ASTPointer<InlineAssembly> ASTJsonImporter::createInlineAssembly(Json const& _no
 	astAssert(evmVersion.has_value(), "Invalid EVM version!");
 	astAssert(m_evmVersion == evmVersion, "Imported tree evm version differs from configured evm version!");
 
-	yul::Dialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(evmVersion.value());
+	// TODO: Add test in test/linsolidity/ASTJSON/assembly. This requires adding support for eofVersion in ASTJSONTest
+	std::optional<uint8_t> eofVersion;
+	if (auto const it = _node.find("eofVersion"); it != _node.end())
+	{
+		eofVersion = it->get<uint8_t>();
+		astAssert(eofVersion > 0);
+	}
+	astAssert(m_eofVersion == eofVersion, "Imported tree EOF version differs from configured EOF version!");
+
+	yul::Dialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(evmVersion.value(), eofVersion);
 	ASTPointer<std::vector<ASTPointer<ASTString>>> flags;
 	if (_node.contains("flags"))
 	{
@@ -733,7 +742,7 @@ ASTPointer<InlineAssembly> ASTJsonImporter::createInlineAssembly(Json const& _no
 			flags->emplace_back(std::make_shared<ASTString>(flag.get<std::string>()));
 		}
 	}
-	std::shared_ptr<yul::Block> operations = std::make_shared<yul::Block>(yul::AsmJsonImporter(m_sourceNames).createBlock(member(_node, "AST")));
+	std::shared_ptr<yul::AST> operations = std::make_shared<yul::AST>(yul::AsmJsonImporter(m_sourceNames).createAST(member(_node, "AST")));
 	return createASTNode<InlineAssembly>(
 		_node,
 		nullOrASTString(_node, "documentation"),
@@ -1190,6 +1199,8 @@ VariableDeclaration::Location ASTJsonImporter::location(Json const& _node)
 		return VariableDeclaration::Location::Memory;
 	else if (storageLocStr == "calldata")
 		return VariableDeclaration::Location::CallData;
+	else if (storageLocStr == "transient")
+		return VariableDeclaration::Location::Transient;
 	else
 		astAssert(false, "Unknown location declaration");
 

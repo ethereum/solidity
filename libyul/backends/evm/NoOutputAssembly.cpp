@@ -71,7 +71,7 @@ void NoOutputAssembly::appendLinkerSymbol(std::string const&)
 
 void NoOutputAssembly::appendVerbatim(bytes, size_t _arguments, size_t _returnVariables)
 {
-	m_stackHeight += static_cast<int>(_returnVariables - _arguments);
+	m_stackHeight += static_cast<int>(_returnVariables) - static_cast<int>(_arguments);
 }
 
 void NoOutputAssembly::appendJump(int _stackDiffAfter, JumpType)
@@ -130,11 +130,11 @@ void NoOutputAssembly::appendImmutableAssignment(std::string const&)
 }
 
 NoOutputEVMDialect::NoOutputEVMDialect(EVMDialect const& _copyFrom):
-	EVMDialect(_copyFrom.evmVersion(), _copyFrom.providesObjectAccess())
+	EVMDialect(_copyFrom.evmVersion(), _copyFrom.eofVersion(), _copyFrom.providesObjectAccess())
 {
 	for (auto& fun: m_functions)
 	{
-		size_t returns = fun.second.returns.size();
+		size_t returns = fun.second.numReturns;
 		fun.second.generateCode = [=](FunctionCall const& _call, AbstractAssembly& _assembly, BuiltinContext&)
 		{
 			for (size_t i: ranges::views::iota(0u, _call.arguments.size()))

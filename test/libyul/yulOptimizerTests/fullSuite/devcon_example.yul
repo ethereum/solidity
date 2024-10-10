@@ -25,7 +25,7 @@
 //         let sum := 0
 //         let length := calldataload(_1)
 //         let i := 0
-//         for { } true { i := add(i, 1) }
+//         for { } 1 { i := add(i, 1) }
 //         {
 //             let _2 := iszero(lt(i, length))
 //             if _2 { break }

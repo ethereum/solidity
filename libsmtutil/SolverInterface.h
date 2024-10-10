@@ -512,13 +512,9 @@ DEV_SIMPLE_EXCEPTION(SolverError);
 class SolverInterface
 {
 public:
-	SolverInterface(std::optional<unsigned> _queryTimeout = {}): m_queryTimeout(_queryTimeout) {}
+	SolverInterface() = default;
 
 	virtual ~SolverInterface() = default;
-	virtual void reset() = 0;
-
-	virtual void push() = 0;
-	virtual void pop() = 0;
 
 	virtual void declareVariable(std::string const& _name, SortPointer const& _sort) = 0;
 	Expression newVariable(std::string _name, SortPointer const& _sort)
@@ -529,21 +525,8 @@ public:
 		return Expression(std::move(_name), {}, _sort);
 	}
 
-	virtual void addAssertion(Expression const& _expr) = 0;
-
-	/// Checks for satisfiability, evaluates the expressions if a model
-	/// is available. Throws SMTSolverError on error.
-	virtual std::pair<CheckResult, std::vector<std::string>>
-	check(std::vector<Expression> const& _expressionsToEvaluate) = 0;
-
-	/// @returns a list of queries that the system was not able to respond to.
-	virtual std::vector<std::string> unhandledQueries() { return {}; }
-
 	/// @returns how many SMT solvers this interface has.
 	virtual size_t solvers() { return 1; }
-
-protected:
-	std::optional<unsigned> m_queryTimeout;
 };
 
 }

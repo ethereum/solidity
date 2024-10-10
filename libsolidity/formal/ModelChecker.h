@@ -95,6 +95,12 @@ private:
 	/// to m_errorReporter at the end of the analysis.
 	langutil::UniqueErrorReporter m_unsupportedErrorReporter;
 
+	langutil::ErrorList m_provedSafeLogs;
+	/// Used by SMTEncoder, BMC and CHC to accumulate info about proved targets.
+	/// This is local to ModelChecker, so needs to be appended
+	/// to m_errorReporter at the end of the analysis.
+	langutil::ErrorReporter m_provedSafeReporter;
+
 	ModelCheckerSettings m_settings;
 
 	/// Stores the context of the encoding.

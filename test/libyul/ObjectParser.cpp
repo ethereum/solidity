@@ -55,23 +55,15 @@ namespace
 
 std::pair<bool, ErrorList> parse(std::string const& _source)
 {
-	try
-	{
-		YulStack asmStack(
-			solidity::test::CommonOptions::get().evmVersion(),
-			solidity::test::CommonOptions::get().eofVersion(),
-			YulStack::Language::StrictAssembly,
-			solidity::frontend::OptimiserSettings::none(),
-			DebugInfoSelection::All()
-		);
-		bool success = asmStack.parseAndAnalyze("source", _source);
-		return {success, asmStack.errors()};
-	}
-	catch (FatalError const&)
-	{
-		BOOST_FAIL("Fatal error leaked.");
-	}
-	return {false, {}};
+	YulStack asmStack(
+		solidity::test::CommonOptions::get().evmVersion(),
+		solidity::test::CommonOptions::get().eofVersion(),
+		YulStack::Language::StrictAssembly,
+		solidity::frontend::OptimiserSettings::none(),
+		DebugInfoSelection::All()
+	);
+	bool success = asmStack.parseAndAnalyze("source", _source);
+	return {success, asmStack.errors()};
 }
 
 std::optional<Error> parseAndReturnFirstError(std::string const& _source, bool _allowWarningsAndInfos = true)
@@ -120,7 +112,8 @@ std::tuple<std::optional<SourceNameMap>, ErrorList> tryGetSourceLocationMapping(
 
 	ErrorList errors;
 	ErrorReporter reporter(errors);
-	Dialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(EVMVersion::berlin());
+	// TODO: Add EOF support
+	Dialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(EVMVersion{}, std::nullopt);
 	ObjectParser objectParser{reporter, dialect};
 	CharStream stream(std::move(source), "");
 	auto object = objectParser.parse(std::make_shared<Scanner>(stream), false);

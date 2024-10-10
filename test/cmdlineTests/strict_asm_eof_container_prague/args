@@ -1,0 +1,1 @@
+ --strict-assembly --experimental-eof-version 1 --evm-version prague --asm --ir-optimized --bin --debug-info none

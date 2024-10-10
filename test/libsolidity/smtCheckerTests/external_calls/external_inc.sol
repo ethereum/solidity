@@ -7,18 +7,18 @@ contract C {
 	D d;
 
 	function inc() public {
+		require(x < 10);
 		++x;
 	}
 
 	function f() public {
 		d.d();
-		assert(x < 10);
+		assert(x < 5);
 	}
 }
 // ====
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 4984: (113-116): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
-// Warning 6328: (156-170): CHC: Assertion violation happens here.
-// Warning 2661: (113-116): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 6328: (175-188): CHC: Assertion violation happens here.\nCounterexample:\nx = 5, d = 0\n\nTransaction trace:\nC.constructor()\nState: x = 0, d = 0\nC.inc()\nState: x = 1, d = 0\nC.inc()\nState: x = 2, d = 0\nC.inc()\nState: x = 3, d = 0\nC.inc()\nState: x = 4, d = 0\nC.f()\n    d.d() -- untrusted external call, synthesized as:\n        C.inc() -- reentrant call
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

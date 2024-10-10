@@ -415,13 +415,15 @@ In case of an exception that reverts changes, already used up gas is not refunde
 Since EVM executors can choose to include a transaction or not,
 transaction senders cannot abuse the system by setting a low gas price.
 
-.. index:: ! storage, ! memory, ! stack
+.. index:: ! storage, ! memory, ! stack, ! transient storage
 
-Storage, Memory and the Stack
-=============================
+.. _locations:
 
-The Ethereum Virtual Machine has three areas where it can store data:
-storage, memory and the stack.
+Storage, Transient Storage, Memory and the Stack
+================================================
+
+The Ethereum Virtual Machine has different areas where it can store data with the most
+prominent being storage, transient storage, memory and the stack.
 
 Each account has a data area called **storage**, which is persistent between function calls
 and transactions.
@@ -432,7 +434,15 @@ you should minimize what you store in persistent storage to what the contract ne
 Store data like derived calculations, caching, and aggregates outside of the contract.
 A contract can neither read nor write to any storage apart from its own.
 
-The second data area is called **memory**, of which a contract obtains
+Similar to storage, there is another data area called **transient storage**,
+where the main difference is that it is reset at the end of each transaction.
+The values stored in this data location persist only across function calls originating
+from the first call of the transaction.
+When the transaction ends, the transient storage is reset and the values stored there
+become unavailable to calls in subsequent transactions.
+Despite this, the cost of reading and writing to transient storage is significantly lower than for storage.
+
+The third data area is called **memory**, of which a contract obtains
 a freshly cleared instance for each message call. Memory is linear and can be
 addressed at byte level, but reads are limited to a width of 256 bits, while writes
 can be either 8 bits or 256 bits wide. Memory is expanded by a word (256-bit), when
@@ -453,6 +463,31 @@ Of course it is possible to move stack elements to storage or memory
 in order to get deeper access to the stack,
 but it is not possible to just access arbitrary elements deeper in the stack
 without first removing the top of the stack.
+
+Calldata, Returndata and Code
+=============================
+
+There are also other data areas which are not as apparent as those discussed previously.
+However, they are routinely used during the execution of smart contract transactions.
+
+The calldata region is the data sent to a transaction as part of a smart contract transaction.
+For example, when creating a contract, calldata would be the constructor code of the new contract.
+The parameters of external functions are always initially stored in calldata in an ABI-encoded form
+and only then decoded into the location specified in their declaration.
+If declared as ``memory``, the compiler will eagerly decode them into memory at the beginning of the function,
+while marking them as ``calldata`` means that this will be done lazily, only when accessed.
+Value types and ``storage`` pointers are decoded directly onto the stack.
+
+The returndata is the way a smart contract can return a value after a call.
+In general, external Solidity functions use the ``return`` keyword to ABI-encode values into the returndata area.
+
+The code is the region where the EVM instructions of a smart contract are stored.
+Code is the bytes read, interpreted, and executed by the EVM during smart contract execution.
+Instruction data stored in the code is persistent as part of a contract account state field.
+Immutable and constant variables are stored in the code region.
+All references to immutables are replaced with the values assigned to them.
+A similar process is performed for constants which have their expressions inlined
+in the places where they are referenced in the smart contract code.
 
 .. index:: ! instruction
 

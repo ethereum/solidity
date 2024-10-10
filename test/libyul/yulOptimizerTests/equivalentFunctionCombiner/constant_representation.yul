@@ -1,8 +1,10 @@
 {
   f()
   g()
-  function f() { mstore(0x01, mload(0x00)) }
-  function g() { mstore(1, mload(0)) }
+  h()
+  function f() { mstore(29400335157912315244266070412362164103369332044010299463143527189509193072640, mload(0x00)) }
+  function g() { mstore(0x4100000000000000000000000000000000000000000000000000000000000000, mload(0x00)) }
+  function h() { mstore("A", mload(0)) }
 }
 // ----
 // step: equivalentFunctionCombiner
@@ -10,8 +12,15 @@
 // {
 //     f()
 //     f()
+//     f()
 //     function f()
-//     { mstore(0x01, mload(0x00)) }
+//     {
+//         mstore(29400335157912315244266070412362164103369332044010299463143527189509193072640, mload(0x00))
+//     }
 //     function g()
-//     { mstore(1, mload(0)) }
+//     {
+//         mstore(0x4100000000000000000000000000000000000000000000000000000000000000, mload(0x00))
+//     }
+//     function h()
+//     { mstore("A", mload(0)) }
 // }

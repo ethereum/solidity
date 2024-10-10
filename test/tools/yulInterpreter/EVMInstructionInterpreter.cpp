@@ -25,6 +25,7 @@
 
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/AST.h>
+#include <libyul/Utilities.h>
 
 #include <libevmasm/Instruction.h>
 #include <libevmasm/SemanticInformation.h>
@@ -508,7 +509,7 @@ u256 EVMInstructionInterpreter::evalBuiltin(
 	// Evaluate datasize/offset/copy instructions
 	if (fun == "datasize" || fun == "dataoffset")
 	{
-		std::string arg = std::get<Literal>(_arguments.at(0)).value.str();
+		std::string arg = formatLiteral(std::get<Literal>(_arguments.at(0)));
 		if (arg.length() < 32)
 			arg.resize(32, 0);
 		if (fun == "datasize")

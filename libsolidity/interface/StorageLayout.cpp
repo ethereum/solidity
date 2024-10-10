@@ -20,10 +20,11 @@
 
 #include <libsolidity/ast/TypeProvider.h>
 
+using namespace std::literals;
 using namespace solidity;
 using namespace solidity::frontend;
 
-Json StorageLayout::generate(ContractDefinition const& _contractDef)
+Json StorageLayout::generate(ContractDefinition const& _contractDef, DataLocation const _location)
 {
 	solAssert(!m_contract, "");
 	m_contract = &_contractDef;
@@ -35,12 +36,13 @@ Json StorageLayout::generate(ContractDefinition const& _contractDef)
 	solAssert(contractType, "");
 
 	Json variables = Json::array();
-	for (auto [var, slot, offset]: contractType->stateVariables())
+	for (auto [var, slot, offset]: contractType->stateVariables(_location))
 		variables.emplace_back(generate(*var, slot, offset));
 
 	Json layout;
 	layout["storage"] = std::move(variables);
 	layout["types"] = std::move(m_types);
+
 	return layout;
 }
 

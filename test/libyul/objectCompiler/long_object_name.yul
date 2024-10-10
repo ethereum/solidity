@@ -10,20 +10,20 @@ object "t" {
 // optimizationPreset: full
 // ----
 // Assembly:
-//     /* "source":33:146   */
+//     /* "source":56:169   */
 //   dataSize(sub_0)
-//     /* "source":30:31   */
+//     /* "source":53:54   */
 //   0x00
-//     /* "source":23:147   */
+//     /* "source":46:170   */
 //   sstore
-//     /* "source":19:150   */
+//     /* "source":22:186   */
 //   stop
 // stop
 //
 // sub_0: assembly {
-//         /* "source":272:274   */
+//         /* "source":317:324   */
 //       stop
 // }
 // Bytecode: 60015f5500fe
 // Opcodes: PUSH1 0x1 PUSH0 SSTORE STOP INVALID
-// SourceMappings: 33:113:0:-:0;30:1;23:124;19:131
+// SourceMappings: 56:113:0:-:0;53:1;46:124;22:164

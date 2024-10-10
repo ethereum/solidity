@@ -62,7 +62,7 @@ public:
 	virtual smtutil::Expression resetIndex();
 	virtual smtutil::Expression setIndex(unsigned _index);
 	virtual smtutil::Expression increaseIndex();
-	virtual smtutil::Expression operator()(std::vector<smtutil::Expression> /*_arguments*/) const
+	virtual smtutil::Expression operator()(std::vector<smtutil::Expression> const& /*_arguments*/) const
 	{
 		solAssert(false, "Function application to non-function.");
 	}
@@ -177,7 +177,7 @@ public:
 	smtutil::Expression setIndex(unsigned _index) override;
 	smtutil::Expression increaseIndex() override;
 
-	smtutil::Expression operator()(std::vector<smtutil::Expression> _arguments) const override;
+	smtutil::Expression operator()(std::vector<smtutil::Expression> const& _arguments) const override;
 
 private:
 	/// Creates a new function declaration.

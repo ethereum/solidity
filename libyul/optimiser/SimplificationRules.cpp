@@ -40,7 +40,7 @@ using namespace solidity::yul;
 SimplificationRules::Rule const* SimplificationRules::findFirstMatch(
 	Expression const& _expr,
 	Dialect const& _dialect,
-	std::function<AssignedValue const*(YulString)> const& _ssaValues
+	std::function<AssignedValue const*(YulName)> const& _ssaValues
 )
 {
 	auto instruction = instructionAndArguments(_dialect, _expr);
@@ -137,7 +137,7 @@ void Pattern::setMatchGroup(unsigned _group, std::map<unsigned, Expression const
 bool Pattern::matches(
 	Expression const& _expr,
 	Dialect const& _dialect,
-	std::function<AssignedValue const*(YulString)> const& _ssaValues
+	std::function<AssignedValue const*(YulName)> const& _ssaValues
 ) const
 {
 	Expression const* expr = &_expr;
@@ -146,7 +146,7 @@ bool Pattern::matches(
 	// Do not do it for "Any" because we can check identity better for variables.
 	if (m_kind != PatternKind::Any && std::holds_alternative<Identifier>(_expr))
 	{
-		YulString varName = std::get<Identifier>(_expr).name;
+		YulName varName = std::get<Identifier>(_expr).name;
 		if (AssignedValue const* value = _ssaValues(varName))
 			if (Expression const* new_expr = value->value)
 				expr = new_expr;
@@ -160,7 +160,7 @@ bool Pattern::matches(
 		Literal const& literal = std::get<Literal>(*expr);
 		if (literal.kind != LiteralKind::Number)
 			return false;
-		if (m_data && *m_data != u256(literal.value.str()))
+		if (m_data && *m_data != literal.value.value())
 			return false;
 		assertThrow(m_arguments.empty(), OptimizerException, "");
 	}
@@ -241,7 +241,7 @@ Expression Pattern::toExpression(langutil::DebugData::ConstPtr const& _debugData
 	if (m_kind == PatternKind::Constant)
 	{
 		assertThrow(m_data, OptimizerException, "No match group and no constant value given.");
-		return Literal{_debugData, LiteralKind::Number, YulString{formatNumber(*m_data)}, {}};
+		return Literal{_debugData, LiteralKind::Number, LiteralValue{*m_data, formatNumber(*m_data)}};
 	}
 	else if (m_kind == PatternKind::Operation)
 	{
@@ -252,7 +252,7 @@ Expression Pattern::toExpression(langutil::DebugData::ConstPtr const& _debugData
 		std::string name = util::toLower(instructionInfo(m_instruction, _evmVersion).name);
 
 		return FunctionCall{_debugData,
-			Identifier{_debugData, YulString{name}},
+			Identifier{_debugData, YulName{name}},
 			std::move(arguments)
 		};
 	}
@@ -261,7 +261,7 @@ Expression Pattern::toExpression(langutil::DebugData::ConstPtr const& _debugData
 
 u256 Pattern::d() const
 {
-	return valueOfNumberLiteral(std::get<Literal>(matchGroupValue()));
+	return std::get<Literal>(matchGroupValue()).value.value();
 }
 
 Expression const& Pattern::matchGroupValue() const

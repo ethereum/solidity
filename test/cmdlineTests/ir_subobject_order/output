@@ -1,0 +1,95 @@
+Optimized IR:
+/// @use-src 0:"ir_subobject_order/input.sol"
+object "A_13" {
+    code { { revert(0, 0) } }
+    /// @use-src 0:"ir_subobject_order/input.sol"
+    object "A_13_deployed" {
+        code { { revert(0, 0) } }
+        data ".metadata" hex"<BYTECODE REMOVED>"
+    }
+}
+
+Optimized IR:
+/// @use-src 0:"ir_subobject_order/input.sol"
+object "B_7" {
+    code { { revert(0, 0) } }
+    /// @use-src 0:"ir_subobject_order/input.sol"
+    object "B_7_deployed" {
+        code { { revert(0, 0) } }
+        data ".metadata" hex"<BYTECODE REMOVED>"
+    }
+}
+
+Optimized IR:
+/// @use-src 0:"ir_subobject_order/input.sol"
+object "C_33" {
+    code {
+        {
+            let _1 := memoryguard(0x80)
+            mstore(64, _1)
+            if callvalue() { revert(0, 0) }
+            let _2 := datasize("A_13")
+            let _3 := add(_1, _2)
+            if or(gt(_3, sub(shl(64, 1), 1)), lt(_3, _1))
+            {
+                mstore(0, shl(224, 0x4e487b71))
+                mstore(4, 0x41)
+                revert(0, 0x24)
+            }
+            datacopy(_1, dataoffset("A_13"), _2)
+            let expr_address := create(0, _1, sub(_3, _1))
+            if iszero(expr_address)
+            {
+                let pos := mload(64)
+                returndatacopy(pos, 0, returndatasize())
+                revert(pos, returndatasize())
+            }
+            sstore(0, or(and(sload(0), not(sub(shl(160, 1), 1))), and(expr_address, sub(shl(160, 1), 1))))
+            let _4 := mload(64)
+            let _5 := datasize("B_7")
+            let _6 := add(_4, _5)
+            if or(gt(_6, sub(shl(64, 1), 1)), lt(_6, _4))
+            {
+                mstore(0, shl(224, 0x4e487b71))
+                mstore(4, 0x41)
+                revert(0, 0x24)
+            }
+            datacopy(_4, dataoffset("B_7"), _5)
+            let expr_address_1 := create(0, _4, sub(_6, _4))
+            if iszero(expr_address_1)
+            {
+                let pos_1 := mload(64)
+                returndatacopy(pos_1, 0, returndatasize())
+                revert(pos_1, returndatasize())
+            }
+            sstore(0x01, or(and(sload(0x01), not(sub(shl(160, 1), 1))), and(expr_address_1, sub(shl(160, 1), 1))))
+            let _7 := mload(64)
+            let _8 := datasize("C_33_deployed")
+            codecopy(_7, dataoffset("C_33_deployed"), _8)
+            return(_7, _8)
+        }
+    }
+    /// @use-src 0:"ir_subobject_order/input.sol"
+    object "C_33_deployed" {
+        code { { revert(0, 0) } }
+        data ".metadata" hex"<BYTECODE REMOVED>"
+    }
+    /// @use-src 0:"ir_subobject_order/input.sol"
+    object "A_13" {
+        code { { revert(0, 0) } }
+        /// @use-src 0:"ir_subobject_order/input.sol"
+        object "A_13_deployed" {
+            code { { revert(0, 0) } }
+            data ".metadata" hex"<BYTECODE REMOVED>"
+        }
+    }
+    /// @use-src 0:"ir_subobject_order/input.sol"
+    object "B_7" {
+        code { { revert(0, 0) } }
+        /// @use-src 0:"ir_subobject_order/input.sol"
+        object "B_7_deployed" {
+            code { { revert(0, 0) } }
+            data ".metadata" hex"<BYTECODE REMOVED>"
+        }
+    }
+}

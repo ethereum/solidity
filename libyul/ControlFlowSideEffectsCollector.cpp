@@ -229,9 +229,9 @@ ControlFlowSideEffectsCollector::ControlFlowSideEffectsCollector(
 	}
 }
 
-std::map<YulString, ControlFlowSideEffects> ControlFlowSideEffectsCollector::functionSideEffectsNamed() const
+std::map<YulName, ControlFlowSideEffects> ControlFlowSideEffectsCollector::functionSideEffectsNamed() const
 {
-	std::map<YulString, ControlFlowSideEffects> result;
+	std::map<YulName, ControlFlowSideEffects> result;
 	for (auto&& [function, sideEffects]: m_functionSideEffects)
 		yulAssert(result.insert({function->name, sideEffects}).second);
 	return result;

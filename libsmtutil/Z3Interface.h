@@ -18,13 +18,13 @@
 
 #pragma once
 
-#include <libsmtutil/SolverInterface.h>
+#include <libsmtutil/BMCSolverInterface.h>
 #include <z3++.h>
 
 namespace solidity::smtutil
 {
 
-class Z3Interface: public SolverInterface
+class Z3Interface: public BMCSolverInterface
 {
 public:
 	/// Noncopyable.
@@ -55,7 +55,7 @@ public:
 
 	// Z3 "basic resources" limit.
 	// This is used to make the runs more deterministic and platform/machine independent.
-	static int const resourceLimit = 1000000;
+	static int const resourceLimit = 2000000;
 
 private:
 	void declareFunction(std::string const& _name, Sort const& _sort);

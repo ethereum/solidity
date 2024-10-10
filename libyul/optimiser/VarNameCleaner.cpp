@@ -34,7 +34,7 @@ using namespace solidity::yul;
 VarNameCleaner::VarNameCleaner(
 	Block const& _ast,
 	Dialect const& _dialect,
-	std::set<YulString> _namesToKeep
+	std::set<YulName> _namesToKeep
 ):
 	m_dialect{_dialect},
 	m_namesToKeep{std::move(_namesToKeep)},
@@ -51,9 +51,9 @@ void VarNameCleaner::operator()(FunctionDefinition& _funDef)
 	yulAssert(!m_insideFunction, "");
 	m_insideFunction = true;
 
-	std::set<YulString> globalUsedNames = std::move(m_usedNames);
+	std::set<YulName> globalUsedNames = std::move(m_usedNames);
 	m_usedNames = m_namesToKeep;
-	std::map<YulString, YulString> globalTranslatedNames;
+	std::map<YulName, YulName> globalTranslatedNames;
 	swap(globalTranslatedNames, m_translatedNames);
 
 	renameVariables(_funDef.parameters);
@@ -72,17 +72,17 @@ void VarNameCleaner::operator()(VariableDeclaration& _varDecl)
 	ASTModifier::operator()(_varDecl);
 }
 
-void VarNameCleaner::renameVariables(std::vector<TypedName>& _variables)
+void VarNameCleaner::renameVariables(std::vector<NameWithDebugData>& _variables)
 {
-	for (TypedName& typedName: _variables)
+	for (NameWithDebugData& variable: _variables)
 	{
-		auto newName = findCleanName(typedName.name);
-		if (newName != typedName.name)
+		auto newName = findCleanName(variable.name);
+		if (newName != variable.name)
 		{
-			m_translatedNames[typedName.name] = newName;
-			typedName.name = newName;
+			m_translatedNames[variable.name] = newName;
+			variable.name = newName;
 		}
-		m_usedNames.insert(typedName.name);
+		m_usedNames.insert(variable.name);
 	}
 }
 
@@ -93,7 +93,7 @@ void VarNameCleaner::operator()(Identifier& _identifier)
 		_identifier.name = name->second;
 }
 
-YulString VarNameCleaner::findCleanName(YulString const& _name) const
+YulName VarNameCleaner::findCleanName(YulName const& _name) const
 {
 	auto newName = stripSuffix(_name);
 	if (!isUsedName(newName))
@@ -102,24 +102,24 @@ YulString VarNameCleaner::findCleanName(YulString const& _name) const
 	// create new name with suffix (by finding a free identifier)
 	for (size_t i = 1; i < std::numeric_limits<decltype(i)>::max(); ++i)
 	{
-		YulString newNameSuffixed = YulString{newName.str() + "_" + std::to_string(i)};
+		YulName newNameSuffixed = YulName{newName.str() + "_" + std::to_string(i)};
 		if (!isUsedName(newNameSuffixed))
 			return newNameSuffixed;
 	}
 	yulAssert(false, "Exhausted by attempting to find an available suffix.");
 }
 
-bool VarNameCleaner::isUsedName(YulString const& _name) const
+bool VarNameCleaner::isUsedName(YulName const& _name) const
 {
 	return isRestrictedIdentifier(m_dialect, _name) || m_usedNames.count(_name);
 }
 
-YulString VarNameCleaner::stripSuffix(YulString const& _name) const
+YulName VarNameCleaner::stripSuffix(YulName const& _name) const
 {
 	static std::regex const suffixRegex("(_+[0-9]+)+$");
 
 	std::smatch suffixMatch;
 	if (regex_search(_name.str(), suffixMatch, suffixRegex))
-		return {YulString{suffixMatch.prefix().str()}};
+		return {YulName{suffixMatch.prefix().str()}};
 	return _name;
 }

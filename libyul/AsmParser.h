@@ -87,12 +87,12 @@ public:
 
 	/// Parses an inline assembly block starting with `{` and ending with `}`.
 	/// @returns an empty shared pointer on error.
-	std::unique_ptr<Block> parseInline(std::shared_ptr<langutil::Scanner> const& _scanner);
+	std::unique_ptr<AST> parseInline(std::shared_ptr<langutil::Scanner> const& _scanner);
 
 	/// Parses an assembly block starting with `{` and ending with `}`
 	/// and expects end of input after the '}'.
 	/// @returns an empty shared pointer on error.
-	std::unique_ptr<Block> parse(langutil::CharStream& _charStream);
+	std::unique_ptr<AST> parse(langutil::CharStream& _charStream);
 
 protected:
 	langutil::SourceLocation currentLocation() const override
@@ -138,15 +138,16 @@ protected:
 	Case parseCase();
 	ForLoop parseForLoop();
 	/// Parses a functional expression that has to push exactly one stack element
-	Expression parseExpression();
+	Expression parseExpression(bool _unlimitedLiteralArgument = false);
 	/// Parses an elementary operation, i.e. a literal, identifier, instruction or
 	/// builtin function call (only the name).
-	std::variant<Literal, Identifier> parseLiteralOrIdentifier();
+	std::variant<Literal, Identifier> parseLiteralOrIdentifier(bool _unlimitedLiteralArgument = false);
 	VariableDeclaration parseVariableDeclaration();
 	FunctionDefinition parseFunctionDefinition();
 	FunctionCall parseCall(std::variant<Literal, Identifier>&& _initialOp);
-	TypedName parseTypedName();
-	YulString expectAsmIdentifier();
+	NameWithDebugData parseNameWithDebugData();
+	YulName expectAsmIdentifier();
+	void raiseUnsupportedTypesError(langutil::SourceLocation const& _location) const;
 
 	/// Reports an error if we are currently not inside the body part of a for loop.
 	void checkBreakContinuePosition(std::string const& _which);

@@ -44,7 +44,7 @@ void ExpressionSimplifier::visit(Expression& _expression)
 	while (auto const* match = SimplificationRules::findFirstMatch(
 		_expression,
 		m_dialect,
-		[this](YulString _var) { return variableValue(_var); }
+		[this](YulName _var) { return variableValue(_var); }
 	))
 		_expression = match->action().toExpression(debugDataOf(_expression), evmVersionFromDialect(m_dialect));
 
@@ -60,14 +60,14 @@ void ExpressionSimplifier::visit(Expression& _expression)
 						!knownToBeZero(startArgument) &&
 						!std::holds_alternative<FunctionCall>(startArgument)
 					)
-						startArgument = Literal{debugDataOf(startArgument), LiteralKind::Number, "0"_yulstring, {}};
+						startArgument = Literal{debugDataOf(startArgument), LiteralKind::Number, LiteralValue{0, std::nullopt}};
 				}
 }
 
 bool ExpressionSimplifier::knownToBeZero(Expression const& _expression) const
 {
 	if (auto const* literal = std::get_if<Literal>(&_expression))
-		return valueOfLiteral(*literal) == 0;
+		return literal->value.value() == 0;
 	else if (auto const* identifier = std::get_if<Identifier>(&_expression))
 		return valueOfIdentifier(identifier->name) == 0;
 	else

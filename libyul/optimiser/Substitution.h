@@ -22,7 +22,7 @@
 #pragma once
 
 #include <libyul/optimiser/ASTCopier.h>
-#include <libyul/YulString.h>
+#include <libyul/YulName.h>
 
 #include <map>
 
@@ -35,13 +35,13 @@ namespace solidity::yul
 class Substitution: public ASTCopier
 {
 public:
-	Substitution(std::map<YulString, Expression const*> const& _substitutions):
+	Substitution(std::map<YulName, Expression const*> const& _substitutions):
 		m_substitutions(_substitutions)
 	{}
 	Expression translate(Expression const& _expression) override;
 
 private:
-	std::map<YulString, Expression const*> const& m_substitutions;
+	std::map<YulName, Expression const*> const& m_substitutions;
 };
 
 }

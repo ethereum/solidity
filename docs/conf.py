@@ -36,8 +36,55 @@ def setup(sphinx):
     sphinx.add_css_file('css/custom-dark.css')
     sphinx.add_css_file('css/pygments.css')
 
-# -- General configuration ------------------------------------------------
+# -- RTD GitHub configuration ---------------------------------------------
 
+# Taken from:
+# https://github.com/readthedocs/readthedocs.org/blob/e366e7fc8649fbcf1b6d06ecc12c5f7766144c46/readthedocs/projects/constants.py#L350
+GITHUB_REGEXS = [
+    re.compile(r"github.com/(.+)/(.+)(?:\.git){1}$"),
+    # This must come before the one without a / to make sure we don't capture the /
+    re.compile(r"github.com/(.+)/(.+)/"),
+    re.compile(r"github.com/(.+)/(.+)"),
+    re.compile(r"github.com:(.+)/(.+)\.git$"),
+]
+
+# Taken and adapted from:
+# https://github.com/readthedocs/readthedocs.org/blob/e366e7fc8649fbcf1b6d06ecc12c5f7766144c46/readthedocs/builds/utils.py#L24
+def get_github_username_repo(url):
+    if "github" in url:
+        for regex in GITHUB_REGEXS:
+            match = regex.search(url)
+            if match:
+                return match.groups()
+    return (None, None)
+
+display_github = False
+# NOTE: RTD_DISPLAY_GITHUB, RTD_GITHUB_USER and RTD_GITHUB_REPO are set in the RTD project settings
+github_user = os.getenv("RTD_GITHUB_USER")
+github_repo = os.getenv("RTD_GITHUB_REPO")
+
+if github_user and github_repo:
+    display_github = True
+else:
+    git_clone_url = os.getenv("READTHEDOCS_GIT_CLONE_URL")
+    if git_clone_url:
+        github_user, github_repo = get_github_username_repo(git_clone_url)
+        if github_user and github_repo:
+            display_github = True
+
+display_github_env = os.getenv("RTD_DISPLAY_GITHUB")
+if display_github_env:
+    display_github = display_github_env.lower() == "true"
+
+html_context = {
+    "display_github": display_github,
+    "github_user": github_user,
+    "github_repo": github_repo,
+    "github_version": os.getenv("READTHEDOCS_VERSION", "develop"),
+    "conf_py_path": "/docs/",
+}
+
+# -- General configuration ------------------------------------------------
 # If your documentation needs a minimal Sphinx version, state it here.
 #needs_sphinx = '1.0'
 
@@ -67,7 +114,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Solidity'
-project_copyright = '2016-2023, The Solidity Authors'
+project_copyright = '2016-2024, The Solidity Authors'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

@@ -18,6 +18,7 @@
 
 #include <libsolidity/formal/Predicate.h>
 
+#include <libsolidity/formal/ExpressionFormatter.h>
 #include <libsolidity/formal/SMTEncoder.h>
 
 #include <liblangutil/CharStreamProvider.h>
@@ -49,26 +50,25 @@ Predicate const* Predicate::create(
 	std::vector<ScopeOpener const*> _scopeStack
 )
 {
-	smt::SymbolicFunctionVariable predicate{_sort, std::move(_name), _context};
-	std::string functorName = predicate.currentName();
-	solAssert(!m_predicates.count(functorName), "");
+	solAssert(!m_predicates.count(_name), "");
 	return &m_predicates.emplace(
 		std::piecewise_construct,
-		std::forward_as_tuple(functorName),
-		std::forward_as_tuple(std::move(predicate), _type, _context.state().hasBytesConcatFunction(),
+		std::forward_as_tuple(_name),
+		std::forward_as_tuple(_name, std::move(_sort), _type, _context.state().hasBytesConcatFunction(),
 			_node, _contractContext, std::move(_scopeStack))
 	).first->second;
 }
 
 Predicate::Predicate(
-	smt::SymbolicFunctionVariable&& _predicate,
+	std::string _name,
+	SortPointer _sort,
 	PredicateType _type,
 	bool _bytesConcatFunctionInContext,
 	ASTNode const* _node,
 	ContractDefinition const* _contractContext,
 	std::vector<ScopeOpener const*> _scopeStack
 ):
-	m_predicate(std::move(_predicate)),
+	m_functor(std::move(_name), {}, std::move(_sort)),
 	m_type(_type),
 	m_node(_node),
 	m_contractContext(_contractContext),
@@ -89,22 +89,12 @@ void Predicate::reset()
 
 smtutil::Expression Predicate::operator()(std::vector<smtutil::Expression> const& _args) const
 {
-	return m_predicate(_args);
+	return smtutil::Expression(m_functor.name, _args, SortProvider::boolSort);
 }
 
-smtutil::Expression Predicate::functor() const
+smtutil::Expression const& Predicate::functor() const
 {
-	return m_predicate.currentFunctionValue();
-}
-
-smtutil::Expression Predicate::functor(unsigned _idx) const
-{
-	return m_predicate.functionValueAtIndex(_idx);
-}
-
-void Predicate::newFunctor()
-{
-	m_predicate.increaseIndex();
+	return m_functor;
 }
 
 ASTNode const* Predicate::programNode() const
@@ -496,171 +486,6 @@ std::map<std::string, std::string> Predicate::expressionSubstitution(smtutil::Ex
 	return subst;
 }
 
-std::vector<std::optional<std::string>> Predicate::formatExpressions(std::vector<smtutil::Expression> const& _exprs, std::vector<Type const*> const& _types) const
-{
-	solAssert(_exprs.size() == _types.size(), "");
-	std::vector<std::optional<std::string>> strExprs;
-	for (unsigned i = 0; i < _exprs.size(); ++i)
-		strExprs.push_back(expressionToString(_exprs.at(i), _types.at(i)));
-	return strExprs;
-}
-
-std::optional<std::string> Predicate::expressionToString(smtutil::Expression const& _expr, Type const* _type) const
-{
-	if (smt::isNumber(*_type))
-	{
-		solAssert(_expr.sort->kind == Kind::Int, "");
-		solAssert(_expr.arguments.empty(), "");
-
-		if (
-			_type->category() == Type::Category::Address ||
-			_type->category() == Type::Category::FixedBytes
-		)
-		{
-			try
-			{
-				if (_expr.name == "0")
-					return "0x0";
-				// For some reason the code below returns "0x" for "0".
-				return util::toHex(toCompactBigEndian(bigint(_expr.name)), util::HexPrefix::Add, util::HexCase::Lower);
-			}
-			catch (std::out_of_range const&)
-			{
-			}
-			catch (std::invalid_argument const&)
-			{
-			}
-		}
-
-		return _expr.name;
-	}
-	if (smt::isBool(*_type))
-	{
-		solAssert(_expr.sort->kind == Kind::Bool, "");
-		solAssert(_expr.arguments.empty(), "");
-		solAssert(_expr.name == "true" || _expr.name == "false", "");
-		return _expr.name;
-	}
-	if (smt::isFunction(*_type))
-	{
-		solAssert(_expr.arguments.empty(), "");
-		return _expr.name;
-	}
-	if (smt::isArray(*_type))
-	{
-		auto const& arrayType = dynamic_cast<ArrayType const&>(*_type);
-		if (_expr.name != "tuple_constructor")
-			return {};
-
-		auto const& tupleSort = dynamic_cast<TupleSort const&>(*_expr.sort);
-		solAssert(tupleSort.components.size() == 2, "");
-
-		unsigned long length;
-		try
-		{
-			length = stoul(_expr.arguments.at(1).name);
-		}
-		catch(std::out_of_range const&)
-		{
-			return {};
-		}
-		catch(std::invalid_argument const&)
-		{
-			return {};
-		}
-
-		// Limit this counterexample size to 1k.
-		// Some OSs give you "unlimited" memory through swap and other virtual memory,
-		// so purely relying on bad_alloc being thrown is not a good idea.
-		// In that case, the array allocation might cause OOM and the program is killed.
-		if (length >= 1024)
-			return {};
-		try
-		{
-			std::vector<std::string> array(length);
-			if (!fillArray(_expr.arguments.at(0), array, arrayType))
-				return {};
-			return "[" + boost::algorithm::join(array, ", ") + "]";
-		}
-		catch (std::bad_alloc const&)
-		{
-			// Solver gave a concrete array but length is too large.
-		}
-	}
-	if (smt::isNonRecursiveStruct(*_type))
-	{
-		auto const& structType = dynamic_cast<StructType const&>(*_type);
-		solAssert(_expr.name == "tuple_constructor", "");
-		auto const& tupleSort = dynamic_cast<TupleSort const&>(*_expr.sort);
-		auto members = structType.structDefinition().members();
-		solAssert(tupleSort.components.size() == members.size(), "");
-		solAssert(_expr.arguments.size() == members.size(), "");
-		std::vector<std::string> elements;
-		for (unsigned i = 0; i < members.size(); ++i)
-		{
-			std::optional<std::string> elementStr = expressionToString(_expr.arguments.at(i), members[i]->type());
-			elements.push_back(members[i]->name() + (elementStr.has_value() ?  ": " + elementStr.value() : ""));
-		}
-		return "{" + boost::algorithm::join(elements, ", ") + "}";
-	}
-
-	return {};
-}
-
-bool Predicate::fillArray(smtutil::Expression const& _expr, std::vector<std::string>& _array, ArrayType const& _type) const
-{
-	// Base case
-	if (_expr.name == "const_array")
-	{
-		auto length = _array.size();
-		std::optional<std::string> elemStr = expressionToString(_expr.arguments.at(1), _type.baseType());
-		if (!elemStr)
-			return false;
-		_array.clear();
-		_array.resize(length, *elemStr);
-		return true;
-	}
-
-	// Recursive case.
-	if (_expr.name == "store")
-	{
-		if (!fillArray(_expr.arguments.at(0), _array, _type))
-			return false;
-		std::optional<std::string> indexStr = expressionToString(_expr.arguments.at(1), TypeProvider::uint256());
-		if (!indexStr)
-			return false;
-		// Sometimes the solver assigns huge lengths that are not related,
-		// we should catch and ignore those.
-		unsigned long index;
-		try
-		{
-			index = stoul(*indexStr);
-		}
-		catch (std::out_of_range const&)
-		{
-			return true;
-		}
-		catch (std::invalid_argument const&)
-		{
-			return true;
-		}
-		std::optional<std::string> elemStr = expressionToString(_expr.arguments.at(2), _type.baseType());
-		if (!elemStr)
-			return false;
-		if (index < _array.size())
-			_array.at(index) = *elemStr;
-		return true;
-	}
-
-	// Special base case, not supported yet.
-	if (_expr.name.rfind("(_ as-array") == 0)
-	{
-		// Z3 expression representing reinterpretation of a different term as an array
-		return false;
-	}
-
-	solAssert(false, "");
-}
 
 std::map<std::string, std::optional<std::string>> Predicate::readTxVars(smtutil::Expression const& _tx) const
 {

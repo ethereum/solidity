@@ -1,7 +1,0 @@
-{ }
-// ====
-// dialect: yul
-// ----
-// step: disambiguator
-//
-// { }

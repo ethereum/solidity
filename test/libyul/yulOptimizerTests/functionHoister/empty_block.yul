@@ -1,20 +1,18 @@
 {
-    let a:u256
+    let a
     { }
-    function f() -> x:bool {
-        let b:u256 := 4:u256
+    function f() -> x {
+        let b := 4
         { }
         for {} f() {} {}
     }
 }
-// ====
-// dialect: yul
 // ----
 // step: functionHoister
 //
 // {
 //     let a
-//     function f() -> x:bool
+//     function f() -> x
 //     {
 //         let b := 4
 //         for { } f() { }

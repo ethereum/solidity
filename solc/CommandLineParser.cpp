@@ -472,6 +472,8 @@ void CommandLineParser::parseOutputSelection()
 			CompilerOutputs::componentName(&CompilerOutputs::binary),
 			CompilerOutputs::componentName(&CompilerOutputs::irOptimized),
 			CompilerOutputs::componentName(&CompilerOutputs::astCompactJson),
+			CompilerOutputs::componentName(&CompilerOutputs::asmJson),
+			CompilerOutputs::componentName(&CompilerOutputs::yulCFGJson),
 		};
 		static std::set<std::string> const evmAssemblyJsonImportModeOutputs = {
 			CompilerOutputs::componentName(&CompilerOutputs::asm_),
@@ -617,6 +619,9 @@ General Information)").c_str(),
 				"Select desired EOF version. Currently the only valid value is 1. "
 				"If not specified, legacy non-EOF bytecode will be generated."
 			)
+			(
+				g_strYul.c_str(), "The typed Yul dialect is no longer supported. For regular Yul compilation use --strict-assembly instead."
+			)
 		;
 	outputOptions.add_options()
 		(
@@ -662,10 +667,6 @@ General Information)").c_str(),
 		(
 			g_strAssemble.c_str(),
 			"Switch to assembly mode and assume input is assembly."
-		)
-		(
-			g_strYul.c_str(),
-			"Switch to Yul mode and assume input is Yul."
 		)
 		(
 			g_strStrictAssembly.c_str(),
@@ -759,8 +760,13 @@ General Information)").c_str(),
 		(CompilerOutputs::componentName(&CompilerOutputs::natspecUser).c_str(), "Natspec user documentation of all contracts.")
 		(CompilerOutputs::componentName(&CompilerOutputs::natspecDev).c_str(), "Natspec developer documentation of all contracts.")
 		(CompilerOutputs::componentName(&CompilerOutputs::metadata).c_str(), "Combined Metadata JSON whose IPFS hash is stored on-chain.")
-		(CompilerOutputs::componentName(&CompilerOutputs::storageLayout).c_str(), "Slots, offsets and types of the contract's state variables.")
+		(CompilerOutputs::componentName(&CompilerOutputs::storageLayout).c_str(), "Slots, offsets and types of the contract's state variables located in storage.")
+		(CompilerOutputs::componentName(&CompilerOutputs::transientStorageLayout).c_str(), "Slots, offsets and types of the contract's state variables located in transient storage.")
 	;
+	if (!_forHelp) // Note: We intentionally keep this undocumented for now.
+		outputComponents.add_options()
+			(CompilerOutputs::componentName(&CompilerOutputs::yulCFGJson).c_str(), "Control Flow Graph (CFG) of Yul code in JSON format.")
+		;
 	desc.add(outputComponents);
 
 	po::options_description extraOutput("Extra Output");
@@ -954,7 +960,6 @@ void CommandLineParser::processArgs()
 		g_strLink,
 		g_strAssemble,
 		g_strStrictAssembly,
-		g_strYul,
 		g_strImportAst,
 		g_strLSP,
 		g_strImportEvmAssemblerJson,
@@ -970,7 +975,7 @@ void CommandLineParser::processArgs()
 		m_options.input.mode = InputMode::StandardJson;
 	else if (m_args.count(g_strLSP))
 		m_options.input.mode = InputMode::LanguageServer;
-	else if (m_args.count(g_strAssemble) > 0 || m_args.count(g_strStrictAssembly) > 0 || m_args.count(g_strYul) > 0)
+	else if (m_args.count(g_strAssemble) > 0 || m_args.count(g_strStrictAssembly) > 0)
 		m_options.input.mode = InputMode::Assembler;
 	else if (m_args.count(g_strLink) > 0)
 		m_options.input.mode = InputMode::Linker;
@@ -987,6 +992,13 @@ void CommandLineParser::processArgs()
 		m_options.input.mode == InputMode::Version
 	)
 		return;
+
+	if (m_args.count(g_strYul) > 0)
+		solThrow(
+			CommandLineValidationError,
+			"The typed Yul dialect formerly accessible via --yul is no longer supported, "
+			"please use --strict-assembly instead."
+		);
 
 	std::map<std::string, std::set<InputMode>> validOptionInputModeCombinations = {
 		// TODO: This should eventually contain all options.
@@ -1274,7 +1286,7 @@ void CommandLineParser::processArgs()
 		// switch to assembly mode
 		using Input = yul::YulStack::Language;
 		using Machine = yul::YulStack::Machine;
-		m_options.assembly.inputLanguage = m_args.count(g_strYul) ? Input::Yul : (m_args.count(g_strStrictAssembly) ? Input::StrictAssembly : Input::Assembly);
+		m_options.assembly.inputLanguage = m_args.count(g_strStrictAssembly) ? Input::StrictAssembly : Input::Assembly;
 
 		if (m_args.count(g_strMachine))
 		{
@@ -1468,7 +1480,8 @@ void CommandLineParser::parseCombinedJsonOption()
 			&CombinedJsonRequests::natspecDev,
 			&CombinedJsonRequests::natspecUser,
 			&CombinedJsonRequests::signatureHashes,
-			&CombinedJsonRequests::storageLayout
+			&CombinedJsonRequests::storageLayout,
+			&CombinedJsonRequests::transientStorageLayout
 		};
 
 		for (auto const invalidOption: invalidOptions)

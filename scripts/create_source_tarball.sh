@@ -21,8 +21,12 @@ REPO_ROOT="$(dirname "$0")"/..
     TEMPDIR=$(mktemp -d)
     SOLDIR="$TEMPDIR/solidity_$versionstring/"
     mkdir "$SOLDIR"
+    # Ensure that submodules are initialized.
+    git submodule update --init --recursive
     # Store the current source
     git checkout-index -a --prefix="$SOLDIR"
+    # shellcheck disable=SC2016
+    SOLDIR="$SOLDIR" git submodule foreach 'git checkout-index -a --prefix="$SOLDIR/$sm_path/"'
     # Store the commit hash
     echo "$commithash" > "$SOLDIR/commit_hash.txt"
     if [ -e prerelease.txt ] && [ ! -s prerelease.txt ]

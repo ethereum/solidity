@@ -71,7 +71,7 @@ For a detailed explanation with examples and discussion of corner cases please r
 Library Linking
 ---------------
 
-If your contracts use :ref:`libraries <libraries>`, you will notice that the bytecode contains substrings of the form ``__$53aea86b7d70b31448b230b20ae141a537$__``. These are placeholders for the actual library addresses.
+If your contracts use :ref:`libraries <libraries>`, you will notice that the bytecode contains substrings of the form ``__$53aea86b7d70b31448b230b20ae141a537$__`` `(format was different <v0.5.0) <https://docs.soliditylang.org/en/v0.4.26/contracts.html#libraries>`_. These are placeholders for the actual library addresses.
 The placeholder is a 34 character prefix of the hex encoding of the keccak256 hash of the fully qualified library name.
 The bytecode file will also contain lines of the form ``// <placeholder> -> <fq library name>`` at the end to help
 identify which libraries the placeholders represent. Note that the fully qualified library name
@@ -404,7 +404,8 @@ Input Description
         // but to the whole source file like the AST.
         // A star as contract name refers to all contracts in the file.
         // Similarly, a star as a file name matches all files.
-        // To select all outputs the compiler can possibly generate, use
+        // To select all outputs the compiler can possibly generate, with the exclusion of
+        // Yul intermediate representation outputs, use
         // "outputSelection: { "*": { "*": [ "*" ], "": [ "*" ] } }"
         // but note that this might slow down the compilation process needlessly.
         //
@@ -422,7 +423,8 @@ Input Description
         //   irAst - AST of Yul intermediate representation of the code before optimization
         //   irOptimized - Intermediate representation after optimization
         //   irOptimizedAst - AST of intermediate representation after optimization
-        //   storageLayout - Slots, offsets and types of the contract's state variables.
+        //   storageLayout - Slots, offsets and types of the contract's state variables in storage.
+        //   transientStorageLayout - Slots, offsets and types of the contract's state variables in transient storage.
         //   evm.assembly - New assembly format
         //   evm.legacyAssembly - Old-style assembly format in JSON
         //   evm.bytecode.functionDebugData - Debugging information at function level
@@ -479,7 +481,7 @@ Input Description
           // Choose which types of invariants should be reported to the user: contract, reentrancy.
           "invariants": ["contract", "reentrancy"],
           // Choose whether to output all proved targets. The default is `false`.
-          "showProved": true,
+          "showProvedSafe": true,
           // Choose whether to output all unproved targets. The default is `false`.
           "showUnproved": true,
           // Choose whether to output all unsupported language features. The default is `false`.
@@ -577,6 +579,8 @@ Output Description
             "irOptimizedAst": {/* ... */},
             // See the Storage Layout documentation.
             "storageLayout": {"storage": [/* ... */], "types": {/* ... */} },
+            // See the Storage Layout documentation.
+            "transientStorageLayout": {"storage": [/* ... */], "types": {/* ... */} },
             // EVM-related outputs
             "evm": {
               // Assembly (string)

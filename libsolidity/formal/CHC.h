@@ -58,6 +58,7 @@ public:
 		smt::EncodingContext& _context,
 		langutil::UniqueErrorReporter& _errorReporter,
 		langutil::UniqueErrorReporter& _unsupportedErrorReporter,
+		langutil::ErrorReporter& _provedSafeReporter,
 		std::map<util::h256, std::string> const& _smtlib2Responses,
 		ReadCallback::Callback const& _smtCallback,
 		ModelCheckerSettings _settings,
@@ -77,6 +78,17 @@ public:
 		}
 	};
 
+	struct SafeTargetsCompare
+	{
+		bool operator()(CHCVerificationTarget const & _lhs, CHCVerificationTarget const & _rhs) const
+		{
+			if (_lhs.errorNode->id() == _rhs.errorNode->id())
+				return _lhs.type  < _rhs.type;
+			else
+				return _lhs.errorNode->id() == _rhs.errorNode->id();
+		}
+	};
+
 	struct ReportTargetInfo
 	{
 		langutil::ErrorId error;
@@ -84,7 +96,7 @@ public:
 		std::string message;
 	};
 
-	std::map<ASTNode const*, std::set<CHCVerificationTarget>, smt::EncodingContext::IdCompare> const& safeTargets() const { return m_safeTargets; }
+	std::map<ASTNode const*, std::set<CHCVerificationTarget, SafeTargetsCompare>, smt::EncodingContext::IdCompare> const& safeTargets() const { return m_safeTargets; }
 	std::map<ASTNode const*, std::map<VerificationTargetType, ReportTargetInfo>, smt::EncodingContext::IdCompare> const& unsafeTargets() const { return m_unsafeTargets; }
 
 	/// This is used if the Horn solver is not directly linked into this binary.
@@ -213,7 +225,6 @@ private:
 	smtutil::Expression interface(ContractDefinition const& _contract);
 	/// Error predicate over current variables.
 	smtutil::Expression error();
-	smtutil::Expression error(unsigned _idx);
 
 	/// Creates a block for the given _node.
 	Predicate const* createBlock(ASTNode const* _node, PredicateType _predType, std::string const& _prefix = "");
@@ -285,7 +296,7 @@ private:
 	void addRule(smtutil::Expression const& _rule, std::string const& _ruleName);
 	/// @returns <true, invariant, empty> if query is unsatisfiable (safe).
 	/// @returns <false, Expression(true), model> otherwise.
-	std::tuple<smtutil::CheckResult, smtutil::Expression, smtutil::CHCSolverInterface::CexGraph> query(smtutil::Expression const& _query, langutil::SourceLocation const& _location);
+	smtutil::CHCSolverInterface::QueryResult query(smtutil::Expression const& _query, langutil::SourceLocation const& _location);
 
 	void verificationTargetEncountered(ASTNode const* const _errorNode, VerificationTargetType _type, smtutil::Expression const& _errorCondition);
 
@@ -423,7 +434,7 @@ private:
 	std::map<unsigned, CHCVerificationTarget> m_verificationTargets;
 
 	/// Targets proved safe.
-	std::map<ASTNode const*, std::set<CHCVerificationTarget>, smt::EncodingContext::IdCompare> m_safeTargets;
+	std::map<ASTNode const*, std::set<CHCVerificationTarget, SafeTargetsCompare>, smt::EncodingContext::IdCompare> m_safeTargets;
 	/// Targets proved unsafe.
 	std::map<ASTNode const*, std::map<VerificationTargetType, ReportTargetInfo>, smt::EncodingContext::IdCompare> m_unsafeTargets;
 	/// Targets not proved.

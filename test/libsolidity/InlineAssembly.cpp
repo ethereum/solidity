@@ -66,18 +66,9 @@ std::optional<Error> parseAndReturnFirstError(
 		solidity::frontend::OptimiserSettings::none(),
 		DebugInfoSelection::None()
 	);
-	bool success = false;
-	try
-	{
-		success = stack.parseAndAnalyze("", _source);
-		if (success && _assemble)
-			stack.assemble(_machine);
-	}
-	catch (FatalError const&)
-	{
-		BOOST_FAIL("Fatal error leaked.");
-		success = false;
-	}
+	bool success = stack.parseAndAnalyze("", _source);
+	if (success && _assemble)
+		stack.assemble(_machine);
 	std::shared_ptr<Error const> error;
 	for (auto const& e: stack.errors())
 	{
@@ -140,7 +131,7 @@ void parsePrintCompare(std::string const& _source, bool _canWarn = false)
 	if (_canWarn)
 		BOOST_REQUIRE(!Error::containsErrors(stack.errors()));
 	else
-		BOOST_REQUIRE(stack.errors().empty());
+		BOOST_REQUIRE(!Error::hasErrorsWarningsOrInfos(stack.errors()));
 	std::string expectation = "object \"object\" {\n    code " + boost::replace_all_copy(_source, "\n", "\n    ") + "\n}\n";
 	BOOST_CHECK_EQUAL(stack.print(), expectation);
 }
@@ -228,7 +219,7 @@ BOOST_AUTO_TEST_CASE(print_string_literal_unicode)
 		DebugInfoSelection::None()
 	);
 	BOOST_REQUIRE(stack.parseAndAnalyze("", source));
-	BOOST_REQUIRE(stack.errors().empty());
+	BOOST_REQUIRE(!Error::hasErrorsWarningsOrInfos(stack.errors()));
 	BOOST_CHECK_EQUAL(stack.print(), parsed);
 
 	std::string parsedInner = "{ let x := \"\\xe1\\xae\\xac\" }";

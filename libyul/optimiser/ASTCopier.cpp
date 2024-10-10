@@ -83,7 +83,7 @@ Statement ASTCopier::operator()(Switch const& _switch)
 
 Statement ASTCopier::operator()(FunctionDefinition const& _function)
 {
-	YulString translatedName = translateIdentifier(_function.name);
+	YulName translatedName = translateIdentifier(_function.name);
 
 	enterFunction(_function);
 	ScopeGuard g([&]() { this->leaveFunction(_function); });
@@ -163,12 +163,12 @@ Literal ASTCopier::translate(Literal const& _literal)
 	return _literal;
 }
 
-TypedName ASTCopier::translate(TypedName const& _typedName)
+NameWithDebugData ASTCopier::translate(NameWithDebugData const& _typedName)
 {
-	return TypedName{_typedName.debugData, translateIdentifier(_typedName.name), _typedName.type};
+	return NameWithDebugData{_typedName.debugData, translateIdentifier(_typedName.name)};
 }
 
-YulString FunctionCopier::translateIdentifier(YulString _name)
+YulName FunctionCopier::translateIdentifier(YulName _name)
 {
 	if (m_translations.count(_name))
 		return m_translations.at(_name);

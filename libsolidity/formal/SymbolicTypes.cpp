@@ -110,6 +110,18 @@ SortPointer smtSort(frontend::Type const& _type)
 			// in the tuple's name.
 			if (auto tupleSort = std::dynamic_pointer_cast<TupleSort>(array->range))
 				tupleName = tupleSort->name;
+			else if (isContract(*baseType))
+				// use a common sort for contracts so inheriting contracts do not cause conflicting SMT types
+				// solc handles types mismtach
+				tupleName = "contract";
+			else if (isFunction(*baseType))
+				// use a common sort for functions so pure and view modifier do not cause conflicting SMT types
+				// solc handles types mismtach
+				tupleName = "function";
+			else if (isAddress(*baseType))
+				// use a common sort for address and address payable so it does not cause conflicting SMT types
+				// solc handles types mismtach
+				tupleName = "address";
 			else if (
 				baseType->category() == frontend::Type::Category::Integer ||
 				baseType->category() == frontend::Type::Category::FixedPoint

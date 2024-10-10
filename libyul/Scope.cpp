@@ -25,26 +25,25 @@ using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
 
-bool Scope::registerVariable(YulString _name, YulType const& _type)
+bool Scope::registerVariable(YulName _name)
 {
 	if (exists(_name))
 		return false;
 	Variable variable;
-	variable.type = _type;
 	variable.name = _name;
 	identifiers[_name] = variable;
 	return true;
 }
 
-bool Scope::registerFunction(YulString _name, std::vector<YulType> _arguments, std::vector<YulType> _returns)
+bool Scope::registerFunction(YulName _name, size_t _numArguments, size_t _numReturns)
 {
 	if (exists(_name))
 		return false;
-	identifiers[_name] = Function{std::move(_arguments), std::move(_returns), _name};
+	identifiers[_name] = Function{_numArguments, _numReturns, _name};
 	return true;
 }
 
-Scope::Identifier* Scope::lookup(YulString _name)
+Scope::Identifier* Scope::lookup(YulName _name)
 {
 	bool crossedFunctionBoundary = false;
 	for (Scope* s = this; s; s = s->superScope)
@@ -64,7 +63,7 @@ Scope::Identifier* Scope::lookup(YulString _name)
 	return nullptr;
 }
 
-bool Scope::exists(YulString _name) const
+bool Scope::exists(YulName _name) const
 {
 	if (identifiers.count(_name))
 		return true;

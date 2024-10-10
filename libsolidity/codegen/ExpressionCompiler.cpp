@@ -108,7 +108,10 @@ void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration c
 	if (_varDecl.immutable())
 		ImmutableItem(m_context, _varDecl).storeValue(*type, _varDecl.location(), true);
 	else
+	{
+		solAssert(_varDecl.referenceLocation() != VariableDeclaration::Location::Transient);
 		StorageItem(m_context, _varDecl).storeValue(*type, _varDecl.location(), true);
+	}
 }
 
 void ExpressionCompiler::appendConstStateVariableAccessor(VariableDeclaration const& _varDecl)
@@ -147,6 +150,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		if (auto mappingType = dynamic_cast<MappingType const*>(returnType))
 		{
 			solAssert(CompilerUtils::freeMemoryPointer >= 0x40, "");
+			solAssert(_varDecl.referenceLocation() != VariableDeclaration::Location::Transient);
 
 			// pop offset
 			m_context << Instruction::POP;
@@ -196,6 +200,8 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		}
 		else if (auto arrayType = dynamic_cast<ArrayType const*>(returnType))
 		{
+			solAssert(_varDecl.referenceLocation() != VariableDeclaration::Location::Transient);
+
 			// pop offset
 			m_context << Instruction::POP;
 			utils().copyToStackTop(static_cast<unsigned>(paramTypes.size() - i + 1), 1);
@@ -229,6 +235,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	solAssert(returnTypes.size() >= 1, "");
 	if (StructType const* structType = dynamic_cast<StructType const*>(returnType))
 	{
+		solAssert(_varDecl.referenceLocation() != VariableDeclaration::Location::Transient);
 		solAssert(!_varDecl.immutable(), "");
 		// remove offset
 		m_context << Instruction::POP;
@@ -258,6 +265,8 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		solAssert(returnTypes.size() == 1, "");
 		if (_varDecl.immutable())
 			ImmutableItem(m_context, _varDecl).retrieveValue(SourceLocation());
+		else if (_varDecl.referenceLocation() == VariableDeclaration::Location::Transient)
+			TransientStorageItem(m_context, *returnType).retrieveValue(SourceLocation(), true);
 		else
 			StorageItem(m_context, *returnType).retrieveValue(SourceLocation(), true);
 		utils().convertType(*returnType, *returnTypes.front());
@@ -436,7 +445,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 		unsigned returnParametersSize = CompilerUtils::sizeOnStack(functionType->returnParameterTypes());
 
 		// callee adds return parameters, but removes arguments and return label
-		m_context.adjustStackOffset(static_cast<int>(returnParametersSize - parameterSize) - 1);
+		m_context.adjustStackOffset(static_cast<int>(returnParametersSize) - static_cast<int>(parameterSize) - 1);
 
 		return false;
 	}
@@ -564,7 +573,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 		unsigned returnParametersSize = CompilerUtils::sizeOnStack(functionType->returnParameterTypes());
 
 		// callee adds return parameters, but removes arguments and return label
-		m_context.adjustStackOffset(static_cast<int>(returnParametersSize - parameterSize) - 1);
+		m_context.adjustStackOffset(static_cast<int>(returnParametersSize) - static_cast<int>(parameterSize) - 1);
 		return false;
 	}
 
@@ -721,7 +730,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 
 			unsigned returnParametersSize = CompilerUtils::sizeOnStack(function.returnParameterTypes());
 			// callee adds return parameters, but removes arguments and return label
-			m_context.adjustStackOffset(static_cast<int>(returnParametersSize - parameterSize) - 1);
+			m_context.adjustStackOffset(static_cast<int>(returnParametersSize) - static_cast<int>(parameterSize) - 1);
 			break;
 		}
 		case FunctionType::Kind::BareCall:
@@ -990,6 +999,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		}
 		case FunctionType::Kind::Error:
 		{
+			// This case is part of the ``revert <error>`` path of the codegen.
+			// For ``require(bool, <error>)`` refer to the ``Kind::Require`` case.
 			_functionCall.expression().accept(*this);
 			std::vector<Type const*> argumentTypes;
 			for (ASTPointer<Expression const> const& arg: _functionCall.sortedArguments())
@@ -1249,9 +1260,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::Require:
 		{
 			acceptAndConvert(*arguments.front(), *function.parameterTypes().front(), false);
-
+			// stack: <condition>
 			bool haveReasonString = arguments.size() > 1 && m_context.revertStrings() != RevertStrings::Strip;
-
 			if (arguments.size() > 1)
 			{
 				// Users probably expect the second argument to be evaluated
@@ -1259,11 +1269,49 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				// function call.
 				solAssert(arguments.size() == 2, "");
 				solAssert(function.kind() == FunctionType::Kind::Require, "");
-				// Check if the function call matches ``require(bool, error)``, and throw an unimplemented error,
-				// as require with custom errors is not supported in legacy codegen.
 				auto const* magicType = dynamic_cast<MagicType const*>(arguments[1]->annotation().type);
 				if (magicType && magicType->kind() == MagicType::Kind::Error)
-					solUnimplemented("Require with a custom error is only available using the via-ir pipeline.");
+				{
+					// Make sure that error constructor arguments are evaluated regardless of the require condition
+					auto const& errorConstructorCall = dynamic_cast<FunctionCall const&>(*arguments[1]);
+					errorConstructorCall.expression().accept(*this);
+					std::vector<Type const*> errorConstructorArgumentTypes{};
+					for (ASTPointer<Expression const> const& errorConstructorArgument: errorConstructorCall.sortedArguments())
+					{
+						errorConstructorArgument->accept(*this);
+						errorConstructorArgumentTypes.push_back(errorConstructorArgument->annotation().type);
+					}
+					unsigned const sizeOfConditionArgument = arguments.at(0)->annotation().type->sizeOnStack();
+					unsigned const sizeOfErrorArguments = CompilerUtils::sizeOnStack(errorConstructorArgumentTypes);
+					// stack: <condition> <arg0> <arg1> ... <argN>
+					try
+					{
+						// Move condition to the top of the stack
+						utils().moveToStackTop(sizeOfErrorArguments, sizeOfConditionArgument);
+					}
+					catch (StackTooDeepError const& _exception)
+					{
+						_exception << errinfo_sourceLocation(errorConstructorCall.location());
+						throw _exception;
+					}
+					// stack: <arg0> <arg1> ... <argN> <condition>
+					m_context << Instruction::ISZERO << Instruction::ISZERO;
+					AssemblyItem successBranchTag = m_context.appendConditionalJump();
+
+					auto const* errorDefinition = dynamic_cast<ErrorDefinition const*>(ASTNode::referencedDeclaration(errorConstructorCall.expression()));
+					solAssert(errorDefinition && errorDefinition->functionType(true));
+					utils().revertWithError(
+						errorDefinition->functionType(true)->externalSignature(),
+						errorDefinition->functionType(true)->parameterTypes(),
+						errorConstructorArgumentTypes
+					);
+					// Here, the argument is consumed, but in the other branch, it is still there.
+					m_context.adjustStackOffset(static_cast<int>(sizeOfErrorArguments));
+					m_context << successBranchTag;
+					// In case of the success branch i.e. require(true, ...), pop error constructor arguments
+					utils().popStackSlots(sizeOfErrorArguments);
+					break;
+				}
 
 				if (m_context.revertStrings() == RevertStrings::Strip)
 				{
@@ -2047,6 +2095,9 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 					ArrayUtils(m_context).retrieveLength(type);
 					m_context << Instruction::SWAP1 << Instruction::POP;
 					break;
+				case DataLocation::Transient:
+					solUnimplemented("Transient data location is only supported for value types.");
+					break;
 				case DataLocation::Memory:
 					m_context << Instruction::MLOAD;
 					break;
@@ -2192,6 +2243,9 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 					}
 					else
 						setLValueToStorageItem(_indexAccess);
+					break;
+				case DataLocation::Transient:
+					solUnimplemented("Transient data location is only supported for value types.");
 					break;
 				case DataLocation::Memory:
 					ArrayUtils(m_context).accessIndex(arrayType);
@@ -2950,7 +3004,12 @@ void ExpressionCompiler::setLValueFromDeclaration(Declaration const& _declaratio
 	if (m_context.isLocalVariable(&_declaration))
 		setLValue<StackVariable>(_expression, dynamic_cast<VariableDeclaration const&>(_declaration));
 	else if (m_context.isStateVariable(&_declaration))
-		setLValue<StorageItem>(_expression, dynamic_cast<VariableDeclaration const&>(_declaration));
+	{
+		if (dynamic_cast<VariableDeclaration const&>(_declaration).referenceLocation() == VariableDeclaration::Location::Transient)
+			setLValue<TransientStorageItem>(_expression, dynamic_cast<VariableDeclaration const&>(_declaration));
+		else
+			setLValue<StorageItem>(_expression, dynamic_cast<VariableDeclaration const&>(_declaration));
+	}
 	else
 		solAssert(false, "Identifier type not supported or identifier not found.");
 }

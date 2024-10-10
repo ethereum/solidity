@@ -37,6 +37,7 @@
 #include <libyul/AsmPrinter.h>
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
+#include <libyul/Utilities.h>
 #include <libyul/optimiser/ASTCopier.h>
 
 #include <liblangutil/Exceptions.h>
@@ -47,6 +48,7 @@
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Visitor.h>
 
+#include <range/v3/algorithm/all_of.hpp>
 #include <range/v3/view/transform.hpp>
 
 using namespace solidity;
@@ -76,7 +78,7 @@ struct CopyTranslate: public yul::ASTCopier
 			return ASTCopier::operator()(_identifier);
 	}
 
-	yul::YulString translateIdentifier(yul::YulString _name) override
+	yul::YulName translateIdentifier(yul::YulName _name) override
 	{
 		// Strictly, the dialect used by inline assembly (m_dialect) could be different
 		// from the Yul dialect we are compiling to. So we are assuming here that the builtin
@@ -85,7 +87,7 @@ struct CopyTranslate: public yul::ASTCopier
 		if (m_dialect.builtin(_name))
 			return _name;
 		else
-			return yul::YulString{"usr$" + _name.str()};
+			return yul::YulName{"usr$" + _name.str()};
 	}
 
 	yul::Identifier translate(yul::Identifier const& _identifier) override
@@ -202,9 +204,9 @@ private:
 			solAssert(false);
 
 		if (isDigit(value.front()))
-			return yul::Literal{_identifier.debugData, yul::LiteralKind::Number, yul::YulString{value}, {}};
+			return yul::Literal{_identifier.debugData, yul::LiteralKind::Number, yul::valueOfNumberLiteral(value)};
 		else
-			return yul::Identifier{_identifier.debugData, yul::YulString{value}};
+			return yul::Identifier{_identifier.debugData, yul::YulName{value}};
 	}
 
 
@@ -269,6 +271,7 @@ void IRGeneratorForStatements::initializeStateVar(VariableDeclaration const& _va
 		solAssert(!_varDecl.isConstant());
 		if (!_varDecl.value())
 			return;
+		solAssert(_varDecl.referenceLocation() != VariableDeclaration::Location::Transient, "Transient storage state variables cannot be initialized in place.");
 
 		_varDecl.value()->accept(*this);
 
@@ -716,11 +719,21 @@ bool IRGeneratorForStatements::visit(UnaryOperation const& _unaryOperation)
 			util::GenericVisitor{
 				[&](IRLValue::Storage const& _storage) {
 					appendCode() <<
-						m_utils.storageSetToZeroFunction(m_currentLValue->type) <<
+						m_utils.storageSetToZeroFunction(m_currentLValue->type, VariableDeclaration::Location::Unspecified) <<
 						"(" <<
 						_storage.slot <<
 						", " <<
 						_storage.offsetString() <<
+						")\n";
+					m_currentLValue.reset();
+				},
+				[&](IRLValue::TransientStorage const& _transientStorage) {
+					appendCode() <<
+						m_utils.storageSetToZeroFunction(m_currentLValue->type, VariableDeclaration::Location::Transient) <<
+						"(" <<
+						_transientStorage.slot <<
+						", " <<
+						_transientStorage.offsetString() <<
 						")\n";
 					m_currentLValue.reset();
 				},
@@ -1548,7 +1561,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 
 		ContractDefinition const* contract =
 			&dynamic_cast<ContractType const&>(*functionType->returnParameterTypes().front()).contractDefinition();
-		m_context.subObjectsCreated().insert(contract);
+		m_context.addSubObject(contract);
 
 		Whiskers t(R"(let <memPos> := <allocateUnbounded>()
 			let <memEnd> := add(<memPos>, datasize("<object>"))
@@ -1936,7 +1949,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 			auto const& contractType = dynamic_cast<ContractType const&>(*arg);
 			solAssert(!contractType.isSuper());
 			ContractDefinition const& contract = contractType.contractDefinition();
-			m_context.subObjectsCreated().insert(&contract);
+			m_context.addSubObject(&contract);
 			appendCode() << Whiskers(R"(
 				let <size> := datasize("<objectName>")
 				let <result> := <allocationFunction>(add(<size>, 32))
@@ -2241,11 +2254,10 @@ bool IRGeneratorForStatements::visit(InlineAssembly const& _inlineAsm)
 		m_context.setMemoryUnsafeInlineAssemblySeen();
 	CopyTranslate bodyCopier{_inlineAsm.dialect(), m_context, _inlineAsm.annotation().externalReferences};
 
-	yul::Statement modified = bodyCopier(_inlineAsm.operations());
+	yul::Statement modified = bodyCopier(_inlineAsm.operations().root());
 
 	solAssert(std::holds_alternative<yul::Block>(modified));
 
-	// Do not provide dialect so that we get the full type information.
 	appendCode() << yul::AsmPrinter()(std::get<yul::Block>(modified)) << "\n";
 	return false;
 }
@@ -2314,6 +2326,9 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 
 				break;
 			}
+			case DataLocation::Transient:
+				solUnimplemented("Transient data location is only supported for value types.");
+				break;
 			case DataLocation::Memory:
 			{
 				std::string const indexAccessFunction = m_utils.memoryArrayIndexAccessFunction(arrayType);
@@ -2545,7 +2560,17 @@ void IRGeneratorForStatements::handleVariableReference(
 			*_variable.annotation().type,
 			IRLValue::Stack{m_context.localVariable(_variable)}
 		});
+	else if (m_context.isStateVariable(_variable) && _variable.referenceLocation() == VariableDeclaration::Location::Transient)
+		setLValue(_referencingExpression, IRLValue{
+			*_variable.annotation().type,
+			IRLValue::TransientStorage{
+				toCompactHexWithPrefix(m_context.storageLocationOfStateVariable(_variable).first),
+				m_context.storageLocationOfStateVariable(_variable).second
+			}
+		});
 	else if (m_context.isStateVariable(_variable))
+	{
+		solAssert(_variable.referenceLocation() == VariableDeclaration::Location::Unspecified, "Must have storage location.");
 		setLValue(_referencingExpression, IRLValue{
 			*_variable.annotation().type,
 			IRLValue::Storage{
@@ -2553,6 +2578,7 @@ void IRGeneratorForStatements::handleVariableReference(
 				m_context.storageLocationOfStateVariable(_variable).second
 			}
 		});
+	}
 	else
 		solAssert(false, "Invalid variable kind.");
 }
@@ -3060,13 +3086,29 @@ void IRGeneratorForStatements::writeToLValue(IRLValue const& _lvalue, IRVariable
 				}, _storage.offset);
 
 				appendCode() <<
-					m_utils.updateStorageValueFunction(_value.type(), _lvalue.type, offsetStatic) <<
+					m_utils.updateStorageValueFunction(_value.type(), _lvalue.type, VariableDeclaration::Location::Unspecified, offsetStatic) <<
 					"(" <<
 					_storage.slot <<
 					offsetArgument <<
 					_value.commaSeparatedListPrefixed() <<
 					")\n";
+			},
+			[&](IRLValue::TransientStorage const& _transientStorage) {
+				std::string offsetArgument;
+				std::optional<unsigned> offsetStatic;
 
+				std::visit(GenericVisitor{
+					[&](unsigned _offset) { offsetStatic = _offset; },
+					[&](std::string const& _offset) { offsetArgument = ", " + _offset; }
+				}, _transientStorage.offset);
+
+				appendCode() <<
+					m_utils.updateStorageValueFunction(_value.type(), _lvalue.type, VariableDeclaration::Location::Transient, offsetStatic) <<
+					"(" <<
+					_transientStorage.slot <<
+					offsetArgument <<
+					_value.commaSeparatedListPrefixed() <<
+					")\n";
 			},
 			[&](IRLValue::Memory const& _memory) {
 				if (_lvalue.type.isValueType())
@@ -3145,7 +3187,7 @@ IRVariable IRGeneratorForStatements::readFromLValue(IRLValue const& _lvalue)
 				define(result) << _storage.slot << "\n";
 			else if (std::holds_alternative<std::string>(_storage.offset))
 				define(result) <<
-					m_utils.readFromStorageDynamic(_lvalue.type, true) <<
+					m_utils.readFromStorageDynamic(_lvalue.type, true, VariableDeclaration::Location::Unspecified) <<
 					"(" <<
 					_storage.slot <<
 					", " <<
@@ -3153,9 +3195,27 @@ IRVariable IRGeneratorForStatements::readFromLValue(IRLValue const& _lvalue)
 					")\n";
 			else
 				define(result) <<
-					m_utils.readFromStorage(_lvalue.type, std::get<unsigned>(_storage.offset), true) <<
+					m_utils.readFromStorage(_lvalue.type, std::get<unsigned>(_storage.offset), true, VariableDeclaration::Location::Unspecified) <<
 					"(" <<
 					_storage.slot <<
+					")\n";
+		},
+		[&](IRLValue::TransientStorage const& _transientStorage) {
+			if (!_lvalue.type.isValueType())
+				define(result) << _transientStorage.slot << "\n";
+			else if (std::holds_alternative<std::string>(_transientStorage.offset))
+				define(result) <<
+					m_utils.readFromStorageDynamic(_lvalue.type, true, VariableDeclaration::Location::Transient) <<
+					"(" <<
+					_transientStorage.slot <<
+					", " <<
+					std::get<std::string>(_transientStorage.offset) <<
+					")\n";
+			else
+				define(result) <<
+					m_utils.readFromStorage(_lvalue.type, std::get<unsigned>(_transientStorage.offset), true, VariableDeclaration::Location::Transient) <<
+					"(" <<
+					_transientStorage.slot <<
 					")\n";
 		},
 		[&](IRLValue::Memory const& _memory) {

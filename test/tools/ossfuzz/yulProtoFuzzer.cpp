@@ -72,18 +72,19 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	// Parse protobuf mutated YUL code
 	if (
 		!stack.parseAndAnalyze("source", yul_source) ||
-		!stack.parserResult()->code ||
+		!stack.parserResult()->code() ||
 		!stack.parserResult()->analysisInfo ||
 		Error::containsErrors(stack.errors())
 	)
 		yulAssert(false, "Proto fuzzer generated malformed program");
 
+	// TODO: Add EOF support
 	// Optimize
 	YulOptimizerTestCommon optimizerTest(
 		stack.parserResult(),
-		EVMDialect::strictAssemblyForEVMObjects(version)
+		EVMDialect::strictAssemblyForEVMObjects(version, std::nullopt)
 	);
 	optimizerTest.setStep(optimizerTest.randomOptimiserStep(_input.step()));
-	std::shared_ptr<solidity::yul::Block> astBlock = optimizerTest.run();
-	yulAssert(astBlock != nullptr, "Optimiser error.");
+	auto const* astRoot = optimizerTest.run();
+	yulAssert(astRoot != nullptr, "Optimiser error.");
 }

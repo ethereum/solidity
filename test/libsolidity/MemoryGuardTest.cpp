@@ -26,6 +26,7 @@
 #include <libyul/Object.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/optimiser/FunctionCallFinder.h>
+#include <libyul/AST.h>
 #include <fstream>
 #include <memory>
 #include <stdexcept>
@@ -61,7 +62,7 @@ TestCase::TestResult MemoryGuardTest::run(std::ostream& _stream, std::string con
 		ErrorList errors;
 		auto [object, analysisInfo] = yul::test::parse(
 			compiler().yulIR(contractName),
-			EVMDialect::strictAssemblyForEVMObjects(CommonOptions::get().evmVersion()),
+			EVMDialect::strictAssemblyForEVMObjects(CommonOptions::get().evmVersion(), CommonOptions::get().eofVersion()),
 			errors
 		);
 
@@ -73,14 +74,14 @@ TestCase::TestResult MemoryGuardTest::run(std::ostream& _stream, std::string con
 		}
 
 		auto handleObject = [&](std::string const& _kind, Object const& _object) {
-			m_obtainedResult += contractName + "(" + _kind + ") " + (FunctionCallFinder::run(
-				*_object.code,
-				"memoryguard"_yulstring
+			m_obtainedResult += contractName + "(" + _kind + ") " + (findFunctionCalls(
+				_object.code()->root(),
+				"memoryguard"_yulname
 			).empty() ? "false" : "true") + "\n";
 		};
 		handleObject("creation", *object);
 		size_t deployedIndex = object->subIndexByName.at(
-			YulString(IRNames::deployedObject(compiler().contractDefinition(contractName)))
+			IRNames::deployedObject(compiler().contractDefinition(contractName))
 		);
 		handleObject("runtime", dynamic_cast<Object const&>(*object->subObjects[deployedIndex]));
 	}

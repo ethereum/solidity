@@ -36,6 +36,7 @@ __pycache__/
 *.app
 
 # Build directory
+/cmake-build-*/
 /build*/
 emscripten_build/
 /docs/_build/

@@ -1,0 +1,40 @@
+/// @use-src 0:"state_var_initialization.sol"
+object "C_23" {
+    code {
+        {
+            /// @src 0:0:125  "contract C {..."
+            let _1 := memoryguard(0x80)
+            mstore(64, _1)
+            if callvalue() { revert(0, 0) }
+            sstore(/** @src 0:33:34  "1" */ 0x00, /** @src 0:56:57  "2" */ 0x02)
+            /// @src 0:0:125  "contract C {..."
+            sstore(/** @src 0:33:34  "1" */ 0x01, 0x00)
+            /// @src 0:0:125  "contract C {..."
+            let _2 := datasize("C_23_deployed")
+            codecopy(_1, dataoffset("C_23_deployed"), _2)
+            return(_1, _2)
+        }
+    }
+    /// @use-src 0:"state_var_initialization.sol"
+    object "C_23_deployed" {
+        code {
+            {
+                /// @src 0:0:125  "contract C {..."
+                let _1 := memoryguard(0x80)
+                mstore(64, _1)
+                if iszero(lt(calldatasize(), 4))
+                {
+                    let _2 := 0
+                    switch shr(224, calldataload(_2))
+                    case 0xb4f40c61 {
+                        mstore(_1, sload(/** @src 0:40:57  "uint public k = 2" */ 1))
+                        /// @src 0:0:125  "contract C {..."
+                        return(_1, 32)
+                    }
+                }
+                revert(0, 0)
+            }
+        }
+        data ".metadata" hex"1234abcd"
+    }
+}

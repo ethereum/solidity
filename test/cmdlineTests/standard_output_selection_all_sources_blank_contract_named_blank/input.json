@@ -1,0 +1,13 @@
+{
+    "language": "Solidity",
+    "sources": {
+        "":  {"content": "contract D {}\n//SPDX-License-Identifier: GPL-3.0\npragma solidity *;"},
+        "*": {"content": "contract D {}\n//SPDX-License-Identifier: GPL-3.0\npragma solidity *;"},
+        "C": {"content": "contract D {}\n//SPDX-License-Identifier: GPL-3.0\npragma solidity *;"}
+    },
+    "settings": {
+        "outputSelection": {
+            "": {"D": ["userdoc"]}
+        }
+    }
+}

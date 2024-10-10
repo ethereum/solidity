@@ -36,12 +36,16 @@ CompilabilityChecker::CompilabilityChecker(
 	bool _optimizeStackAllocation
 )
 {
+	yulAssert(_object.hasCode());
 	if (auto const* evmDialect = dynamic_cast<EVMDialect const*>(&_dialect))
 	{
 		NoOutputEVMDialect noOutputDialect(*evmDialect);
 
-		yul::AsmAnalysisInfo analysisInfo =
-			yul::AsmAnalyzer::analyzeStrictAssertCorrect(noOutputDialect, _object);
+		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(
+			noOutputDialect,
+			_object.code()->root(),
+			_object.qualifiedDataNames()
+		);
 
 		BuiltinContext builtinContext;
 		builtinContext.currentObject = &_object;
@@ -53,12 +57,12 @@ CompilabilityChecker::CompilabilityChecker(
 		CodeTransform transform(
 			assembly,
 			analysisInfo,
-			*_object.code,
+			_object.code()->root(),
 			noOutputDialect,
 			builtinContext,
 			_optimizeStackAllocation
 		);
-		transform(*_object.code);
+		transform(_object.code()->root());
 
 		for (StackTooDeepError const& error: transform.stackErrors())
 		{

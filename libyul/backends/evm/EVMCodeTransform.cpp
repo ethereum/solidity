@@ -56,7 +56,7 @@ CodeTransform::CodeTransform(
 	ExternalIdentifierAccess::CodeGenerator _identifierAccessCodeGen,
 	UseNamedLabels _useNamedLabelsForFunctions,
 	std::shared_ptr<Context> _context,
-	std::vector<TypedName> _delayedReturnVariables,
+	std::vector<NameWithDebugData> _delayedReturnVariables,
 	std::optional<AbstractAssembly::LabelID> _functionExitLabel
 ):
 	m_assembly(_assembly),
@@ -79,7 +79,7 @@ CodeTransform::CodeTransform(
 	}
 }
 
-void CodeTransform::decreaseReference(YulString, Scope::Variable const& _var)
+void CodeTransform::decreaseReference(YulName, Scope::Variable const& _var)
 {
 	if (!m_allowStackOpt)
 		return;
@@ -158,7 +158,7 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 	for (size_t varIndex = 0; varIndex < numVariables; ++varIndex)
 	{
 		size_t varIndexReverse = numVariables - 1 - varIndex;
-		YulString varName = _varDecl.variables[varIndexReverse].name;
+		YulName varName = _varDecl.variables[varIndexReverse].name;
 		auto& var = std::get<Scope::Variable>(m_scope->identifiers.at(varName));
 		m_context->variableStackHeights[&var] = heightAtStart + varIndexReverse;
 		if (!m_allowStackOpt)
@@ -249,13 +249,13 @@ void CodeTransform::operator()(FunctionCall const& _call)
 			[&](Scope::Function& _function) { function = &_function; }
 		}), "Function name not found.");
 		yulAssert(function, "");
-		yulAssert(function->arguments.size() == _call.arguments.size(), "");
+		yulAssert(function->numArguments == _call.arguments.size(), "");
 		for (auto const& arg: _call.arguments | ranges::views::reverse)
 			visitExpression(arg);
 		m_assembly.setSourceLocation(originLocationOf(_call));
 		m_assembly.appendJumpTo(
 			functionEntryID(*function),
-			static_cast<int>(function->returns.size() - function->arguments.size()) - 1,
+			static_cast<int>(function->numReturns) - static_cast<int>(function->numArguments) - 1,
 			AbstractAssembly::JumpType::IntoFunction
 		);
 		m_assembly.appendLabel(returnLabel);
@@ -297,7 +297,7 @@ void CodeTransform::operator()(Identifier const& _identifier)
 void CodeTransform::operator()(Literal const& _literal)
 {
 	m_assembly.setSourceLocation(originLocationOf(_literal));
-	m_assembly.appendConstant(valueOfLiteral(_literal));
+	m_assembly.appendConstant(_literal.value.value());
 }
 
 void CodeTransform::operator()(If const& _if)
@@ -457,7 +457,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		{
 			StackTooDeepError error(
 				_function.name,
-				YulString{},
+				YulName{},
 				static_cast<int>(stackLayout.size()) - 17,
 				"The function " +
 				_function.name.str() +
@@ -646,10 +646,10 @@ void CodeTransform::setupReturnVariablesAndFunctionExit()
 	}
 
 	// Allocate slots for return variables as if they were declared as variables in the virtual function scope.
-	for (TypedName const& var: m_delayedReturnVariables)
+	for (NameWithDebugData const& var: m_delayedReturnVariables)
 		(*this)(VariableDeclaration{var.debugData, {var}, {}});
 
-	m_functionExitStackHeight = ranges::max(m_delayedReturnVariables | ranges::views::transform([&](TypedName const& _name) {
+	m_functionExitStackHeight = ranges::max(m_delayedReturnVariables | ranges::views::transform([&](NameWithDebugData const& _name) {
 		return variableStackHeight(_name.name);
 	})) + 1;
 	m_delayedReturnVariables.clear();
@@ -658,7 +658,7 @@ void CodeTransform::setupReturnVariablesAndFunctionExit()
 namespace
 {
 
-bool statementNeedsReturnVariableSetup(Statement const& _statement, std::vector<TypedName> const& _returnVariables)
+bool statementNeedsReturnVariableSetup(Statement const& _statement, std::vector<NameWithDebugData> const& _returnVariables)
 {
 	if (std::holds_alternative<FunctionDefinition>(_statement))
 		return true;
@@ -667,8 +667,8 @@ bool statementNeedsReturnVariableSetup(Statement const& _statement, std::vector<
 		std::holds_alternative<Assignment>(_statement)
 	)
 	{
-		std::map<YulString, size_t> references = VariableReferencesCounter::countReferences(_statement);
-		auto isReferenced = [&references](TypedName const& _returnVariable) {
+		std::map<YulName, size_t> references = VariableReferencesCounter::countReferences(_statement);
+		auto isReferenced = [&references](NameWithDebugData const& _returnVariable) {
 			return references.count(_returnVariable.name);
 		};
 		if (ranges::none_of(_returnVariables, isReferenced))
@@ -771,7 +771,7 @@ void CodeTransform::generateAssignment(Identifier const& _variableName)
 	}
 }
 
-size_t CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulString _varName, bool _forSwap)
+size_t CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulName _varName, bool _forSwap)
 {
 	yulAssert(m_context->variableStackHeights.count(&_var), "");
 	size_t heightDiff = static_cast<size_t>(m_assembly.stackHeight()) - m_context->variableStackHeights[&_var];
@@ -795,7 +795,7 @@ size_t CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulString 
 	return heightDiff;
 }
 
-int CodeTransform::variableStackHeight(YulString _name) const
+int CodeTransform::variableStackHeight(YulName _name) const
 {
 	Scope::Variable const* var = std::get_if<Scope::Variable>(m_scope->lookup(_name));
 	yulAssert(var, "");

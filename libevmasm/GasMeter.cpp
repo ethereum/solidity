@@ -44,12 +44,8 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 	switch (_item.type())
 	{
 	case Push:
-		if (m_evmVersion.hasPush0() && _item.data() == 0)
-		{
-			gas = runGas(Instruction::PUSH0, m_evmVersion);
-			break;
-		}
-		[[fallthrough]];
+		gas = pushGas(_item.data(), m_evmVersion);
+		break;
 	case PushTag:
 	case PushData:
 	case PushSub:
@@ -288,6 +284,14 @@ unsigned GasMeter::runGas(Instruction _instruction, langutil::EVMVersion _evmVer
 		assertThrow(false, OptimizerException, "Invalid gas tier for instruction " + instructionInfo(_instruction, _evmVersion).name);
 	}
 	util::unreachable();
+}
+
+unsigned GasMeter::pushGas(u256 _value, langutil::EVMVersion _evmVersion)
+{
+	return runGas(
+		(_evmVersion.hasPush0() && _value == u256(0)) ? Instruction::PUSH0 : Instruction::PUSH1,
+		_evmVersion
+	);
 }
 
 u256 GasMeter::dataGas(bytes const& _data, bool _inCreation, langutil::EVMVersion _evmVersion)

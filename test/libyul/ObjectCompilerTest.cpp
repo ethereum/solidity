@@ -26,8 +26,9 @@
 
 #include <libyul/YulStack.h>
 
-#include <libevmasm/Instruction.h>
+#include <libevmasm/Assembly.h>
 #include <libevmasm/Disassemble.h>
+#include <libevmasm/Instruction.h>
 
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/SourceReferenceFormatter.h>
@@ -83,7 +84,7 @@ TestCase::TestResult ObjectCompilerTest::run(std::ostream& _stream, std::string 
 	solAssert(obj.bytecode, "");
 	solAssert(obj.sourceMappings, "");
 
-	m_obtainedResult = "Assembly:\n" + obj.assembly;
+	m_obtainedResult = "Assembly:\n" + obj.assembly->assemblyString(stack.debugInfoSelection());
 	if (obj.bytecode->bytecode.empty())
 		m_obtainedResult += "-- empty bytecode --\n";
 	else

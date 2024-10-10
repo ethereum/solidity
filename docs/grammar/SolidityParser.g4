@@ -262,7 +262,7 @@ userDefinedValueTypeDefinition:
  * The declaration of a state variable.
  */
 stateVariableDeclaration
-locals [boolean constantnessSet = false, boolean visibilitySet = false, boolean overrideSpecifierSet = false]
+locals [boolean constantnessSet = false, boolean visibilitySet = false, boolean overrideSpecifierSet = false, boolean locationSet = false]
 :
 	type=typeName
 	(
@@ -272,6 +272,7 @@ locals [boolean constantnessSet = false, boolean visibilitySet = false, boolean 
 		| {!$constantnessSet}? Constant {$constantnessSet = true;}
 		| {!$overrideSpecifierSet}? overrideSpecifier {$overrideSpecifierSet = true;}
 		| {!$constantnessSet}? Immutable {$constantnessSet = true;}
+		| {!$locationSet}? Transient {$locationSet = true;}
 	)*
 	name=identifier
 	(Assign initialValue=expression)?
@@ -419,7 +420,7 @@ inlineArrayExpression: LBrack (expression ( Comma expression)* ) RBrack;
 /**
  * Besides regular non-keyword Identifiers, some keywords like 'from' and 'error' can also be used as identifiers.
  */
-identifier: Identifier | From | Error | Revert | Global;
+identifier: Identifier | From | Error | Revert | Global | Transient;
 
 literal: stringLiteral | numberLiteral | booleanLiteral | hexStringLiteral | unicodeStringLiteral;
 

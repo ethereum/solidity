@@ -1,6 +1,4 @@
-{ { let a:u256 } { let a:u256 } }
-// ====
-// dialect: yul
+{ { let a } { let a } }
 // ----
 // step: disambiguator
 //

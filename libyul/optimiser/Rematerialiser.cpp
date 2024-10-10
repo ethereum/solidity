@@ -31,7 +31,7 @@
 using namespace solidity;
 using namespace solidity::yul;
 
-void Rematerialiser::run(Dialect const& _dialect, Block& _ast, std::set<YulString> _varsToAlwaysRematerialize, bool _onlySelectedVariables)
+void Rematerialiser::run(Dialect const& _dialect, Block& _ast, std::set<YulName> _varsToAlwaysRematerialize, bool _onlySelectedVariables)
 {
 	Rematerialiser{_dialect, _ast, std::move(_varsToAlwaysRematerialize), _onlySelectedVariables}(_ast);
 }
@@ -39,7 +39,7 @@ void Rematerialiser::run(Dialect const& _dialect, Block& _ast, std::set<YulStrin
 Rematerialiser::Rematerialiser(
 	Dialect const& _dialect,
 	Block& _ast,
-	std::set<YulString> _varsToAlwaysRematerialize,
+	std::set<YulName> _varsToAlwaysRematerialize,
 	bool _onlySelectedVariables
 ):
 	DataFlowAnalyzer(_dialect, MemoryAndStorage::Ignore),
@@ -54,7 +54,7 @@ void Rematerialiser::visit(Expression& _e)
 	if (std::holds_alternative<Identifier>(_e))
 	{
 		Identifier& identifier = std::get<Identifier>(_e);
-		YulString name = identifier.name;
+		YulName name = identifier.name;
 		if (AssignedValue const* value = variableValue(name))
 		{
 			assertThrow(value->value, OptimizerException, "");
@@ -93,7 +93,7 @@ void LiteralRematerialiser::visit(Expression& _e)
 	if (std::holds_alternative<Identifier>(_e))
 	{
 		Identifier& identifier = std::get<Identifier>(_e);
-		YulString name = identifier.name;
+		YulName name = identifier.name;
 		if (AssignedValue const* value = variableValue(name))
 		{
 			assertThrow(value->value, OptimizerException, "");

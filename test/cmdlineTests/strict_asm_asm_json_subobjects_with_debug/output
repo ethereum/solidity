@@ -1,0 +1,427 @@
+
+======= <stdin> (EVM) =======
+
+EVM assembly:
+{
+    ".code": [
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "PUSH",
+            "source": 0,
+            "value": "0"
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "PUSH",
+            "source": 0,
+            "value": "0"
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "SSTORE",
+            "source": 0
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "PUSHSIZE",
+            "source": 0
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "PUSH",
+            "source": 0,
+            "value": "1"
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "SSTORE",
+            "source": 0
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "PUSH [$]",
+            "source": 0,
+            "value": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "PUSH",
+            "source": 0,
+            "value": "2"
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "SSTORE",
+            "source": 0
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "PUSH #[$]",
+            "source": 0,
+            "value": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "PUSH",
+            "source": 0,
+            "value": "3"
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "SSTORE",
+            "source": 0
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "PUSH [$]",
+            "source": 0,
+            "value": "000000000000000000000000000000000000000000000000ffffffffffffffff"
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "PUSH",
+            "source": 0,
+            "value": "4"
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "SSTORE",
+            "source": 0
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "PUSH #[$]",
+            "source": 0,
+            "value": "000000000000000000000000000000000000000000000000ffffffffffffffff"
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "PUSH",
+            "source": 0,
+            "value": "5"
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "SSTORE",
+            "source": 0
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "PUSH [$]",
+            "source": 0,
+            "value": "000000000000000000000000000000000000000000000000fffffffffffffffe"
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "PUSH",
+            "source": 0,
+            "value": "6"
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "SSTORE",
+            "source": 0
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "PUSH #[$]",
+            "source": 0,
+            "value": "000000000000000000000000000000000000000000000000fffffffffffffffe"
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "PUSH",
+            "source": 0,
+            "value": "7"
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "SSTORE",
+            "source": 0
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "PUSH [$]",
+            "source": 0,
+            "value": "000000000000000000000000000000000000000000000000fffffffffffffffd"
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "PUSH",
+            "source": 0,
+            "value": "8"
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "SSTORE",
+            "source": 0
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "PUSH #[$]",
+            "source": 0,
+            "value": "000000000000000000000000000000000000000000000000fffffffffffffffd"
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "PUSH",
+            "source": 0,
+            "value": "9"
+        },
+        {
+            "begin": 41,
+            "end": 137,
+            "name": "SSTORE",
+            "source": 0
+        },
+        {
+            "begin": -1,
+            "end": -1,
+            "name": "STOP",
+            "source": -1
+        }
+    ],
+    ".data": {
+        "0": {
+            ".code": [
+                {
+                    "begin": 57,
+                    "end": 158,
+                    "name": "PUSH [$]",
+                    "source": 1,
+                    "value": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                    "begin": 57,
+                    "end": 158,
+                    "name": "PUSH",
+                    "source": 1,
+                    "value": "A"
+                },
+                {
+                    "begin": 57,
+                    "end": 158,
+                    "name": "SSTORE",
+                    "source": 1
+                },
+                {
+                    "begin": 57,
+                    "end": 158,
+                    "name": "PUSH #[$]",
+                    "source": 1,
+                    "value": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                    "begin": 57,
+                    "end": 158,
+                    "name": "PUSH",
+                    "source": 1,
+                    "value": "B"
+                },
+                {
+                    "begin": 57,
+                    "end": 158,
+                    "name": "SSTORE",
+                    "source": 1
+                },
+                {
+                    "begin": 57,
+                    "end": 158,
+                    "name": "PUSH [$]",
+                    "source": 1,
+                    "value": "0000000000000000000000000000000000000000000000000000000000000001"
+                },
+                {
+                    "begin": 57,
+                    "end": 158,
+                    "name": "PUSH",
+                    "source": 1,
+                    "value": "C"
+                },
+                {
+                    "begin": 57,
+                    "end": 158,
+                    "name": "SSTORE",
+                    "source": 1
+                },
+                {
+                    "begin": 57,
+                    "end": 158,
+                    "name": "PUSH #[$]",
+                    "source": 1,
+                    "value": "0000000000000000000000000000000000000000000000000000000000000001"
+                },
+                {
+                    "begin": 57,
+                    "end": 158,
+                    "name": "PUSH",
+                    "source": 1,
+                    "value": "D"
+                },
+                {
+                    "begin": 57,
+                    "end": 158,
+                    "name": "SSTORE",
+                    "source": 1
+                },
+                {
+                    "begin": 57,
+                    "end": 158,
+                    "name": "PUSH [$]",
+                    "source": 1,
+                    "value": "000000000000000000000000000000000000000000000000ffffffffffffffff"
+                },
+                {
+                    "begin": 57,
+                    "end": 158,
+                    "name": "PUSH",
+                    "source": 1,
+                    "value": "E"
+                },
+                {
+                    "begin": 57,
+                    "end": 158,
+                    "name": "SSTORE",
+                    "source": 1
+                },
+                {
+                    "begin": 57,
+                    "end": 158,
+                    "name": "PUSH #[$]",
+                    "source": 1,
+                    "value": "000000000000000000000000000000000000000000000000ffffffffffffffff"
+                },
+                {
+                    "begin": 57,
+                    "end": 158,
+                    "name": "PUSH",
+                    "source": 1,
+                    "value": "F"
+                },
+                {
+                    "begin": 57,
+                    "end": 158,
+                    "name": "SSTORE",
+                    "source": 1
+                },
+                {
+                    "begin": -1,
+                    "end": -1,
+                    "name": "STOP",
+                    "source": -1
+                }
+            ],
+            ".data": {
+                "0": {
+                    ".code": [
+                        {
+                            "begin": 41,
+                            "end": 100,
+                            "name": "PUSH [$]",
+                            "source": 2,
+                            "value": "0000000000000000000000000000000000000000000000000000000000000000"
+                        },
+                        {
+                            "begin": 41,
+                            "end": 100,
+                            "name": "PUSH",
+                            "source": 2,
+                            "value": "10"
+                        },
+                        {
+                            "begin": 41,
+                            "end": 100,
+                            "name": "SSTORE",
+                            "source": 2
+                        },
+                        {
+                            "begin": 41,
+                            "end": 100,
+                            "name": "PUSH #[$]",
+                            "source": 2,
+                            "value": "0000000000000000000000000000000000000000000000000000000000000000"
+                        },
+                        {
+                            "begin": 41,
+                            "end": 100,
+                            "name": "PUSH",
+                            "source": 2,
+                            "value": "11"
+                        },
+                        {
+                            "begin": 41,
+                            "end": 100,
+                            "name": "SSTORE",
+                            "source": 2
+                        },
+                        {
+                            "begin": -1,
+                            "end": -1,
+                            "name": "STOP",
+                            "source": -1
+                        }
+                    ],
+                    ".data": {
+                        "0": {
+                            ".code": [
+                                {
+                                    "begin": -1,
+                                    "end": -1,
+                                    "name": "INVALID",
+                                    "source": -1
+                                }
+                            ]
+                        }
+                    }
+                },
+                "1": {
+                    ".code": [
+                        {
+                            "begin": -1,
+                            "end": -1,
+                            "name": "INVALID",
+                            "source": -1
+                        }
+                    ]
+                }
+            }
+        },
+        "ACAF3289D7B601CBD114FB36C4D29C85BBFD5E133F14CB355C3FD8D99367964F": "48656c6c6f2c20576f726c6421"
+    },
+    "sourceList": [
+        "a.sol",
+        "b.sol",
+        "c.sol",
+        "d.sol",
+        "e.sol"
+    ]
+}

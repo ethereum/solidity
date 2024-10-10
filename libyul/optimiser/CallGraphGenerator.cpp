@@ -35,11 +35,11 @@ namespace
 struct CallGraphCycleFinder
 {
 	CallGraph const& callGraph;
-	std::set<YulString> containedInCycle{};
-	std::set<YulString> visited{};
-	std::vector<YulString> currentPath{};
+	std::set<YulName> containedInCycle{};
+	std::set<YulName> visited{};
+	std::vector<YulName> currentPath{};
 
-	void visit(YulString _function)
+	void visit(YulName _function)
 	{
 		if (visited.count(_function))
 			return;
@@ -61,7 +61,7 @@ struct CallGraphCycleFinder
 };
 }
 
-std::set<YulString> CallGraph::recursiveFunctions() const
+std::set<YulName> CallGraph::recursiveFunctions() const
 {
 	CallGraphCycleFinder cycleFinder{*this};
 	// Visiting the root only is not enough, since there may be disconnected recursive functions.
@@ -93,7 +93,7 @@ void CallGraphGenerator::operator()(ForLoop const& _forLoop)
 
 void CallGraphGenerator::operator()(FunctionDefinition const& _functionDefinition)
 {
-	YulString previousFunction = m_currentFunction;
+	YulName previousFunction = m_currentFunction;
 	m_currentFunction = _functionDefinition.name;
 	yulAssert(m_callGraph.functionCalls.count(m_currentFunction) == 0, "");
 	m_callGraph.functionCalls[m_currentFunction] = {};
@@ -103,6 +103,6 @@ void CallGraphGenerator::operator()(FunctionDefinition const& _functionDefinitio
 
 CallGraphGenerator::CallGraphGenerator()
 {
-	m_callGraph.functionCalls[YulString{}] = {};
+	m_callGraph.functionCalls[YulName{}] = {};
 }
 

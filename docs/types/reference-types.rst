@@ -29,6 +29,9 @@ annotation, the "data location", about where it is stored. There are three data 
 non-persistent area where function arguments are stored, and behaves mostly like memory.
 
 .. note::
+    ``transient`` is not yet supported as a data location for reference types.
+
+.. note::
     If you can, try to use ``calldata`` as data location because it will avoid copies and
     also makes sure that the data cannot be modified. Arrays and structs with ``calldata``
     data location can also be returned from functions, but it is not possible to

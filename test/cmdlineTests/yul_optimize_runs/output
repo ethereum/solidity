@@ -24,28 +24,28 @@ Binary representation:
 602480600a5f395ff3fe7fabc12345000000000000000000000000000000000000000000000000000000005f5500
 
 Text representation:
-    /* "yul_optimize_runs/input.yul":115:143   */
+    /* "yul_optimize_runs/input.yul":64:92   */
   dataSize(sub_0)
-    /* "yul_optimize_runs/input.yul":83:113   */
+    /* "yul_optimize_runs/input.yul":117:147   */
   dup1
   dataOffset(sub_0)
-    /* "yul_optimize_runs/input.yul":80:81   */
+    /* "yul_optimize_runs/input.yul":114:115   */
   0x00
-    /* "yul_optimize_runs/input.yul":71:144   */
+    /* "yul_optimize_runs/input.yul":105:152   */
   codecopy
-    /* "yul_optimize_runs/input.yul":80:81   */
+    /* "yul_optimize_runs/input.yul":172:173   */
   0x00
-    /* "yul_optimize_runs/input.yul":153:192   */
+    /* "yul_optimize_runs/input.yul":165:178   */
   return
 stop
 
 sub_0: assembly {
-        /* "yul_optimize_runs/input.yul":273:293   */
+        /* "yul_optimize_runs/input.yul":282:348   */
       0xabc1234500000000000000000000000000000000000000000000000000000000
-        /* "yul_optimize_runs/input.yul":313:314   */
+        /* "yul_optimize_runs/input.yul":279:280   */
       0x00
-        /* "yul_optimize_runs/input.yul":306:324   */
+        /* "yul_optimize_runs/input.yul":272:349   */
       sstore
-        /* "yul_optimize_runs/input.yul":244:334   */
+        /* "yul_optimize_runs/input.yul":240:373   */
       stop
 }

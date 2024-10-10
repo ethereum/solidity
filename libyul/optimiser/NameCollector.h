@@ -22,6 +22,7 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
+#include <libyul/YulName.h>
 
 #include <map>
 #include <set>
@@ -59,9 +60,9 @@ public:
 	void operator()(VariableDeclaration const& _varDecl) override;
 	void operator()(FunctionDefinition const& _funDef) override;
 
-	std::set<YulString> names() const { return m_names; }
+	std::set<YulName> names() const { return m_names; }
 private:
-	std::set<YulString> m_names;
+	std::set<YulName> m_names;
 	CollectWhat m_collectWhat = VariablesAndFunctions;
 };
 
@@ -75,12 +76,12 @@ public:
 	void operator()(Identifier const& _identifier) override;
 	void operator()(FunctionCall const& _funCall) override;
 
-	static std::map<YulString, size_t> countReferences(Block const& _block);
-	static std::map<YulString, size_t> countReferences(FunctionDefinition const& _function);
-	static std::map<YulString, size_t> countReferences(Expression const& _expression);
+	static std::map<YulName, size_t> countReferences(Block const& _block);
+	static std::map<YulName, size_t> countReferences(FunctionDefinition const& _function);
+	static std::map<YulName, size_t> countReferences(Expression const& _expression);
 
 private:
-	std::map<YulString, size_t> m_references;
+	std::map<YulName, size_t> m_references;
 };
 
 /**
@@ -92,13 +93,13 @@ public:
 	using ASTWalker::operator ();
 	void operator()(Identifier const& _identifier) override;
 
-	static std::map<YulString, size_t> countReferences(Block const& _block);
-	static std::map<YulString, size_t> countReferences(FunctionDefinition const& _function);
-	static std::map<YulString, size_t> countReferences(Expression const& _expression);
-	static std::map<YulString, size_t> countReferences(Statement const& _statement);
+	static std::map<YulName, size_t> countReferences(Block const& _block);
+	static std::map<YulName, size_t> countReferences(FunctionDefinition const& _function);
+	static std::map<YulName, size_t> countReferences(Expression const& _expression);
+	static std::map<YulName, size_t> countReferences(Statement const& _statement);
 
 private:
-	std::map<YulString, size_t> m_references;
+	std::map<YulName, size_t> m_references;
 };
 
 /**
@@ -117,21 +118,21 @@ public:
 	void operator()(Assignment const& _assignment) override;
 	void operator()(FunctionDefinition const& _funDef) override;
 
-	std::set<YulString> const& names() const { return m_names; }
+	std::set<YulName> const& names() const { return m_names; }
 	bool empty() const noexcept { return m_names.empty(); }
 
 private:
 	size_t m_forLoopDepth = 0;
 	bool m_continueFound = false;
-	std::set<YulString> m_names;
+	std::set<YulName> m_names;
 };
 
 /// @returns the names of all variables that are assigned to inside @a _code.
 /// (ignores variable declarations)
-std::set<YulString> assignedVariableNames(Block const& _code);
+std::set<YulName> assignedVariableNames(Block const& _code);
 
 /// @returns all function definitions anywhere in the AST.
 /// Requires disambiguated source.
-std::map<YulString, FunctionDefinition const*> allFunctionDefinitions(Block const& _block);
+std::map<YulName, FunctionDefinition const*> allFunctionDefinitions(Block const& _block);
 
 }

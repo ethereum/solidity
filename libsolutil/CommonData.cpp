@@ -161,7 +161,7 @@ std::string solidity::util::getChecksummedAddress(std::string const& _addr)
 	return ret;
 }
 
-bool solidity::util::isValidHex(std::string const& _string)
+bool solidity::util::isValidHex(std::string_view const _string)
 {
 	if (_string.substr(0, 2) != "0x")
 		return false;
@@ -170,7 +170,7 @@ bool solidity::util::isValidHex(std::string const& _string)
 	return true;
 }
 
-bool solidity::util::isValidDecimal(std::string const& _string)
+bool solidity::util::isValidDecimal(std::string_view const _string)
 {
 	if (_string.empty())
 		return false;

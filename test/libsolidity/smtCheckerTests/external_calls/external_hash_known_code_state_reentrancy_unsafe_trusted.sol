@@ -40,5 +40,5 @@ contract C {
 // SMTExtCalls: trusted
 // SMTIgnoreOS: macos
 // ----
-// Warning 6328: (396-410): CHC: Assertion violation might happen here.
 // Warning 6328: (429-455): CHC: Assertion violation happens here.
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

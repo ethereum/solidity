@@ -46,8 +46,8 @@ public:
 	void operator()(FunctionCall& _funCall) override;
 
 private:
-	EquivalentFunctionCombiner(std::map<YulString, FunctionDefinition const*> _duplicates): m_duplicates(std::move(_duplicates)) {}
-	std::map<YulString, FunctionDefinition const*> m_duplicates;
+	EquivalentFunctionCombiner(std::map<YulName, FunctionDefinition const*> _duplicates): m_duplicates(std::move(_duplicates)) {}
+	std::map<YulName, FunctionDefinition const*> m_duplicates;
 };
 
 

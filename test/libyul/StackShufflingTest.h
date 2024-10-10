@@ -41,7 +41,7 @@ private:
 
 	Stack m_sourceStack;
 	Stack m_targetStack;
-	std::map<YulString, yul::FunctionCall> m_functions;
-	std::map<YulString, Scope::Variable> m_variables;
+	std::map<YulName, yul::FunctionCall> m_functions;
+	std::map<YulName, Scope::Variable> m_variables;
 };
 }

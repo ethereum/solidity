@@ -245,7 +245,7 @@ ControlFlowGraphBuilder::ControlFlowGraphBuilder(
 
 StackSlot ControlFlowGraphBuilder::operator()(Literal const& _literal)
 {
-	return LiteralSlot{valueOfLiteral(_literal), _literal.debugData};
+	return LiteralSlot{_literal.value.value(), _literal.debugData};
 }
 
 StackSlot ControlFlowGraphBuilder::operator()(Identifier const& _identifier)
@@ -268,7 +268,7 @@ StackSlot ControlFlowGraphBuilder::operator()(FunctionCall const& _call)
 void ControlFlowGraphBuilder::operator()(VariableDeclaration const& _varDecl)
 {
 	yulAssert(m_currentBlock, "");
-	auto declaredVariables = _varDecl.variables | ranges::views::transform([&](TypedName const& _var) {
+	auto declaredVariables = _varDecl.variables | ranges::views::transform([&](NameWithDebugData const& _var) {
 		return VariableSlot{lookupVariable(_var.name), _var.debugData};
 	}) | ranges::to<std::vector<VariableSlot>>;
 	Stack input;
@@ -336,8 +336,8 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 	langutil::DebugData::ConstPtr preSwitchDebugData = debugDataOf(_switch);
 
 	auto ghostVariableId = m_graph.ghostVariables.size();
-	YulString ghostVariableName("GHOST[" + std::to_string(ghostVariableId) + "]");
-	auto& ghostVar = m_graph.ghostVariables.emplace_back(Scope::Variable{""_yulstring, ghostVariableName});
+	YulName ghostVariableName("GHOST[" + std::to_string(ghostVariableId) + "]");
+	auto& ghostVar = m_graph.ghostVariables.emplace_back(Scope::Variable{ghostVariableName});
 
 	// Artificially generate:
 	// let <ghostVariable> := <switchExpression>
@@ -349,7 +349,7 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 		CFG::Assignment{_switch.debugData, {ghostVarSlot}}
 	});
 
-	BuiltinFunction const* equalityBuiltin = m_dialect.equalityFunction({});
+	BuiltinFunction const* equalityBuiltin = m_dialect.equalityFunction();
 	yulAssert(equalityBuiltin, "");
 
 	// Artificially generate:
@@ -357,11 +357,11 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 	auto makeValueCompare = [&](Case const& _case) {
 		yul::FunctionCall const& ghostCall = m_graph.ghostCalls.emplace_back(yul::FunctionCall{
 			debugDataOf(_case),
-			yul::Identifier{{}, "eq"_yulstring},
+			yul::Identifier{{}, "eq"_yulname},
 			{*_case.value, Identifier{{}, ghostVariableName}}
 		});
 		CFG::Operation& operation = m_currentBlock->operations.emplace_back(CFG::Operation{
-			Stack{ghostVarSlot, LiteralSlot{valueOfLiteral(*_case.value), debugDataOf(*_case.value)}},
+			Stack{ghostVarSlot, LiteralSlot{_case.value->value.value(), debugDataOf(*_case.value)}},
 			Stack{TemporarySlot{ghostCall, 0}},
 			CFG::BuiltinCall{debugDataOf(_case), *equalityBuiltin, ghostCall, 2},
 		});
@@ -399,7 +399,7 @@ void ControlFlowGraphBuilder::operator()(ForLoop const& _loop)
 
 	std::optional<bool> constantCondition;
 	if (auto const* literalCondition = std::get_if<yul::Literal>(_loop.condition.get()))
-		constantCondition = valueOfLiteral(*literalCondition) != 0;
+		constantCondition = literalCondition->value.value() != 0;
 
 	CFG::BasicBlock& loopCondition = m_graph.makeBlock(debugDataOf(*_loop.condition));
 	CFG::BasicBlock& loopBody = m_graph.makeBlock(debugDataOf(_loop.body));
@@ -527,7 +527,7 @@ Stack const& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _cal
 			// input
 			std::move(inputs),
 			// output
-			ranges::views::iota(0u, builtin->returns.size()) | ranges::views::transform([&](size_t _i) {
+			ranges::views::iota(0u, builtin->numReturns) | ranges::views::transform([&](size_t _i) {
 				return TemporarySlot{_call, _i};
 			}) | ranges::to<Stack>,
 			// operation
@@ -548,7 +548,7 @@ Stack const& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _cal
 			// input
 			std::move(inputs),
 			// output
-			ranges::views::iota(0u, function.returns.size()) | ranges::views::transform([&](size_t _i) {
+			ranges::views::iota(0u, function.numReturns) | ranges::views::transform([&](size_t _i) {
 				return TemporarySlot{_call, _i};
 			}) | ranges::to<Stack>,
 			// operation
@@ -578,7 +578,7 @@ Stack ControlFlowGraphBuilder::visitAssignmentRightHandSide(Expression const& _e
 	}, _expression);
 }
 
-Scope::Function const& ControlFlowGraphBuilder::lookupFunction(YulString _name) const
+Scope::Function const& ControlFlowGraphBuilder::lookupFunction(YulName _name) const
 {
 	Scope::Function const* function = nullptr;
 	yulAssert(m_scope->lookup(_name, util::GenericVisitor{
@@ -589,7 +589,7 @@ Scope::Function const& ControlFlowGraphBuilder::lookupFunction(YulString _name) 
 	return *function;
 }
 
-Scope::Variable const& ControlFlowGraphBuilder::lookupVariable(YulString _name) const
+Scope::Variable const& ControlFlowGraphBuilder::lookupVariable(YulName _name) const
 {
 	yulAssert(m_scope, "");
 	Scope::Variable const* var = nullptr;

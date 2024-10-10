@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(version)
 
 BOOST_AUTO_TEST_CASE(multiple_input_modes)
 {
-	std::array<std::string, 10> inputModeOptions = {
+	std::array inputModeOptions {
 		"--help",
 		"--license",
 		"--version",
@@ -156,17 +156,16 @@ BOOST_AUTO_TEST_CASE(multiple_input_modes)
 		"--link",
 		"--assemble",
 		"--strict-assembly",
-		"--yul",
 		"--import-ast",
 		"--import-asm-json",
 	};
 	std::string expectedMessage =
 		"The following options are mutually exclusive: "
-		"--help, --license, --version, --standard-json, --link, --assemble, --strict-assembly, --yul, --import-ast, --lsp, --import-asm-json. "
+		"--help, --license, --version, --standard-json, --link, --assemble, --strict-assembly, --import-ast, --lsp, --import-asm-json. "
 		"Select at most one.";
 
-	for (std::string const& mode1: inputModeOptions)
-		for (std::string const& mode2: inputModeOptions)
+	for (auto const& mode1: inputModeOptions)
+		for (auto const& mode2: inputModeOptions)
 			if (mode1 != mode2)
 				BOOST_CHECK_EXCEPTION(
 					parseCommandLineAndReadInputFiles({"solc", mode1, mode2}),

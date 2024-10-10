@@ -1,9 +1,7 @@
 {
-    let x := 1:u256
-    let y:u256 := 1
+    let x := 1
+    let y := 1
     function f(a) {}
-    function g(a:u256) -> b {}
+    function g(a) -> b {}
 }
-// ====
-// dialect: yul
 // ----

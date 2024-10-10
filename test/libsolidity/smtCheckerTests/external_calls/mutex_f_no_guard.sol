@@ -21,12 +21,11 @@ contract C {
 	function f() public {
 		uint y = x;
 		d.d();
-		// Disabled because of Spacer nondeterminism.
-		//assert(y == x);
+		assert(y == x);
 	}
 }
 // ====
-// SMTEngine: all
+// SMTEngine: chc
 // SMTIgnoreCex: yes
 // ----
-// Warning 2072: (251-257): Unused local variable.
+// Warning 6328: (274-288): CHC: Assertion violation happens here.\nCounterexample:\nx = 0, d = 0, lock = false\ny = 1\n\nTransaction trace:\nC.constructor()\nState: x = 0, d = 0, lock = false\nC.set(1)\nState: x = 1, d = 0, lock = false\nC.f()\n    d.d() -- untrusted external call, synthesized as:\n        C.set(0) -- reentrant call

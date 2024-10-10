@@ -1,0 +1,24 @@
+{
+    "language": "Solidity",
+    "sources": {
+        "C": {"content": "contract A {}\ncontract B {}\n//SPDX-License-Identifier: GPL-3.0\npragma solidity *;"}
+    },
+    "settings": {
+        "outputSelection": {
+            // Unrecognized outputs are ignored.
+            "C": {
+                "A": [
+                    "X",
+                    "METADATA",
+                    "abi.encode",
+                    "userdoc",  // The only valid one here.
+                    ".",
+                    "evm.",
+                    "evm.bytecodeObject",
+                    "evm.bytecode.object.ir",
+                    "evm.bytecode.*"
+                ]
+            }
+        }
+    }
+}

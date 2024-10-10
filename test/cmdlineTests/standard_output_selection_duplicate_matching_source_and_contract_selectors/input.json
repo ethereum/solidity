@@ -1,0 +1,29 @@
+{
+    "language": "Solidity",
+    "sources": {
+        "*": {"content": "contract A {}\ncontract B {}\n//SPDX-License-Identifier: GPL-3.0\npragma solidity *;"},
+        "C": {"content": "contract A {}\ncontract B {}\n//SPDX-License-Identifier: GPL-3.0\npragma solidity *;"},
+        "D": {"content": "contract A {}\ncontract B {}\n//SPDX-License-Identifier: GPL-3.0\npragma solidity *;"}
+    },
+    "settings": {
+        "outputSelection": {
+            // Outputs from duplicate keys are not combined. Last value wins.
+            "*": {
+                "*": ["userdoc"],  // Ignored
+                "*": ["devdoc"]    // Ignored
+            },
+            "C": {
+                "*": ["storageLayout"],          // Ignored
+                "*": ["transientStorageLayout"]  // Ignored
+            },
+            "C": {
+                "A": ["evm.bytecode.linkReferences"], // Ignored
+                "A": ["evm.bytecode.object"]
+            },
+            "*": {
+                "A": ["evm.deployedBytecode.immutableReferences"],  // Ignored
+                "A": ["abi"]
+            }
+        }
+    }
+}

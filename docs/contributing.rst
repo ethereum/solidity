@@ -93,7 +93,8 @@ Prerequisites
 
 For running all compiler tests you may want to optionally install a few
 dependencies (`evmone <https://github.com/ethereum/evmone/releases>`_,
-`libz3 <https://github.com/Z3Prover/z3>`_).
+`libz3 <https://github.com/Z3Prover/z3>`_, `Eldarica <https://github.com/uuverifiers/eldarica/>`_,
+`cvc5 <https://github.com/cvc5/cvc5>`).
 
 On macOS systems, some of the testing scripts expect GNU coreutils to be installed.
 This can be easiest accomplished using Homebrew: ``brew install coreutils``.
@@ -133,11 +134,14 @@ extension ``.so`` on Linux, ``.dll`` on Windows systems and ``.dylib`` on macOS.
 
 For running SMT tests, the ``libz3`` library must be installed and locatable
 by ``cmake`` during compiler configure stage.
+A few SMT tests use ``Eldarica`` instead of ``Z3``.
+``Eldarica`` is a runtime dependency, its executable (``eld``) must be present in ``PATH`` for the tests to pass.
+However, if ``Eldarica`` is not found, these tests will be automatically skipped.
 
 If the ``libz3`` library is not installed on your system, you should disable the
 SMT tests by exporting ``SMT_FLAGS=--no-smt`` before running ``./scripts/tests.sh`` or
 running ``./scripts/soltest.sh --no-smt``.
-These tests are ``libsolidity/smtCheckerTests`` and ``libsolidity/smtCheckerTestsJSON``.
+These tests are ``libsolidity/smtCheckerTests``.
 
 .. note::
 
@@ -552,7 +556,7 @@ topics, issues or feature implementations are debated in detail. The invitation 
 
 We are also sharing feedback surveys and other content that is relevant to language design in the forum.
 
-If you want to know where the team is standing in terms or implementing new features, you can follow the implementation status in the `Solidity GitHub project <https://github.com/ethereum/solidity/projects/43>`_.
+If you want to know where the team is standing in terms of implementing new features, you can follow the implementation status in the `Solidity GitHub project <https://github.com/orgs/ethereum/projects/17>`_.
 Issues in the design backlog need further specification and will either be discussed in a language design call or in a regular team call. You can
 see the upcoming changes for the next breaking release by changing from the default branch (`develop`) to the `breaking branch <https://github.com/ethereum/solidity/tree/breaking>`_.
 

@@ -22,7 +22,7 @@
 #pragma once
 
 #include <libyul/ASTForward.h>
-#include <libyul/YulString.h>
+#include <libyul/YulName.h>
 
 #include <map>
 #include <type_traits>
@@ -34,6 +34,9 @@ namespace solidity::yul
 /**
  * Component that can compare ASTs for equality on a syntactic basis.
  * Ignores source locations and allows for different variable names but requires exact matches otherwise.
+ * Literals are compared based on their values, e.g., `0x01`, `1`, `"\x01"` and `true` all evaluate as equal.
+ * Note that this does not apply to unlimited literal strings, which are never considered equal to normal literals,
+ * even when the values would look like identical strings in the source.
  *
  * Prerequisite: Disambiguator (unless only expressions are compared)
  */
@@ -60,7 +63,7 @@ public:
 	bool statementEqual(Leave const&, Leave const&) { return true; }
 	bool statementEqual(Block const& _lhs, Block const& _rhs);
 private:
-	bool visitDeclaration(TypedName const& _lhs, TypedName const& _rhs);
+	bool visitDeclaration(NameWithDebugData const& _lhs, NameWithDebugData const& _rhs);
 
 	template<typename U, typename V>
 	bool expressionEqual(U const&, V const&, std::enable_if_t<!std::is_same<U, V>::value>* = nullptr)
@@ -81,8 +84,8 @@ private:
 	}
 
 	std::size_t m_idsUsed = 0;
-	std::map<YulString, std::size_t> m_identifiersLHS;
-	std::map<YulString, std::size_t> m_identifiersRHS;
+	std::map<YulName, std::size_t> m_identifiersLHS;
+	std::map<YulName, std::size_t> m_identifiersRHS;
 };
 
 /**

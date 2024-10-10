@@ -826,31 +826,48 @@ Token Scanner::scanString(bool const _isUnicode)
 	char const quote = m_char;
 	advance();  // consume quote
 	LiteralScope literal(this, LITERAL_TYPE_STRING);
-	while (m_char != quote && !isSourcePastEndOfInput() && !isUnicodeLinebreak())
+	// for source location comments we allow multiline string literals
+	while (m_char != quote && !isSourcePastEndOfInput() && (!isUnicodeLinebreak() || m_kind == ScannerKind::SpecialComment))
 	{
 		char c = m_char;
 		advance();
-		if (c == '\\')
+
+		if (m_kind == ScannerKind::SpecialComment)
 		{
-			if (isSourcePastEndOfInput() || !scanEscape())
-				return setError(ScannerError::IllegalEscapeSequence);
+			if (c == '\\')
+			{
+				if (isSourcePastEndOfInput())
+					return setError(ScannerError::IllegalEscapeSequence);
+				advance();
+			}
+			else
+				addLiteralChar(c);
 		}
 		else
 		{
-			// Report error on non-printable characters in string literals, however
-			// allow anything for unicode string literals, because their validity will
-			// be verified later (in the syntax checker).
-			//
-			// We are using a manual range and not isprint() to avoid
-			// any potential complications with locale.
-			if (!_isUnicode && (static_cast<unsigned>(c) <= 0x1f || static_cast<unsigned>(c) >= 0x7f))
+			if (c == '\\')
 			{
-				if (m_kind == ScannerKind::Yul)
-					return setError(ScannerError::IllegalCharacterInString);
-				return setError(ScannerError::UnicodeCharacterInNonUnicodeString);
+				if (isSourcePastEndOfInput() || !scanEscape())
+					return setError(ScannerError::IllegalEscapeSequence);
 			}
-			addLiteralChar(c);
+			else
+			{
+				// Report error on non-printable characters in string literals, however
+				// allow anything for unicode string literals, because their validity will
+				// be verified later (in the syntax checker).
+				//
+				// We are using a manual range and not isprint() to avoid
+				// any potential complications with locale.
+				if (!_isUnicode && (static_cast<unsigned>(c) <= 0x1f || static_cast<unsigned>(c) >= 0x7f))
+				{
+					if (m_kind == ScannerKind::Yul)
+						return setError(ScannerError::IllegalCharacterInString);
+					return setError(ScannerError::UnicodeCharacterInNonUnicodeString);
+				}
+				addLiteralChar(c);
+			}
 		}
+
 	}
 	if (m_char != quote)
 		return setError(ScannerError::IllegalStringEndQuote);
@@ -1023,6 +1040,9 @@ std::tuple<Token, unsigned, unsigned> Scanner::scanIdentifierOrKeyword()
 	auto const token = TokenTraits::fromIdentifierOrKeyword(m_tokens[NextNext].literal);
 	switch (m_kind)
 	{
+	case ScannerKind::SpecialComment:
+		// there are no keywords in special comments
+		return std::make_tuple(Token::Identifier, 0, 0);
 	case ScannerKind::Solidity:
 		// Turn experimental Solidity keywords that are not keywords in legacy Solidity into identifiers.
 		if (TokenTraits::isExperimentalSolidityOnlyKeyword(std::get<0>(token)))

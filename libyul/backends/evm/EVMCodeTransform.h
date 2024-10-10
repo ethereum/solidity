@@ -114,11 +114,11 @@ protected:
 		ExternalIdentifierAccess::CodeGenerator _identifierAccessCodeGen,
 		UseNamedLabels _useNamedLabelsForFunctions,
 		std::shared_ptr<Context> _context,
-		std::vector<TypedName> _delayedReturnVariables,
+		std::vector<NameWithDebugData> _delayedReturnVariables,
 		std::optional<AbstractAssembly::LabelID> _functionExitLabel
 	);
 
-	void decreaseReference(YulString _name, Scope::Variable const& _var);
+	void decreaseReference(YulName _name, Scope::Variable const& _var);
 	bool unreferenced(Scope::Variable const& _var) const;
 	/// Marks slots of variables that are not used anymore
 	/// and were defined in the current scope for reuse.
@@ -165,10 +165,10 @@ private:
 	/// the (positive) stack height difference otherwise.
 	/// @param _forSwap if true, produces stack error if the difference is invalid for a swap
 	///                 opcode, otherwise checks for validity for a dup opcode.
-	size_t variableHeightDiff(Scope::Variable const& _var, YulString _name, bool _forSwap);
+	size_t variableHeightDiff(Scope::Variable const& _var, YulName _name, bool _forSwap);
 
 	/// Determines the stack height of the given variable. Throws if the variable is not in scope.
-	int variableStackHeight(YulString _name) const;
+	int variableStackHeight(YulName _name) const;
 
 	void expectDeposit(int _deposit, int _oldHeight) const;
 
@@ -198,7 +198,7 @@ private:
 	BuiltinContext& m_builtinContext;
 	bool const m_allowStackOpt = true;
 	UseNamedLabels const m_useNamedLabelsForFunctions = UseNamedLabels::Never;
-	std::set<YulString> m_assignedNamedLabels;
+	std::set<YulName> m_assignedNamedLabels;
 	ExternalIdentifierAccess::CodeGenerator m_identifierAccessCodeGen;
 	std::shared_ptr<Context> m_context;
 
@@ -209,7 +209,7 @@ private:
 	std::set<int> m_unusedStackSlots;
 
 	/// A list of return variables for which no stack slots have been assigned yet.
-	std::vector<TypedName> m_delayedReturnVariables;
+	std::vector<NameWithDebugData> m_delayedReturnVariables;
 
 	/// Function exit label. Used as jump target for ``leave``.
 	std::optional<AbstractAssembly::LabelID> m_functionExitLabel;

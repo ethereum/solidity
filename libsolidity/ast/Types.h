@@ -70,7 +70,7 @@ inline rational makeRational(bigint const& _numerator, bigint const& _denominato
 		return rational(_numerator, _denominator);
 }
 
-enum class DataLocation { Storage, CallData, Memory };
+enum class DataLocation { Storage, Transient, CallData, Memory };
 
 
 /**
@@ -1001,8 +1001,8 @@ public:
 	FunctionType const* newExpressionType() const;
 
 	/// @returns a list of all state variables (including inherited) of the contract and their
-	/// offsets in storage.
-	std::vector<std::tuple<VariableDeclaration const*, u256, unsigned>> stateVariables() const;
+	/// offsets in storage/transient storage.
+	std::vector<std::tuple<VariableDeclaration const*, u256, unsigned>> stateVariables(DataLocation _location) const;
 	/// @returns a list of all immutable variables (including inherited) of the contract.
 	std::vector<VariableDeclaration const*> immutableVariables() const;
 protected:

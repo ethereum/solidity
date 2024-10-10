@@ -99,13 +99,13 @@ namespace
 {
 
 #ifdef PROFILE_OPTIMIZER_STEPS
-void outputPerformanceMetrics(map<string, int64_t> const& _metrics)
+void outputPerformanceMetrics(std::map<std::string, int64_t> const& _metrics)
 {
-	vector<pair<string, int64_t>> durations(_metrics.begin(), _metrics.end());
+	std::vector<std::pair<std::string, int64_t>> durations(_metrics.begin(), _metrics.end());
 	sort(
 		durations.begin(),
 		durations.end(),
-		[](pair<string, int64_t> const& _lhs, pair<string, int64_t> const& _rhs) -> bool
+		[](std::pair<std::string, int64_t> const& _lhs, std::pair<std::string, int64_t> const& _rhs) -> bool
 		{
 			return _lhs.second < _rhs.second;
 		}
@@ -115,18 +115,18 @@ void outputPerformanceMetrics(map<string, int64_t> const& _metrics)
 	for (auto&& [step, durationInMicroseconds]: durations)
 		totalDurationInMicroseconds += durationInMicroseconds;
 
-	cerr << "Performance metrics of optimizer steps" << endl;
-	cerr << "======================================" << endl;
+	std::cerr << "Performance metrics of optimizer steps" << std::endl;
+	std::cerr << "======================================" << std::endl;
 	constexpr double microsecondsInSecond = 1000000;
 	for (auto&& [step, durationInMicroseconds]: durations)
 	{
 		double percentage = 100.0 * static_cast<double>(durationInMicroseconds) / static_cast<double>(totalDurationInMicroseconds);
 		double sec = static_cast<double>(durationInMicroseconds) / microsecondsInSecond;
-		cerr << fmt::format("{:>7.3f}% ({} s): {}", percentage, sec, step) << endl;
+		std::cerr << fmt::format("{:>7.3f}% ({} s): {}", percentage, sec, step) << std::endl;
 	}
 	double totalDurationInSeconds = static_cast<double>(totalDurationInMicroseconds) / microsecondsInSecond;
-	cerr << "--------------------------------------" << endl;
-	cerr << fmt::format("{:>7}% ({:.3f} s)", 100, totalDurationInSeconds) << endl;
+	std::cerr << "--------------------------------------" << std::endl;
+	std::cerr << fmt::format("{:>7}% ({:.3f} s)", 100, totalDurationInSeconds) << std::endl;
 }
 #endif
 
@@ -141,7 +141,7 @@ void OptimiserSuite::run(
 	std::string_view _optimisationSequence,
 	std::string_view _optimisationCleanupSequence,
 	std::optional<size_t> _expectedExecutionsPerDeployment,
-	std::set<YulString> const& _externallyUsedIdentifiers
+	std::set<YulName> const& _externallyUsedIdentifiers
 )
 {
 	EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&_dialect);
@@ -150,78 +150,88 @@ void OptimiserSuite::run(
 		evmDialect &&
 		evmDialect->evmVersion().canOverchargeGasForCall() &&
 		evmDialect->providesObjectAccess();
-	std::set<YulString> reservedIdentifiers = _externallyUsedIdentifiers;
+	std::set<YulName> reservedIdentifiers = _externallyUsedIdentifiers;
 	reservedIdentifiers += _dialect.fixedFunctionNames();
 
-	*_object.code = std::get<Block>(Disambiguator(
+	auto astRoot = std::get<Block>(Disambiguator(
 		_dialect,
 		*_object.analysisInfo,
 		reservedIdentifiers
-	)(*_object.code));
-	Block& ast = *_object.code;
+	)(_object.code()->root()));
 
-	NameDispenser dispenser{_dialect, ast, reservedIdentifiers};
+	NameDispenser dispenser{_dialect, astRoot, reservedIdentifiers};
 	OptimiserStepContext context{_dialect, dispenser, reservedIdentifiers, _expectedExecutionsPerDeployment};
 
 	OptimiserSuite suite(context, Debug::None);
 
 	// Some steps depend on properties ensured by FunctionHoister, BlockFlattener, FunctionGrouper and
 	// ForLoopInitRewriter. Run them first to be able to run arbitrary sequences safely.
-	suite.runSequence("hgfo", ast);
+	suite.runSequence("hgfo", astRoot);
 
-	NameSimplifier::run(suite.m_context, ast);
+	NameSimplifier::run(suite.m_context, astRoot);
 	// Now the user-supplied part
-	suite.runSequence(_optimisationSequence, ast);
+	suite.runSequence(_optimisationSequence, astRoot);
 
 	// This is a tuning parameter, but actually just prevents infinite loops.
 	size_t stackCompressorMaxIterations = 16;
-	suite.runSequence("g", ast);
+	suite.runSequence("g", astRoot);
 
 	// We ignore the return value because we will get a much better error
 	// message once we perform code generation.
 	if (!usesOptimizedCodeGenerator)
-		StackCompressor::run(
+	{
+		_object.setCode(std::make_shared<AST>(std::move(astRoot)));
+		astRoot = std::get<1>(StackCompressor::run(
 			_dialect,
 			_object,
 			_optimizeStackAllocation,
 			stackCompressorMaxIterations
-		);
+		));
+	}
 
 	// Run the user-supplied clean up sequence
-	suite.runSequence(_optimisationCleanupSequence, ast);
+	suite.runSequence(_optimisationCleanupSequence, astRoot);
 	// Hard-coded FunctionGrouper step is used to bring the AST into a canonical form required by the StackCompressor
 	// and StackLimitEvader. This is hard-coded as the last step, as some previously executed steps may break the
 	// aforementioned form, thus causing the StackCompressor/StackLimitEvader to throw.
-	suite.runSequence("g", ast);
+	suite.runSequence("g", astRoot);
 
 	if (evmDialect)
 	{
 		yulAssert(_meter, "");
-		ConstantOptimiser{*evmDialect, *_meter}(ast);
+		ConstantOptimiser{*evmDialect, *_meter}(astRoot);
 		if (usesOptimizedCodeGenerator)
 		{
-			StackCompressor::run(
+			_object.setCode(std::make_shared<AST>(std::move(astRoot)));
+			astRoot = std::get<1>(StackCompressor::run(
 				_dialect,
 				_object,
 				_optimizeStackAllocation,
 				stackCompressorMaxIterations
-			);
+			));
 			if (evmDialect->providesObjectAccess())
-				StackLimitEvader::run(suite.m_context, _object);
+			{
+				_object.setCode(std::make_shared<AST>(std::move(astRoot)));
+				astRoot = StackLimitEvader::run(suite.m_context, _object);
+			}
 		}
 		else if (evmDialect->providesObjectAccess() && _optimizeStackAllocation)
-			StackLimitEvader::run(suite.m_context, _object);
+		{
+			_object.setCode(std::make_shared<AST>(std::move(astRoot)));
+			astRoot = StackLimitEvader::run(suite.m_context, _object);
+		}
 	}
 
-	dispenser.reset(ast);
-	NameSimplifier::run(suite.m_context, ast);
-	VarNameCleaner::run(suite.m_context, ast);
+	dispenser.reset(astRoot);
+	NameSimplifier::run(suite.m_context, astRoot);
+	VarNameCleaner::run(suite.m_context, astRoot);
 
 #ifdef PROFILE_OPTIMIZER_STEPS
 	outputPerformanceMetrics(suite.m_durationPerStepInMicroseconds);
 #endif
 
-	*_object.analysisInfo = AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, _object);
+	_object.setCode(std::make_shared<AST>(std::move(astRoot)));
+	_object.analysisInfo = std::make_shared<AsmAnalysisInfo>(AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, _object));
 }
 
 namespace

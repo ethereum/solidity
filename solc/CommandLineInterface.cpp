@@ -135,6 +135,7 @@ static std::string const g_strSources = "sources";
 static std::string const g_strSrcMap = "srcmap";
 static std::string const g_strSrcMapRuntime = "srcmap-runtime";
 static std::string const g_strStorageLayout = "storage-layout";
+static std::string const g_strTransientStorageLayout = "transient-storage-layout";
 static std::string const g_strVersion = "version";
 
 static bool needsHumanTargetedStdout(CommandLineOptions const& _options)
@@ -154,7 +155,8 @@ static bool needsHumanTargetedStdout(CommandLineOptions const& _options)
 		_options.compiler.outputs.natspecDev ||
 		_options.compiler.outputs.opcodes ||
 		_options.compiler.outputs.signatureHashes ||
-		_options.compiler.outputs.storageLayout;
+		_options.compiler.outputs.storageLayout ||
+		_options.compiler.outputs.transientStorageLayout;
 }
 
 static bool coloredOutput(CommandLineOptions const& _options)
@@ -177,7 +179,7 @@ void CommandLineInterface::handleEVMAssembly(std::string const& _contract)
 
 	std::string assembly;
 	if (m_options.compiler.outputs.asmJson)
-		assembly = util::jsonPrint(removeNullMembers(m_assemblyStack->assemblyJSON(_contract)), m_options.formatting.json);
+		assembly = util::jsonPrint(m_assemblyStack->assemblyJSON(_contract), m_options.formatting.json);
 	else
 		assembly = m_assemblyStack->assemblyString(_contract, m_fileReader.sourceUnits());
 
@@ -284,6 +286,30 @@ void CommandLineInterface::handleIRAst(std::string const& _contractName)
 		sout() << "IR AST:" << std::endl;
 		sout() << util::jsonPrint(
 			m_compiler->yulIRAst(_contractName),
+			m_options.formatting.json
+		) << std::endl;
+	}
+}
+
+void CommandLineInterface::handleYulCFGExport(std::string const& _contractName)
+{
+	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
+
+	if (!m_options.compiler.outputs.yulCFGJson)
+		return;
+
+	if (!m_options.output.dir.empty())
+		createFile(
+			m_compiler->filesystemFriendlyName(_contractName) + "_yul_cfg.json",
+			util::jsonPrint(
+				m_compiler->yulCFGJson(_contractName),
+				m_options.formatting.json
+			)
+		);
+	else
+	{
+		sout() << util::jsonPrint(
+			m_compiler->yulCFGJson(_contractName),
 			m_options.formatting.json
 		) << std::endl;
 	}
@@ -418,6 +444,19 @@ void CommandLineInterface::handleStorageLayout(std::string const& _contract)
 		createFile(m_compiler->filesystemFriendlyName(_contract) + "_storage.json", data);
 	else
 		sout() << "Contract Storage Layout:" << std::endl << data << std::endl;
+}
+
+void CommandLineInterface::handleTransientStorageLayout(std::string const& _contract)
+{
+	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
+
+	if (!m_options.compiler.outputs.transientStorageLayout)
+		return;
+	std::string data = jsonPrint(removeNullMembers(m_compiler->transientStorageLayout(_contract)), m_options.formatting.json);
+	if (!m_options.output.dir.empty())
+		createFile(m_compiler->filesystemFriendlyName(_contract) + "_transient_storage.json", data);
+	else
+		sout() << "Contract Transient Storage Layout:" << std::endl << data << std::endl;
 }
 
 void CommandLineInterface::handleNatspec(bool _natspecDev, std::string const& _contract)
@@ -804,7 +843,7 @@ void CommandLineInterface::assembleFromEVMAssemblyJSON()
 	solAssert(m_fileReader.sourceUnits().size() == 1);
 	auto&& [sourceUnitName, source] = *m_fileReader.sourceUnits().begin();
 
-	auto evmAssemblyStack = std::make_unique<evmasm::EVMAssemblyStack>(m_options.output.evmVersion);
+	auto evmAssemblyStack = std::make_unique<evmasm::EVMAssemblyStack>(m_options.output.evmVersion, m_options.output.eofVersion);
 	try
 	{
 		evmAssemblyStack->parseAndAnalyze(sourceUnitName, source);
@@ -849,14 +888,17 @@ void CommandLineInterface::compile()
 		m_compiler->setRevertStringBehaviour(m_options.output.revertStrings);
 		if (m_options.output.debugInfoSelection.has_value())
 			m_compiler->selectDebugInfo(m_options.output.debugInfoSelection.value());
-		// TODO: Perhaps we should not compile unless requested
-		m_compiler->enableIRGeneration(
-			m_options.compiler.outputs.ir ||
+
+		CompilerStack::PipelineConfig pipelineConfig;
+		pipelineConfig.irOptimization =
 			m_options.compiler.outputs.irOptimized ||
-			m_options.compiler.outputs.irAstJson ||
-			m_options.compiler.outputs.irOptimizedAstJson
-		);
-		m_compiler->enableEvmBytecodeGeneration(
+			m_options.compiler.outputs.irOptimizedAstJson ||
+			m_options.compiler.outputs.yulCFGJson;
+		pipelineConfig.irCodegen =
+			pipelineConfig.irOptimization ||
+			m_options.compiler.outputs.ir ||
+			m_options.compiler.outputs.irAstJson;
+		pipelineConfig.bytecode =
 			m_options.compiler.estimateGas ||
 			m_options.compiler.outputs.asm_ ||
 			m_options.compiler.outputs.asmJson ||
@@ -874,8 +916,9 @@ void CommandLineInterface::compile()
 				m_options.compiler.combinedJsonRequests->srcMapRuntime ||
 				m_options.compiler.combinedJsonRequests->funDebug ||
 				m_options.compiler.combinedJsonRequests->funDebugRuntime
-			))
-		);
+			));
+
+		m_compiler->selectContracts({{"", {{"", pipelineConfig}}}});
 
 		m_compiler->setOptimiserSettings(m_options.optimiserSettings());
 
@@ -921,20 +964,6 @@ void CommandLineInterface::compile()
 		);
 		solThrow(CommandLineExecutionError, "");
 	}
-	catch (Error const& _error)
-	{
-		if (_error.type() == Error::Type::DocstringParsingError)
-		{
-			report(Error::Severity::Error, *boost::get_error_info<errinfo_comment>(_error));
-			solThrow(CommandLineExecutionError, "Documentation parsing failed.");
-		}
-		else
-		{
-			m_hasOutput = true;
-			formatter.printErrorInformation(_error);
-			solThrow(CommandLineExecutionError, "");
-		}
-	}
 }
 
 void CommandLineInterface::handleCombinedJSON()
@@ -969,6 +998,8 @@ void CommandLineInterface::handleCombinedJSON()
 				contractData["metadata"] = m_compiler->metadata(contractName);
 			if (m_options.compiler.combinedJsonRequests->storageLayout)
 				contractData[g_strStorageLayout] = m_compiler->storageLayout(contractName);
+			if (m_options.compiler.combinedJsonRequests->transientStorageLayout)
+				contractData[g_strTransientStorageLayout] = m_compiler->transientStorageLayout(contractName);
 			if (m_options.compiler.combinedJsonRequests->generatedSources)
 				contractData[g_strGeneratedSources] = m_compiler->generatedSources(contractName, false);
 			if (m_options.compiler.combinedJsonRequests->generatedSourcesRuntime)
@@ -1210,6 +1241,17 @@ void CommandLineInterface::assembleYul(yul::YulStack::Language _language, yul::Y
 			successful = false;
 		else
 			stack.optimize();
+
+		if (successful && m_options.compiler.outputs.asmJson)
+		{
+			std::shared_ptr<yul::Object> result = stack.parserResult();
+			if (result && !result->hasContiguousSourceIndices())
+				solThrow(
+					CommandLineExecutionError,
+					"Generating the assembly JSON output was not possible. "
+					"Source indices provided in the @use-src annotation in the Yul input do not start at 0 or are not contiguous."
+				);
+		}
 	}
 
 	for (auto const& sourceAndStack: yulStacks)
@@ -1265,14 +1307,30 @@ void CommandLineInterface::assembleYul(yul::YulStack::Language _language, yul::Y
 			sout() << "AST:" << std::endl << std::endl;
 			sout() << util::jsonPrint(stack.astJson(), m_options.formatting.json) << std::endl;
 		}
+		if (m_options.compiler.outputs.yulCFGJson)
+		{
+			sout() << "Yul Control Flow Graph:" << std::endl << std::endl;
+			sout() << util::jsonPrint(stack.cfgJson(), m_options.formatting.json) << std::endl;
+		}
 		solAssert(_targetMachine == yul::YulStack::Machine::EVM, "");
 		if (m_options.compiler.outputs.asm_)
 		{
 			sout() << std::endl << "Text representation:" << std::endl;
-			if (!object.assembly.empty())
-				sout() << object.assembly << std::endl;
+			std::string assemblyText{object.assembly->assemblyString(stack.debugInfoSelection())};
+			if (!assemblyText.empty())
+				sout() << assemblyText << std::endl;
 			else
 				report(Error::Severity::Info, "No text representation found.");
+		}
+		if (m_options.compiler.outputs.asmJson)
+		{
+			sout() << std::endl << "EVM assembly:" << std::endl;
+			std::map<std::string, unsigned> sourceIndices;
+			stack.parserResult()->collectSourceIndices(sourceIndices);
+			sout() << util::jsonPrint(
+				object.assembly->assemblyJSON(sourceIndices),
+				m_options.formatting.json
+			) << std::endl;
 		}
 	}
 }
@@ -1309,10 +1367,12 @@ void CommandLineInterface::outputCompilationResults()
 			handleIRAst(contract);
 			handleIROptimized(contract);
 			handleIROptimizedAst(contract);
+			handleYulCFGExport(contract);
 			handleSignatureHashes(contract);
 			handleMetadata(contract);
 			handleABI(contract);
 			handleStorageLayout(contract);
+			handleTransientStorageLayout(contract);
 			handleNatspec(true, contract);
 			handleNatspec(false, contract);
 		} // end of contracts iteration

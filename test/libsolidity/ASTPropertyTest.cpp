@@ -43,7 +43,7 @@ using namespace solidity;
 using namespace std::string_literals;
 
 ASTPropertyTest::ASTPropertyTest(std::string const& _filename):
-	TestCase(_filename)
+	EVMVersionRestrictedTestCase(_filename)
 {
 	if (!boost::algorithm::ends_with(_filename, ".sol"))
 		BOOST_THROW_EXCEPTION(std::runtime_error("Not a Solidity file: \"" + _filename + "\"."));

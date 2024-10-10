@@ -1,0 +1,109 @@
+{
+    "contracts": {
+        "": {
+            "A": {
+                "abi": [],
+                "evm": {
+                    "bytecode": {
+                        "linkReferences": {},
+                        "object": "<BYTECODE REMOVED>"
+                    }
+                },
+                "transientStorageLayout": {
+                    "storage": [],
+                    "types": null
+                }
+            },
+            "B": {
+                "evm": {
+                    "bytecode": {
+                        "object": "<BYTECODE REMOVED>"
+                    }
+                },
+                "transientStorageLayout": {
+                    "storage": [],
+                    "types": null
+                }
+            }
+        },
+        "*": {
+            "A": {
+                "evm": {
+                    "bytecode": {
+                        "linkReferences": {},
+                        "object": "<BYTECODE REMOVED>"
+                    }
+                }
+            },
+            "B": {
+                "evm": {
+                    "bytecode": {
+                        "object": "<BYTECODE REMOVED>"
+                    }
+                }
+            }
+        },
+        "C": {
+            "A": {
+                "devdoc": {
+                    "kind": "dev",
+                    "methods": {},
+                    "version": 1
+                },
+                "evm": {
+                    "bytecode": {
+                        "linkReferences": {},
+                        "object": "<BYTECODE REMOVED>"
+                    }
+                },
+                "storageLayout": {
+                    "storage": [],
+                    "types": null
+                }
+            },
+            "B": {
+                "devdoc": {
+                    "kind": "dev",
+                    "methods": {},
+                    "version": 1
+                },
+                "evm": {
+                    "bytecode": {
+                        "object": "<BYTECODE REMOVED>"
+                    }
+                }
+            }
+        },
+        "D": {
+            "A": {
+                "evm": {
+                    "bytecode": {
+                        "linkReferences": {},
+                        "object": "<BYTECODE REMOVED>"
+                    }
+                }
+            },
+            "B": {
+                "evm": {
+                    "bytecode": {
+                        "object": "<BYTECODE REMOVED>"
+                    }
+                }
+            }
+        }
+    },
+    "sources": {
+        "": {
+            "id": 0
+        },
+        "*": {
+            "id": 1
+        },
+        "C": {
+            "id": 2
+        },
+        "D": {
+            "id": 3
+        }
+    }
+}

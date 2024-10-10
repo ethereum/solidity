@@ -1,3 +1,3 @@
-{ let .y:u256 }
+{ let .y }
 // ----
 // ParserError 2314: (6-7): Expected identifier but got '.'
