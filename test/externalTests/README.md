@@ -88,6 +88,6 @@ branches if they exist. If no changes on our part were necessary, it is complete
 e.g. the `master_060` of an external project in Solidity 0.8.x.
 
 Since each project is handled separately, this approach may result in a mix of version-specific branches
-between different external projects. For example, in one project we could could have `master_050` on
+between different external projects. For example, in one project we could have `master_050` on
 both `develop` and `breaking` and in another `breaking` could use `master_080` while `develop` still
 uses `master_060`.
