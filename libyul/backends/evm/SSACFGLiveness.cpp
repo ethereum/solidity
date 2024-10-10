@@ -24,6 +24,17 @@
 
 using namespace solidity::yul;
 
+namespace
+{
+constexpr auto literalsFilter(SSACFG const& _cfg)
+{
+	return [&_cfg](SSACFG::ValueId const& _valueId) -> bool
+	{
+		return !std::holds_alternative<SSACFG::LiteralValue>(_cfg.valueInfo(_valueId));;
+	};
+}
+}
+
 SSACFGLiveness::SSACFGLiveness(SSACFG const& _cfg):
 	m_cfg(_cfg),
 	m_topologicalSort(_cfg),
@@ -46,9 +57,6 @@ void SSACFGLiveness::runDagDfs()
 	{
 		// post-order traversal
 		SSACFG::BlockId blockId{blockIdValue};
-		auto const filterLiterals = [this](auto const& valueId){
-			return !std::holds_alternative<SSACFG::LiteralValue>(m_cfg.valueInfo(valueId));
-		};
 		auto const& block = m_cfg.block(blockId);
 
 		// live <- PhiUses(B)
@@ -66,15 +74,10 @@ void SSACFGLiveness::runDagDfs()
 					auto const it = entries.find(blockId);
 					yulAssert(it != entries.end());
 					auto const argIndex = static_cast<size_t>(std::distance(entries.begin(), it));
-					if (argIndex < std::get<SSACFG::PhiValue>(info).arguments.size())
-					{
-						// todo not sure why arg index would exceed phi arg length but it does happen
-						auto const arg = std::get<SSACFG::PhiValue>(info).arguments.at(argIndex);
-						if (!std::holds_alternative<SSACFG::LiteralValue>(m_cfg.valueInfo(arg)))
-							live.insert(arg);
-					}
-					else
-						yulAssert(false);
+					yulAssert(argIndex < std::get<SSACFG::PhiValue>(info).arguments.size());
+					auto const arg = std::get<SSACFG::PhiValue>(info).arguments.at(argIndex);
+					if (!std::holds_alternative<SSACFG::LiteralValue>(m_cfg.valueInfo(arg)))
+						live.insert(arg);
 				}
 			});
 
@@ -86,7 +89,7 @@ void SSACFGLiveness::runDagDfs()
 			});
 		if (std::holds_alternative<SSACFG::BasicBlock::FunctionReturn>(block.exit))
 			live += std::get<SSACFG::BasicBlock::FunctionReturn>(block.exit).returnValues
-					| ranges::views::filter(filterLiterals);
+					| ranges::views::filter(literalsFilter(m_cfg));
 
 		// clean out unreachables
 		live = live | ranges::views::filter([&](auto const& valueId) { return !std::holds_alternative<SSACFG::UnreachableValue>(m_cfg.valueInfo(valueId)); }) | ranges::to<std::set>;
@@ -98,9 +101,9 @@ void SSACFGLiveness::runDagDfs()
 		for (auto const& op: block.operations | ranges::views::reverse)
 		{
 			// remove variables defined at p from live
-			live -= op.outputs | ranges::views::filter(filterLiterals) | ranges::to<std::vector>;
+			live -= op.outputs | ranges::views::filter(literalsFilter(m_cfg)) | ranges::to<std::vector>;
 			// add uses at p to live
-			live += op.inputs | ranges::views::filter(filterLiterals) | ranges::to<std::vector>;
+			live += op.inputs | ranges::views::filter(literalsFilter(m_cfg)) | ranges::to<std::vector>;
 		}
 
 		// livein(b) <- live \cup PhiDefs(B)
@@ -120,23 +123,20 @@ void SSACFGLiveness::runLoopTreeDfs(size_t const _loopHeader)
 		// must be live out of header if live in of children
 		m_liveOuts[_loopHeader] += liveLoop;
 		// for each blockId \in children(loopHeader)
-		for (size_t blockId = 0; blockId < m_cfg.numBlocks(); ++blockId)
-			if (m_loopNestingForest.loopParents()[blockId] == _loopHeader)
+		for (size_t blockIdValue = 0; blockIdValue < m_cfg.numBlocks(); ++blockIdValue)
+			if (m_loopNestingForest.loopParents()[blockIdValue] == _loopHeader)
 			{
 				// propagate loop liveness information down to the loop header's children
-				m_liveIns[blockId] += liveLoop;
-				m_liveOuts[blockId] += liveLoop;
+				m_liveIns[blockIdValue] += liveLoop;
+				m_liveOuts[blockIdValue] += liveLoop;
 
-				runLoopTreeDfs(blockId);
+				runLoopTreeDfs(blockIdValue);
 			}
 	}
 }
 
 void SSACFGLiveness::fillOperationsLiveOut()
 {
-	auto const filterLiterals = [this](auto const& valueId){
-		return !std::holds_alternative<SSACFG::LiteralValue>(m_cfg.valueInfo(valueId));
-	};
 	for (size_t blockIdValue = 0; blockIdValue < m_cfg.numBlocks(); ++blockIdValue)
 	{
 		auto const& operations = m_cfg.block(SSACFG::BlockId{blockIdValue}).operations;
@@ -149,8 +149,8 @@ void SSACFGLiveness::fillOperationsLiveOut()
 			for (auto const& op: operations | ranges::views::reverse)
 			{
 				*rit = live;
-				live -= op.outputs | ranges::views::filter(filterLiterals) | ranges::to<std::vector>;
-				live += op.inputs | ranges::views::filter(filterLiterals) | ranges::to<std::vector>;
+				live -= op.outputs | ranges::views::filter(literalsFilter(m_cfg)) | ranges::to<std::vector>;
+				live += op.inputs | ranges::views::filter(literalsFilter(m_cfg)) | ranges::to<std::vector>;
 				++rit;
 			}
 		}

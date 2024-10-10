@@ -29,7 +29,7 @@
 namespace solidity::yul
 {
 
-/// Performs liveness analysis on an SSA CFG following Algorithm 9.1 in [1].
+/// Performs liveness analysis on a reducible SSA CFG following Algorithm 9.1 in [1].
 ///
 /// [1] Rastello, Fabrice, and Florent Bouchez Tichadou, eds. SSA-based Compiler Design. Springer, 2022.
 class SSACFGLiveness
