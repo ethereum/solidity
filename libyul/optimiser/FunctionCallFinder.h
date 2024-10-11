@@ -21,8 +21,8 @@
 #pragma once
 
 #include <libyul/ASTForward.h>
-#include <libyul/YulName.h>
 
+#include <string_view>
 #include <vector>
 
 namespace solidity::yul

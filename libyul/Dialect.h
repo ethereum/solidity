@@ -25,9 +25,12 @@
 #include <libyul/ControlFlowSideEffects.h>
 #include <libyul/SideEffects.h>
 #include <libyul/YulName.h>
+#include <libyul/YulString.h>
 
 #include <optional>
 #include <set>
+#include <string>
+#include <string_view>
 #include <vector>
 
 namespace solidity::yul
