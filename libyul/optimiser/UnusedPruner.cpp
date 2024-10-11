@@ -108,7 +108,7 @@ void UnusedPruner::operator()(Block& _block)
 				else if (varDecl.variables.size() == 1 && m_dialect.discardFunction())
 					statement = ExpressionStatement{varDecl.debugData, FunctionCall{
 						varDecl.debugData,
-						Builtin{varDecl.debugData, *m_dialect.discardFunction()},
+						BuiltinName{varDecl.debugData, *m_dialect.discardFunction()},
 						{*std::move(varDecl.value)}
 					}};
 			}

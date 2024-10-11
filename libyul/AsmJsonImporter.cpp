@@ -261,7 +261,7 @@ FunctionCall AsmJsonImporter::createFunctionCall(Json const& _node)
 	auto const name = member(functionNameNode, "name").get<std::string>();
 	if (std::optional<BuiltinHandle> builtinHandle = m_dialect.builtin(name))
 	{
-		auto builtin = createAsmNode<Builtin>(functionNameNode);
+		auto builtin = createAsmNode<BuiltinName>(functionNameNode);
 		builtin.handle = *builtinHandle;
 		functionCall.functionName = builtin;
 	}

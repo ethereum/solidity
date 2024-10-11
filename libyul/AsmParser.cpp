@@ -400,7 +400,7 @@ Statement Parser::parseStatement()
 	// Options left:
 	// Expression/FunctionCall
 	// Assignment
-	std::variant<Literal, Identifier, Builtin, Verbatim> elementary(parseLiteralOrIdentifier());
+	std::variant<Literal, Identifier, BuiltinName, Verbatim> elementary(parseLiteralOrIdentifier());
 
 	switch (currentToken())
 	{
@@ -435,7 +435,7 @@ Statement Parser::parseStatement()
 						(currentToken() == Token::Comma ? " in multiple assignment." : " in assignment.")
 					);
 				},
-				[&](Builtin const& _builtin) { raiseAssignToBuiltinError(m_dialect.builtinFunction(_builtin.handle).name); },
+				[&](BuiltinName const& _builtin) { raiseAssignToBuiltinError(m_dialect.builtinFunction(_builtin.handle).name); },
 				[&](Verbatim const& _verbatim) { raiseAssignToBuiltinError(m_dialect.verbatimFunction(_verbatim.handle).name); },
 				[&](Identifier const& _identifier)
 				{
@@ -519,7 +519,7 @@ Expression Parser::parseExpression(bool _unlimitedLiteralArgument)
 {
 	RecursionGuard recursionGuard(*this);
 
-	std::variant<Literal, Identifier, Builtin, Verbatim> operation = parseLiteralOrIdentifier(_unlimitedLiteralArgument);
+	std::variant<Literal, Identifier, BuiltinName, Verbatim> operation = parseLiteralOrIdentifier(_unlimitedLiteralArgument);
 	auto const uninvokedBuiltinError = [this](SourceLocation const& _builtinLocation, BuiltinFunction const& _function)
 	{
 		fatalParserError(
@@ -535,7 +535,7 @@ Expression Parser::parseExpression(bool _unlimitedLiteralArgument)
 				return parseCall(std::move(operation));
 			return std::move(_identifier);
 		},
-		[&](Builtin& _builtin) -> Expression
+		[&](BuiltinName& _builtin) -> Expression
 		{
 			if (currentToken() == Token::LParen)
 				return parseCall(std::move(operation));
@@ -556,7 +556,7 @@ Expression Parser::parseExpression(bool _unlimitedLiteralArgument)
 	}, operation);
 }
 
-std::variant<Literal, Identifier, Builtin, Verbatim> Parser::parseLiteralOrIdentifier(bool _unlimitedLiteralArgument)
+std::variant<Literal, Identifier, BuiltinName, Verbatim> Parser::parseLiteralOrIdentifier(bool _unlimitedLiteralArgument)
 {
 	RecursionGuard recursionGuard(*this);
 	switch (currentToken())
@@ -565,7 +565,7 @@ std::variant<Literal, Identifier, Builtin, Verbatim> Parser::parseLiteralOrIdent
 	{
 		if (auto builtinHandle = m_dialect.builtin(currentLiteral()))
 		{
-			Builtin builtin{createDebugData(), *builtinHandle};
+			BuiltinName builtin{createDebugData(), *builtinHandle};
 			advance();
 			return builtin;
 		}
@@ -707,7 +707,7 @@ FunctionDefinition Parser::parseFunctionDefinition()
 	return funDef;
 }
 
-FunctionCall Parser::parseCall(std::variant<Literal, Identifier, Builtin, Verbatim>&& _initialOp)
+FunctionCall Parser::parseCall(std::variant<Literal, Identifier, BuiltinName, Verbatim>&& _initialOp)
 {
 	RecursionGuard recursionGuard(*this);
 
@@ -720,7 +720,7 @@ FunctionCall Parser::parseCall(std::variant<Literal, Identifier, Builtin, Verbat
 			functionCall.debugData = _identifier.debugData;
 			functionCall.functionName = _identifier;
 		},
-		[&](Builtin const& _builtin)
+		[&](BuiltinName const& _builtin)
 		{
 			isUnlimitedLiteralArgument = [builtinFunction =m_dialect.builtinFunction(_builtin.handle)](size_t _index) {
 				if (_index < builtinFunction.literalArguments.size())

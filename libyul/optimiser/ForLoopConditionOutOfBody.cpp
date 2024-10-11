@@ -60,14 +60,14 @@ void ForLoopConditionOutOfBody::operator()(ForLoop& _forLoop)
 
 	if (
 		std::holds_alternative<FunctionCall>(*firstStatement.condition) &&
-		std::holds_alternative<Builtin>(std::get<FunctionCall>(*firstStatement.condition).functionName) &&
-		std::get<Builtin>(std::get<FunctionCall>(*firstStatement.condition).functionName).handle.id == isZeroHandle.id
+		std::holds_alternative<BuiltinName>(std::get<FunctionCall>(*firstStatement.condition).functionName) &&
+		std::get<BuiltinName>(std::get<FunctionCall>(*firstStatement.condition).functionName).handle.id == isZeroHandle.id
 	)
 		_forLoop.condition = std::make_unique<Expression>(std::move(std::get<FunctionCall>(*firstStatement.condition).arguments.front()));
 	else
 		_forLoop.condition = std::make_unique<Expression>(FunctionCall{
 			debugData,
-			Builtin{debugData, isZeroHandle},
+			BuiltinName{debugData, isZeroHandle},
 			util::make_vector<Expression>(
 				std::move(*firstStatement.condition)
 			)

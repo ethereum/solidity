@@ -75,7 +75,7 @@ struct Literal { langutil::DebugData::ConstPtr debugData; LiteralKind kind; Lite
 /// External / internal identifier or label reference
 struct Identifier { langutil::DebugData::ConstPtr debugData; YulName name; };
 /// Builtin function
-struct Builtin { langutil::DebugData::ConstPtr debugData; BuiltinHandle handle; };
+struct BuiltinName { langutil::DebugData::ConstPtr debugData; BuiltinHandle handle; };
 /// Verbatim function
 struct Verbatim { langutil::DebugData::ConstPtr debugData; VerbatimHandle handle; };
 /// Identifier for function names
@@ -112,7 +112,7 @@ struct Leave { langutil::DebugData::ConstPtr debugData; };
 
 constexpr bool isBuiltinFunctionCall(FunctionCall const& _functionCall) noexcept
 {
-	return std::holds_alternative<Builtin>(_functionCall.functionName) || std::holds_alternative<Verbatim>(_functionCall.functionName);
+	return std::holds_alternative<BuiltinName>(_functionCall.functionName) || std::holds_alternative<Verbatim>(_functionCall.functionName);
 }
 
 /// Immutable AST comprised of its top-level block

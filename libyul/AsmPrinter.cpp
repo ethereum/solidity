@@ -62,7 +62,7 @@ std::string AsmPrinter::operator()(Literal const& _literal)
 	return locationComment + escapeAndQuoteString(formattedValue);
 }
 
-std::string AsmPrinter::operator()(Builtin const& _builtin)
+std::string AsmPrinter::operator()(BuiltinName const& _builtin)
 {
 	return formatDebugData(_builtin) + m_dialect.builtinFunction(_builtin.handle).name;
 }

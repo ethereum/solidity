@@ -50,7 +50,7 @@ public:
 	Json operator()(NameWithDebugData const& _node) const;
 	Json operator()(Literal const& _node) const;
 	Json operator()(Identifier const& _node) const;
-	Json operator()(Builtin const& _node) const;
+	Json operator()(BuiltinName const& _node) const;
 	Json operator()(Verbatim const& _node) const;
 	Json operator()(Assignment const& _node) const;
 	Json operator()(VariableDeclaration const& _node) const;

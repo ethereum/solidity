@@ -357,7 +357,7 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 	auto makeValueCompare = [&](Case const& _case) {
 		yul::FunctionCall const& ghostCall = m_graph.ghostCalls.emplace_back(yul::FunctionCall{
 			debugDataOf(_case),
-			Builtin{{}, *equalityBuiltin},
+			BuiltinName{{}, *equalityBuiltin},
 			{*_case.value, Identifier{{}, ghostVariableName}}
 		});
 		CFG::BuiltinCall builtinCall{debugDataOf(_case), m_dialect.builtinFunction(*equalityBuiltin), ghostCall, 2};
@@ -520,8 +520,8 @@ Stack const& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _cal
 	if (isBuiltinFunctionCall(_call))
 	{
 		BuiltinFunction const* builtin;
-		if (std::holds_alternative<Builtin>(_call.functionName))
-			builtin = &m_dialect.builtinFunction(std::get<Builtin>(_call.functionName).handle);
+		if (std::holds_alternative<BuiltinName>(_call.functionName))
+			builtin = &m_dialect.builtinFunction(std::get<BuiltinName>(_call.functionName).handle);
 		else if (std::holds_alternative<Verbatim>(_call.functionName))
 			builtin = &m_dialect.verbatimFunction(std::get<Verbatim>(_call.functionName).handle);
 		else

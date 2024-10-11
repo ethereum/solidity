@@ -48,7 +48,7 @@ void ForLoopConditionIntoBody::operator()(ForLoop& _forLoop)
 				std::make_unique<Expression>(
 					FunctionCall {
 						debugData,
-						Builtin{debugData, *m_dialect.booleanNegationFunction()},
+						BuiltinName{debugData, *m_dialect.booleanNegationFunction()},
 						util::make_vector<Expression>(std::move(*_forLoop.condition))
 					}
 				),

@@ -124,10 +124,10 @@ std::optional<KnowledgeBase::VariableOffset> KnowledgeBase::explore(Expression c
 	else if
 	(
 		FunctionCall const* f = std::get_if<FunctionCall>(&_value);
-		f && std::holds_alternative<Builtin>(f->functionName)
+		f && std::holds_alternative<BuiltinName>(f->functionName)
 	)
 	{
-		if (std::get<Builtin>(f->functionName).handle == evmDialect->handles().add)
+		if (std::get<BuiltinName>(f->functionName).handle == evmDialect->handles().add)
 		{
 			if (std::optional<VariableOffset> a = explore(f->arguments[0]))
 				if (std::optional<VariableOffset> b = explore(f->arguments[1]))
@@ -141,7 +141,7 @@ std::optional<KnowledgeBase::VariableOffset> KnowledgeBase::explore(Expression c
 						return VariableOffset{a->reference, offset};
 				}
 		}
-		else if (std::get<Builtin>(f->functionName).handle == evmDialect->handles().sub)
+		else if (std::get<BuiltinName>(f->functionName).handle == evmDialect->handles().sub)
 			if (std::optional<VariableOffset> a = explore(f->arguments[0]))
 				if (std::optional<VariableOffset> b = explore(f->arguments[1]))
 				{

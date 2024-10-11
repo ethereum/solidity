@@ -200,7 +200,7 @@ Representation RepresentationFinder::represent(
 	Representation repr;
 	repr.expression = std::make_unique<Expression>(FunctionCall{
 		m_debugData,
-		Builtin{m_debugData, _instruction},
+		BuiltinName{m_debugData, _instruction},
 		{ASTCopier{}.translate(*_argument.expression)}
 	});
 	repr.cost = _argument.cost + m_meter.instructionCosts(*m_dialect.builtinFunction(_instruction).instruction);
@@ -216,7 +216,7 @@ Representation RepresentationFinder::represent(
 	Representation repr;
 	repr.expression = std::make_unique<Expression>(FunctionCall{
 		m_debugData,
-		Builtin{m_debugData, _instruction},
+		BuiltinName{m_debugData, _instruction},
 		{ASTCopier{}.translate(*_arg1.expression), ASTCopier{}.translate(*_arg2.expression)}
 	});
 	repr.cost = m_meter.instructionCosts(*m_dialect.builtinFunction(_instruction).instruction) + _arg1.cost + _arg2.cost;

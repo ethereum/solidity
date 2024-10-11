@@ -83,7 +83,7 @@ void CallGraphGenerator::operator()(FunctionCall const& _functionCall)
 {
 	auto& functionCalls = m_callGraph.functionCalls[m_currentFunction];
 	FunctionHandle identifier = std::visit(GenericVisitor{
-		[](Builtin const& _builtin) -> FunctionHandle { return _builtin.handle; },
+		[](BuiltinName const& _builtin) -> FunctionHandle { return _builtin.handle; },
 		[](Verbatim const& _verbatim) -> FunctionHandle { return _verbatim.handle; },
 		[](Identifier const& _identifier) -> FunctionHandle { return _identifier.name; },
 	}, _functionCall.functionName);

@@ -58,7 +58,7 @@ void ASTHasherBase::hashFunctionCall(FunctionCall const& _funCall)
 	hash64(compileTimeLiteralHash("FunctionCall"));
 	GenericVisitor visitor
 		{
-			[&](Builtin const& _builtin)
+			[&](BuiltinName const& _builtin)
 			{
 				hash64(compileTimeLiteralHash("Builtin"));
 				hash64(_builtin.handle.id);

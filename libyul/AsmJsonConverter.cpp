@@ -83,8 +83,9 @@ Json AsmJsonConverter::operator()(Verbatim const& _node) const
 	return ret;
 }
 
-Json AsmJsonConverter::operator()(Builtin const& _node) const
+Json AsmJsonConverter::operator()(BuiltinName const& _node) const
 {
+	// represents BuiltinName also with YulIdentifier node type to avoid a breaking change in the JSON interface
 	Json ret = createAstNode(originLocationOf(_node), nativeLocationOf(_node), "YulIdentifier");
 	ret["name"] = m_dialect.builtinFunction(_node.handle).name;
 	return ret;

@@ -258,7 +258,7 @@ Expression Pattern::toExpression(langutil::DebugData::ConstPtr const& _debugData
 		}
 
 		return FunctionCall{_debugData,
-			Builtin{_debugData, *m_instructionBuiltinHandle},
+			BuiltinName{_debugData, *m_instructionBuiltinHandle},
 			std::move(arguments)
 		};
 	}

@@ -60,7 +60,7 @@ void ReferencesCounter::operator()(FunctionCall const& _funCall)
 {
 	auto const handle = std::visit(util::GenericVisitor{
 		[&](Identifier const& _identifier) -> FunctionHandle { return _identifier.name; },
-		[&](Builtin const& _builtin) -> FunctionHandle { return _builtin.handle; },
+		[&](BuiltinName const& _builtin) -> FunctionHandle { return _builtin.handle; },
 		[&](Verbatim const& _verbatim) -> FunctionHandle { return _verbatim.handle; }
 	}, _funCall.functionName);
 	++m_references[handle];

@@ -47,7 +47,7 @@ std::vector<Statement> generateMemoryStore(
 	std::vector<Statement> result;
 	result.emplace_back(ExpressionStatement{_debugData, FunctionCall{
 		_debugData,
-		Builtin{_debugData, *memoryStoreFunction},
+		BuiltinName{_debugData, *memoryStoreFunction},
 		{
 			Literal{_debugData, LiteralKind::Number, _mpos},
 			std::move(_value)
@@ -62,7 +62,7 @@ FunctionCall generateMemoryLoad(Dialect const& _dialect, langutil::DebugData::Co
 	yulAssert(memoryLoadFunction, "");
 	return FunctionCall{
 		_debugData,
-		Builtin{_debugData, *memoryLoadFunction}, {
+		BuiltinName{_debugData, *memoryLoadFunction}, {
 			Literal{
 				_debugData,
 				LiteralKind::Number,

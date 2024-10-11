@@ -158,7 +158,7 @@ FunctionName ASTCopier::translate(FunctionName const& _functionName)
 {
 	GenericVisitor visitor{
 		[&](Identifier const& _identifier) -> FunctionName { return translate(_identifier); },
-		[](Builtin const& _builtin) -> FunctionName { return _builtin; },
+		[](BuiltinName const& _builtin) -> FunctionName { return _builtin; },
 		[](Verbatim const& _verbatim) -> FunctionName { return _verbatim; }
 	};
 	return std::visit(visitor, _functionName);

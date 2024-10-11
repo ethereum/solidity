@@ -57,9 +57,9 @@ void LoadResolver::visit(Expression& _e)
 	DataFlowAnalyzer::visit(_e);
 
 	if (FunctionCall const* funCall = std::get_if<FunctionCall>(&_e);
-		funCall && std::holds_alternative<Builtin>(funCall->functionName))
+		funCall && std::holds_alternative<BuiltinName>(funCall->functionName))
 	{
-		auto const& builtinHandle = std::get<Builtin>(funCall->functionName).handle;
+		auto const& builtinHandle = std::get<BuiltinName>(funCall->functionName).handle;
 		if (builtinHandle == m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Memory)])
 			tryResolve(_e, StoreLoadLocation::Memory, funCall->arguments);
 		else if (builtinHandle == m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Storage)])

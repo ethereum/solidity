@@ -43,7 +43,7 @@ ExpressionStatement makeDiscardCall(
 {
 	return {_debugData, FunctionCall{
 		_debugData,
-		Builtin{_debugData, _discardFunction},
+		BuiltinName{_debugData, _discardFunction},
 		{std::move(_expression)}
 	}};
 }
@@ -201,7 +201,7 @@ OptionalStatements ControlFlowSimplifier::reduceSingleCaseSwitch(Switch& _switch
 			std::move(_switchStmt.debugData),
 			std::make_unique<Expression>(FunctionCall{
 				debugData,
-				Builtin{debugData, *m_dialect.equalityFunction()},
+				BuiltinName{debugData, *m_dialect.equalityFunction()},
 				{std::move(*switchCase.value), std::move(*_switchStmt.expression)}
 			}),
 			std::move(switchCase.body)
