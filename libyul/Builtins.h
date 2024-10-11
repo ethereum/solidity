@@ -18,15 +18,11 @@
 
 #pragma once
 
-#include <libyul/ASTForward.h>
-
 #include <cstddef>
 #include <tuple>
 
 namespace solidity::yul
 {
-
-struct Dialect;
 
 /// Handle to reference a builtin function in the AST
 struct BuiltinHandle

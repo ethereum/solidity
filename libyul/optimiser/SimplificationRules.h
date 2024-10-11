@@ -39,8 +39,9 @@
 
 namespace solidity::yul
 {
-struct EVMDialect;
 struct AssignedValue;
+struct Dialect;
+struct EVMDialect;
 class Pattern;
 
 using DebugData = langutil::DebugData;

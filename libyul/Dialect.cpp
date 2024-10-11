@@ -31,10 +31,12 @@ Literal Dialect::zeroLiteral() const
 	return {DebugData::create(), LiteralKind::Number, LiteralValue(0, std::nullopt)};
 }
 
-BuiltinFunction const& Dialect::builtinFunction(BuiltinHandle const&) const {
+BuiltinFunction const& Dialect::builtinFunction(BuiltinHandle const&) const
+{
 	yulAssert(false);
 }
 
-BuiltinFunction const& Dialect::verbatimFunction(VerbatimHandle const&) const {
+BuiltinFunction const& Dialect::verbatimFunction(VerbatimHandle const&) const
+{
 	yulAssert(false);
 }

@@ -86,7 +86,6 @@ private:
 	void overwriteWithOptimizedObject(util::h256 _cacheKey, Object& _object) const;
 
 	static std::optional<util::h256> calculateCacheKey(
-		Dialect const& _dialect,
 		Block const& _ast,
 		ObjectDebugData const& _debugData,
 		Settings const& _settings,
