@@ -265,12 +265,6 @@ FunctionCall AsmJsonImporter::createFunctionCall(Json const& _node)
 		builtin.handle = *builtinHandle;
 		functionCall.functionName = builtin;
 	}
-	else if (std::optional<VerbatimHandle> verbatimHandle = m_dialect.verbatim(name))
-	{
-		auto verbatim = createAsmNode<Verbatim>(functionNameNode);
-		verbatim.handle = *verbatimHandle;
-		functionCall.functionName = verbatim;
-	}
 	else
 		functionCall.functionName = createIdentifier(functionNameNode);
 

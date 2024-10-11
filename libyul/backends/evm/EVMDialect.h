@@ -78,10 +78,8 @@ struct EVMDialect: public Dialect
 
 	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
 	std::optional<BuiltinHandle> builtin(std::string_view _name) const override;
-	std::optional<VerbatimHandle> verbatim(std::string_view _name) const override;
 
 	BuiltinFunctionForEVM const& builtinFunction(BuiltinHandle const& handle) const override;
-	BuiltinFunctionForEVM const& verbatimFunction(VerbatimHandle const&) const override;
 	/// @returns true if the identifier is reserved. This includes the builtins too.
 	bool reservedIdentifier(std::string_view _name) const override;
 
@@ -106,16 +104,18 @@ struct EVMDialect: public Dialect
 
 	static SideEffects sideEffectsOfInstruction(evmasm::Instruction _instruction);
 
-	std::map<std::pair<size_t, size_t>, BuiltinFunctionForEVM> const& verbatimFunctions() const { return m_verbatimFunctions; }
+	std::vector<BuiltinFunctionForEVM> const& verbatimFunctions() const { return m_verbatimFunctions; }
 
 protected:
-	VerbatimHandle verbatimFunction(size_t _arguments, size_t _returnVariables) const;
+	BuiltinHandle verbatimFunction(size_t _arguments, size_t _returnVariables) const;
+
+	static size_t constexpr verbatimIdOffset = verbatimMaxInputSlots * verbatimMaxOutputSlots;
 
 	bool const m_objectAccess;
 	langutil::EVMVersion const m_evmVersion;
 	std::optional<uint8_t> m_eofVersion;
 	std::vector<std::optional<BuiltinFunctionForEVM>> m_functions;
-	std::map<std::pair<size_t, size_t>, BuiltinFunctionForEVM> mutable m_verbatimFunctions;
+	std::vector<BuiltinFunctionForEVM> mutable m_verbatimFunctions;
 	std::set<std::string, std::less<>> m_reserved;
 
 	Handles m_handles{};

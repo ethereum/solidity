@@ -60,16 +60,17 @@ struct BuiltinFunction
 
 struct Dialect
 {
+	static size_t constexpr verbatimMaxInputSlots = 100;
+	static size_t constexpr verbatimMaxOutputSlots = 100;
+
 	/// Noncopiable.
 	Dialect(Dialect const&) = delete;
 	Dialect& operator=(Dialect const&) = delete;
 
 	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
 	virtual std::optional<BuiltinHandle> builtin(std::string_view /*_name*/) const { return std::nullopt; }
-	virtual std::optional<VerbatimHandle> verbatim(std::string_view /*_name*/) const { return std::nullopt; }
 
 	virtual BuiltinFunction const& builtinFunction(BuiltinHandle const&) const;
-	virtual BuiltinFunction const& verbatimFunction(VerbatimHandle const&) const;
 
 	/// @returns true if the identifier is reserved. This includes the builtins too.
 	virtual bool reservedIdentifier(std::string_view _name) const { return builtin(_name).has_value(); }

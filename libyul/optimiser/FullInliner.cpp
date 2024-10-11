@@ -131,7 +131,7 @@ std::map<FunctionHandle, size_t> FullInliner::callDepths() const
 	// Remove calls to builtin functions.
 	for (auto& call: cg.functionCalls)
 		for (auto it = call.second.begin(); it != call.second.end();)
-			if (std::holds_alternative<BuiltinHandle>(*it) || std::holds_alternative<VerbatimHandle>(*it))
+			if (std::holds_alternative<BuiltinHandle>(*it))
 				it = call.second.erase(it);
 			else
 				++it;

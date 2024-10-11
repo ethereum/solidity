@@ -19,7 +19,6 @@
 #pragma once
 
 #include <cstddef>
-#include <tuple>
 
 namespace solidity::yul
 {
@@ -31,16 +30,6 @@ struct BuiltinHandle
 
 	bool operator==(BuiltinHandle const& _other) const { return id == _other.id; }
 	bool operator<(BuiltinHandle const& _other) const { return id < _other.id; }
-};
-
-/// Handle to reference a verbatim function in the AST
-struct VerbatimHandle
-{
-	size_t numArgs;
-	size_t numRets;
-
-	bool operator==(VerbatimHandle const& _other) const { return numArgs == _other.numArgs && numRets == _other.numRets; }
-	bool operator<(VerbatimHandle const& _other) const { return std::make_tuple(numArgs, numRets) < std::make_tuple(_other.numArgs, _other.numRets); }
 };
 
 }

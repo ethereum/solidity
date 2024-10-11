@@ -59,7 +59,6 @@ bool SyntacticallyEqual::expressionEqual(FunctionName const& _lhs, FunctionName 
 {
 	return std::visit(util::GenericVisitor{
 		[&](BuiltinName const& _builtin) { return std::holds_alternative<BuiltinName>(_rhs) && _builtin.handle == std::get<BuiltinName>(_rhs).handle; },
-		[&](Verbatim const& _verbatim) { return std::holds_alternative<Verbatim>(_rhs) && _verbatim.handle == std::get<Verbatim>(_rhs).handle; },
 		[&](Identifier const& _identifier) { return std::holds_alternative<Identifier>(_rhs) && expressionEqual(_identifier, std::get<Identifier>(_rhs)); },
 	}, _lhs);
 }

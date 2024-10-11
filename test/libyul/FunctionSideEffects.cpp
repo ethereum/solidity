@@ -103,8 +103,7 @@ TestCase::TestResult FunctionSideEffects::run(std::ostream& _stream, std::string
 	{
 		auto const& functionNameStr = std::visit(GenericVisitor{
 			[](YulName const& _name) { return _name.str(); },
-			[&](BuiltinHandle const& _builtin) { return dialect.builtinFunction(_builtin).name; },
-			[&](VerbatimHandle const& _verbatim) { return dialect.verbatimFunction(_verbatim).name; }
+			[&](BuiltinHandle const& _builtin) { return dialect.builtinFunction(_builtin).name; }
 		}, fun.first);
 		functionSideEffectsStr[functionNameStr] = toString(fun.second);
 	}

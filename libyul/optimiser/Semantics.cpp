@@ -155,8 +155,6 @@ std::map<FunctionHandle, SideEffects> SideEffectsPropagator::sideEffects(
 				return;
 			if (std::holds_alternative<BuiltinHandle>(_function))
 				sideEffects += _dialect.builtinFunction(std::get<BuiltinHandle>(_function)).sideEffects;
-			else if (std::holds_alternative<VerbatimHandle>(_function))
-				sideEffects += _dialect.verbatimFunction(std::get<VerbatimHandle>(_function)).sideEffects;
 			else
 			{
 				yulAssert(std::holds_alternative<YulName>(_function));

@@ -400,7 +400,7 @@ Statement Parser::parseStatement()
 	// Options left:
 	// Expression/FunctionCall
 	// Assignment
-	std::variant<Literal, Identifier, BuiltinName, Verbatim> elementary(parseLiteralOrIdentifier());
+	std::variant<Literal, Identifier, BuiltinName> elementary(parseLiteralOrIdentifier());
 
 	switch (currentToken())
 	{
@@ -436,7 +436,6 @@ Statement Parser::parseStatement()
 					);
 				},
 				[&](BuiltinName const& _builtin) { raiseAssignToBuiltinError(m_dialect.builtinFunction(_builtin.handle).name); },
-				[&](Verbatim const& _verbatim) { raiseAssignToBuiltinError(m_dialect.verbatimFunction(_verbatim.handle).name); },
 				[&](Identifier const& _identifier)
 				{
 					assignment.variableNames.emplace_back(_identifier);
@@ -519,7 +518,7 @@ Expression Parser::parseExpression(bool _unlimitedLiteralArgument)
 {
 	RecursionGuard recursionGuard(*this);
 
-	std::variant<Literal, Identifier, BuiltinName, Verbatim> operation = parseLiteralOrIdentifier(_unlimitedLiteralArgument);
+	std::variant<Literal, Identifier, BuiltinName> operation = parseLiteralOrIdentifier(_unlimitedLiteralArgument);
 	auto const uninvokedBuiltinError = [this](SourceLocation const& _builtinLocation, BuiltinFunction const& _function)
 	{
 		fatalParserError(
@@ -542,13 +541,6 @@ Expression Parser::parseExpression(bool _unlimitedLiteralArgument)
 			uninvokedBuiltinError(nativeLocationOf(_builtin), m_dialect.builtinFunction(_builtin.handle));
 			return {};
 		},
-		[&](Verbatim& _verbatim) -> Expression
-		{
-			if (currentToken() == Token::LParen)
-				return parseCall(std::move(operation));
-			uninvokedBuiltinError(nativeLocationOf(_verbatim), m_dialect.verbatimFunction(_verbatim.handle));
-			return {};
-		},
 		[&](Literal& _literal) -> Expression
 		{
 			return std::move(_literal);
@@ -556,7 +548,7 @@ Expression Parser::parseExpression(bool _unlimitedLiteralArgument)
 	}, operation);
 }
 
-std::variant<Literal, Identifier, BuiltinName, Verbatim> Parser::parseLiteralOrIdentifier(bool _unlimitedLiteralArgument)
+std::variant<Literal, Identifier, BuiltinName> Parser::parseLiteralOrIdentifier(bool _unlimitedLiteralArgument)
 {
 	RecursionGuard recursionGuard(*this);
 	switch (currentToken())
@@ -568,12 +560,6 @@ std::variant<Literal, Identifier, BuiltinName, Verbatim> Parser::parseLiteralOrI
 			BuiltinName builtin{createDebugData(), *builtinHandle};
 			advance();
 			return builtin;
-		}
-		else if (auto verbatimHandle = m_dialect.verbatim(currentLiteral()))
-		{
-			Verbatim verbatim{createDebugData(), *verbatimHandle};
-			advance();
-			return verbatim;
 		}
 		else
 		{
@@ -707,7 +693,7 @@ FunctionDefinition Parser::parseFunctionDefinition()
 	return funDef;
 }
 
-FunctionCall Parser::parseCall(std::variant<Literal, Identifier, BuiltinName, Verbatim>&& _initialOp)
+FunctionCall Parser::parseCall(std::variant<Literal, Identifier, BuiltinName>&& _initialOp)
 {
 	RecursionGuard recursionGuard(*this);
 
@@ -729,16 +715,6 @@ FunctionCall Parser::parseCall(std::variant<Literal, Identifier, BuiltinName, Ve
 			};
 			functionCall.debugData = _builtin.debugData;
 			functionCall.functionName = _builtin;
-		},
-		[&](Verbatim const& _verbatim)
-		{
-			isUnlimitedLiteralArgument = [verbatimFunction =m_dialect.verbatimFunction(_verbatim.handle)](size_t _index) {
-				if (_index < verbatimFunction.literalArguments.size())
-					return verbatimFunction.literalArgument(_index).has_value();
-				return false;
-			};
-			functionCall.debugData = _verbatim.debugData;
-			functionCall.functionName = _verbatim;
 		}
 	}, _initialOp);
 
@@ -779,7 +755,7 @@ NameWithDebugData Parser::parseNameWithDebugData()
 YulName Parser::expectAsmIdentifier()
 {
 	YulName name{currentLiteral()};
-	if (currentToken() == Token::Identifier && (m_dialect.builtin(name.str()) || m_dialect.verbatim(name.str())))
+	if (currentToken() == Token::Identifier && m_dialect.builtin(name.str()))
 		fatalParserError(5568_error, "Cannot use builtin function name \"" + name.str() + "\" as identifier name.");
 	// NOTE: We keep the expectation here to ensure the correct source location for the error above.
 	expectToken(Token::Identifier);

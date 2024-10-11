@@ -35,8 +35,3 @@ BuiltinFunction const& Dialect::builtinFunction(BuiltinHandle const&) const
 {
 	yulAssert(false);
 }
-
-BuiltinFunction const& Dialect::verbatimFunction(VerbatimHandle const&) const
-{
-	yulAssert(false);
-}

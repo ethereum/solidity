@@ -50,15 +50,13 @@ struct ExpressionStatement;
 struct Block;
 struct BuiltinName;
 struct BuiltinHandle;
-struct Verbatim;
-struct VerbatimHandle;
 class AST;
 
 struct NameWithDebugData;
 
 using Expression = std::variant<FunctionCall, Identifier, Literal>;
-using FunctionName = std::variant<Identifier, BuiltinName, Verbatim>;
-using FunctionHandle = std::variant<YulName, BuiltinHandle, VerbatimHandle>;
+using FunctionName = std::variant<Identifier, BuiltinName>;
+using FunctionHandle = std::variant<YulName, BuiltinHandle>;
 using Statement = std::variant<ExpressionStatement, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Break, Continue, Leave, Block>;
 
 }

@@ -522,8 +522,6 @@ Stack const& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _cal
 		BuiltinFunction const* builtin;
 		if (std::holds_alternative<BuiltinName>(_call.functionName))
 			builtin = &m_dialect.builtinFunction(std::get<BuiltinName>(_call.functionName).handle);
-		else if (std::holds_alternative<Verbatim>(_call.functionName))
-			builtin = &m_dialect.verbatimFunction(std::get<Verbatim>(_call.functionName).handle);
 		else
 			yulAssert(false);
 		Stack inputs;

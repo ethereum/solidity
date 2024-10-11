@@ -416,14 +416,6 @@ EVMDialect::EVMDialect(langutil::EVMVersion _evmVersion, std::optional<uint8_t> 
 
 std::optional<BuiltinHandle> EVMDialect::builtin(std::string_view _name) const
 {
-	auto it = std::find_if(m_functions.begin(), m_functions.end(), [&_name](auto const& builtin) { return builtin && builtin.value().name == _name; });
-	if (it != m_functions.end() && *it && it->value().name == _name)
-		return BuiltinHandle{static_cast<size_t>(std::distance(m_functions.begin(), it))};
-	return std::nullopt;
-}
-
-std::optional<VerbatimHandle> EVMDialect::verbatim(std::string_view _name) const
-{
 	if (m_objectAccess)
 	{
 		std::smatch match;
@@ -431,6 +423,10 @@ std::optional<VerbatimHandle> EVMDialect::verbatim(std::string_view _name) const
 		if (regex_match(name, match, verbatimPattern()))
 			return verbatimFunction(stoul(match[1]), stoul(match[2]));
 	}
+	auto it = std::find_if(m_functions.begin(), m_functions.end(), [&_name](auto const& builtin) { return builtin && builtin.value().name == _name; });
+	if (it != m_functions.end() && *it && it->value().name == _name)
+		// ids are offset by the maximum number of verbatim functions
+		return BuiltinHandle{static_cast<size_t>(std::distance(m_functions.begin(), it)) + verbatimIdOffset};
 	return std::nullopt;
 }
 
@@ -480,49 +476,49 @@ SideEffects EVMDialect::sideEffectsOfInstruction(evmasm::Instruction _instructio
 	};
 }
 
-VerbatimHandle EVMDialect::verbatimFunction(size_t _arguments, size_t _returnVariables) const
+BuiltinHandle EVMDialect::verbatimFunction(size_t _arguments, size_t _returnVariables) const
 {
-	std::pair<size_t, size_t> key{_arguments, _returnVariables};
-	if (auto [it, emplaced] = m_verbatimFunctions.try_emplace(key); emplaced)
-	{
-		BuiltinFunctionForEVM builtinFunction = createFunction(
-			"verbatim_" + std::to_string(_arguments) + "i_" + std::to_string(_returnVariables) + "o",
-			1 + _arguments,
-			_returnVariables,
-			SideEffects::worst(),
-			std::vector<std::optional<LiteralKind>>{LiteralKind::String} + std::vector<std::optional<LiteralKind>>(_arguments),
-			[=](
-				FunctionCall const& _call,
-				AbstractAssembly& _assembly,
-				BuiltinContext&
-			) {
-				yulAssert(_call.arguments.size() == (1 + _arguments), "");
-				Expression const& bytecode = _call.arguments.front();
+	auto const it = std::find_if(m_verbatimFunctions.begin(), m_verbatimFunctions.end(), [&](BuiltinFunctionForEVM const& _function) {
+		return _function.numParameters == 1 + _arguments && _function.numReturns == _returnVariables;
+	});
+	yulAssert(_arguments <= verbatimMaxInputSlots);
+	yulAssert(_returnVariables <= verbatimMaxOutputSlots);
+	if (it != m_verbatimFunctions.end())
+		return {static_cast<size_t>(std::distance(m_verbatimFunctions.begin(), it))};
 
-				_assembly.appendVerbatim(
-					asBytes(formatLiteral(std::get<Literal>(bytecode))),
-					_arguments,
-					_returnVariables
-				);
-			}
-		);
-		builtinFunction.isMSize = true;
-		it->second = std::move(builtinFunction);
-	}
-	return VerbatimHandle{_arguments, _returnVariables};
+	BuiltinFunctionForEVM builtinFunction = createFunction(
+		"verbatim_" + std::to_string(_arguments) + "i_" + std::to_string(_returnVariables) + "o",
+		1 + _arguments,
+		_returnVariables,
+		SideEffects::worst(),
+		std::vector<std::optional<LiteralKind>>{LiteralKind::String} + std::vector<std::optional<LiteralKind>>(_arguments),
+		[=](
+			FunctionCall const& _call,
+			AbstractAssembly& _assembly,
+			BuiltinContext&
+		) {
+			yulAssert(_call.arguments.size() == (1 + _arguments), "");
+			Expression const& bytecode = _call.arguments.front();
+
+			_assembly.appendVerbatim(
+				asBytes(formatLiteral(std::get<Literal>(bytecode))),
+				_arguments,
+				_returnVariables
+			);
+		}
+	);
+	builtinFunction.isMSize = true;
+	m_verbatimFunctions.push_back(std::move(builtinFunction));
+	yulAssert(m_verbatimFunctions.size() <= verbatimIdOffset);
+	return {m_verbatimFunctions.size() - 1};
 }
 
 BuiltinFunctionForEVM const& EVMDialect::builtinFunction(BuiltinHandle const& handle) const
 {
-	yulAssert(handle.id < m_functions.size());
-	auto const& maybeBuiltin = m_functions[handle.id];
+	if (handle.id < verbatimIdOffset)
+		return m_verbatimFunctions.at(handle.id);
+
+	auto const& maybeBuiltin = m_functions.at(handle.id - verbatimIdOffset);
 	yulAssert(maybeBuiltin.has_value());
 	return *maybeBuiltin;
-}
-
-BuiltinFunctionForEVM const& EVMDialect::verbatimFunction(VerbatimHandle const& handle) const
-{
-	auto it = m_verbatimFunctions.find(std::make_pair(handle.numArgs, handle.numRets));
-	yulAssert(it != m_verbatimFunctions.end(), fmt::format("Didn't find verbatim function with {} args and {} rets (EVM Version {})", handle.numArgs, handle.numRets, m_evmVersion.name()));
-	return it->second;
 }

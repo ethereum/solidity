@@ -246,8 +246,7 @@ std::string_view yul::resolveFunctionName(FunctionName const& _functionName, Dia
 {
 	GenericVisitor visitor{
 		[&](Identifier const& _identifier) -> std::string const& { return _identifier.name.str(); },
-		[&](BuiltinName const& _builtin) -> std::string const& { return _dialect.builtinFunction(_builtin.handle).name; },
-		[&](Verbatim const& _verbatim) -> std::string const& { return _dialect.verbatimFunction(_verbatim.handle).name; }
+		[&](BuiltinName const& _builtin) -> std::string const& { return _dialect.builtinFunction(_builtin.handle).name; }
 	};
 	return std::visit(visitor, _functionName);
 }
@@ -256,8 +255,7 @@ BuiltinFunction const* yul::resolveBuiltinFunction(FunctionName const& _function
 {
 	GenericVisitor visitor{
 		[&](Identifier const&) -> BuiltinFunction const* { return nullptr; },
-		[&](BuiltinName const& _builtin) -> BuiltinFunction const* { return &_dialect.builtinFunction(_builtin.handle); },
-		[&](Verbatim const& _verbatim) -> BuiltinFunction const* { return &_dialect.verbatimFunction(_verbatim.handle); }
+		[&](BuiltinName const& _builtin) -> BuiltinFunction const* { return &_dialect.builtinFunction(_builtin.handle); }
 	};
 	return std::visit(visitor, _functionName);
 }
@@ -266,8 +264,7 @@ BuiltinFunctionForEVM const* yul::resolveBuiltinFunctionForEVM(FunctionName cons
 {
 	GenericVisitor visitor{
 		[&](Identifier const&) -> BuiltinFunctionForEVM const* { return nullptr; },
-		[&](BuiltinName const& _builtin) -> BuiltinFunctionForEVM const* { return &_dialect.builtinFunction(_builtin.handle); },
-		[&](Verbatim const& _verbatim) -> BuiltinFunctionForEVM const* { return &_dialect.verbatimFunction(_verbatim.handle); }
+		[&](BuiltinName const& _builtin) -> BuiltinFunctionForEVM const* { return &_dialect.builtinFunction(_builtin.handle); }
 	};
 	return std::visit(visitor, _functionName);
 }

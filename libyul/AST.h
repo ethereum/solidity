@@ -39,7 +39,6 @@ namespace solidity::yul
 {
 
 struct BuiltinHandle;
-struct VerbatimHandle;
 
 struct NameWithDebugData { langutil::DebugData::ConstPtr debugData; YulName name; };
 using NameWithDebugDataList = std::vector<NameWithDebugData>;
@@ -76,10 +75,8 @@ struct Literal { langutil::DebugData::ConstPtr debugData; LiteralKind kind; Lite
 struct Identifier { langutil::DebugData::ConstPtr debugData; YulName name; };
 /// Builtin function
 struct BuiltinName { langutil::DebugData::ConstPtr debugData; BuiltinHandle handle; };
-/// Verbatim function
-struct Verbatim { langutil::DebugData::ConstPtr debugData; VerbatimHandle handle; };
 /// Identifier for function names
-using FunctionHandle = std::variant<YulName, BuiltinHandle, VerbatimHandle>;
+using FunctionHandle = std::variant<YulName, BuiltinHandle>;
 /// Assignment ("x := mload(20:u256)", expects push-1-expression on the right hand
 /// side and requires x to occupy exactly one stack slot.
 ///
@@ -112,7 +109,7 @@ struct Leave { langutil::DebugData::ConstPtr debugData; };
 
 constexpr bool isBuiltinFunctionCall(FunctionCall const& _functionCall) noexcept
 {
-	return std::holds_alternative<BuiltinName>(_functionCall.functionName) || std::holds_alternative<Verbatim>(_functionCall.functionName);
+	return std::holds_alternative<BuiltinName>(_functionCall.functionName);
 }
 
 /// Immutable AST comprised of its top-level block

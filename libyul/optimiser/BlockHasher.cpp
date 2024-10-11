@@ -63,12 +63,6 @@ void ASTHasherBase::hashFunctionCall(FunctionCall const& _funCall)
 				hash64(compileTimeLiteralHash("Builtin"));
 				hash64(_builtin.handle.id);
 			},
-			[&](Verbatim const& _verbatim)
-			{
-				hash64(compileTimeLiteralHash("Verbatim"));
-				hash64(_verbatim.handle.numArgs);
-				hash64(_verbatim.handle.numRets);
-			},
 			[&](Identifier const& _identifier)
 			{
 				hash64(compileTimeLiteralHash("UserDefined"));
