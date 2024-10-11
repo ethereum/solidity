@@ -1,6 +1,8 @@
 object "a" {
   code { sstore(0, 1) }
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // Assembly:
 //     /* "source":36:37   */

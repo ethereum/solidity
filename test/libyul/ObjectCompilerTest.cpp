@@ -46,7 +46,7 @@ using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 
 ObjectCompilerTest::ObjectCompilerTest(std::string const& _filename):
-	TestCase(_filename)
+	solidity::frontend::test::EVMVersionRestrictedTestCase(_filename)
 {
 	m_source = m_reader.source();
 	m_optimisationPreset = m_reader.enumSetting<OptimisationPreset>(
@@ -65,8 +65,8 @@ ObjectCompilerTest::ObjectCompilerTest(std::string const& _filename):
 TestCase::TestResult ObjectCompilerTest::run(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted)
 {
 	YulStack stack(
-		EVMVersion(),
-		std::nullopt,
+		solidity::test::CommonOptions::get().evmVersion(),
+		solidity::test::CommonOptions::get().eofVersion(),
 		YulStack::Language::StrictAssembly,
 		OptimiserSettings::preset(m_optimisationPreset),
 		DebugInfoSelection::All()

@@ -5,6 +5,8 @@ object "a" {
         let success := call(gas(), addr, 0, 128, 4, 128, 0)
     }
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // Assembly:
 //     /* "source":190:191   */

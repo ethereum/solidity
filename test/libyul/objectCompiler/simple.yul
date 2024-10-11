@@ -1,6 +1,8 @@
 {
   sstore(0, 1)
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // Assembly:
 //     /* "source":41:42   */

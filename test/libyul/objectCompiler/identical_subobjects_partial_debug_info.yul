@@ -69,6 +69,7 @@ object "A" {
     }
 }
 // ====
+// EVMVersion: >=shanghai
 // optimizationPreset: full
 // ----
 // Assembly:

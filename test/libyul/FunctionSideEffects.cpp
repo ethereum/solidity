@@ -88,9 +88,9 @@ TestCase::TestResult FunctionSideEffects::run(std::ostream& _stream, std::string
 	if (!obj.hasCode())
 		BOOST_THROW_EXCEPTION(std::runtime_error("Parsing input failed."));
 
-	// TODO: Add EOF support
 	std::map<YulName, SideEffects> functionSideEffects = SideEffectsPropagator::sideEffects(
-		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion(), std::nullopt),
+		EVMDialect::strictAssemblyForEVMObjects(solidity::test::CommonOptions::get().evmVersion(),
+			solidity::test::CommonOptions::get().eofVersion()),
 		CallGraphGenerator::callGraph(obj.code()->root())
 	);
 

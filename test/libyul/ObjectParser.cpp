@@ -112,8 +112,8 @@ std::tuple<std::optional<SourceNameMap>, ErrorList> tryGetSourceLocationMapping(
 
 	ErrorList errors;
 	ErrorReporter reporter(errors);
-	// TODO: Add EOF support
-	Dialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(EVMVersion{}, std::nullopt);
+	Dialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(solidity::test::CommonOptions::get().evmVersion(),
+		solidity::test::CommonOptions::get().eofVersion());
 	ObjectParser objectParser{reporter, dialect};
 	CharStream stream(std::move(source), "");
 	auto object = objectParser.parse(std::make_shared<Scanner>(stream), false);

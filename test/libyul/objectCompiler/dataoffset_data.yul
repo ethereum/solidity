@@ -2,6 +2,8 @@ object "a" {
   code { sstore(0, dataoffset("data1")) }
   data "data1" "Hello, World!"
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // Assembly:
 //     /* "source":56:75   */

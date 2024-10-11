@@ -5,6 +5,7 @@
   sstore(add(x, 0), z)
 }
 // ====
+// EVMVersion: >=shanghai
 // optimizationPreset: full
 // ----
 // Assembly:
