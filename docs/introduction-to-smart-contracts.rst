@@ -186,16 +186,17 @@ and any user interface calls the automatically generated ``balances`` function f
 
 .. code-block:: javascript
 
-    Coin.Sent().watch({}, '', function(error, result) {
-        if (!error) {
-            console.log("Coin transfer: " + result.args.amount +
-                " coins were sent from " + result.args.from +
-                " to " + result.args.to + ".");
-            console.log("Balances now:\n" +
-                "Sender: " + Coin.balances.call(result.args.from) +
-                "Receiver: " + Coin.balances.call(result.args.to));
-        }
+    Coin.events.Sent().on('data', async function (event) {
+    console.log("Coin transfer: " + event.returnValues.amount +
+        " coins were sent from " + event.returnValues.from +
+        " to " + event.returnValues.to + ".")
+    const senderBalance = await Coin.methods.balances(event.returnValues.from).call();
+    const receiverBalance = await Coin.methods.balances(event.returnValues.to).call();
+    console.log("Balances now:\n" +
+        "Sender: " + senderBalance +
+        "\nReceiver: " + receiverBalance);
     })
+    Coin.events.Sent().on('error', console.error);
 
 .. index:: coin
 
