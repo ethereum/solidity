@@ -90,7 +90,7 @@ public:
 	explicit DataFlowAnalyzer(
 		Dialect const& _dialect,
 		MemoryAndStorage _analyzeStores,
-		std::map<FunctionNameIdentifier, SideEffects> _functionSideEffects = {}
+		std::map<FunctionHandle, SideEffects> _functionSideEffects = {}
 	);
 
 	using ASTModifier::operator();
@@ -166,7 +166,7 @@ protected:
 	Dialect const& m_dialect;
 	/// Side-effects of user-defined functions. Worst-case side-effects are assumed
 	/// if this is not provided or the function is not found.
-	std::map<FunctionNameIdentifier, SideEffects> m_functionSideEffects;
+	std::map<FunctionHandle, SideEffects> m_functionSideEffects;
 
 private:
 	struct Environment

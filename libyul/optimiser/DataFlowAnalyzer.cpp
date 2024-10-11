@@ -45,7 +45,7 @@ using namespace solidity::yul;
 DataFlowAnalyzer::DataFlowAnalyzer(
 	Dialect const& _dialect,
 	MemoryAndStorage _analyzeStores,
-	std::map<FunctionNameIdentifier, SideEffects> _functionSideEffects
+	std::map<FunctionHandle, SideEffects> _functionSideEffects
 ):
 	m_dialect(_dialect),
 	m_functionSideEffects(std::move(_functionSideEffects)),

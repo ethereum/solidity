@@ -45,7 +45,7 @@ public:
 private:
 	EqualStoreEliminator(
 		Dialect const& _dialect,
-		std::map<FunctionNameIdentifier, SideEffects> _functionSideEffects
+		std::map<FunctionHandle, SideEffects> _functionSideEffects
 	):
 		DataFlowAnalyzer(_dialect, MemoryAndStorage::Analyze, std::move(_functionSideEffects))
 	{}

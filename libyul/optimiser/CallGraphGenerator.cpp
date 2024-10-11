@@ -37,11 +37,11 @@ namespace
 struct CallGraphCycleFinder
 {
 	CallGraph const& callGraph;
-	std::set<FunctionNameIdentifier> containedInCycle{};
-	std::set<FunctionNameIdentifier> visited{};
-	std::vector<FunctionNameIdentifier> currentPath{};
+	std::set<FunctionHandle> containedInCycle{};
+	std::set<FunctionHandle> visited{};
+	std::vector<FunctionHandle> currentPath{};
 
-	void visit(FunctionNameIdentifier _function)
+	void visit(FunctionHandle _function)
 	{
 		if (visited.count(_function))
 			return;
@@ -63,7 +63,7 @@ struct CallGraphCycleFinder
 };
 }
 
-std::set<FunctionNameIdentifier> CallGraph::recursiveFunctions() const
+std::set<FunctionHandle> CallGraph::recursiveFunctions() const
 {
 	CallGraphCycleFinder cycleFinder{*this};
 	// Visiting the root only is not enough, since there may be disconnected recursive functions.
@@ -82,10 +82,10 @@ CallGraph CallGraphGenerator::callGraph(Block const& _ast)
 void CallGraphGenerator::operator()(FunctionCall const& _functionCall)
 {
 	auto& functionCalls = m_callGraph.functionCalls[m_currentFunction];
-	FunctionNameIdentifier identifier = std::visit(GenericVisitor{
-		[](Builtin const& _builtin) -> FunctionNameIdentifier { return _builtin.handle; },
-		[](Verbatim const& _verbatim) -> FunctionNameIdentifier { return _verbatim.handle; },
-		[](Identifier const& _identifier) -> FunctionNameIdentifier { return _identifier.name; },
+	FunctionHandle identifier = std::visit(GenericVisitor{
+		[](Builtin const& _builtin) -> FunctionHandle { return _builtin.handle; },
+		[](Verbatim const& _verbatim) -> FunctionHandle { return _verbatim.handle; },
+		[](Identifier const& _identifier) -> FunctionHandle { return _identifier.name; },
 	}, _functionCall.functionName);
 	if (!util::contains(functionCalls, identifier))
 		functionCalls.emplace_back(identifier);

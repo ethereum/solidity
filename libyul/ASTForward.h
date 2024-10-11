@@ -58,7 +58,7 @@ struct NameWithDebugData;
 
 using Expression = std::variant<FunctionCall, Identifier, Literal>;
 using FunctionName = std::variant<Identifier, Builtin, Verbatim>;
-using FunctionNameIdentifier = std::variant<YulName, BuiltinHandle, VerbatimHandle>;
+using FunctionHandle = std::variant<YulName, BuiltinHandle, VerbatimHandle>;
 using Statement = std::variant<ExpressionStatement, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Break, Continue, Leave, Block>;
 
 }

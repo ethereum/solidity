@@ -46,7 +46,7 @@ void CommonSubexpressionEliminator::run(OptimiserStepContext& _context, Block& _
 
 CommonSubexpressionEliminator::CommonSubexpressionEliminator(
 	Dialect const& _dialect,
-	std::map<FunctionNameIdentifier, SideEffects> _functionSideEffects
+	std::map<FunctionHandle, SideEffects> _functionSideEffects
 ):
 	DataFlowAnalyzer(_dialect, MemoryAndStorage::Ignore, std::move(_functionSideEffects))
 {

@@ -57,7 +57,7 @@ namespace
  */
 struct MemoryOffsetAllocator
 {
-	uint64_t run(FunctionNameIdentifier _function = YulName{})
+	uint64_t run(FunctionHandle _function = YulName{})
 	{
 		if (slotsRequiredForFunction.count(_function))
 			return slotsRequiredForFunction[_function];
@@ -70,7 +70,7 @@ struct MemoryOffsetAllocator
 
 		uint64_t requiredSlots = 0;
 		if (callGraph.count(std::get<YulName>(_function)))
-			for (FunctionNameIdentifier const& child: callGraph.at(std::get<YulName>(_function)))
+			for (FunctionHandle const& child: callGraph.at(std::get<YulName>(_function)))
 				requiredSlots = std::max(run(child), requiredSlots);
 
 		if (auto const* unreachables = util::valueOrNullptr(unreachableVariables, std::get<YulName>(_function)))
@@ -102,14 +102,14 @@ struct MemoryOffsetAllocator
 	/// An empty variable name means that the function has too many arguments or return variables.
 	std::map<YulName, std::vector<YulName>> const& unreachableVariables;
 	/// The graph of immediate function calls of all functions.
-	std::map<FunctionNameIdentifier, std::vector<FunctionNameIdentifier>> const& callGraph;
+	std::map<FunctionHandle, std::vector<FunctionHandle>> const& callGraph;
 	/// Maps the name of each user-defined function to its definition.
 	std::map<YulName, FunctionDefinition const*> const& functionDefinitions;
 
 	/// Maps variable names to the memory slot the respective variable is assigned.
 	std::map<YulName, uint64_t> slotAllocations{};
 	/// Maps function names to the number of memory slots the respective function requires.
-	std::map<FunctionNameIdentifier, uint64_t> slotsRequiredForFunction{};
+	std::map<FunctionHandle, uint64_t> slotsRequiredForFunction{};
 };
 
 u256 literalArgumentValue(FunctionCall const& _call)
@@ -197,7 +197,7 @@ void StackLimitEvader::run(
 	CallGraph callGraph = CallGraphGenerator::callGraph(_astRoot);
 
 	// We cannot move variables in recursive functions to fixed memory offsets.
-	for (FunctionNameIdentifier function: callGraph.recursiveFunctions())
+	for (FunctionHandle function: callGraph.recursiveFunctions())
 	{
 		yulAssert(std::holds_alternative<YulName>(function), "Builtins are not recursive.");
 		if (_unreachableVariables.count(std::get<YulName>(function)))

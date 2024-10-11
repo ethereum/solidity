@@ -79,7 +79,7 @@ struct Builtin { langutil::DebugData::ConstPtr debugData; BuiltinHandle handle; 
 /// Verbatim function
 struct Verbatim { langutil::DebugData::ConstPtr debugData; VerbatimHandle handle; };
 /// Identifier for function names
-using FunctionNameIdentifier = std::variant<YulName, BuiltinHandle, VerbatimHandle>;
+using FunctionHandle = std::variant<YulName, BuiltinHandle, VerbatimHandle>;
 /// Assignment ("x := mload(20:u256)", expects push-1-expression on the right hand
 /// side and requires x to occupy exactly one stack slot.
 ///

@@ -41,7 +41,7 @@ using namespace solidity::yul;
 SideEffectsCollector::SideEffectsCollector(
 		Dialect const& _dialect,
 		Expression const& _expression,
-		std::map<FunctionNameIdentifier, SideEffects> const* _functionSideEffects
+		std::map<FunctionHandle, SideEffects> const* _functionSideEffects
 ):
 	SideEffectsCollector(_dialect, _functionSideEffects)
 {
@@ -57,7 +57,7 @@ SideEffectsCollector::SideEffectsCollector(Dialect const& _dialect, Statement co
 SideEffectsCollector::SideEffectsCollector(
 	Dialect const& _dialect,
 	Block const& _ast,
-	std::map<FunctionNameIdentifier, SideEffects> const* _functionSideEffects
+	std::map<FunctionHandle, SideEffects> const* _functionSideEffects
 ):
 	SideEffectsCollector(_dialect, _functionSideEffects)
 {
@@ -67,7 +67,7 @@ SideEffectsCollector::SideEffectsCollector(
 SideEffectsCollector::SideEffectsCollector(
 	Dialect const& _dialect,
 	ForLoop const& _ast,
-	std::map<FunctionNameIdentifier, SideEffects> const* _functionSideEffects
+	std::map<FunctionHandle, SideEffects> const* _functionSideEffects
 ):
 	SideEffectsCollector(_dialect, _functionSideEffects)
 {
@@ -116,7 +116,7 @@ void MSizeFinder::operator()(FunctionCall const& _functionCall)
 			m_msizeFound = true;
 }
 
-std::map<FunctionNameIdentifier, SideEffects> SideEffectsPropagator::sideEffects(
+std::map<FunctionHandle, SideEffects> SideEffectsPropagator::sideEffects(
 	Dialect const& _dialect,
 	CallGraph const& _directCallGraph
 )
@@ -127,7 +127,7 @@ std::map<FunctionNameIdentifier, SideEffects> SideEffectsPropagator::sideEffects
 	// In the future, we should refine that, because the property
 	// is actually a bit different from "not movable".
 
-	std::map<FunctionNameIdentifier, SideEffects> ret;
+	std::map<FunctionHandle, SideEffects> ret;
 	for (auto const& function: _directCallGraph.functionsWithLoops)
 	{
 		ret[function].movable = false;
@@ -146,9 +146,9 @@ std::map<FunctionNameIdentifier, SideEffects> SideEffectsPropagator::sideEffects
 
 	for (auto const& call: _directCallGraph.functionCalls)
 	{
-		FunctionNameIdentifier funName = call.first;
+		FunctionHandle funName = call.first;
 		SideEffects sideEffects;
-		auto _visit = [&, visited = std::set<FunctionNameIdentifier>{}](FunctionNameIdentifier _function, auto&& _recurse) mutable {
+		auto _visit = [&, visited = std::set<FunctionHandle>{}](FunctionHandle _function, auto&& _recurse) mutable {
 			if (!visited.insert(_function).second)
 				return;
 			if (sideEffects == SideEffects::worst())

@@ -52,7 +52,7 @@ static std::string const thirtyTwo{"@ 32"};
 
 void UnusedStoreEliminator::run(OptimiserStepContext& _context, Block& _ast)
 {
-	std::map<FunctionNameIdentifier, SideEffects> functionSideEffects = SideEffectsPropagator::sideEffects(
+	std::map<FunctionHandle, SideEffects> functionSideEffects = SideEffectsPropagator::sideEffects(
 		_context.dialect,
 		CallGraphGenerator::callGraph(_ast)
 	);
@@ -94,7 +94,7 @@ void UnusedStoreEliminator::run(OptimiserStepContext& _context, Block& _ast)
 
 UnusedStoreEliminator::UnusedStoreEliminator(
 	Dialect const& _dialect,
-	std::map<FunctionNameIdentifier, SideEffects> const& _functionSideEffects,
+	std::map<FunctionHandle, SideEffects> const& _functionSideEffects,
 	std::map<YulName, ControlFlowSideEffects> _controlFlowSideEffects,
 	std::map<YulName, AssignedValue> const& _ssaValues,
 	bool _ignoreMemory

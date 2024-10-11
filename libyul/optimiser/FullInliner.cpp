@@ -67,7 +67,7 @@ FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser, Dialect const& 
 
 	// Store size of global statements.
 	m_functionSizes[YulName{}] = CodeSize::codeSize(_ast);
-	std::map<FunctionNameIdentifier, size_t> references = ReferencesCounter::countReferences(m_ast);
+	std::map<FunctionHandle, size_t> references = ReferencesCounter::countReferences(m_ast);
 	for (auto& statement: m_ast.statements)
 	{
 		if (!std::holds_alternative<FunctionDefinition>(statement))
@@ -101,7 +101,7 @@ void FullInliner::run(Pass _pass)
 	// function name) order.
 	// We use stable_sort below to keep the inlining order of two functions
 	// with the same depth.
-	std::map<FunctionNameIdentifier, size_t> depths = callDepths();
+	std::map<FunctionHandle, size_t> depths = callDepths();
 	std::vector<FunctionDefinition*> functions;
 	for (auto& statement: m_ast.statements)
 		if (std::holds_alternative<FunctionDefinition>(statement))
@@ -123,7 +123,7 @@ void FullInliner::run(Pass _pass)
 			handleBlock({}, std::get<Block>(statement));
 }
 
-std::map<FunctionNameIdentifier, size_t> FullInliner::callDepths() const
+std::map<FunctionHandle, size_t> FullInliner::callDepths() const
 {
 	CallGraph cg = CallGraphGenerator::callGraph(m_ast);
 	cg.functionCalls.erase(""_yulname);
@@ -136,12 +136,12 @@ std::map<FunctionNameIdentifier, size_t> FullInliner::callDepths() const
 			else
 				++it;
 
-	std::map<FunctionNameIdentifier, size_t> depths;
+	std::map<FunctionHandle, size_t> depths;
 	size_t currentDepth = 0;
 
 	while (true)
 	{
-		std::vector<FunctionNameIdentifier> removed;
+		std::vector<FunctionHandle> removed;
 		for (auto it = cg.functionCalls.begin(); it != cg.functionCalls.end();)
 		{
 			auto const& [fun, callees] = *it;
@@ -156,7 +156,7 @@ std::map<FunctionNameIdentifier, size_t> FullInliner::callDepths() const
 		}
 
 		for (auto& call: cg.functionCalls)
-			for (FunctionNameIdentifier toBeRemoved: removed)
+			for (FunctionHandle toBeRemoved: removed)
 				ranges::actions::remove(call.second, toBeRemoved);
 
 		currentDepth++;
@@ -255,7 +255,7 @@ void FullInliner::handleBlock(YulName _currentFunctionName, Block& _block)
 
 bool FullInliner::recursive(FunctionDefinition const& _fun) const
 {
-	std::map<FunctionNameIdentifier, size_t> references = ReferencesCounter::countReferences(_fun);
+	std::map<FunctionHandle, size_t> references = ReferencesCounter::countReferences(_fun);
 	return references[_fun.name] > 0;
 }
 

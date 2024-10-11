@@ -59,29 +59,29 @@ void ReferencesCounter::operator()(Identifier const& _identifier)
 void ReferencesCounter::operator()(FunctionCall const& _funCall)
 {
 	auto const handle = std::visit(util::GenericVisitor{
-		[&](Identifier const& _identifier) -> FunctionNameIdentifier { return _identifier.name; },
-		[&](Builtin const& _builtin) -> FunctionNameIdentifier { return _builtin.handle; },
-		[&](Verbatim const& _verbatim) -> FunctionNameIdentifier { return _verbatim.handle; }
+		[&](Identifier const& _identifier) -> FunctionHandle { return _identifier.name; },
+		[&](Builtin const& _builtin) -> FunctionHandle { return _builtin.handle; },
+		[&](Verbatim const& _verbatim) -> FunctionHandle { return _verbatim.handle; }
 	}, _funCall.functionName);
 	++m_references[handle];
 	ASTWalker::operator()(_funCall);
 }
 
-std::map<FunctionNameIdentifier, size_t> ReferencesCounter::countReferences(Block const& _block)
+std::map<FunctionHandle, size_t> ReferencesCounter::countReferences(Block const& _block)
 {
 	ReferencesCounter counter;
 	counter(_block);
 	return std::move(counter.m_references);
 }
 
-std::map<FunctionNameIdentifier, size_t> ReferencesCounter::countReferences(FunctionDefinition const& _function)
+std::map<FunctionHandle, size_t> ReferencesCounter::countReferences(FunctionDefinition const& _function)
 {
 	ReferencesCounter counter;
 	counter(_function);
 	return std::move(counter.m_references);
 }
 
-std::map<FunctionNameIdentifier, size_t> ReferencesCounter::countReferences(Expression const& _expression)
+std::map<FunctionHandle, size_t> ReferencesCounter::countReferences(Expression const& _expression)
 {
 	ReferencesCounter counter;
 	counter.visit(_expression);

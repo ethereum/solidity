@@ -67,7 +67,7 @@ public:
 
 private:
 	explicit FunctionSpecializer(
-		std::set<FunctionNameIdentifier> _recursiveFunctions,
+		std::set<FunctionHandle> _recursiveFunctions,
 		NameDispenser& _nameDispenser
 	):
 		m_recursiveFunctions(std::move(_recursiveFunctions)),
@@ -102,7 +102,7 @@ private:
 	/// Note that at least one of the argument will have a literal value.
 	std::map<YulName, std::vector<std::pair<YulName, LiteralArguments>>> m_oldToNewMap;
 	/// We skip specializing recursive functions. Need backtracking to properly deal with them.
-	std::set<FunctionNameIdentifier> const m_recursiveFunctions;
+	std::set<FunctionHandle> const m_recursiveFunctions;
 
 	NameDispenser& m_nameDispenser;
 };
