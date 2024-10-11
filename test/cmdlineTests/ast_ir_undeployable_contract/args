@@ -1,0 +1,1 @@
+--ir-ast-json --ir-optimized-ast-json --optimize --pretty-json --json-indent 4
