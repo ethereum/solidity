@@ -70,7 +70,6 @@ Bugfixes:
  * Yul Optimizer: Fix warnings being generated twice when there are no errors.
  * Yul Optimizer: Name simplification could lead to forbidden identifiers with a leading and/or trailing dot, e.g., ``x._`` would get simplified into ``x.``.
  * Yul Parser: Fix segfault when parsing very long location comments.
- * NatSpec: Correct devdoc method returns in documentation.
 
 Build System:
  * Change build system to use git submodules for some dependencies (nlohmann-json, fmtlib & range-v3).
