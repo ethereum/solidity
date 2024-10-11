@@ -197,7 +197,7 @@ User Documentation
 ------------------
 
 The above documentation will produce the following user documentation
-JSON file as output for the `Tree` contract:
+JSON file as output for the ``Tree`` contract:
 
 .. code-block:: json
 
@@ -229,7 +229,7 @@ Developer Documentation
 -----------------------
 
 Apart from the user documentation file, a developer documentation JSON
-file should also be produced and should look like this for the `Tree` contract:
+file should also be produced and should look like this:
 
 .. code-block:: json
 
