@@ -73,8 +73,9 @@ The following example shows a contract and a function using all available tags.
         /// @dev The Alexandr N. Tetearing algorithm could increase precision
         /// @param rings The number of rings from dendrochronological sample
         /// @return Age in years, rounded up for partial years
-        function age(uint256 rings) external virtual pure returns (uint256) {
-            return rings + 1;
+        /// @return Name of the tree
+        function age(uint256 rings) external virtual pure returns (uint256, string memory) {
+            return (rings + 1, "tree");
         }
 
         /// @notice Returns the amount of leaves the tree has.
@@ -91,8 +92,8 @@ The following example shows a contract and a function using all available tags.
     }
 
     contract KumquatTree is Tree, Plant {
-        function age(uint256 rings) external override pure returns (uint256) {
-            return rings + 2;
+        function age(uint256 rings) external override pure returns (uint256, string memory) {
+            return (rings + 2, "Kumquat");
         }
 
         /// Return the amount of leaves that this specific kind of tree has
@@ -196,7 +197,7 @@ User Documentation
 ------------------
 
 The above documentation will produce the following user documentation
-JSON file as output:
+JSON file as output for the ``Tree`` contract:
 
 .. code-block:: json
 
@@ -208,6 +209,10 @@ JSON file as output:
         "age(uint256)" :
         {
           "notice" : "Calculate tree age in years, rounded up, for live trees"
+        }
+        "leaves()" :
+        {
+            "notice" : "Returns the amount of leaves the tree has."
         }
       },
       "notice" : "You can use this contract for only the most basic simulation"
@@ -243,7 +248,14 @@ file should also be produced and should look like this:
           {
             "rings" : "The number of rings from dendrochronological sample"
           },
-          "return" : "age in years, rounded up for partial years"
+          "returns" : {
+            "_0" : "Age in years, rounded up for partial years",
+            "_1" : "Name of the tree"
+          }
+        },
+        "leaves()" :
+        {
+            "details" : "Returns only a fixed number."
         }
       },
       "title" : "A simulator for trees"
