@@ -106,8 +106,6 @@ void copyZeroExtendedWithOverlap(
 
 }
 
-using u512 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<512, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
-
 u256 EVMInstructionInterpreter::eval(
 	evmasm::Instruction _instruction,
 	std::vector<u256> const& _arguments

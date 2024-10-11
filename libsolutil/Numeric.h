@@ -48,6 +48,8 @@ namespace solidity
 using bigint = boost::multiprecision::cpp_int;
 using u256 = boost::multiprecision::uint256_t;
 using s256 = boost::multiprecision::int256_t;
+using u512 = boost::multiprecision::uint512_t;
+
 
 /// Interprets @a _u as a two's complement signed number and returns the resulting s256.
 inline s256 u2s(u256 _u)
