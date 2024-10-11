@@ -68,7 +68,7 @@ CHCSolverInterface::QueryResult Z3CHCSmtLib2Interface::query(smtutil::Expression
 		z3::set_param("fp.xform.slice", true);
 		z3::set_param("fp.xform.inline_linear", true);
 		z3::set_param("fp.xform.inline_eager", true);
-		std::string response = [&](){ z3::context context; return Z3_eval_smtlib2_string(context, query.c_str()); }();
+		std::string response = Z3_eval_smtlib2_string(z3::context{}, query.c_str());
 #else
 		std::string response = querySolver(query);
 #endif
@@ -81,11 +81,10 @@ CHCSolverInterface::QueryResult Z3CHCSmtLib2Interface::query(smtutil::Expression
 			setupSmtCallback(false);
 			query = "(set-option :produce-proofs true)" + query + "\n(get-proof)";
 #ifdef EMSCRIPTEN_BUILD
-			z3::context context;
 			z3::set_param("fp.xform.slice", false);
 			z3::set_param("fp.xform.inline_linear", false);
 			z3::set_param("fp.xform.inline_eager", false);
-			response = Z3_eval_smtlib2_string(context, query.c_str());
+			response = Z3_eval_smtlib2_string(z3::context{}, query.c_str());
 #else
 			response = querySolver(query);
 #endif
