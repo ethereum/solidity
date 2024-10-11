@@ -76,24 +76,25 @@ void util::Profiler::outputPerformanceMetrics()
 		totalCallCount += scopeMetrics.callCount;
 	}
 
-	std::cerr << "Performance metrics for profiled scopes" << std::endl;
-	std::cerr << "=======================================" << std::endl;
+	std::cerr << "PERFORMANCE METRICS FOR PROFILED SCOPES\n\n";
+	std::cerr << "| Time % | Time       | Calls   | Scope                          |\n";
+	std::cerr << "|-------:|-----------:|--------:|--------------------------------|\n";
+
 	constexpr double microsecondsInSecond = 1000000;
 	for (auto&& [scopeName, scopeMetrics]: sortedMetrics)
 	{
 		double percentage = 100.0 * static_cast<double>(scopeMetrics.durationInMicroseconds) / static_cast<double>(totalDurationInMicroseconds);
 		double durationInSeconds = static_cast<double>(scopeMetrics.durationInMicroseconds) / microsecondsInSecond;
 		std::cerr << fmt::format(
-			"{:>7.3f}% ({} s, {} calls): {}",
+			"| {:5.1f}% | {:8.3f} s | {:7} | {:30} |\n",
 			percentage,
 			durationInSeconds,
 			scopeMetrics.callCount,
 			scopeName
-		) << std::endl;
+		);
 	}
 	double totalDurationInSeconds = static_cast<double>(totalDurationInMicroseconds) / microsecondsInSecond;
-	std::cerr << "--------------------------------------" << std::endl;
-	std::cerr << fmt::format("{:>7}% ({:.3f} s, {} calls)", 100, totalDurationInSeconds, totalCallCount) << std::endl;
+	std::cerr << fmt::format("| {:5.1f}% | {:8.3f} s | {:7} | {:30} |\n", 100.0, totalDurationInSeconds, totalCallCount, "**TOTAL**");
 }
 
 #endif
