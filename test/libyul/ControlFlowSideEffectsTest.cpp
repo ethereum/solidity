@@ -62,9 +62,9 @@ TestCase::TestResult ControlFlowSideEffectsTest::run(std::ostream& _stream, std:
 	if (!obj.hasCode())
 		BOOST_THROW_EXCEPTION(std::runtime_error("Parsing input failed."));
 
-	// TODO: Add EOF support
 	ControlFlowSideEffectsCollector sideEffects(
-		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion(), std::nullopt),
+		EVMDialect::strictAssemblyForEVMObjects(solidity::test::CommonOptions::get().evmVersion(),
+			solidity::test::CommonOptions::get().eofVersion()),
 		obj.code()->root()
 	);
 	m_obtainedResult.clear();

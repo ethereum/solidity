@@ -11,6 +11,8 @@ object "a" {
     data "data1" "Hello, World!"
   }
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // Assembly:
 //     /* "source":77:92   */

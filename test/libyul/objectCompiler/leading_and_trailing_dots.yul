@@ -12,6 +12,8 @@
     }
     g(2)
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // Assembly:
 //     /* "source":53:54   */

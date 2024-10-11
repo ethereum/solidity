@@ -7,6 +7,8 @@ object "a" {
         )
     }
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // Assembly:
 //     /* "source":143:185   */

@@ -134,6 +134,8 @@ object "root" {
         }
     }
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // Assembly:
 //     /* "source":59:75   */

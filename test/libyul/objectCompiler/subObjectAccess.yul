@@ -65,6 +65,8 @@ object "A" {
     }
   }
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // Assembly:
 //     /* "source":57:72   */

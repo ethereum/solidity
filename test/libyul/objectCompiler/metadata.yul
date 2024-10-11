@@ -19,6 +19,8 @@ object "A" {
   data ".metadata" "M2"
   data "x" "Hello, World2!"
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // Assembly:
 //     /* "source":55:68   */
