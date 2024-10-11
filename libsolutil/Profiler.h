@@ -64,10 +64,16 @@ public:
 private:
 	~Profiler();
 
+	struct Metrics
+	{
+		int64_t durationInMicroseconds;
+		size_t callCount;
+	};
+
 	/// Summarizes gathered metric and prints a report to standard error output.
 	void outputPerformanceMetrics();
 
-	std::map<std::string, int64_t> m_durations;
+	std::map<std::string, Metrics> m_metrics;
 };
 
 #endif

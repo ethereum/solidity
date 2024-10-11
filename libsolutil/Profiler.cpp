@@ -40,8 +40,9 @@ util::Profiler::Probe::~Probe()
 	steady_clock::time_point endTime = steady_clock::now();
 	int64_t durationInMicroseconds = duration_cast<microseconds>(endTime - m_startTime).count();
 
-	auto [durationIt, inserted] = Profiler::singleton().m_durations.try_emplace(m_scopeName, 0);
-	durationIt->second += durationInMicroseconds;
+	auto [metricsIt, inserted] = Profiler::singleton().m_metrics.try_emplace(m_scopeName, Metrics{0, 0});
+	metricsIt->second.durationInMicroseconds += durationInMicroseconds;
+	++metricsIt->second.callCount;
 }
 
 util::Profiler::~Profiler()
@@ -57,32 +58,42 @@ util::Profiler& util::Profiler::singleton()
 
 void util::Profiler::outputPerformanceMetrics()
 {
-	std::vector<std::pair<std::string, int64_t>> durations(m_durations.begin(), m_durations.end());
+	std::vector<std::pair<std::string, Metrics>> sortedMetrics(m_metrics.begin(), m_metrics.end());
 	std::sort(
-		durations.begin(),
-		durations.end(),
-		[](std::pair<std::string, int64_t> const& _lhs, std::pair<std::string, int64_t> const& _rhs) -> bool
+		sortedMetrics.begin(),
+		sortedMetrics.end(),
+		[](std::pair<std::string, Metrics> const& _lhs, std::pair<std::string, Metrics> const& _rhs) -> bool
 		{
-			return _lhs.second < _rhs.second;
+			return _lhs.second.durationInMicroseconds < _rhs.second.durationInMicroseconds;
 		}
 	);
 
 	int64_t totalDurationInMicroseconds = 0;
-	for (auto&& [scopeName, durationInMicroseconds]: durations)
-		totalDurationInMicroseconds += durationInMicroseconds;
+	size_t totalCallCount = 0;
+	for (auto&& [scopeName, scopeMetrics]: sortedMetrics)
+	{
+		totalDurationInMicroseconds += scopeMetrics.durationInMicroseconds;
+		totalCallCount += scopeMetrics.callCount;
+	}
 
 	std::cerr << "Performance metrics for profiled scopes" << std::endl;
 	std::cerr << "=======================================" << std::endl;
 	constexpr double microsecondsInSecond = 1000000;
-	for (auto&& [scopeName, durationInMicroseconds]: durations)
+	for (auto&& [scopeName, scopeMetrics]: sortedMetrics)
 	{
-		double percentage = 100.0 * static_cast<double>(durationInMicroseconds) / static_cast<double>(totalDurationInMicroseconds);
-		double durationInSeconds = static_cast<double>(durationInMicroseconds) / microsecondsInSecond;
-		std::cerr << fmt::format("{:>7.3f}% ({} s): {}", percentage, durationInSeconds, scopeName) << std::endl;
+		double percentage = 100.0 * static_cast<double>(scopeMetrics.durationInMicroseconds) / static_cast<double>(totalDurationInMicroseconds);
+		double durationInSeconds = static_cast<double>(scopeMetrics.durationInMicroseconds) / microsecondsInSecond;
+		std::cerr << fmt::format(
+			"{:>7.3f}% ({} s, {} calls): {}",
+			percentage,
+			durationInSeconds,
+			scopeMetrics.callCount,
+			scopeName
+		) << std::endl;
 	}
 	double totalDurationInSeconds = static_cast<double>(totalDurationInMicroseconds) / microsecondsInSecond;
 	std::cerr << "--------------------------------------" << std::endl;
-	std::cerr << fmt::format("{:>7}% ({:.3f} s)", 100, totalDurationInSeconds) << std::endl;
+	std::cerr << fmt::format("{:>7}% ({:.3f} s, {} calls)", 100, totalDurationInSeconds, totalCallCount) << std::endl;
 }
 
 #endif
