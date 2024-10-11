@@ -982,7 +982,9 @@ Json CompilerStack::yulIRAst(std::string const& _contractName) const
 
 	// NOTE: Intentionally not using LazyInit. The artifact can get very large and we don't want to
 	// keep it around when compiling a large project containing many contracts.
-	return loadGeneratedIR(contract(_contractName).yulIR).astJson();
+	auto const& currentContract = contract(_contractName);
+	yulAssert(currentContract.contract);
+	return currentContract.contract->canBeDeployed() ? loadGeneratedIR(currentContract.yulIR).astJson() : Json{};
 }
 
 Json CompilerStack::yulCFGJson(std::string const& _contractName) const
@@ -992,7 +994,9 @@ Json CompilerStack::yulCFGJson(std::string const& _contractName) const
 
 	// NOTE: Intentionally not using LazyInit. The artifact can get very large and we don't want to
 	// keep it around when compiling a large project containing many contracts.
-	return loadGeneratedIR(contract(_contractName).yulIR).cfgJson();
+	auto const& currentContract = contract(_contractName);
+	yulAssert(currentContract.contract);
+	return currentContract.contract->canBeDeployed() ? loadGeneratedIR(currentContract.yulIR).cfgJson() : Json{};
 }
 
 std::string const& CompilerStack::yulIROptimized(std::string const& _contractName) const
@@ -1008,7 +1012,9 @@ Json CompilerStack::yulIROptimizedAst(std::string const& _contractName) const
 
 	// NOTE: Intentionally not using LazyInit. The artifact can get very large and we don't want to
 	// keep it around when compiling a large project containing many contracts.
-	return loadGeneratedIR(contract(_contractName).yulIROptimized).astJson();
+	auto const& currentContract = contract(_contractName);
+	yulAssert(currentContract.contract);
+	return currentContract.contract->canBeDeployed() ? loadGeneratedIR(currentContract.yulIROptimized).astJson() : Json{};
 }
 
 evmasm::LinkerObject const& CompilerStack::object(std::string const& _contractName) const
