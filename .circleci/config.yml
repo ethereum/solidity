@@ -760,9 +760,6 @@ defaults:
       name: t_native_compile_ext_euler
       project: euler
       binary_type: native
-      # NOTE: test suite disabled due to dependence on a specific version of Hardhat
-      # which does not support shanghai EVM.
-      compile_only: 1
       resource_class: medium
 
   - job_native_test_ext_yield_liquidator: &job_native_test_ext_yield_liquidator
