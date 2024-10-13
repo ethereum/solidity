@@ -1455,6 +1455,8 @@ End Run.
 
 Import Run.
 
+(** Run with a resulting state that is optional, to avoid handling complex cases when we are
+    actually reverting and not caring about the precise result. *)
 Module RunO.
   Reserved Notation "{{? codes , environment , state | e ⇓ output | state' ?}}"
     (at level 70, no associativity).
@@ -1494,6 +1496,40 @@ Module RunO.
   | CallUnfold {B : Set} (e1 : LowM.t B) k state state' :
     {{? codes, environment, state | LowM.let_ e1 k ⇓ output | state' ?}} ->
     {{? codes, environment, state | LowM.Call e1 k ⇓ output | state' ?}}
+  | LoopOngoing {In Out : Set}
+      (init next_init : In)
+      (body : In -> LowM.t Out)
+      (break_with : Out -> In + Out)
+      (k : Out -> LowM.t A)
+      (output_inter : Out)
+      (state state_inter state' : option State.t) :
+    {{? codes, environment, state |
+      body init ⇓ output_inter
+    | state_inter ?}} ->
+    break_with output_inter = inl next_init ->
+    {{? codes, environment, state_inter |
+      LowM.Loop next_init body break_with k ⇓ output
+    | state' ?}} ->
+    {{? codes, environment, state |
+      LowM.Loop init body break_with k ⇓ output
+    | state' ?}}
+  | LoopTerminating {In Out : Set}
+      (init : In)
+      (body : In -> LowM.t Out)
+      (break_with : Out -> In + Out)
+      (k : Out -> LowM.t A)
+      (output_inter output_inter' : Out)
+      (state state_inter state' : option State.t) :
+    {{? codes, environment, state |
+      body init ⇓ output_inter
+    | state_inter ?}} ->
+    break_with output_inter = inr output_inter' ->
+    {{? codes, environment, state_inter |
+      k output_inter' ⇓ output
+    | state' ?}} ->
+    {{? codes, environment, state |
+      LowM.Loop init body break_with k ⇓ output
+    | state' ?}}
 
   where "{{? codes , environment , state | e ⇓ output | state' ?}}" :=
     (t codes environment output state e state').
@@ -1510,6 +1546,42 @@ Module RunO.
     now destruct condition.
   Qed.
 
+  Lemma LoopStep codes environment {In Out : Set}
+      (init : In)
+      (body : In -> LowM.t Out)
+      (break_with : Out -> In + Out)
+      (k : Out -> LowM.t Out)
+      output output_inter state state_inter state'
+      (H_body : {{? codes, environment, state | body init ⇓ output_inter | state_inter ?}})
+      (H_break_with :
+        match break_with output_inter with
+        | inl next_init =>
+          {{? codes, environment, state_inter |
+            LowM.Loop next_init body break_with k ⇓ output
+          | state' ?}}
+        | inr output_inter' =>
+          {{? codes, environment, state_inter |
+            k output_inter' ⇓ output
+          | state' ?}}
+        end
+      ) :
+    {{? codes, environment, state |
+      LowM.Loop init body break_with k ⇓ output
+    | state' ?}}.
+  Proof.
+    destruct break_with as [next_init|output_inter'] eqn:?.
+    { eapply LoopOngoing;
+        try apply H_body;
+        try apply H_break_with;
+        assumption.
+    }
+    { eapply LoopTerminating;
+        try apply H_body;
+        try apply H_break_with;
+        assumption.
+    }
+  Qed.
+
   Lemma PureEq codes environment {A : Set} (output output' : A) state state' :
     output = output' ->
     state = state' ->
@@ -1519,8 +1591,8 @@ Module RunO.
     now constructor.
   Qed.
 
-  (** Apply the [simpl] tactic on the expressions of the reduction relation, the finale state, but not
-      the initial state. *)
+  (** Apply the [simpl] tactic on the expressions of the reduction relation, the finale state, but
+      not the initial state. *)
   Ltac simpl_goal :=
     match goal with
     | |- {{? _, _, _ | ?expr1 ⇓ ?expr2 | ?state_end ?}} =>

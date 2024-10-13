@@ -873,7 +873,73 @@ Proof.
       p. *)
     (* } *)
     { repeat load_store_line.
-      
+      l. {
+        change (Pure.shl 127 1) with (2 ^ (127 - Z.of_nat 0)).
+        generalize 0%nat as index.
+        induction index.
+        { eapply LoopStep.
+          { l. {
+              c. {
+                apply_run_mload.
+              }
+              cu; p.
+            }
+            s.
+            l. {
+              l. {
+                repeat (c; [
+                  p ||
+                  apply_run_mload
+                |]).
+                s.
+                c. {
+                  match goal with
+                  | |- context[mstore _ ?value] =>
+                    change value with (get_s scalar_u scalar_v (2 ^ 127))
+                  end.
+                  apply_run_mstore.
+                }
+                CanonizeState.execute.
+                p.
+              }
+              p.
+            }
+            s.
+            l. {
+              c. {
+                apply_run_mload.
+              }
+              s.
+              cu; s.
+              c. {
+                match goal with
+                | |- context[mstore _ ?value] =>
+                  change value with (2 ^ 126)
+                end.
+                apply_run_mstore.
+              }
+              CanonizeState.execute.
+              p.
+            }
+            s.
+            p.
+          }
+          { 
+
+          }
+
+        }
+        simpl in (Pure.shl _ _).
+        match goal with
+        | |- context[Pure.shl _ _] =>
+        end.
+        cbv in (Pure.shl _ _).
+        match goal with
+        end.
+        unfold Pure.shl.
+        generalize 127.
+        Compute 416 / 32.
+      }
 
 
 
