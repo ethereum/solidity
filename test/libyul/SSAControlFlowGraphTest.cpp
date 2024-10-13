@@ -72,8 +72,8 @@ TestCase::TestResult SSAControlFlowGraphTest::run(std::ostream& _stream, std::st
 		*m_dialect,
 		object->code()->root()
 	);
-
-	m_obtainedResult = controlFlow->toDot();
+	ControlFlowLiveness liveness(*controlFlow);
+	m_obtainedResult = controlFlow->toDot(&liveness);
 
 	auto result = checkResult(_stream, _linePrefix, _formatted);
 

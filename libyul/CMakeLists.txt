@@ -48,6 +48,8 @@ add_library(yul
 	backends/evm/AsmCodeGen.h
 	backends/evm/ConstantOptimiser.cpp
 	backends/evm/ConstantOptimiser.h
+	backends/evm/ControlFlow.cpp
+	backends/evm/ControlFlow.h
 	backends/evm/ControlFlowGraph.h
 	backends/evm/ControlFlowGraphBuilder.cpp
 	backends/evm/ControlFlowGraphBuilder.h
@@ -65,6 +67,8 @@ add_library(yul
 	backends/evm/NoOutputAssembly.cpp
 	backends/evm/OptimizedEVMCodeTransform.cpp
 	backends/evm/OptimizedEVMCodeTransform.h
+	backends/evm/SSACFGLiveness.cpp
+	backends/evm/SSACFGLiveness.h
 	backends/evm/SSACFGLoopNestingForest.cpp
 	backends/evm/SSACFGLoopNestingForest.h
 	backends/evm/SSACFGTopologicalSort.cpp

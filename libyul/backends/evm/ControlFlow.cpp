@@ -16,27 +16,13 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#pragma once
+#include <libyul/backends/evm/ControlFlow.h>
+#include <range/v3/range/conversion.hpp>
 
-#include <test/TestCase.h>
+using namespace solidity::yul;
 
-#include <memory>
-
-namespace solidity::yul
-{
-struct Dialect;
-
-namespace test
-{
-
-class SSAControlFlowGraphTest: public solidity::frontend::test::TestCase
-{
-public:
-	static std::unique_ptr<TestCase> create(Config const& _config);
-	explicit SSAControlFlowGraphTest(std::string const& _filename);
-	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
-private:
-	Dialect const* m_dialect = nullptr;
-};
-}
-}
+ControlFlowLiveness::ControlFlowLiveness(ControlFlow const& _controlFlow):
+	controlFlow(_controlFlow),
+	mainLiveness(std::make_unique<SSACFGLiveness>(*_controlFlow.mainGraph)),
+	functionLiveness(_controlFlow.functionGraphs | ranges::views::transform([](auto const& _cfg) { return std::make_unique<SSACFGLiveness>(*_cfg); }) | ranges::to<std::vector>)
+{ }
