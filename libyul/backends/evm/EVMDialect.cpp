@@ -200,6 +200,8 @@ std::map<YulName, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _ev
 			opcode != evmasm::Instruction::JUMPI &&
 			opcode != evmasm::Instruction::JUMPDEST &&
 			opcode != evmasm::Instruction::DATALOADN &&
+			opcode != evmasm::Instruction::EOFCREATE &&
+			opcode != evmasm::Instruction::RETURNCONTRACT &&
 			_evmVersion.hasOpcode(opcode, _eofVersion) &&
 			!prevRandaoException(name)
 		)
@@ -366,6 +368,80 @@ std::map<YulName, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _ev
 					_assembly.appendAuxDataLoadN(static_cast<uint16_t>(literal->value.value()));
 				}
 			));
+
+			builtins.emplace(createFunction(
+				"eofcreate",
+				5,
+				1,
+				SideEffects{
+					false,               // movable
+					false,               // movableApartFromEffects
+					false,               // canBeRemoved
+					false,               // canBeRemovedIfNotMSize
+					true,                // cannotLoop
+					SideEffects::Write,  // otherState
+					SideEffects::Write,  // storage
+					SideEffects::Write,  // memory
+					SideEffects::Write   // transientStorage
+				},
+				{LiteralKind::String, std::nullopt, std::nullopt, std::nullopt, std::nullopt},
+				[](
+					FunctionCall const& _call,
+					AbstractAssembly& _assembly,
+					BuiltinContext& context
+				) {
+					yulAssert(_call.arguments.size() == 5, "");
+					Literal const* literal = std::get_if<Literal>(&_call.arguments.front());
+					yulAssert(literal, "");
+					auto const it = context.subIDs.find(formatLiteral(*literal));
+					if (it != context.subIDs.end())
+					{
+						yulAssert(literal->value.value() <= std::numeric_limits<solidity::yul::AbstractAssembly::ContainerID>::max(), "");
+						_assembly.appendEofCreateCall(static_cast<solidity::yul::AbstractAssembly::ContainerID>((*it).second));
+					}
+				}
+				));
+
+			{
+				auto [createdFunctionIt, success] = builtins.emplace(createFunction(
+					"returncontract",
+					3,
+					0,
+					SideEffects{
+						false,               // movable
+						false,               // movableApartFromEffects
+						false,               // canBeRemoved
+						false,               // canBeRemovedIfNotMSize
+						true,                // cannotLoop
+						SideEffects::None,   // otherState
+						SideEffects::None,   // storage
+						SideEffects::Write,  // memory
+						SideEffects::None    // transientStorage
+					},
+					{LiteralKind::String, std::nullopt, std::nullopt},
+					[](
+						FunctionCall const& _call,
+						AbstractAssembly& _assembly,
+						BuiltinContext& context
+					) {
+						yulAssert(_call.arguments.size() == 3, "");
+						Literal const* literal = std::get_if<Literal>(&_call.arguments.front());
+						yulAssert(literal, "");
+						auto const it = context.subIDs.find(formatLiteral(*literal));
+						if (it != context.subIDs.end())
+						{
+							yulAssert(literal->value.value() <= std::numeric_limits<solidity::yul::AbstractAssembly::ContainerID>::max(), "");
+							_assembly.appendReturnContractCall(static_cast<solidity::yul::AbstractAssembly::ContainerID>((*it).second));
+						}
+
+					}
+					));
+				yulAssert(success, "");
+				// TODO: Can it be done better? For instructions is being done by `createEVMFunction`
+				createdFunctionIt->second.controlFlowSideEffects.canContinue = false;
+				createdFunctionIt->second.controlFlowSideEffects.canTerminate = true;
+				createdFunctionIt->second.controlFlowSideEffects.canRevert = false;
+			}
 		}
 	}
 	return builtins;

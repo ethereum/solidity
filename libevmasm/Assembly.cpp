@@ -1335,10 +1335,15 @@ std::map<uint16_t, uint16_t> Assembly::findReferencedContainers() const
 	std::set<uint16_t> referencedSubcontainersIds;
 	solAssert(m_subs.size() <= 0x100); // According to EOF spec
 
-	// TODO: Implement properly when opcodes referring sub containers added.
-	for (uint16_t i = 0; i < m_subs.size(); ++i)
-		referencedSubcontainersIds.insert(static_cast<uint16_t>(i));
-	// END TODO
+	for (auto&& codeSection: m_codeSections)
+		for (AssemblyItem const& item: codeSection.items)
+			if (item.type() == EofCreate || item.type() == ReturnContract)
+			{
+				solAssert(item.data() <= std::numeric_limits<uint16_t>::max(),
+					"Invalid EofCreate/ReturnContract index value.");
+				auto const containerId = static_cast<uint16_t>(item.data());
+				referencedSubcontainersIds.insert(containerId);
+			}
 
 	std::map<uint16_t, uint16_t> replacements;
 	uint8_t nUnreferenced = 0;
@@ -1417,6 +1422,18 @@ LinkerObject const& Assembly::assembleEOF() const
 				auto const [pushLibraryAddressBytecode, linkRef] = assemblePushLibraryAddress(item, ret.bytecode.size());
 				ret.bytecode += pushLibraryAddressBytecode;
 				ret.linkReferences.insert(linkRef);
+				break;
+			}
+			case EofCreate:
+			{
+				ret.bytecode.push_back(static_cast<uint8_t>(Instruction::EOFCREATE));
+				ret.bytecode.push_back(static_cast<uint8_t>(item.data()));
+				break;
+			}
+			case ReturnContract:
+			{
+				ret.bytecode.push_back(static_cast<uint8_t>(Instruction::RETURNCONTRACT));
+				ret.bytecode.push_back(static_cast<uint8_t>(item.data()));
 				break;
 			}
 			case VerbatimBytecode:

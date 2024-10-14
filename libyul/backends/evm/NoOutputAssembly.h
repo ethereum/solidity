@@ -76,6 +76,8 @@ public:
 	void appendImmutableAssignment(std::string const& _identifier) override;
 
 	void appendAuxDataLoadN(uint16_t) override;
+	void appendEofCreateCall(ContainerID) override;
+	void appendReturnContractCall(ContainerID) override;
 
 	void markAsInvalid() override {}
 
