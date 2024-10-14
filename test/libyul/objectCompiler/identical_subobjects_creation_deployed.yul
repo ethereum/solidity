@@ -64,6 +64,7 @@ object "A" {
     }
 }
 // ====
+// EVMVersion: >=constantinople
 // optimizationPreset: full
 // ----
 // Assembly:
