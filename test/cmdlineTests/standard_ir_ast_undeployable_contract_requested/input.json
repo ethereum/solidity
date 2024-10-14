@@ -4,6 +4,10 @@
 		"C": {"urls": ["standard_ir_ast_undeployable_contract_requested/in.sol"]}
 	},
 	"settings": {
-		"outputSelection": {"*": {"*": ["irAst", "irOptimizedAst"]}}
+		"outputSelection": {
+			"*": {
+				"*": ["*", "ir", "irAst", "irOptimized", "irOptimizedAst"]
+			}
+		}
 	}
 }

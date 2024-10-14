@@ -969,52 +969,61 @@ std::string const CompilerStack::filesystemFriendlyName(std::string const& _cont
 	return matchContract.contract->name();
 }
 
-std::string const& CompilerStack::yulIR(std::string const& _contractName) const
+std::optional<std::string> const& CompilerStack::yulIR(std::string const& _contractName) const
 {
 	solAssert(m_stackState == CompilationSuccessful, "Compilation was not successful.");
 	return contract(_contractName).yulIR;
 }
 
-Json CompilerStack::yulIRAst(std::string const& _contractName) const
+std::optional<Json> CompilerStack::yulIRAst(std::string const& _contractName) const
 {
 	solAssert(m_stackState == CompilationSuccessful, "Compilation was not successful.");
 	solUnimplementedAssert(!isExperimentalSolidity());
 
 	// NOTE: Intentionally not using LazyInit. The artifact can get very large and we don't want to
 	// keep it around when compiling a large project containing many contracts.
-	auto const& currentContract = contract(_contractName);
+	Contract const& currentContract = contract(_contractName);
 	yulAssert(currentContract.contract);
-	return currentContract.contract->canBeDeployed() ? loadGeneratedIR(currentContract.yulIR).astJson() : Json{};
+	yulAssert(currentContract.yulIR.has_value() == currentContract.contract->canBeDeployed());
+	if (!currentContract.yulIR)
+		return std::nullopt;
+	return loadGeneratedIR(*currentContract.yulIR).astJson();
 }
 
-Json CompilerStack::yulCFGJson(std::string const& _contractName) const
+std::optional<Json> CompilerStack::yulCFGJson(std::string const& _contractName) const
 {
 	solAssert(m_stackState == CompilationSuccessful, "Compilation was not successful.");
 	solUnimplementedAssert(!isExperimentalSolidity());
 
 	// NOTE: Intentionally not using LazyInit. The artifact can get very large and we don't want to
 	// keep it around when compiling a large project containing many contracts.
-	auto const& currentContract = contract(_contractName);
+	Contract const& currentContract = contract(_contractName);
 	yulAssert(currentContract.contract);
-	return currentContract.contract->canBeDeployed() ? loadGeneratedIR(currentContract.yulIR).cfgJson() : Json{};
+	yulAssert(currentContract.yulIR.has_value() == currentContract.contract->canBeDeployed());
+	if (!currentContract.yulIR)
+		return std::nullopt;
+	return loadGeneratedIR(*currentContract.yulIR).cfgJson();
 }
 
-std::string const& CompilerStack::yulIROptimized(std::string const& _contractName) const
+std::optional<std::string> const& CompilerStack::yulIROptimized(std::string const& _contractName) const
 {
 	solAssert(m_stackState == CompilationSuccessful, "Compilation was not successful.");
 	return contract(_contractName).yulIROptimized;
 }
 
-Json CompilerStack::yulIROptimizedAst(std::string const& _contractName) const
+std::optional<Json> CompilerStack::yulIROptimizedAst(std::string const& _contractName) const
 {
 	solAssert(m_stackState == CompilationSuccessful, "Compilation was not successful.");
 	solUnimplementedAssert(!isExperimentalSolidity());
 
 	// NOTE: Intentionally not using LazyInit. The artifact can get very large and we don't want to
 	// keep it around when compiling a large project containing many contracts.
-	auto const& currentContract = contract(_contractName);
+	Contract const& currentContract = contract(_contractName);
 	yulAssert(currentContract.contract);
-	return currentContract.contract->canBeDeployed() ? loadGeneratedIR(currentContract.yulIROptimized).astJson() : Json{};
+	yulAssert(currentContract.yulIROptimized.has_value() == currentContract.contract->canBeDeployed());
+	if (!currentContract.yulIROptimized)
+		return std::nullopt;
+	return loadGeneratedIR(*currentContract.yulIROptimized).astJson();
 }
 
 evmasm::LinkerObject const& CompilerStack::object(std::string const& _contractName) const
@@ -1513,8 +1522,11 @@ void CompilerStack::generateIR(ContractDefinition const& _contract, bool _unopti
 	solAssert(m_stackState >= AnalysisSuccessful, "");
 
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
-	if (!compiledContract.yulIR.empty())
+	if (compiledContract.yulIR)
+	{
+		solAssert(!compiledContract.yulIR->empty());
 		return;
+	}
 
 	if (!*_contract.sourceUnit().annotation().useABICoderV2)
 		m_errorReporter.warning(
@@ -1533,7 +1545,7 @@ void CompilerStack::generateIR(ContractDefinition const& _contract, bool _unopti
 
 	std::map<ContractDefinition const*, std::string_view const> otherYulSources;
 	for (auto const& pair: m_contracts)
-		otherYulSources.emplace(pair.second.contract, pair.second.yulIR);
+		otherYulSources.emplace(pair.second.contract, pair.second.yulIR ? *pair.second.yulIR : std::string_view{});
 
 	if (m_experimentalAnalysis)
 	{
@@ -1570,7 +1582,8 @@ void CompilerStack::generateIR(ContractDefinition const& _contract, bool _unopti
 		);
 	}
 
-	YulStack stack = loadGeneratedIR(compiledContract.yulIR);
+	yulAssert(compiledContract.yulIR);
+	YulStack stack = loadGeneratedIR(*compiledContract.yulIR);
 	if (!_unoptimizedOnly)
 	{
 		stack.optimize();
@@ -1586,14 +1599,13 @@ void CompilerStack::generateEVMFromIR(ContractDefinition const& _contract)
 		return;
 
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
-	solAssert(!compiledContract.yulIROptimized.empty(), "");
+	solAssert(compiledContract.yulIROptimized);
+	solAssert(!compiledContract.yulIROptimized->empty());
 	if (!compiledContract.object.bytecode.empty())
 		return;
 
 	// Re-parse the Yul IR in EVM dialect
-	YulStack stack = loadGeneratedIR(compiledContract.yulIROptimized);
-
-	//cout << yul::AsmPrinter{}(*stack.parserResult()->code) << endl;
+	YulStack stack = loadGeneratedIR(*compiledContract.yulIROptimized);
 
 	std::string deployedName = IRNames::deployedObject(_contract);
 	solAssert(!deployedName.empty(), "");

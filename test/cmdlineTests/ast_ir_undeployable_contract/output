@@ -1,8 +1,44 @@
+
+======= ast_ir_undeployable_contract/input.sol:C =======
+EVM assembly:
+null
+Gas estimation:
+Opcodes:
+
+Binary:
+
+Binary of the runtime part:
+
+IR:
+
 IR AST:
 null
+Optimized IR:
+
 Optimized IR AST:
 null
+Function signatures:
+Contract JSON ABI
+[]
+
+======= ast_ir_undeployable_contract/input.sol:I =======
+EVM assembly:
+null
+Gas estimation:
+Opcodes:
+
+Binary:
+
+Binary of the runtime part:
+
+IR:
+
 IR AST:
 null
+Optimized IR:
+
 Optimized IR AST:
 null
+Function signatures:
+Contract JSON ABI
+[]

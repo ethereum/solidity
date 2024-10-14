@@ -321,18 +321,18 @@ public:
 	virtual std::string const filesystemFriendlyName(std::string const& _contractName) const override;
 
 	/// @returns the IR representation of a contract.
-	std::string const& yulIR(std::string const& _contractName) const;
+	std::optional<std::string> const& yulIR(std::string const& _contractName) const;
 
 	/// @returns the IR representation of a contract AST in format.
-	Json yulIRAst(std::string const& _contractName) const;
+	std::optional<Json> yulIRAst(std::string const& _contractName) const;
 
 	/// @returns the optimized IR representation of a contract.
-	std::string const& yulIROptimized(std::string const& _contractName) const;
+	std::optional<std::string> const& yulIROptimized(std::string const& _contractName) const;
 
 	/// @returns the optimized IR representation of a contract AST in JSON format.
-	Json yulIROptimizedAst(std::string const& _contractName) const;
+	std::optional<Json> yulIROptimizedAst(std::string const& _contractName) const;
 
-	Json yulCFGJson(std::string const& _contractName) const;
+	std::optional<Json> yulCFGJson(std::string const& _contractName) const;
 
 	/// @returns the assembled object for a contract.
 	virtual evmasm::LinkerObject const& object(std::string const& _contractName) const override;
@@ -445,8 +445,8 @@ private:
 		std::optional<std::string> runtimeGeneratedYulUtilityCode; ///< Extra Yul utility code that was used when compiling the deployed assembly
 		evmasm::LinkerObject object; ///< Deployment object (includes the runtime sub-object).
 		evmasm::LinkerObject runtimeObject; ///< Runtime object.
-		std::string yulIR; ///< Yul IR code straight from the code generator.
-		std::string yulIROptimized; ///< Reparsed and possibly optimized Yul IR code.
+		std::optional<std::string> yulIR; ///< Yul IR code straight from the code generator.
+		std::optional<std::string> yulIROptimized; ///< Reparsed and possibly optimized Yul IR code.
 		util::LazyInit<std::string const> metadata; ///< The metadata json that will be hashed into the chain.
 		util::LazyInit<Json const> abi;
 		util::LazyInit<Json const> storageLayout;
