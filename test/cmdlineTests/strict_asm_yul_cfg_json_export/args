@@ -1,0 +1,1 @@
+--strict-assembly --optimize --yul-cfg-json --pretty-json --json-indent 4

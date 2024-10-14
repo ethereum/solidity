@@ -1,0 +1,380 @@
+
+======= strict_asm_yul_cfg_json_export/input.yul (EVM) =======
+Yul Control Flow Graph:
+
+{
+    "C_19": {
+        "blocks": [
+            {
+                "exit": {
+                    "cond": "v2",
+                    "targets": [
+                        "Block2",
+                        "Block1"
+                    ],
+                    "type": "ConditionalJump"
+                },
+                "id": "Block0",
+                "instructions": [
+                    {
+                        "builtinArgs": [
+                            "0x80"
+                        ],
+                        "in": [],
+                        "op": "memoryguard",
+                        "out": [
+                            "v0"
+                        ]
+                    },
+                    {
+                        "in": [
+                            "v0",
+                            "0x40"
+                        ],
+                        "op": "mstore",
+                        "out": []
+                    },
+                    {
+                        "in": [],
+                        "op": "callvalue",
+                        "out": [
+                            "v2"
+                        ]
+                    }
+                ],
+                "type": "BuiltinCall"
+            },
+            {
+                "exit": {
+                    "type": "Terminated"
+                },
+                "id": "Block2",
+                "instructions": [
+                    {
+                        "builtinArgs": [
+                            "C_19_deployed"
+                        ],
+                        "in": [],
+                        "op": "datasize",
+                        "out": [
+                            "v4"
+                        ]
+                    },
+                    {
+                        "builtinArgs": [
+                            "C_19_deployed"
+                        ],
+                        "in": [],
+                        "op": "dataoffset",
+                        "out": [
+                            "v5"
+                        ]
+                    },
+                    {
+                        "in": [
+                            "v4",
+                            "v5",
+                            "v0"
+                        ],
+                        "op": "codecopy",
+                        "out": []
+                    },
+                    {
+                        "in": [
+                            "v4",
+                            "v0"
+                        ],
+                        "op": "return",
+                        "out": []
+                    }
+                ],
+                "type": "BuiltinCall"
+            },
+            {
+                "exit": {
+                    "type": "Terminated"
+                },
+                "id": "Block1",
+                "instructions": [
+                    {
+                        "in": [
+                            "0x00",
+                            "0x00"
+                        ],
+                        "op": "revert",
+                        "out": []
+                    }
+                ],
+                "type": "BuiltinCall"
+            }
+        ],
+        "functions": {}
+    },
+    "subObjects": {
+        "C_19_deployed": {
+            "blocks": [
+                {
+                    "exit": {
+                        "cond": "v5",
+                        "targets": [
+                            "Block2",
+                            "Block1"
+                        ],
+                        "type": "ConditionalJump"
+                    },
+                    "id": "Block0",
+                    "instructions": [
+                        {
+                            "builtinArgs": [
+                                "0x80"
+                            ],
+                            "in": [],
+                            "op": "memoryguard",
+                            "out": [
+                                "v0"
+                            ]
+                        },
+                        {
+                            "in": [
+                                "v0",
+                                "0x40"
+                            ],
+                            "op": "mstore",
+                            "out": []
+                        },
+                        {
+                            "in": [],
+                            "op": "calldatasize",
+                            "out": [
+                                "v3"
+                            ]
+                        },
+                        {
+                            "in": [
+                                "0x04",
+                                "v3"
+                            ],
+                            "op": "lt",
+                            "out": [
+                                "v4"
+                            ]
+                        },
+                        {
+                            "in": [
+                                "v4"
+                            ],
+                            "op": "iszero",
+                            "out": [
+                                "v5"
+                            ]
+                        }
+                    ],
+                    "type": "BuiltinCall"
+                },
+                {
+                    "exit": {
+                        "type": "Terminated"
+                    },
+                    "id": "Block2",
+                    "instructions": [
+                        {
+                            "in": [
+                                "0x00",
+                                "0x00"
+                            ],
+                            "op": "revert",
+                            "out": []
+                        }
+                    ],
+                    "type": "BuiltinCall"
+                },
+                {
+                    "exit": {
+                        "cond": "v11",
+                        "targets": [
+                            "Block4",
+                            "Block3"
+                        ],
+                        "type": "ConditionalJump"
+                    },
+                    "id": "Block1",
+                    "instructions": [
+                        {
+                            "in": [
+                                "0x00"
+                            ],
+                            "op": "calldataload",
+                            "out": [
+                                "v7"
+                            ]
+                        },
+                        {
+                            "in": [
+                                "v7",
+                                "0xe0"
+                            ],
+                            "op": "shr",
+                            "out": [
+                                "v9"
+                            ]
+                        },
+                        {
+                            "in": [
+                                "v9",
+                                "0x26121ff0"
+                            ],
+                            "op": "eq",
+                            "out": [
+                                "v11"
+                            ]
+                        }
+                    ],
+                    "type": "BuiltinCall"
+                },
+                {
+                    "exit": {
+                        "targets": [
+                            "Block2"
+                        ],
+                        "type": "Jump"
+                    },
+                    "id": "Block4",
+                    "instructions": []
+                },
+                {
+                    "exit": {
+                        "cond": "v12",
+                        "targets": [
+                            "Block6",
+                            "Block5"
+                        ],
+                        "type": "ConditionalJump"
+                    },
+                    "id": "Block3",
+                    "instructions": [
+                        {
+                            "in": [],
+                            "op": "callvalue",
+                            "out": [
+                                "v12"
+                            ]
+                        }
+                    ],
+                    "type": "BuiltinCall"
+                },
+                {
+                    "exit": {
+                        "cond": "v17",
+                        "targets": [
+                            "Block9",
+                            "Block8"
+                        ],
+                        "type": "ConditionalJump"
+                    },
+                    "id": "Block6",
+                    "instructions": [
+                        {
+                            "in": [
+                                "0x03"
+                            ],
+                            "op": "not",
+                            "out": [
+                                "v14"
+                            ]
+                        },
+                        {
+                            "in": [],
+                            "op": "calldatasize",
+                            "out": [
+                                "v15"
+                            ]
+                        },
+                        {
+                            "in": [
+                                "v14",
+                                "v15"
+                            ],
+                            "op": "add",
+                            "out": [
+                                "v16"
+                            ]
+                        },
+                        {
+                            "in": [
+                                "0x00",
+                                "v16"
+                            ],
+                            "op": "slt",
+                            "out": [
+                                "v17"
+                            ]
+                        }
+                    ],
+                    "type": "BuiltinCall"
+                },
+                {
+                    "exit": {
+                        "type": "Terminated"
+                    },
+                    "id": "Block5",
+                    "instructions": [
+                        {
+                            "in": [
+                                "0x00",
+                                "0x00"
+                            ],
+                            "op": "revert",
+                            "out": []
+                        }
+                    ],
+                    "type": "BuiltinCall"
+                },
+                {
+                    "exit": {
+                        "type": "Terminated"
+                    },
+                    "id": "Block9",
+                    "instructions": [
+                        {
+                            "in": [
+                                "0x2a",
+                                "v0"
+                            ],
+                            "op": "mstore",
+                            "out": []
+                        },
+                        {
+                            "in": [
+                                "0x20",
+                                "v0"
+                            ],
+                            "op": "return",
+                            "out": []
+                        }
+                    ],
+                    "type": "BuiltinCall"
+                },
+                {
+                    "exit": {
+                        "type": "Terminated"
+                    },
+                    "id": "Block8",
+                    "instructions": [
+                        {
+                            "in": [
+                                "0x00",
+                                "0x00"
+                            ],
+                            "op": "revert",
+                            "out": []
+                        }
+                    ],
+                    "type": "BuiltinCall"
+                }
+            ],
+            "functions": {}
+        },
+        "type": "subObject"
+    },
+    "type": "Object"
+}
