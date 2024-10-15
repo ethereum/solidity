@@ -1555,13 +1555,13 @@ Module RunO.
       (H_body : {{? codes, environment, state | body init ⇓ output_inter | state_inter ?}})
       (H_break_with :
         match break_with output_inter with
-        | inl next_init =>
-          {{? codes, environment, state_inter |
-            LowM.Loop next_init body break_with k ⇓ output
-          | state' ?}}
         | inr output_inter' =>
           {{? codes, environment, state_inter |
             k output_inter' ⇓ output
+          | state' ?}}
+        | inl next_init =>
+          {{? codes, environment, state_inter |
+            LowM.Loop next_init body break_with k ⇓ output
           | state' ?}}
         end
       ) :

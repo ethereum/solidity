@@ -14,9 +14,10 @@ homepage: "https://github.com/formal-land/solidity"
 bug-reports: "https://github.com/formal-land/solidity/issues"
 dev-repo: "git+https://github.com/formal-land/solidity.git"
 depends: [
-  "ocaml" {>= "4.08"}
   "coq" {>= "8.17.1" }
+  "coq-coqutil" {>= "0.0.5"}
   "coq-hammer"
+  "ocaml" {>= "4.08"}
 ]
 build: [
   [make]

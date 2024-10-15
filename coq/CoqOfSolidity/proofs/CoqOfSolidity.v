@@ -1,5 +1,6 @@
 Require Import CoqOfSolidity.CoqOfSolidity.
 Require Import simulations.CoqOfSolidity.
+Require coqutil.Datatypes.List.
 
 Import RunO.
 
@@ -31,6 +32,36 @@ Module Memory.
     end.
   Proof.
   Admitted.
+
+  Lemma update_at (index : nat) (word2 : U256.t)
+      {A : Set} codes environment state1 e (output : A) state'
+      (words1 : list U256.t) (word1 : U256.t)
+      (H_word : word2 = word1)
+      (H_nth : List.nth_error words1 index = Some word1)
+      (H_memory : state1.(State.memory) = of_u256_list words1) :
+    let state2 :=
+      state1 <| State.memory := of_u256_list (List.replace_nth index words1 word2) |> in
+    {{? codes, environment, Some state2 |
+      e ⇓ output
+    | state' ?}} ->
+    {{? codes, environment, Some state1 |
+      e ⇓ output
+    | state' ?}}.
+  Proof.
+    intros.
+    assert (state1 = state2). {
+      unfold state2.
+      replace (of_u256_list _) with state1.(State.memory). 2: {
+        rewrite H_memory, H_word.
+        f_equal.
+        revert H_nth; clear; intros.
+        revert index H_nth.
+        induction words1; hauto lq: on.
+      }
+      sfirstorder.
+    }
+    congruence.
+  Qed.
 End Memory.
 
 Module SimulatedMemory.
@@ -332,6 +363,14 @@ Ltac apply_run_mstore :=
   | |- {{? _, _, Some (make_state _ _ ?memory _) | Stdlib.mstore ?offset ?value ⇓ _ | _ ?}} =>
     apply (Memory.run_mstore _ _ _ memory (Z.to_nat (offset / 32)) value)
   end.
+
+Ltac apply_memory_update_at index word2 :=
+  let index := eval cbv in (Z.to_nat (index / 32)) in
+  eapply (Memory.update_at index word2);
+    try apply get_memory_make_state_eq;
+    [|reflexivity|];
+    unfold List.replace_nth;
+    CanonizeState.execute.
 
 Ltac apply_run_sload_u256 :=
   match goal with

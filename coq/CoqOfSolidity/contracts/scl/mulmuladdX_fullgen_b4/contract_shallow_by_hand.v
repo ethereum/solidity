@@ -814,42 +814,11 @@ Proof.
   unfold Contract_91.Contract_91_deployed.fun_ecGenMulmuladdX_store_2814_beginning.
   l. {
     repeat load_store_line.
-    (* l. {
-      c. {
-        apply_run_mstore.
-      }
-      CanonizeState.execute.
-      p.
-    }
-    l. {
-      cu; s.
-      c. {
-        apply_run_mstore.
-      }
-      CanonizeState.execute.
-      p.
-    }
-    l. {
-      c. {
-        apply_run_mload.
-      }
-      s.
-      cu; p.
-    } *)
     l. {
       unfold Shallow.if_, Pure.iszero.
       instantiate (2 := Result.Ok (BlockUnit.Tt, if scalar_u =? 0 then _ else _)).
       destruct (scalar_u =? 0); s; [|p].
       load_store_line.
-      (* l. {
-        c. {
-          apply_run_mload.
-        }
-        s.
-        cu; p.
-      }
-      s.
-      p. *)
     }
     s.
     lu.
@@ -863,49 +832,111 @@ Proof.
     }
     match goal with
     | |- context [Shallow.if_ (Z.b2z ?condition)] =>
-      destruct condition; s
+      destruct condition eqn:H_u_v_eq; s
     end.
     { load_store_line. }
-      (* p.
-      lu; c. {
-        apply_run_mstore.
-      }
-      p. *)
-    (* } *)
     { repeat load_store_line.
       l. {
-        change (Pure.shl 127 1) with (2 ^ (127 - Z.of_nat 0)).
-        generalize 0%nat as index.
+        change (Pure.shl 127 1) with (2 ^ Z.of_nat (128 - 1)).
+        set (index := 128%nat).
+        assert (H_index_le : (index <= 128)%nat) by lia.
+        assert (H_get_s :
+          forall i, Z.of_nat index <= i <= 127 -> get_s scalar_u scalar_v i = 0
+        ) by lia.
+        Ltac foo index word2 :=
+          let index := eval cbv in (Z.to_nat (index / 32)) in
+          eapply (Memory.update_at index word2);
+            try apply get_memory_make_state_eq;
+            [|reflexivity|];
+            unfold List.replace_nth;
+            CanonizeState.execute.
+        foo 0xe0 (
+          if (index =? 128)%nat then
+            0
+          else
+            get_s scalar_u scalar_v (Z.of_nat index)
+        ). {
+          reflexivity.
+        }
+        foo 0x01a0 (2 ^ (Z.of_nat index - 1)). {
+          reflexivity.
+        }
         induction index.
+        { (* The base case, corresponding to a bit position of `-1`, is impossible to reach. *)
+          assert (H_u_v_zero :
+            (forall i, 0 <= i <= 127 -> get_s scalar_u scalar_v i = 0) ->
+            scalar_u = 0 /\ scalar_v = 0
+          ) by admit.
+          exfalso; lia.
+        }
         { eapply LoopStep.
-          { l. {
-              c. {
-                apply_run_mload.
+          { (* for body *)
+            load_store_line.
+            destruct (index =? 127)%nat eqn:?; s.
+            { l. {
+                load_store_line.
               }
-              cu; p.
+              load_store_line.
             }
-            s.
+            { 
+
+            }
             l. {
-              l. {
-                repeat (c; [
-                  p ||
-                  apply_run_mload
-                |]).
-                s.
-                c. {
-                  match goal with
-                  | |- context[mstore _ ?value] =>
-                    change value with (get_s scalar_u scalar_v (2 ^ 127))
-                  end.
-                  apply_run_mstore.
-                }
-                CanonizeState.execute.
-                p.
+              load_store_line.
+            }
+            load_store_line.
+          }
+          {
+        }
+        eapply LoopStep.
+        { Compute (224 / 32). load_store_line.
+          l. {
+            load_store_line.
+          }
+          load_store_line.
+        }
+        { induction index.
+          { assert (H_u_v_zero :
+              (forall i, 0 <= i <= 127 -> get_s scalar_u scalar_v i = 0) ->
+              scalar_u = 0 /\ scalar_v = 0
+            ) by admit.
+            exfalso; lia.
+          }
+          { apply IHindex; clear IHindex.
+            { lia. }
+            { 
+
+            }
+          }
+        }
+          l. {
+            c. {
+              apply_run_mload.
+            }
+            cu; p.
+          }
+          s.
+          l. {
+            l. {
+              repeat (c; [
+                p ||
+                apply_run_mload
+              |]).
+              s.
+              c. {
+                match goal with
+                | |- context[mstore _ ?value] =>
+                  change value with (get_s scalar_u scalar_v (2 ^ 127))
+                end.
+                apply_run_mstore.
               }
+              CanonizeState.execute.
               p.
             }
-            s.
-            l. {
+            p.
+          }
+          s.
+          l. {
               c. {
                 apply_run_mload.
               }
