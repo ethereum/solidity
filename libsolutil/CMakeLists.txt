@@ -27,6 +27,8 @@ set(sources
 	Numeric.cpp
 	Numeric.h
 	picosha2.h
+	Profiler.cpp
+	Profiler.h
 	Result.h
 	SetOnce.h
 	StackTooDeepString.h
