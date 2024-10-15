@@ -1,0 +1,27 @@
+
+======= strict_asm_eof_dataloadn_prague/input.yul (EVM) =======
+
+Pretty printed source:
+object "a" {
+    code {
+        {
+            mstore(0, auxdataloadn(0))
+            return(0, 32)
+        }
+    }
+    data "data1" hex"48656c6c6f2c20576f726c6421"
+}
+
+
+Binary representation:
+ef0001010004020001000904002d000080ffffd1000d5f5260205ff348656c6c6f2c20576f726c6421
+
+Text representation:
+  auxdataloadn(0)
+  0x00
+  mstore
+  0x20
+  0x00
+  return
+stop
+data_acaf3289d7b601cbd114fb36c4d29c85bbfd5e133f14cb355c3fd8d99367964f 48656c6c6f2c20576f726c6421

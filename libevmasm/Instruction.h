@@ -182,6 +182,7 @@ enum class Instruction: uint8_t
 	LOG3,                     ///< Makes a log entry; 3 topics.
 	LOG4,                     ///< Makes a log entry; 4 topics.
 
+	DATALOADN = 0xd1,         ///< load data from EOF data section
 	CREATE = 0xf0,            ///< create a new account with associated code
 	CALL,                     ///< message-call into an account
 	CALLCODE,                 ///< message-call with another account's code only
