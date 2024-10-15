@@ -5,22 +5,28 @@ Resources
 General Resources
 =================
 
-* `Ethereum.org Developer Portal <https://ethereum.org/en/developers/>`_
+* `Ethereum.org Developers page <https://ethereum.org/en/developers/>`_
 * `Ethereum StackExchange <https://ethereum.stackexchange.com/>`_
-* `Solidity Portal <https://soliditylang.org/>`_
-* `Solidity Changelog <https://github.com/ethereum/solidity/blob/develop/Changelog.md>`_
-* `Solidity Source Code on GitHub <https://github.com/ethereum/solidity/>`_
-* `Solidity Language Users Chat <https://matrix.to/#/#ethereum_solidity:gitter.im>`_
-* `Solidity Compiler Developers Chat <https://matrix.to/#/#ethereum_solidity-dev:gitter.im>`_
-* `Awesome Solidity <https://github.com/bkrem/awesome-solidity>`_
+* `Solidity website <https://soliditylang.org/>`_
+* `Solidity changelog <https://github.com/ethereum/solidity/blob/develop/Changelog.md>`_
+* `Solidity codebase on GitHub <https://github.com/ethereum/solidity/>`_
+* `Solidity language users chat <https://matrix.to/#/#ethereum_solidity:gitter.im>`_
+* `Solidity compiler developers chat <https://matrix.to/#/#ethereum_solidity-dev:gitter.im>`_
+* `awesome-solidity <https://github.com/bkrem/awesome-solidity>`_
 * `Solidity by Example <https://solidity-by-example.org/>`_
-* `Solidity Documentation Community Translations <https://github.com/solidity-docs>`_
+* `Solidity documentation community translations <https://github.com/solidity-docs>`_
 
 Integrated (Ethereum) Development Environments
 ==============================================
 
+    * `Ape <https://docs.apeworx.io/ape/stable/az>`_
+        Python-based web3 development tool for compiling, testing, and interacting with smart contracts.
+
     * `Brownie <https://eth-brownie.readthedocs.io/en/stable/>`_
         Python-based development and testing framework for smart contracts targeting the Ethereum Virtual Machine.
+        💡 Note: As per the official docs, Brownie is no longer actively maintained.
+        Future releases may come sporadically - or never at all.
+        Check out Ape Framework (first in list) for all your python Ethereum development needs.
 
     * `Dapp <https://dapp.tools/>`_
         Tool for building, testing and deploying smart contracts from the command-line.
@@ -36,6 +42,9 @@ Integrated (Ethereum) Development Environments
 
     * `Truffle <https://trufflesuite.com/truffle/>`_
         Ethereum development framework.
+        💡 Note: Consensys announced the sunset of Truffle on September 21, 2023.
+        Current users may check out the migration path and available product support `here:
+        <https://consensys.io/blog/consensys-announces-the-sunset-of-truffle-and-ganache-and-new-hardhat>`_
 
 Editor Integrations
 ===================
@@ -92,8 +101,14 @@ Solidity Tools
 * `abi-to-sol <https://github.com/gnidan/abi-to-sol>`_
     Tool to generate Solidity interface source from a given ABI JSON.
 
+* `Aderyn <https://github.com/Cyfrin/aderyn>`_
+    Rust-based solidity smart contract static analyzer designed to help find vulnerabilities in Solidity code bases.
+
 * `Doxity <https://github.com/DigixGlobal/doxity>`_
     Documentation Generator for Solidity.
+
+* `ethdebug <https://github.com/ethdebug/format>`_
+    A standard debugging data format for smart contracts on Ethereum-compatible networks.
 
 * `Ethlint <https://github.com/duaraghav8/Ethlint>`_
     Linter to identify and fix style and security issues in Solidity.
@@ -102,7 +117,7 @@ Solidity Tools
     EVM Disassembler that performs static analysis on the bytecode to provide a higher level of abstraction than raw EVM operations.
 
 * `EVM Lab <https://github.com/ethereum/evmlab/>`_
-    Rich tool package to interact with the EVM. Includes a VM, Etherchain API, and a trace-viewer with gas cost display.
+    A collection of tools to interact with the EVM. The package includes a VM, Etherchain API, and a trace-viewer with gas cost display.
 
 * `hevm <https://github.com/dapphub/dapptools/tree/master/src/hevm#readme>`_
     EVM debugger and symbolic execution engine.
