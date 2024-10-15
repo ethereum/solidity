@@ -1,6 +1,8 @@
 object "a" {
   code {}
 }
+// ====
+// EVMVersion: >=constantinople
 // ----
 // Assembly:
 //     /* "source":22:29   */

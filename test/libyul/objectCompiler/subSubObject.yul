@@ -10,6 +10,8 @@ object "a" {
     }
   }
 }
+// ====
+// EVMVersion: >=constantinople
 // ----
 // Assembly:
 //     /* "source":22:29   */

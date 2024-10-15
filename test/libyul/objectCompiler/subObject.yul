@@ -4,6 +4,8 @@ object "a" {
   data "str" "Hello, World!"
   object "sub" { code { sstore(0, 1) } }
 }
+// ====
+// EVMVersion: >=constantinople
 // ----
 // Assembly:
 //     /* "source":22:29   */
