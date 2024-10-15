@@ -18,9 +18,8 @@
 
 #pragma once
 
-#include <libyul/YulString.h>
-
 namespace solidity::yul
 {
+class YulString;
 using YulName = YulString;
 }

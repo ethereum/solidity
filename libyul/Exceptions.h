@@ -25,6 +25,7 @@
 #include <libsolutil/Assertions.h>
 
 #include <libyul/YulName.h>
+#include <libyul/YulString.h>
 
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/facilities/empty.hpp>

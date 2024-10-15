@@ -118,7 +118,7 @@ SemanticTest::SemanticTest(
 	}
 }
 
-std::map<std::string, Builtin> SemanticTest::makeBuiltins()
+std::map<std::string, frontend::test::Builtin> SemanticTest::makeBuiltins()
 {
 	return {
 		{

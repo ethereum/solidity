@@ -54,9 +54,8 @@ struct CopyTranslate: public yul::ASTCopier
 {
 	CopyTranslate(
 		IRGenerationContext const& _context,
-		yul::Dialect const& _dialect,
 		std::map<yul::Identifier const*, InlineAssemblyAnnotation::ExternalIdentifierInfo> _references
-	): m_context(_context), m_dialect(_dialect), m_references(std::move(_references)) {}
+	): m_context(_context), m_references(std::move(_references)) {}
 
 	using ASTCopier::operator();
 
@@ -72,10 +71,7 @@ struct CopyTranslate: public yul::ASTCopier
 
 	yul::YulName translateIdentifier(yul::YulName _name) override
 	{
-		if (m_dialect.builtin(_name))
-			return _name;
-		else
-			return yul::YulName{"usr$" + _name.str()};
+		return yul::YulName{"usr$" + _name.str()};
 	}
 
 	yul::Identifier translate(yul::Identifier const& _identifier) override
@@ -106,7 +102,6 @@ private:
 	}
 
 	IRGenerationContext const& m_context;
-	yul::Dialect const& m_dialect;
 	std::map<yul::Identifier const*, InlineAssemblyAnnotation::ExternalIdentifierInfo> m_references;
 };
 
@@ -129,10 +124,10 @@ bool IRGeneratorForStatements::visit(TupleExpression const& _tupleExpression)
 
 bool IRGeneratorForStatements::visit(InlineAssembly const& _assembly)
 {
-	CopyTranslate bodyCopier{m_context, _assembly.dialect(), _assembly.annotation().externalReferences};
+	CopyTranslate bodyCopier{m_context, _assembly.annotation().externalReferences};
 	yul::Statement modified = bodyCopier(_assembly.operations().root());
 	solAssert(std::holds_alternative<yul::Block>(modified));
-	m_code << yul::AsmPrinter()(std::get<yul::Block>(modified)) << "\n";
+	m_code << yul::AsmPrinter(_assembly.dialect())(std::get<yul::Block>(modified)) << "\n";
 	return false;
 }
 

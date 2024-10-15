@@ -67,8 +67,11 @@ void NameSimplifier::operator()(Identifier& _identifier)
 void NameSimplifier::operator()(FunctionCall& _funCall)
 {
 	// The visitor on its own does not visit the function name.
-	if (!m_context.dialect.builtin(_funCall.functionName.name))
-		(*this)(_funCall.functionName);
+	if (!isBuiltinFunctionCall(_funCall))
+	{
+		yulAssert(std::holds_alternative<Identifier>(_funCall.functionName));
+		(*this)(std::get<Identifier>(_funCall.functionName));
+	}
 	ASTModifier::operator()(_funCall);
 }
 

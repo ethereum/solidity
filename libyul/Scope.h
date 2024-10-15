@@ -24,10 +24,8 @@
 #include <liblangutil/Exceptions.h>
 
 #include <libyul/YulName.h>
+#include <libyul/YulString.h>
 
-#include <functional>
-#include <memory>
-#include <optional>
 #include <variant>
 
 namespace solidity::yul

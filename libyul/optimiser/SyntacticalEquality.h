@@ -25,6 +25,7 @@
 #include <libyul/YulName.h>
 
 #include <map>
+#include <memory>
 #include <type_traits>
 
 namespace solidity::yul
@@ -48,6 +49,7 @@ public:
 
 	bool expressionEqual(FunctionCall const& _lhs, FunctionCall const& _rhs);
 	bool expressionEqual(Identifier const& _lhs, Identifier const& _rhs);
+	bool expressionEqual(FunctionName const& _lhs, FunctionName const& _rhs);
 	bool expressionEqual(Literal const& _lhs, Literal const& _rhs);
 
 	bool statementEqual(ExpressionStatement const& _lhs, ExpressionStatement const& _rhs);

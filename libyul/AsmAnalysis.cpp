@@ -293,15 +293,14 @@ void AsmAnalyzer::operator()(FunctionDefinition const& _funDef)
 
 size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 {
-	yulAssert(!_funCall.functionName.name.empty(), "");
 	auto watcher = m_errorReporter.errorWatcher();
 	std::optional<size_t> numParameters;
 	std::optional<size_t> numReturns;
 	std::vector<std::optional<LiteralKind>> const* literalArguments = nullptr;
 
-	if (BuiltinFunction const* f = m_dialect.builtin(_funCall.functionName.name))
+	if (BuiltinFunction const* f = resolveBuiltinFunction(_funCall.functionName, m_dialect))
 	{
-		if (_funCall.functionName.name == "selfdestruct"_yulname)
+		if (f->name == "selfdestruct")
 			m_errorReporter.warning(
 				1699_error,
 				nativeLocationOf(_funCall.functionName),
@@ -314,7 +313,7 @@ size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 			);
 		else if (
 			m_evmVersion.supportsTransientStorage() &&
-			_funCall.functionName.name == "tstore"_yulname &&
+			f->name == "tstore" &&
 			!m_errorReporter.hasError({2394})
 		)
 			m_errorReporter.warning(
@@ -335,7 +334,7 @@ size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		validateInstructions(_funCall);
 		m_sideEffects += f->sideEffects;
 	}
-	else if (m_currentScope->lookup(_funCall.functionName.name, GenericVisitor{
+	else if (m_currentScope->lookup(YulName{std::string(resolveFunctionName(_funCall.functionName, m_dialect))}, GenericVisitor{
 		[&](Scope::Variable const&)
 		{
 			m_errorReporter.typeError(
@@ -351,10 +350,11 @@ size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		}
 	}))
 	{
+		yulAssert(std::holds_alternative<Identifier>(_funCall.functionName));
 		if (m_resolver)
 			// We found a local reference, make sure there is no external reference.
 			m_resolver(
-				_funCall.functionName,
+				std::get<Identifier>(_funCall.functionName),
 				yul::IdentifierContext::NonExternal,
 				m_currentScope->insideFunction()
 			);
@@ -365,7 +365,7 @@ size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 			m_errorReporter.declarationError(
 				4619_error,
 				nativeLocationOf(_funCall.functionName),
-				"Function \"" + _funCall.functionName.name.str() + "\" not found."
+				fmt::format("Function \"{}\" not found.", resolveFunctionName(_funCall.functionName, m_dialect))
 			);
 		yulAssert(!watcher.ok(), "Expected a reported error.");
 	}
@@ -374,10 +374,12 @@ size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		m_errorReporter.typeError(
 			7000_error,
 			nativeLocationOf(_funCall.functionName),
-			"Function \"" + _funCall.functionName.name.str() + "\" expects " +
-			std::to_string(*numParameters) +
-			" arguments but got " +
-			std::to_string(_funCall.arguments.size()) + "."
+			fmt::format(
+				"Function \"{}\" expects {} arguments but got {}.",
+				resolveFunctionName(_funCall.functionName, m_dialect),
+				*numParameters,
+				_funCall.arguments.size()
+			)
 		);
 
 	for (size_t i = _funCall.arguments.size(); i > 0; i--)
@@ -403,7 +405,7 @@ size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 				);
 			else if (*literalArgumentKind == LiteralKind::String)
 			{
-				std::string functionName = _funCall.functionName.name.str();
+				std::string_view functionName = resolveFunctionName(_funCall.functionName, m_dialect);
 				if (functionName == "datasize" || functionName == "dataoffset")
 				{
 					auto const& argumentAsLiteral = std::get<Literal>(arg);
@@ -430,7 +432,7 @@ size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 			}
 			else if (*literalArgumentKind == LiteralKind::Number)
 			{
-				std::string functionName = _funCall.functionName.name.str();
+				std::string_view functionName = resolveFunctionName(_funCall.functionName, m_dialect);
 				if (functionName == "auxdataloadn")
 				{
 					auto const& argumentAsLiteral = std::get<Literal>(arg);
@@ -628,7 +630,7 @@ void AsmAnalyzer::expectValidIdentifier(YulName _identifier, SourceLocation cons
 			"\"" + _identifier.str() + "\" is not a valid identifier (contains consecutive dots)."
 		);
 
-	if (m_dialect.reservedIdentifier(_identifier))
+	if (m_dialect.reservedIdentifier(_identifier.str()))
 		m_errorReporter.declarationError(
 			5017_error,
 			_location,
@@ -636,17 +638,22 @@ void AsmAnalyzer::expectValidIdentifier(YulName _identifier, SourceLocation cons
 		);
 }
 
-bool AsmAnalyzer::validateInstructions(std::string const& _instructionIdentifier, langutil::SourceLocation const& _location)
+bool AsmAnalyzer::validateInstructions(std::string_view _instructionIdentifier, langutil::SourceLocation const& _location)
 {
 	// NOTE: This function uses the default EVM version instead of the currently selected one.
-	auto const builtin = EVMDialect::strictAssemblyForEVM(EVMVersion{}, std::nullopt).builtin(YulName(_instructionIdentifier));
-	if (builtin && builtin->instruction.has_value())
-		return validateInstructions(builtin->instruction.value(), _location);
+	auto const& defaultEVMDialect = EVMDialect::strictAssemblyForEVM(EVMVersion{}, std::nullopt);
+	auto const builtinHandle = defaultEVMDialect.builtin(_instructionIdentifier);
+	if (builtinHandle)
+	{
+		BuiltinFunctionForEVM const& builtin = defaultEVMDialect.builtinFunction(builtinHandle.value());
+		return builtin.instruction.has_value() && validateInstructions(builtin.instruction.value(), _location);
+	}
 
 	// TODO: Change `prague()` to `EVMVersion{}` once EOF gets deployed
-	auto const eofBuiltin = EVMDialect::strictAssemblyForEVM(EVMVersion::prague(), 1).builtin(YulName(_instructionIdentifier));
-	if (eofBuiltin && eofBuiltin->instruction.has_value())
-		return validateInstructions(eofBuiltin->instruction.value(), _location);
+	auto const& eofEVMDialect = EVMDialect::strictAssemblyForEVM(EVMVersion::prague(), 1);
+	auto const eofBuiltin = eofEVMDialect.builtin(_instructionIdentifier);
+	if (eofBuiltin && eofEVMDialect.builtinFunction(eofBuiltin.value()).instruction.has_value())
+		return validateInstructions(eofEVMDialect.builtinFunction(eofBuiltin.value()).instruction.value(), _location);
 
 	return false;
 }
@@ -761,5 +768,5 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 
 bool AsmAnalyzer::validateInstructions(FunctionCall const& _functionCall)
 {
-	return validateInstructions(_functionCall.functionName.name.str(), nativeLocationOf(_functionCall.functionName));
+	return validateInstructions(resolveFunctionName(_functionCall.functionName, m_dialect), nativeLocationOf(_functionCall.functionName));
 }

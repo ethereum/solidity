@@ -27,15 +27,21 @@
 using namespace solidity;
 using namespace solidity::yul;
 
+void InlinableExpressionFunctionFinder::checkAllowed(FunctionName _name) {
+	// disallowed identifiers can only ever hold identifiers, not builtins or verbatims
+	if (std::holds_alternative<Identifier>(_name) && m_disallowedIdentifiers.count(std::get<Identifier>(_name).name))
+		m_foundDisallowedIdentifier = true;
+}
+
 void InlinableExpressionFunctionFinder::operator()(Identifier const& _identifier)
 {
-	checkAllowed(_identifier.name);
+	checkAllowed(_identifier);
 	ASTWalker::operator()(_identifier);
 }
 
 void InlinableExpressionFunctionFinder::operator()(FunctionCall const& _funCall)
 {
-	checkAllowed(_funCall.functionName.name);
+	checkAllowed(_funCall.functionName);
 	ASTWalker::operator()(_funCall);
 }
 

@@ -19,6 +19,7 @@
 #include <libsolidity/analysis/ControlFlowBuilder.h>
 #include <libsolidity/ast/ASTUtils.h>
 #include <libyul/AST.h>
+#include <libyul/Utilities.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
 using namespace solidity::langutil;
@@ -582,7 +583,7 @@ void ControlFlowBuilder::operator()(yul::FunctionCall const& _functionCall)
 	solAssert(m_currentNode && m_inlineAssembly, "");
 	yul::ASTWalker::operator()(_functionCall);
 
-	if (auto const *builtinFunction = m_inlineAssembly->dialect().builtin(_functionCall.functionName.name))
+	if (auto const *builtinFunction = resolveBuiltinFunction(_functionCall.functionName, m_inlineAssembly->dialect()))
 	{
 		if (builtinFunction->controlFlowSideEffects.canTerminate)
 			connect(m_currentNode, m_transactionReturnNode);

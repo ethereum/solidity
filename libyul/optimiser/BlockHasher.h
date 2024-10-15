@@ -61,7 +61,8 @@ protected:
 class ASTHasherBase: public HasherBase
 {
 protected:
-	void hashLiteral(solidity::yul::Literal const& _literal);
+	void hashLiteral(Literal const& _literal);
+	void hashFunctionCall(FunctionCall const& _functionCall);
 };
 
 /**

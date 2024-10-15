@@ -76,7 +76,7 @@ std::pair<bigint, bigint> GasMeterVisitor::instructionCosts(
 void GasMeterVisitor::operator()(FunctionCall const& _funCall)
 {
 	ASTWalker::operator()(_funCall);
-	if (BuiltinFunctionForEVM const* f = m_dialect.builtin(_funCall.functionName.name))
+	if (BuiltinFunctionForEVM const* f = resolveBuiltinFunctionForEVM(_funCall.functionName, m_dialect))
 		if (f->instruction)
 		{
 			instructionCostsInternal(*f->instruction);

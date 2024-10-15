@@ -21,6 +21,7 @@
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
 #include <libyul/FunctionReferenceResolver.h>
+#include <libyul/Utilities.h>
 
 #include <libsolutil/Common.h>
 #include <libsolutil/CommonData.h>
@@ -271,7 +272,7 @@ ControlFlowNode const* ControlFlowSideEffectsCollector::nextProcessableNode(Func
 
 ControlFlowSideEffects const& ControlFlowSideEffectsCollector::sideEffects(FunctionCall const& _call) const
 {
-	if (auto const* builtin = m_dialect.builtin(_call.functionName.name))
+	if (auto const* builtin = resolveBuiltinFunction(_call.functionName, m_dialect))
 		return builtin->controlFlowSideEffects;
 	else
 		return m_functionSideEffects.at(m_functionReferences.at(&_call));

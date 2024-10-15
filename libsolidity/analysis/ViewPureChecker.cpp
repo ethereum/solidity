@@ -18,8 +18,9 @@
 
 #include <libsolidity/analysis/ViewPureChecker.h>
 #include <libsolidity/ast/ExperimentalFeatures.h>
-#include <libyul/AST.h>
 #include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/AST.h>
+#include <libyul/Utilities.h>
 #include <liblangutil/ErrorReporter.h>
 #include <libevmasm/SemanticInformation.h>
 
@@ -66,7 +67,7 @@ public:
 	void operator()(yul::FunctionCall const& _funCall)
 	{
 		if (yul::EVMDialect const* dialect = dynamic_cast<decltype(dialect)>(&m_dialect))
-			if (yul::BuiltinFunctionForEVM const* fun = dialect->builtin(_funCall.functionName.name))
+			if (yul::BuiltinFunctionForEVM const* fun = yul::resolveBuiltinFunctionForEVM(_funCall.functionName, *dialect))
 				if (fun->instruction)
 					checkInstruction(nativeLocationOf(_funCall), *fun->instruction);
 

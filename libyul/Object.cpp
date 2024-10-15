@@ -38,12 +38,13 @@ using namespace solidity::langutil;
 using namespace solidity::util;
 using namespace solidity::yul;
 
-std::string Data::toString(DebugInfoSelection const&, CharStreamProvider const*) const
+std::string Data::toString(Dialect const&, DebugInfoSelection const&, CharStreamProvider const*) const
 {
 	return "data \"" + name + "\" hex\"" + util::toHex(data) + "\"";
 }
 
 std::string Object::toString(
+	Dialect const& _dialect,
 	DebugInfoSelection const& _debugInfoSelection,
 	CharStreamProvider const* _soliditySourceProvider
 ) const
@@ -52,13 +53,14 @@ std::string Object::toString(
 	yulAssert(debugData, "No debug data");
 
 	std::string inner = "code " + AsmPrinter(
+		_dialect,
 		debugData->sourceNames,
 		_debugInfoSelection,
 		_soliditySourceProvider
 	)(code()->root());
 
 	for (auto const& obj: subObjects)
-		inner += "\n" + obj->toString(_debugInfoSelection, _soliditySourceProvider);
+		inner += "\n" + obj->toString(_dialect, _debugInfoSelection, _soliditySourceProvider);
 
 	return
 		debugData->formatUseSrcComment() +
@@ -67,7 +69,7 @@ std::string Object::toString(
 		"}";
 }
 
-Json Data::toJson() const
+Json Data::toJson(Dialect const&) const
 {
 	Json ret;
 	ret["nodeType"] = "YulData";
@@ -90,17 +92,17 @@ std::string ObjectDebugData::formatUseSrcComment() const
 	return "/// @use-src " + serializedSourceNames + "\n";
 }
 
-Json Object::toJson() const
+Json Object::toJson(Dialect const& _dialect) const
 {
 	yulAssert(hasCode(), "No code");
 
 	Json codeJson;
 	codeJson["nodeType"] = "YulCode";
-	codeJson["block"] = AsmJsonConverter(0 /* sourceIndex */)(code()->root());
+	codeJson["block"] = AsmJsonConverter(_dialect, 0 /* sourceIndex */)(code()->root());
 
 	Json subObjectsJson = Json::array();
 	for (std::shared_ptr<ObjectNode> const& subObject: subObjects)
-		subObjectsJson.emplace_back(subObject->toJson());
+		subObjectsJson.emplace_back(subObject->toJson(_dialect));
 
 	Json ret;
 	ret["nodeType"] = "YulObject";

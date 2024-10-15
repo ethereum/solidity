@@ -50,14 +50,14 @@ void CircularReferencesPruner::operator()(Block& _block)
 
 std::set<YulName> CircularReferencesPruner::functionsCalledFromOutermostContext(CallGraph const& _callGraph)
 {
-	std::set<YulName> verticesToTraverse = m_reservedIdentifiers;
+	std::set<YulName> verticesToTraverse{m_reservedIdentifiers.begin(), m_reservedIdentifiers.end()};
 	verticesToTraverse.insert(YulName(""));
 
 	return util::BreadthFirstSearch<YulName>{{verticesToTraverse.begin(), verticesToTraverse.end()}}.run(
 		[&_callGraph](YulName _function, auto&& _addChild) {
 			if (_callGraph.functionCalls.count(_function))
 				for (auto const& callee: _callGraph.functionCalls.at(_function))
-					if (_callGraph.functionCalls.count(callee))
-						_addChild(callee);
+					if (std::holds_alternative<YulName>(callee) && _callGraph.functionCalls.count(std::get<YulName>(callee)))
+						_addChild(std::get<YulName>(callee));
 		}).visited;
 }

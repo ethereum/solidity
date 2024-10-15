@@ -25,14 +25,10 @@
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/ControlFlowSideEffectsCollector.h>
+#include <libyul/Utilities.h>
 #include <libyul/AST.h>
-#include <libyul/AsmPrinter.h>
 
 #include <libsolutil/CommonData.h>
-
-#include <range/v3/action/remove_if.hpp>
-
-#include <iostream>
 
 using namespace solidity;
 using namespace solidity::yul;
@@ -79,10 +75,13 @@ void UnusedAssignEliminator::operator()(FunctionCall const& _functionCall)
 	UnusedStoreBase::operator()(_functionCall);
 
 	ControlFlowSideEffects sideEffects;
-	if (auto builtin = m_dialect.builtin(_functionCall.functionName.name))
+	if (auto const* builtin = resolveBuiltinFunction(_functionCall.functionName, m_dialect))
 		sideEffects = builtin->controlFlowSideEffects;
 	else
-		sideEffects = m_controlFlowSideEffects.at(_functionCall.functionName.name);
+	{
+		yulAssert(std::holds_alternative<Identifier>(_functionCall.functionName));
+		sideEffects = m_controlFlowSideEffects.at(std::get<Identifier>(_functionCall.functionName).name);
+	}
 
 	if (!sideEffects.canContinue)
 		// We do not return from the current function, so it is OK to also

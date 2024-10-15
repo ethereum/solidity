@@ -23,6 +23,7 @@
 #include <libyul/ASTForward.h>
 
 #include <libyul/YulName.h>
+#include <libyul/YulString.h>
 
 #include <set>
 

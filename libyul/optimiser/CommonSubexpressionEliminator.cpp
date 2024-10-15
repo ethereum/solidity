@@ -46,7 +46,7 @@ void CommonSubexpressionEliminator::run(OptimiserStepContext& _context, Block& _
 
 CommonSubexpressionEliminator::CommonSubexpressionEliminator(
 	Dialect const& _dialect,
-	std::map<YulName, SideEffects> _functionSideEffects
+	std::map<FunctionHandle, SideEffects> _functionSideEffects
 ):
 	DataFlowAnalyzer(_dialect, MemoryAndStorage::Ignore, std::move(_functionSideEffects))
 {
@@ -72,7 +72,7 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 	{
 		FunctionCall& funCall = std::get<FunctionCall>(_e);
 
-		if (BuiltinFunction const* builtin = m_dialect.builtin(funCall.functionName.name))
+		if (BuiltinFunction const* builtin = resolveBuiltinFunction(funCall.functionName, m_dialect))
 		{
 			for (size_t i = funCall.arguments.size(); i > 0; i--)
 				// We should not modify function arguments that have to be literals

@@ -32,14 +32,16 @@
 namespace solidity::yul
 {
 
+struct Dialect;
+
 /**
  * Component that imports an AST from json format to the internal format
  */
 class AsmJsonImporter
 {
 public:
-	explicit AsmJsonImporter(std::vector<std::shared_ptr<std::string const>> const& _sourceNames):
-		m_sourceNames(_sourceNames)
+	explicit AsmJsonImporter(std::vector<std::shared_ptr<std::string const>> const& _sourceNames, Dialect const& _dialect):
+		m_sourceNames(_sourceNames), m_dialect(_dialect)
 	{}
 
 	yul::AST createAST(Json const& node);
@@ -74,6 +76,7 @@ private:
 	yul::Continue createContinue(Json const& _node);
 
 	std::vector<std::shared_ptr<std::string const>> const& m_sourceNames;
+	Dialect const& m_dialect;
 };
 
 }

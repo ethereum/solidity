@@ -20,6 +20,7 @@
 
 #include <libyul/backends/evm/ControlFlowGraph.h>
 #include <libyul/Exceptions.h>
+#include <libyul/Utilities.h>
 
 #include <libsolutil/Visitor.h>
 
@@ -33,23 +34,23 @@
 namespace solidity::yul
 {
 
-inline std::string stackSlotToString(StackSlot const& _slot)
+inline std::string stackSlotToString(StackSlot const& _slot, Dialect const& _dialect)
 {
 	return std::visit(util::GenericVisitor{
-		[](FunctionCallReturnLabelSlot const& _ret) -> std::string { return "RET[" + _ret.call.get().functionName.name.str() + "]"; },
+		[&](FunctionCallReturnLabelSlot const& _ret) -> std::string { return "RET[" + std::string(resolveFunctionName(_ret.call.get().functionName, _dialect)) + "]"; },
 		[](FunctionReturnLabelSlot const&) -> std::string { return "RET"; },
 		[](VariableSlot const& _var) { return _var.variable.get().name.str(); },
 		[](LiteralSlot const& _lit) { return toCompactHexWithPrefix(_lit.value); },
-		[](TemporarySlot const& _tmp) -> std::string { return "TMP[" + _tmp.call.get().functionName.name.str() + ", " + std::to_string(_tmp.index) + "]"; },
+		[&](TemporarySlot const& _tmp) -> std::string { return "TMP[" + std::string(resolveFunctionName(_tmp.call.get().functionName, _dialect)) + ", " + std::to_string(_tmp.index) + "]"; },
 		[](JunkSlot const&) -> std::string { return "JUNK"; }
 	}, _slot);
 }
 
-inline std::string stackToString(Stack const& _stack)
+inline std::string stackToString(Stack const& _stack, Dialect const& _dialect)
 {
 	std::string result("[ ");
 	for (auto const& slot: _stack)
-		result += stackSlotToString(slot) + ' ';
+		result += stackSlotToString(slot, _dialect) + ' ';
 	result += ']';
 	return result;
 }

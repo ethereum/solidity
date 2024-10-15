@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <libyul/YulName.h>
+
 #include <variant>
 
 namespace solidity::yul
@@ -46,11 +48,15 @@ struct Continue;
 struct Leave;
 struct ExpressionStatement;
 struct Block;
+struct BuiltinName;
+struct BuiltinHandle;
 class AST;
 
 struct NameWithDebugData;
 
 using Expression = std::variant<FunctionCall, Identifier, Literal>;
+using FunctionName = std::variant<Identifier, BuiltinName>;
+using FunctionHandle = std::variant<YulName, BuiltinHandle>;
 using Statement = std::variant<ExpressionStatement, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Break, Continue, Leave, Block>;
 
 }
