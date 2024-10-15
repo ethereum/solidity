@@ -1,5 +1,7 @@
 {
 }
+// ====
+// EVMVersion: >=constantinople
 // ----
 // Assembly:
 //     /* "source":27:34   */

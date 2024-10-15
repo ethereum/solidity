@@ -3,6 +3,8 @@ object "a" {
   // Unreferenced data is not added to the assembled bytecode.
   data "str" "Hello, World!"
 }
+// ====
+// EVMVersion: >=constantinople
 // ----
 // Assembly:
 //     /* "source":22:29   */
