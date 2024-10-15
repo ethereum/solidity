@@ -1410,7 +1410,11 @@ LinkerObject const& Assembly::assembleEOF() const
 			switch (item.type())
 			{
 			case Operation:
-				solAssert(item.instruction() != Instruction::DATALOADN);
+				solAssert(
+					item.instruction() != Instruction::DATALOADN &&
+					item.instruction() != Instruction::RETURNCONTRACT &&
+					item.instruction() != Instruction::EOFCREATE
+				);
 				solAssert(!(item.instruction() >= Instruction::PUSH0 && item.instruction() <= Instruction::PUSH32));
 				ret.bytecode += assembleOperation(item);
 				break;
