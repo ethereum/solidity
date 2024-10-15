@@ -55,20 +55,6 @@ UnusedPruner::UnusedPruner(
 		++m_references[f];
 }
 
-UnusedPruner::UnusedPruner(
-	Dialect const& _dialect,
-	FunctionDefinition& _function,
-	bool _allowMSizeOptimization,
-	std::set<YulName> const& _externallyUsedFunctions
-):
-	m_dialect(_dialect),
-	m_allowMSizeOptimization(_allowMSizeOptimization)
-{
-	m_references = ReferencesCounter::countReferences(_function);
-	for (auto const& f: _externallyUsedFunctions)
-		++m_references[f];
-}
-
 void UnusedPruner::operator()(Block& _block)
 {
 	for (auto&& statement: _block.statements)
@@ -142,8 +128,12 @@ void UnusedPruner::runUntilStabilised(
 	while (true)
 	{
 		UnusedPruner pruner(
-			_dialect, _ast, _allowMSizeOptimization, _functionSideEffects,
-							_externallyUsedFunctions);
+			_dialect,
+			_ast,
+			_allowMSizeOptimization,
+			_functionSideEffects,
+			_externallyUsedFunctions
+		);
 		pruner(_ast);
 		if (!pruner.shouldRunAgain())
 			return;
@@ -160,22 +150,6 @@ void UnusedPruner::runUntilStabilisedOnFullAST(
 		SideEffectsPropagator::sideEffects(_dialect, CallGraphGenerator::callGraph(_ast));
 	bool allowMSizeOptimization = !MSizeFinder::containsMSize(_dialect, _ast);
 	runUntilStabilised(_dialect, _ast, allowMSizeOptimization, &functionSideEffects, _externallyUsedFunctions);
-}
-
-void UnusedPruner::runUntilStabilised(
-	Dialect const& _dialect,
-	FunctionDefinition& _function,
-	bool _allowMSizeOptimization,
-	std::set<YulName> const& _externallyUsedFunctions
-)
-{
-	while (true)
-	{
-		UnusedPruner pruner(_dialect, _function, _allowMSizeOptimization, _externallyUsedFunctions);
-		pruner(_function);
-		if (!pruner.shouldRunAgain())
-			return;
-	}
 }
 
 bool UnusedPruner::used(YulName _name) const
