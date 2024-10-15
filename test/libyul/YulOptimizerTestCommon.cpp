@@ -16,6 +16,10 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
+#include "libyul/YulStack.h"
+#include "test/Common.h"
+
+
 #include <test/libyul/YulOptimizerTestCommon.h>
 
 #include <libyul/optimiser/BlockFlattener.h>
@@ -88,7 +92,21 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 		solUnimplementedAssert(false, "The current implementation of YulOptimizerTests ignores subobjects that are not Data.");
 
 	m_namedSteps = {
-		{"disambiguator", [&]() { return disambiguate(); }},
+		{"disambiguator", [&]()
+		{
+			m_optimizedObject = m_object->clone();
+			ObjectOptimizer::Settings settings{
+				YulStack::Language::StrictAssembly,  // .language =
+				solidity::test::CommonOptions::get().evmVersion(),  // .evmVersion =
+				solidity::test::CommonOptions::get().eofVersion(),  // .eofVersion =
+				false,  // .optimizeStackAllocation =
+				"",  // .yulOptimiserSteps =
+				"",  // .yulOptimiserCleanupSteps =
+				200  // .expectedExecutionsPerDeployment =
+			};
+			ObjectOptimizer{}.optimize(*m_optimizedObject, settings);
+			return disambiguate();
+		}},
 		{"nameDisplacer", [&]() {
 			auto block = disambiguate();
 			updateContext(block);

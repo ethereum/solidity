@@ -58,6 +58,7 @@ struct ObjectNode
 		langutil::CharStreamProvider const* _soliditySourceProvider
 	) const = 0;
 	virtual Json toJson() const = 0;
+	virtual std::shared_ptr<ObjectNode> cloneNode() const = 0;
 };
 
 /**
@@ -74,6 +75,9 @@ struct Data: public ObjectNode
 		langutil::CharStreamProvider const* _soliditySourceProvider
 	) const override;
 	Json toJson() const override;
+
+private:
+	std::shared_ptr<ObjectNode> cloneNode() const override;
 };
 
 
@@ -139,7 +143,10 @@ public:
 	/// @returns the name of the special metadata data object.
 	static std::string metadataName() { return ".metadata"; }
 
+	std::shared_ptr<Object> clone() const { return std::dynamic_pointer_cast<Object>(cloneNode()); }
 private:
+	std::shared_ptr<ObjectNode> cloneNode() const override;
+
 	std::shared_ptr<AST const> m_code;
 };
 

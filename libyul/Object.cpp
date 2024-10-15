@@ -19,6 +19,9 @@
  * Yul code and data object container.
  */
 
+#include "optimiser/ASTCopier.h"
+
+
 #include <libyul/Object.h>
 
 #include <libyul/AsmPrinter.h>
@@ -73,6 +76,10 @@ Json Data::toJson() const
 	ret["nodeType"] = "YulData";
 	ret["value"] = util::toHex(data);
 	return ret;
+}
+std::shared_ptr<ObjectNode> Data::cloneNode() const
+{
+	return std::make_shared<Data>(*this);
 }
 
 std::string ObjectDebugData::formatUseSrcComment() const
@@ -208,3 +215,13 @@ bool Object::hasContiguousSourceIndices() const
 	solAssert(maxSourceIndex + 1 >= indices.size());
 	return indices.size() == 0 || indices.size() == maxSourceIndex + 1;
 }
+
+std::shared_ptr<ObjectNode> Object::cloneNode() const
+{
+	auto result = std::make_shared<Object>(*this);
+	result->setCode(std::make_shared<AST>(std::get<Block>(ASTCopier{}(code()->root()))));
+	for (auto& subObject: result->subObjects)
+		subObject = subObject->cloneNode();
+	return result;
+}
+

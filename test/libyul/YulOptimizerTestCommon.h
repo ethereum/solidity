@@ -72,7 +72,7 @@ private:
 
 	std::shared_ptr<Object const> m_object;
 	std::shared_ptr<Object> m_optimizedObject;
-	std::map<std::string, std::function<Block(void)>> m_namedSteps;
+	std::map<std::string, std::function<Block()>> m_namedSteps;
 };
 
 }
