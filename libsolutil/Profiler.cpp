@@ -38,10 +38,9 @@ util::Profiler::Probe::Probe(std::string _scopeName):
 util::Profiler::Probe::~Probe()
 {
 	steady_clock::time_point endTime = steady_clock::now();
-	int64_t durationInMicroseconds = duration_cast<microseconds>(endTime - m_startTime).count();
 
-	auto [metricsIt, inserted] = Profiler::singleton().m_metrics.try_emplace(m_scopeName, Metrics{0, 0});
-	metricsIt->second.durationInMicroseconds += durationInMicroseconds;
+	auto [metricsIt, inserted] = Profiler::singleton().m_metrics.try_emplace(m_scopeName, Metrics{0us, 0});
+	metricsIt->second.durationInMicroseconds += duration_cast<microseconds>(endTime - m_startTime);
 	++metricsIt->second.callCount;
 }
 
@@ -68,7 +67,7 @@ void util::Profiler::outputPerformanceMetrics()
 		}
 	);
 
-	int64_t totalDurationInMicroseconds = 0;
+	std::chrono::microseconds totalDurationInMicroseconds = 0us;
 	size_t totalCallCount = 0;
 	for (auto&& [scopeName, scopeMetrics]: sortedMetrics)
 	{
@@ -80,11 +79,11 @@ void util::Profiler::outputPerformanceMetrics()
 	std::cerr << "| Time % | Time       | Calls   | Scope                          |\n";
 	std::cerr << "|-------:|-----------:|--------:|--------------------------------|\n";
 
-	constexpr double microsecondsInSecond = 1000000;
+	double totalDurationInSeconds = duration_cast<duration<double>>(totalDurationInMicroseconds).count();
 	for (auto&& [scopeName, scopeMetrics]: sortedMetrics)
 	{
-		double percentage = 100.0 * static_cast<double>(scopeMetrics.durationInMicroseconds) / static_cast<double>(totalDurationInMicroseconds);
-		double durationInSeconds = static_cast<double>(scopeMetrics.durationInMicroseconds) / microsecondsInSecond;
+		double durationInSeconds = duration_cast<duration<double>>(scopeMetrics.durationInMicroseconds).count();
+		double percentage = 100.0 * durationInSeconds / totalDurationInSeconds;
 		std::cerr << fmt::format(
 			"| {:5.1f}% | {:8.3f} s | {:7} | {:30} |\n",
 			percentage,
@@ -93,7 +92,6 @@ void util::Profiler::outputPerformanceMetrics()
 			scopeName
 		);
 	}
-	double totalDurationInSeconds = static_cast<double>(totalDurationInMicroseconds) / microsecondsInSecond;
 	std::cerr << fmt::format("| {:5.1f}% | {:8.3f} s | {:7} | {:30} |\n", 100.0, totalDurationInSeconds, totalCallCount, "**TOTAL**");
 }
 

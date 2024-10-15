@@ -66,7 +66,7 @@ private:
 
 	struct Metrics
 	{
-		int64_t durationInMicroseconds;
+		std::chrono::microseconds durationInMicroseconds;
 		size_t callCount;
 	};
 
