@@ -428,6 +428,20 @@ size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 				expectUnlimitedStringLiteral(std::get<Literal>(arg));
 				continue;
 			}
+			else if (*literalArgumentKind == LiteralKind::Number)
+			{
+				std::string functionName = _funCall.functionName.name.str();
+				if (functionName == "auxdataloadn")
+				{
+					auto const& argumentAsLiteral = std::get<Literal>(arg);
+					if (argumentAsLiteral.value.value() > std::numeric_limits<uint16_t>::max())
+						m_errorReporter.typeError(
+							5202_error,
+							nativeLocationOf(arg),
+							"Invalid auxdataloadn argument value. Offset must be in range 0...0xFFFF"
+						);
+				}
+			}
 		}
 		expectExpression(arg);
 	}

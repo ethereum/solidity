@@ -79,6 +79,7 @@ public:
 	AssemblyItem newPushLibraryAddress(std::string const& _identifier);
 	AssemblyItem newPushImmutable(std::string const& _identifier);
 	AssemblyItem newImmutableAssignment(std::string const& _identifier);
+	AssemblyItem newAuxDataLoadN(size_t offset);
 
 	AssemblyItem const& append(AssemblyItem _i);
 	AssemblyItem const& append(bytes const& _data) { return append(newData(_data)); }
@@ -91,6 +92,7 @@ public:
 	void appendLibraryAddress(std::string const& _identifier) { append(newPushLibraryAddress(_identifier)); }
 	void appendImmutable(std::string const& _identifier) { append(newPushImmutable(_identifier)); }
 	void appendImmutableAssignment(std::string const& _identifier) { append(newImmutableAssignment(_identifier)); }
+	void appendAuxDataLoadN(uint16_t _offset) { append(newAuxDataLoadN(_offset));}
 
 	void appendVerbatim(bytes _data, size_t _arguments, size_t _returnVariables)
 	{
@@ -240,6 +242,8 @@ private:
 
 	/// Returns map from m_subs to an index of subcontainer in the final EOF bytecode
 	std::map<uint16_t, uint16_t> findReferencedContainers() const;
+	/// Returns max AuxDataLoadN offset for the assembly.
+	std::optional<uint16_t> findMaxAuxDataLoadNOffset() const;
 
 	/// Assemble bytecode for AssemblyItem type.
 	[[nodiscard]] bytes assembleOperation(AssemblyItem const& _item) const;

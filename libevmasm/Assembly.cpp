@@ -717,6 +717,11 @@ AssemblyItem Assembly::newImmutableAssignment(std::string const& _identifier)
 	return AssemblyItem{AssignImmutable, h};
 }
 
+AssemblyItem Assembly::newAuxDataLoadN(size_t _offset)
+{
+	return AssemblyItem{AuxDataLoadN, _offset};
+}
+
 Assembly& Assembly::optimise(OptimiserSettings const& _settings)
 {
 	optimiseInternal(_settings, {});
@@ -922,8 +927,8 @@ void appendBigEndianUint16(bytes& _dest, ValueT _value)
 std::tuple<bytes, std::vector<size_t>, size_t> Assembly::createEOFHeader(std::set<uint16_t> const& _referencedSubIds) const
 {
 	bytes retBytecode;
-	std::vector<size_t> codeSectionSizeOffsets;
-	size_t dataSectionSizeOffset;
+	std::vector<size_t> codeSectionSizePositions;
+	size_t dataSectionSizePosition;
 
 	retBytecode.push_back(0xef);
 	retBytecode.push_back(0x00);
@@ -938,7 +943,7 @@ std::tuple<bytes, std::vector<size_t>, size_t> Assembly::createEOFHeader(std::se
 	for (auto const& codeSection: m_codeSections)
 	{
 		(void) codeSection;
-		codeSectionSizeOffsets.emplace_back(retBytecode.size());
+		codeSectionSizePositions.emplace_back(retBytecode.size());
 		appendBigEndianUint16(retBytecode, 0u);                         // placeholder for length of code
 	}
 
@@ -952,7 +957,7 @@ std::tuple<bytes, std::vector<size_t>, size_t> Assembly::createEOFHeader(std::se
 	}
 
 	retBytecode.push_back(0x04);                                        // kind=data
-	dataSectionSizeOffset = retBytecode.size();
+	dataSectionSizePosition = retBytecode.size();
 	appendBigEndianUint16(retBytecode, 0u);                             // length of data
 
 	retBytecode.push_back(0x00);                                        // terminator
@@ -965,7 +970,7 @@ std::tuple<bytes, std::vector<size_t>, size_t> Assembly::createEOFHeader(std::se
 		appendBigEndianUint16(retBytecode, 0xFFFFu);
 	}
 
-	return {retBytecode, codeSectionSizeOffsets, dataSectionSizeOffset};
+	return {retBytecode, codeSectionSizePositions, dataSectionSizePosition};
 }
 
 LinkerObject const& Assembly::assemble() const
@@ -1348,6 +1353,23 @@ std::map<uint16_t, uint16_t> Assembly::findReferencedContainers() const
 	return replacements;
 }
 
+std::optional<uint16_t> Assembly::findMaxAuxDataLoadNOffset() const
+{
+	std::optional<unsigned> maxOffset = std::nullopt;
+	for (auto&& codeSection: m_codeSections)
+		for (AssemblyItem const& item: codeSection.items)
+			if (item.type() == AuxDataLoadN)
+			{
+				solAssert(item.data() <= std::numeric_limits<uint16_t>::max(), "Invalid auxdataloadn index value.");
+				auto const offset = static_cast<unsigned>(item.data());
+				if (!maxOffset.has_value() || offset > maxOffset.value())
+					maxOffset = offset;
+
+			}
+
+	return maxOffset;
+}
+
 LinkerObject const& Assembly::assembleEOF() const
 {
 	solAssert(m_eofVersion.has_value() && m_eofVersion == 1);
@@ -1362,11 +1384,14 @@ LinkerObject const& Assembly::assembleEOF() const
 		"Expected the first code section to have zero inputs and be non-returning."
 	);
 
+	auto const maxAuxDataLoadNOffset = findMaxAuxDataLoadNOffset();
+
 	// Insert EOF1 header.
-	auto [headerBytecode, codeSectionSizeOffsets, dataSectionSizeOffset] = createEOFHeader(referencedSubIds);
+	auto [headerBytecode, codeSectionSizePositions, dataSectionSizePosition] = createEOFHeader(referencedSubIds);
 	ret.bytecode = headerBytecode;
 
 	m_tagPositionsInBytecode = std::vector<size_t>(m_usedTags, std::numeric_limits<size_t>::max());
+	std::map<size_t, uint16_t> dataSectionRef;
 
 	for (auto&& [codeSectionIndex, codeSection]: m_codeSections | ranges::views::enumerate)
 	{
@@ -1380,6 +1405,8 @@ LinkerObject const& Assembly::assembleEOF() const
 			switch (item.type())
 			{
 			case Operation:
+				solAssert(item.instruction() != Instruction::DATALOADN);
+				solAssert(!(item.instruction() >= Instruction::PUSH0 && item.instruction() <= Instruction::PUSH32));
 				ret.bytecode += assembleOperation(item);
 				break;
 			case Push:
@@ -1401,12 +1428,21 @@ LinkerObject const& Assembly::assembleEOF() const
 			case Tag:
 				ret.bytecode += assembleTag(item, ret.bytecode.size(), false);
 				break;
+			case AuxDataLoadN:
+			{
+				// In findMaxAuxDataLoadNOffset we already verified that unsigned data value fits 2 bytes
+				solAssert(item.data() <= std::numeric_limits<uint16_t>::max(), "Invalid auxdataloadn position.");
+				ret.bytecode.push_back(uint8_t(Instruction::DATALOADN));
+				dataSectionRef[ret.bytecode.size()] = static_cast<uint16_t>(item.data());
+				appendBigEndianUint16(ret.bytecode, item.data());
+				break;
+			}
 			default:
 				solThrow(InvalidOpcode, "Unexpected opcode while assembling.");
 			}
 		}
 
-		setBigEndianUint16(ret.bytecode, codeSectionSizeOffsets[codeSectionIndex], ret.bytecode.size() - sectionStart);
+		setBigEndianUint16(ret.bytecode, codeSectionSizePositions[codeSectionIndex], ret.bytecode.size() - sectionStart);
 	}
 
 	for (auto i: referencedSubIds)
@@ -1422,8 +1458,25 @@ LinkerObject const& Assembly::assembleEOF() const
 
 	ret.bytecode += m_auxiliaryData;
 
-	auto dataLength = ret.bytecode.size() - dataStart;
-	setBigEndianUint16(ret.bytecode, dataSectionSizeOffset, dataLength);
+	auto const preDeployDataSectionSize = ret.bytecode.size() - dataStart;
+	// DATALOADN loads 32 bytes from EOF data section zero padded if reading out of data bounds.
+	// In our case we do not allow DATALOADN with offsets which reads out of data bounds.
+	auto const staticAuxDataSize = maxAuxDataLoadNOffset.has_value() ? (*maxAuxDataLoadNOffset + 32u) : 0u;
+	solRequire(preDeployDataSectionSize + staticAuxDataSize < std::numeric_limits<uint16_t>::max(), AssemblyException,
+		"Invalid DATALOADN offset.");
+
+	// If some data was already added to data section we need to update data section refs accordingly
+	if (preDeployDataSectionSize > 0)
+		for (auto [refPosition, staticAuxDataOffset] : dataSectionRef)
+		{
+			// staticAuxDataOffset + preDeployDataSectionSize value is already verified to fit 2 bytes because
+			// staticAuxDataOffset < staticAuxDataSize
+			setBigEndianUint16(ret.bytecode, refPosition, staticAuxDataOffset + preDeployDataSectionSize);
+		}
+
+	auto const preDeployAndStaticAuxDataSize = preDeployDataSectionSize + staticAuxDataSize;
+
+	setBigEndianUint16(ret.bytecode, dataSectionSizePosition, preDeployAndStaticAuxDataSize);
 
 	return ret;
 }

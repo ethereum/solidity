@@ -76,6 +76,9 @@ bool EVMVersion::hasOpcode(Instruction _opcode, std::optional<uint8_t> _eofVersi
 	case Instruction::EXTCODECOPY:
 	case Instruction::GAS:
 		return !_eofVersion.has_value();
+	// Instructions below available only in EOF
+	case Instruction::DATALOADN:
+		return _eofVersion.has_value();
 	default:
 		return true;
 	}
