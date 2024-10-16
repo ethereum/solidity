@@ -78,8 +78,6 @@ struct Dialect
 
 	Literal zeroLiteral() const;
 
-	virtual std::set<YulName> fixedFunctionNames() const { return {}; }
-
 	Dialect() = default;
 	virtual ~Dialect() = default;
 };
