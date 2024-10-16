@@ -357,6 +357,12 @@ public:
 	/// @returns the canonical name of this type for use in library function signatures.
 	virtual std::string canonicalName() const { return toString(true); }
 	virtual std::string humanReadableName() const { return toString(); }
+	virtual std::string eip712TypeName() const
+	{
+		solAssert(isEIP712AllowedStructMemberType(), "Invalid type ...");
+		return encodingType()->toString(true);
+	}
+	virtual bool isEIP712AllowedStructMemberType() const { return false; }
 	/// @returns the signature of this type in external functions, i.e. `uint256` for integers
 	/// or `(uint256,bytes8)[2]` for an array of structs. If @a _structsByName,
 	/// structs are given by canonical name like `ContractName.StructName[2]`.
@@ -457,6 +463,7 @@ public:
 	bool leftAligned() const override { return false; }
 	bool isValueType() const override { return true; }
 	bool nameable() const override { return true; }
+	bool isEIP712AllowedStructMemberType() const override { return true; }
 
 	MemberList::MemberMap nativeMembers(ASTNode const*) const override;
 
@@ -502,6 +509,7 @@ public:
 	bool leftAligned() const override { return false; }
 	bool isValueType() const override { return true; }
 	bool nameable() const override { return true; }
+	bool isEIP712AllowedStructMemberType() const override { return true; }
 
 	std::string toString(bool _withoutDataLocation) const override;
 
@@ -551,6 +559,7 @@ public:
 	bool nameable() const override { return true; }
 
 	std::string toString(bool _withoutDataLocation) const override;
+	std::string eip712TypeName() const override{ solAssert(false, "EIP-712 is not supported for struct members of fixed point type"); }
 
 	Type const* encodingType() const override { return this; }
 	TypeResult interfaceType(bool) const override { return this; }
@@ -660,6 +669,8 @@ public:
 		return nullptr;
 	}
 
+	bool isEIP712AllowedStructMemberType() const override { return true; }
+
 	std::string richIdentifier() const override;
 	bool operator==(Type const& _other) const override;
 
@@ -698,6 +709,7 @@ public:
 	bool leftAligned() const override { return true; }
 	bool isValueType() const override { return true; }
 	bool nameable() const override { return true; }
+	bool isEIP712AllowedStructMemberType() const override { return true; }
 
 	std::string toString(bool) const override { return "bytes" + util::toString(m_bytes); }
 	MemberList::MemberMap nativeMembers(ASTNode const*) const override;
@@ -726,6 +738,7 @@ public:
 	bool leftAligned() const override { return false; }
 	bool isValueType() const override { return true; }
 	bool nameable() const override { return true; }
+	bool isEIP712AllowedStructMemberType() const override { return true; }
 
 	std::string toString(bool) const override { return "bool"; }
 	u256 literalValue(Literal const* _literal) const override;
@@ -863,10 +876,12 @@ public:
 	u256 storageSize() const override;
 	bool containsNestedMapping() const override { return m_baseType->containsNestedMapping(); }
 	bool nameable() const override { return true; }
+	bool isEIP712AllowedStructMemberType() const override { return true; }
 
 	std::string toString(bool _withoutDataLocation) const override;
 	std::string humanReadableName() const override;
 	std::string canonicalName() const override;
+	std::string eip712TypeName() const override;
 	std::string signatureInExternalFunction(bool _structsByName) const override;
 	MemberList::MemberMap nativeMembers(ASTNode const* _currentScope) const override;
 	Type const* encodingType() const override;
@@ -924,6 +939,7 @@ public:
 	BoolResult isImplicitlyConvertibleTo(Type const& _other) const override;
 	BoolResult isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	std::string richIdentifier() const override;
+	std::string eip712TypeName() const override { solAssert(false, "EIP-712 is not supported for struct members of array slice type"); }
 	bool operator==(Type const& _other) const override;
 	unsigned calldataEncodedSize(bool) const override { solAssert(false, ""); }
 	unsigned calldataEncodedTailSize() const override { return 32; }
@@ -974,6 +990,7 @@ public:
 	bool leftAligned() const override { solAssert(!isSuper(), ""); return false; }
 	bool isValueType() const override { return !isSuper(); }
 	bool nameable() const override { return !isSuper(); }
+	bool isEIP712AllowedStructMemberType() const override { return true; }
 	std::string toString(bool _withoutDataLocation) const override;
 	std::string canonicalName() const override;
 
@@ -1036,6 +1053,7 @@ public:
 	u256 storageSize() const override;
 	bool containsNestedMapping() const override;
 	bool nameable() const override { return true; }
+	bool isEIP712AllowedStructMemberType() const override { return true; }
 	std::string toString(bool _withoutDataLocation) const override;
 
 	MemberList::MemberMap nativeMembers(ASTNode const* _currentScope) const override;
@@ -1052,6 +1070,7 @@ public:
 	std::unique_ptr<ReferenceType> copyForLocation(DataLocation _location, bool _isPointer) const override;
 
 	std::string canonicalName() const override;
+	std::string eip712TypeName() const override;
 	std::string signatureInExternalFunction(bool _structsByName) const override;
 
 	/// @returns a function that performs the type conversion between a list of struct members
@@ -1100,6 +1119,7 @@ public:
 	bool leftAligned() const override { return false; }
 	std::string toString(bool _withoutDataLocation) const override;
 	std::string canonicalName() const override;
+	std::string eip712TypeName() const override { solAssert(false, "EIP-712 is not supported for struct members of Enum type"); }
 	bool isValueType() const override { return true; }
 	bool nameable() const override { return true; }
 
@@ -1163,6 +1183,7 @@ public:
 		solAssert(underlyingType().nameable(), "");
 		return true;
 	}
+	bool isEIP712AllowedStructMemberType() const override { return true; }
 
 	bool containsNestedMapping() const override
 	{
@@ -1217,6 +1238,8 @@ public:
 	u256 storageSize() const override;
 	bool hasSimpleZeroValueInMemory() const override { return false; }
 	Type const* mobileType() const override;
+
+	std::string eip712TypeName() const override { solAssert(false, "EIP-712 is not supported for struct members of tuple type"); }
 
 	std::vector<Type const*> const& components() const { return m_components; }
 
@@ -1416,6 +1439,7 @@ public:
 	TypeResult binaryOperatorResult(Token, Type const*) const override;
 	std::string canonicalName() const override;
 	std::string humanReadableName() const override;
+	std::string eip712TypeName() const override { solAssert(false, "EIP-712 is not supported for struct members of function type"); }
 	std::string toString(bool _withoutDataLocation) const override;
 	unsigned calldataEncodedSize(bool _padded) const override;
 	bool canBeStored() const override { return m_kind == Kind::Internal || m_kind == Kind::External; }
@@ -1552,6 +1576,7 @@ public:
 	bool operator==(Type const& _other) const override;
 	std::string toString(bool _withoutDataLocation) const override;
 	std::string canonicalName() const override;
+	std::string eip712TypeName() const override { solAssert(false, "EIP-712 is not supported for struct members of mapping type"); }
 	bool containsNestedMapping() const override { return true; }
 	TypeResult binaryOperatorResult(Token, Type const*) const override { return nullptr; }
 	Type const* encodingType() const override;
@@ -1596,6 +1621,7 @@ public:
 	bool operator==(Type const& _other) const override;
 	bool canBeStored() const override { return false; }
 	u256 storageSize() const override;
+	std::string eip712TypeName() const override { solAssert(false, "EIP-712 is not supported for struct members of type type"); }
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
 	std::string toString(bool _withoutDataLocation) const override { return "type(" + m_actualType->toString(_withoutDataLocation) + ")"; }
 	MemberList::MemberMap nativeMembers(ASTNode const* _currentScope) const override;
@@ -1624,6 +1650,7 @@ public:
 	u256 storageSize() const override;
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
 	std::string richIdentifier() const override;
+	std::string eip712TypeName() const override { solAssert(false, "EIP-712 is not supported for struct members of modifier type"); }
 	bool operator==(Type const& _other) const override;
 	std::string toString(bool _withoutDataLocation) const override;
 protected:
@@ -1648,6 +1675,7 @@ public:
 	std::string richIdentifier() const override;
 	bool operator==(Type const& _other) const override;
 	bool canBeStored() const override { return false; }
+	std::string eip712TypeName() const override { solAssert(false, "EIP-712 is not supported for struct members of module type"); }
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
 	MemberList::MemberMap nativeMembers(ASTNode const*) const override;
 
@@ -1690,6 +1718,7 @@ public:
 	std::string richIdentifier() const override;
 	bool operator==(Type const& _other) const override;
 	bool canBeStored() const override { return false; }
+	std::string eip712TypeName() const override { solAssert(false, "EIP-712 is not supported for struct members of magic type"); }
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
 	MemberList::MemberMap nativeMembers(ASTNode const*) const override;
 
@@ -1725,6 +1754,7 @@ public:
 	unsigned calldataEncodedSize(bool) const override { return 32; }
 	bool canBeStored() const override { return false; }
 	bool isValueType() const override { return true; }
+	std::string eip712TypeName() const override { solAssert(false, "EIP-712 is not supported for struct members of inaccessible dynamic type"); }
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
 	std::string toString(bool) const override { return "inaccessible dynamic type"; }
 	Type const* decodingType() const override;

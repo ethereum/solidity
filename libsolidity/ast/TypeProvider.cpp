@@ -563,10 +563,11 @@ MagicType const* TypeProvider::meta(Type const* _type)
 	solAssert(
 		_type && (
 			_type->category() == Type::Category::Contract ||
+			_type->category() == Type::Category::Struct ||
 			_type->category() == Type::Category::Integer ||
 			_type->category() == Type::Category::Enum
 		),
-		"Only enum, contracts or integer types supported for now."
+		"Only enum, contract, struct or integer types supported for now."
 	);
 	return createAndGet<MagicType>(_type);
 }

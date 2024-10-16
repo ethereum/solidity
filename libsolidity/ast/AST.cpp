@@ -38,6 +38,8 @@
 
 #include <functional>
 #include <utility>
+#include <numeric>
+#include <set>
 
 using namespace solidity;
 using namespace solidity::frontend;
@@ -386,6 +388,61 @@ TypeDeclarationAnnotation& UserDefinedValueTypeDefinition::annotation() const
 std::vector<std::pair<ASTPointer<IdentifierPath>, std::optional<Token>>> UsingForDirective::functionsAndOperators() const
 {
 	return ranges::zip_view(m_functionsOrLibrary, m_operators) | ranges::to<std::vector>;
+}
+
+void StructDefinition::insertEip712EncodedSubtypes(std::set<std::string>& subtypes) const
+{
+	for (auto const& member: m_members)
+	{
+		Declaration const* declaration = nullptr;
+
+		switch (member->type()->category())
+		{
+			case Type::Category::Struct:
+				declaration = member->type()->typeDefinition();
+				break;
+			case Type::Category::Array:
+				if (auto const* arrayType = dynamic_cast<ArrayType const*>(member->type()))
+					if (auto finalBaseType = dynamic_cast<StructType const*>(arrayType->finalBaseType(false)))
+						declaration = finalBaseType->typeDefinition();
+				break;
+			default:
+				continue;
+		}
+
+		if (!declaration)
+			continue;
+
+		if (auto const* structDef = dynamic_cast<StructDefinition const*>(declaration))
+		{
+			subtypes.insert(structDef->eip712EncodeTypeWithoutSubtypes());
+			structDef->insertEip712EncodedSubtypes(subtypes);
+		}
+	}
+}
+
+std::string StructDefinition::eip712EncodeTypeWithoutSubtypes() const
+{
+	std::string str = name() + "(";
+	for (size_t i = 0; i < m_members.size(); i++)
+	{
+		str += i == 0 ? "" : ",";
+		str += m_members[i]->type()->eip712TypeName() + " " + m_members[i]->name();
+	}
+	return str + ")";
+}
+
+std::string StructDefinition::eip712EncodeType() const
+{
+	// std::set enables duplicates elimination and ordered enumeration
+	std::set<std::string> subtypes;
+	insertEip712EncodedSubtypes(subtypes);
+	return std::accumulate(subtypes.begin(), subtypes.end(), eip712EncodeTypeWithoutSubtypes());
+}
+
+util::h256 StructDefinition::typehash() const
+{
+	return util::keccak256(eip712EncodeType());
 }
 
 Type const* StructDefinition::type() const

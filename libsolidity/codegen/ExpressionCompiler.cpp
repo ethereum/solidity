@@ -1994,6 +1994,13 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			ContractDefinition const& contract = dynamic_cast<ContractType const&>(*arg).contractDefinition();
 			m_context << (u256{contract.interfaceId()} << (256 - 32));
 		}
+		else if (member == "typehash")
+		{
+			Type const* arg = dynamic_cast<MagicType const&>(*_memberAccess.expression().annotation().type).typeArgument();
+			solAssert(dynamic_cast<StructType const*>(arg), "typehash called on a non-struct type");
+			StructDefinition const& struct_ = dynamic_cast<StructType const&>(*arg).structDefinition();
+			m_context << struct_.typehash();
+		}
 		else if (member == "min" || member == "max")
 		{
 			MagicType const* arg = dynamic_cast<MagicType const*>(_memberAccess.expression().annotation().type);

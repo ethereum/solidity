@@ -1423,6 +1423,11 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 					ContractDefinition const& contract = dynamic_cast<ContractType const&>(*magicType->typeArgument()).contractDefinition();
 					defineExpr(_memberAccess, contract.interfaceId());
 				}
+				else if (memberName == "typehash")
+				{
+					StructDefinition const& structDef = dynamic_cast<StructType const&>(*magicType->typeArgument()).structDefinition();
+					defineExpr(_memberAccess, u256(structDef.typehash()));
+				}
 				else
 					// NOTE: supporting name, creationCode, runtimeCode would be easy enough, but the bytes/string they return are not
 					//       at all usable in the SMT checker currently

@@ -207,6 +207,7 @@ TypePointers TypeChecker::typeCheckMetaTypeFunctionAndRetrieveReturnType(Functio
 			wrongType = contractType->isSuper();
 		else if (
 			typeCategory != Type::Category::Integer &&
+			typeCategory != Type::Category::Struct &&
 			typeCategory != Type::Category::Enum
 		)
 			wrongType = true;
@@ -219,7 +220,7 @@ TypePointers TypeChecker::typeCheckMetaTypeFunctionAndRetrieveReturnType(Functio
 			4259_error,
 			arguments.front()->location(),
 			"Invalid type for argument in the function call. "
-			"An enum type, contract type or an integer type is required, but " +
+			"An enum type, contract type, struct type or an integer type is required, but " +
 			type(*arguments.front())->humanReadableName() + " provided."
 		);
 
@@ -3299,6 +3300,33 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			annotation.isPure = true;
 		else if (magicType->kind() == MagicType::Kind::MetaType && memberName == "interfaceId")
 			annotation.isPure = true;
+		else if (magicType->kind() == MagicType::Kind::MetaType && memberName == "typehash")
+		{
+			annotation.isPure = true;
+			auto accessedStructType = dynamic_cast<StructType const*>(magicType->typeArgument());
+			solAssert(accessedStructType, "typehash requested on a non struct type.");
+
+			if (accessedStructType->recursive())
+			{
+				m_errorReporter.typeError(
+					9298_error,
+					_memberAccess.location(),
+					"\"typehash\" cannot be used for recursive structs."
+				);
+			}
+
+			for (auto const& member: accessedStructType->members(currentDefinitionScope()))
+			{
+				if (!member.type->isEIP712AllowedStructMemberType())
+				{
+					m_errorReporter.typeError(
+						9518_error,
+						_memberAccess.location(),
+						"\"typehash\" cannot be used for structs with members of \"" + member.type->humanReadableName() + "\" type."
+					);
+				}
+			}
+		}
 		else if (
 			magicType->kind() == MagicType::Kind::MetaType &&
 			(memberName == "min" || memberName == "max")
