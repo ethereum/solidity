@@ -78,8 +78,8 @@ void SideEffectsCollector::operator()(FunctionCall const& _functionCall)
 	ASTWalker::operator()(_functionCall);
 
 	YulName functionName = _functionCall.functionName.name;
-	if (BuiltinFunction const* f = m_dialect.builtin(functionName))
-		m_sideEffects += f->sideEffects;
+	if (std::optional<BuiltinHandle> builtinHandle = m_dialect.findBuiltin(functionName.str()))
+		m_sideEffects += m_dialect.builtin(*builtinHandle).sideEffects;
 	else if (m_functionSideEffects && m_functionSideEffects->count(functionName))
 		m_sideEffects += m_functionSideEffects->at(functionName);
 	else
@@ -110,8 +110,8 @@ void MSizeFinder::operator()(FunctionCall const& _functionCall)
 {
 	ASTWalker::operator()(_functionCall);
 
-	if (BuiltinFunction const* f = m_dialect.builtin(_functionCall.functionName.name))
-		if (f->isMSize)
+	if (std::optional<BuiltinHandle> builtinHandle = m_dialect.findBuiltin(_functionCall.functionName.name.str()))
+		if (m_dialect.builtin(*builtinHandle).isMSize)
 			m_msizeFound = true;
 }
 
@@ -144,8 +144,8 @@ std::map<YulName, SideEffects> SideEffectsPropagator::sideEffects(
 				return;
 			if (sideEffects == SideEffects::worst())
 				return;
-			if (BuiltinFunction const* f = _dialect.builtin(_function))
-				sideEffects += f->sideEffects;
+			if (std::optional<BuiltinHandle> builtinHandle = _dialect.findBuiltin(_function.str()))
+				sideEffects += _dialect.builtin(*builtinHandle).sideEffects;
 			else
 			{
 				if (ret.count(_function))
@@ -227,8 +227,8 @@ bool TerminationFinder::containsNonContinuingFunctionCall(Expression const& _exp
 			if (containsNonContinuingFunctionCall(arg))
 				return true;
 
-		if (auto builtin = m_dialect.builtin(functionCall->functionName.name))
-			return !builtin->controlFlowSideEffects.canContinue;
+		if (std::optional<BuiltinHandle> const builtinHandle = m_dialect.findBuiltin(functionCall->functionName.name.str()))
+			return !m_dialect.builtin(*builtinHandle).controlFlowSideEffects.canContinue;
 		else if (m_functionSideEffects && m_functionSideEffects->count(functionCall->functionName.name))
 			return !m_functionSideEffects->at(functionCall->functionName.name).canContinue;
 	}

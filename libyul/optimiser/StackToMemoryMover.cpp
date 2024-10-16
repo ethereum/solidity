@@ -42,12 +42,12 @@ std::vector<Statement> generateMemoryStore(
 	Expression _value
 )
 {
-	BuiltinFunction const* memoryStoreFunction = _dialect.memoryStoreFunction();
-	yulAssert(memoryStoreFunction, "");
+	std::optional<BuiltinHandle> memoryStoreFunctionHandle = _dialect.memoryStoreFunctionHandle();
+	yulAssert(memoryStoreFunctionHandle);
 	std::vector<Statement> result;
 	result.emplace_back(ExpressionStatement{_debugData, FunctionCall{
 		_debugData,
-		Identifier{_debugData, memoryStoreFunction->name},
+		Identifier{_debugData, YulName{_dialect.builtin(*memoryStoreFunctionHandle).name}},
 		{
 			Literal{_debugData, LiteralKind::Number, _mpos},
 			std::move(_value)
@@ -58,11 +58,11 @@ std::vector<Statement> generateMemoryStore(
 
 FunctionCall generateMemoryLoad(Dialect const& _dialect, langutil::DebugData::ConstPtr const& _debugData, LiteralValue const& _mpos)
 {
-	BuiltinFunction const* memoryLoadFunction = _dialect.memoryLoadFunction();
-	yulAssert(memoryLoadFunction, "");
+	std::optional<BuiltinHandle> const& memoryLoadHandle = _dialect.memoryStoreFunctionHandle();
+	yulAssert(memoryLoadHandle);
 	return FunctionCall{
 		_debugData,
-		Identifier{_debugData, memoryLoadFunction->name}, {
+		Identifier{_debugData, YulName{_dialect.builtin(*memoryLoadHandle).name}}, {
 			Literal{
 				_debugData,
 				LiteralKind::Number,
@@ -223,7 +223,7 @@ void StackToMemoryMover::operator()(Block& _block)
 		{
 			FunctionCall const* functionCall = std::get_if<FunctionCall>(_stmt.value.get());
 			yulAssert(functionCall, "");
-			if (m_context.dialect.builtin(functionCall->functionName.name))
+			if (m_context.dialect.findBuiltin(functionCall->functionName.name.str()))
 				rhsMemorySlots = std::vector<std::optional<LiteralValue>>(_lhsVars.size(), std::nullopt);
 			else
 				rhsMemorySlots =

@@ -79,8 +79,8 @@ void UnusedAssignEliminator::operator()(FunctionCall const& _functionCall)
 	UnusedStoreBase::operator()(_functionCall);
 
 	ControlFlowSideEffects sideEffects;
-	if (auto builtin = m_dialect.builtin(_functionCall.functionName.name))
-		sideEffects = builtin->controlFlowSideEffects;
+	if (std::optional<BuiltinHandle> const builtinHandle = m_dialect.findBuiltin(_functionCall.functionName.name.str()))
+		sideEffects = m_dialect.builtin(*builtinHandle).controlFlowSideEffects;
 	else
 		sideEffects = m_controlFlowSideEffects.at(_functionCall.functionName.name);
 

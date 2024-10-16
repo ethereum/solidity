@@ -55,7 +55,7 @@ void FunctionSpecializer::operator()(FunctionCall& _f)
 
 	// TODO When backtracking is implemented, the restriction of recursive functions can be lifted.
 	if (
-		m_dialect.builtin(_f.functionName.name) ||
+		m_dialect.findBuiltin(_f.functionName.name.str()) ||
 		m_recursiveFunctions.count(_f.functionName.name)
 	)
 		return;

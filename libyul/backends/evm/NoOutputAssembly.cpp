@@ -139,11 +139,30 @@ NoOutputEVMDialect::NoOutputEVMDialect(EVMDialect const& _copyFrom):
 {
 	for (auto& fun: m_functions)
 	{
-		size_t returns = fun.second.numReturns;
-		fun.second.generateCode = [=](FunctionCall const& _call, AbstractAssembly& _assembly, BuiltinContext&)
+		if (fun)
+		{
+			size_t returns = fun.value().numReturns;
+			fun.value().generateCode = [=](FunctionCall const& _call, AbstractAssembly& _assembly, BuiltinContext&)
+			{
+				for (size_t i: ranges::views::iota(0u, _call.arguments.size()))
+					if (!fun.value().literalArgument(i))
+						_assembly.appendInstruction(evmasm::Instruction::POP);
+
+				for (size_t i = 0; i < returns; i++)
+					_assembly.appendConstant(u256(0));
+			};
+		}
+	}
+
+	m_verbatimFunctions = _copyFrom.verbatimFunctions();
+	for (auto& entry: m_verbatimFunctions)
+	{
+		auto const& fun = entry;
+		auto returns = fun.numReturns;
+		entry.generateCode = [returns, fun](FunctionCall const& _call, AbstractAssembly& _assembly, BuiltinContext&)
 		{
 			for (size_t i: ranges::views::iota(0u, _call.arguments.size()))
-				if (!fun.second.literalArgument(i))
+				if (!fun.literalArgument(i))
 					_assembly.appendInstruction(evmasm::Instruction::POP);
 
 			for (size_t i = 0; i < returns; i++)
