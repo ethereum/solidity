@@ -1482,15 +1482,15 @@ Json StandardCompiler::compileSolidity(StandardCompiler::InputsAndSettings _inpu
 
 		// IR
 		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "ir", wildcardMatchesExperimental))
-			contractData["ir"] = compilerStack.yulIR(contractName);
+			contractData["ir"] = compilerStack.yulIR(contractName).value_or("");
 		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "irAst", wildcardMatchesExperimental))
-			contractData["irAst"] = compilerStack.yulIRAst(contractName);
+			contractData["irAst"] = compilerStack.yulIRAst(contractName).value_or(Json{});
 		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "irOptimized", wildcardMatchesExperimental))
-			contractData["irOptimized"] = compilerStack.yulIROptimized(contractName);
+			contractData["irOptimized"] = compilerStack.yulIROptimized(contractName).value_or("");
 		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "irOptimizedAst", wildcardMatchesExperimental))
-			contractData["irOptimizedAst"] = compilerStack.yulIROptimizedAst(contractName);
+			contractData["irOptimizedAst"] = compilerStack.yulIROptimizedAst(contractName).value_or(Json{});
 		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "yulCFGJson", wildcardMatchesExperimental))
-			contractData["yulCFGJson"] = compilerStack.yulCFGJson(contractName);
+			contractData["yulCFGJson"] = compilerStack.yulCFGJson(contractName).value_or(Json{});
 
 		// EVM
 		Json evmData;

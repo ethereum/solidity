@@ -1,0 +1,1 @@
+--bin --bin-runtime --opcodes --asm --ir --ir-ast-json --ir-optimized --ir-optimized-ast-json --gas --asm-json --abi --hashes --optimize --pretty-json --json-indent 4

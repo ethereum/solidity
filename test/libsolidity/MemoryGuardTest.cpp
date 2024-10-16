@@ -60,8 +60,10 @@ TestCase::TestResult MemoryGuardTest::run(std::ostream& _stream, std::string con
 	for (std::string contractName: compiler().contractNames())
 	{
 		ErrorList errors;
+		std::optional<std::string> const& ir = compiler().yulIR(contractName);
+		solAssert(ir);
 		auto [object, analysisInfo] = yul::test::parse(
-			compiler().yulIR(contractName),
+			*ir,
 			EVMDialect::strictAssemblyForEVMObjects(CommonOptions::get().evmVersion(), CommonOptions::get().eofVersion()),
 			errors
 		);

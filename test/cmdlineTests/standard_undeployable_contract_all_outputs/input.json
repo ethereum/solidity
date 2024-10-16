@@ -1,0 +1,13 @@
+{
+	"language": "Solidity",
+	"sources": {
+		"C": {"urls": ["standard_undeployable_contract_all_outputs/in.sol"]}
+	},
+	"settings": {
+		"outputSelection": {
+			"*": {
+				"*": ["*", "ir", "irAst", "irOptimized", "irOptimizedAst"]
+			}
+		}
+	}
+}

@@ -7,6 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
+* General: Fix internal compiler error when requesting IR AST outputs for interfaces and abstract contracts.
 
 
 ### 0.8.28 (2024-10-09)

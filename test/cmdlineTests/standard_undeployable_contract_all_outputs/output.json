@@ -1,0 +1,109 @@
+{
+    "contracts": {
+        "C": {
+            "C": {
+                "abi": [],
+                "devdoc": {
+                    "kind": "dev",
+                    "methods": {},
+                    "version": 1
+                },
+                "evm": {
+                    "assembly": "",
+                    "bytecode": {
+                        "functionDebugData": {},
+                        "generatedSources": [],
+                        "linkReferences": {},
+                        "object": "",
+                        "opcodes": "",
+                        "sourceMap": ""
+                    },
+                    "deployedBytecode": {
+                        "functionDebugData": {},
+                        "generatedSources": [],
+                        "immutableReferences": {},
+                        "linkReferences": {},
+                        "object": "",
+                        "opcodes": "",
+                        "sourceMap": ""
+                    },
+                    "gasEstimates": null,
+                    "legacyAssembly": null,
+                    "methodIdentifiers": {}
+                },
+                "ir": "",
+                "irAst": null,
+                "irOptimized": "",
+                "irOptimizedAst": null,
+                "metadata": "{\"compiler\":{\"version\":\"<VERSION REMOVED>\"},\"language\":\"Solidity\",\"output\":{\"abi\":[],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"C\":\"C\"},\"evmVersion\":\"cancun\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"C\":{\"keccak256\":\"0xa8b7bfe5eff9112e6573d2860721faef28e8920ee251acb458303a05c1ec7df2\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://a2333e25b5034de4f98729e0a737309ba8e0db4371016f312e8f991f6f01613f\",\"dweb:/ipfs/QmVLwS2grVYV6qiDvNmeEYWzb6WDne9Ze47NXERSLPM4fJ\"]}},\"version\":1}",
+                "storageLayout": {
+                    "storage": [],
+                    "types": null
+                },
+                "transientStorageLayout": {
+                    "storage": [],
+                    "types": null
+                },
+                "userdoc": {
+                    "kind": "user",
+                    "methods": {},
+                    "version": 1
+                }
+            },
+            "I": {
+                "abi": [],
+                "devdoc": {
+                    "kind": "dev",
+                    "methods": {},
+                    "version": 1
+                },
+                "evm": {
+                    "assembly": "",
+                    "bytecode": {
+                        "functionDebugData": {},
+                        "generatedSources": [],
+                        "linkReferences": {},
+                        "object": "",
+                        "opcodes": "",
+                        "sourceMap": ""
+                    },
+                    "deployedBytecode": {
+                        "functionDebugData": {},
+                        "generatedSources": [],
+                        "immutableReferences": {},
+                        "linkReferences": {},
+                        "object": "",
+                        "opcodes": "",
+                        "sourceMap": ""
+                    },
+                    "gasEstimates": null,
+                    "legacyAssembly": null,
+                    "methodIdentifiers": {}
+                },
+                "ir": "",
+                "irAst": null,
+                "irOptimized": "",
+                "irOptimizedAst": null,
+                "metadata": "{\"compiler\":{\"version\":\"<VERSION REMOVED>\"},\"language\":\"Solidity\",\"output\":{\"abi\":[],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"C\":\"I\"},\"evmVersion\":\"cancun\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"C\":{\"keccak256\":\"0xa8b7bfe5eff9112e6573d2860721faef28e8920ee251acb458303a05c1ec7df2\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://a2333e25b5034de4f98729e0a737309ba8e0db4371016f312e8f991f6f01613f\",\"dweb:/ipfs/QmVLwS2grVYV6qiDvNmeEYWzb6WDne9Ze47NXERSLPM4fJ\"]}},\"version\":1}",
+                "storageLayout": {
+                    "storage": [],
+                    "types": null
+                },
+                "transientStorageLayout": {
+                    "storage": [],
+                    "types": null
+                },
+                "userdoc": {
+                    "kind": "user",
+                    "methods": {},
+                    "version": 1
+                }
+            }
+        }
+    },
+    "sources": {
+        "C": {
+            "id": 0
+        }
+    }
+}

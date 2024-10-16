@@ -257,12 +257,13 @@ void CommandLineInterface::handleIR(std::string const& _contractName)
 	if (!m_options.compiler.outputs.ir)
 		return;
 
+	std::optional<std::string> const& ir = m_compiler->yulIR(_contractName);
 	if (!m_options.output.dir.empty())
-		createFile(m_compiler->filesystemFriendlyName(_contractName) + ".yul", m_compiler->yulIR(_contractName));
+		createFile(m_compiler->filesystemFriendlyName(_contractName) + ".yul", ir.value_or(""));
 	else
 	{
-		sout() << "IR:" << std::endl;
-		sout() << m_compiler->yulIR(_contractName) << std::endl;
+		sout() << "IR:\n";
+		sout() << ir.value_or("") << std::endl;
 	}
 }
 
@@ -273,11 +274,12 @@ void CommandLineInterface::handleIRAst(std::string const& _contractName)
 	if (!m_options.compiler.outputs.irAstJson)
 		return;
 
+	std::optional<Json> const& yulIRAst = m_compiler->yulIRAst(_contractName);
 	if (!m_options.output.dir.empty())
 		createFile(
 			m_compiler->filesystemFriendlyName(_contractName) + "_yul_ast.json",
 			util::jsonPrint(
-				m_compiler->yulIRAst(_contractName),
+				yulIRAst.value_or(Json{}),
 				m_options.formatting.json
 			)
 		);
@@ -285,7 +287,7 @@ void CommandLineInterface::handleIRAst(std::string const& _contractName)
 	{
 		sout() << "IR AST:" << std::endl;
 		sout() << util::jsonPrint(
-			m_compiler->yulIRAst(_contractName),
+			yulIRAst.value_or(Json{}),
 			m_options.formatting.json
 		) << std::endl;
 	}
@@ -298,18 +300,19 @@ void CommandLineInterface::handleYulCFGExport(std::string const& _contractName)
 	if (!m_options.compiler.outputs.yulCFGJson)
 		return;
 
+	std::optional<Json> const& yulCFGJson = m_compiler->yulCFGJson(_contractName);
 	if (!m_options.output.dir.empty())
 		createFile(
 			m_compiler->filesystemFriendlyName(_contractName) + "_yul_cfg.json",
 			util::jsonPrint(
-				m_compiler->yulCFGJson(_contractName),
+				yulCFGJson.value_or(Json{}),
 				m_options.formatting.json
 			)
 		);
 	else
 	{
 		sout() << util::jsonPrint(
-			m_compiler->yulCFGJson(_contractName),
+			yulCFGJson.value_or(Json{}),
 			m_options.formatting.json
 		) << std::endl;
 	}
@@ -322,15 +325,16 @@ void CommandLineInterface::handleIROptimized(std::string const& _contractName)
 	if (!m_options.compiler.outputs.irOptimized)
 		return;
 
+	std::optional<std::string> const& irOptimized = m_compiler->yulIROptimized(_contractName);
 	if (!m_options.output.dir.empty())
 		createFile(
 			m_compiler->filesystemFriendlyName(_contractName) + "_opt.yul",
-			m_compiler->yulIROptimized(_contractName)
+			irOptimized.value_or("")
 		);
 	else
 	{
 		sout() << "Optimized IR:" << std::endl;
-		sout() << m_compiler->yulIROptimized(_contractName) << std::endl;
+		sout() << irOptimized.value_or("") << std::endl;
 	}
 }
 
@@ -341,11 +345,12 @@ void CommandLineInterface::handleIROptimizedAst(std::string const& _contractName
 	if (!m_options.compiler.outputs.irOptimizedAstJson)
 		return;
 
+	std::optional<Json> const& yulIROptimizedAst = m_compiler->yulIROptimizedAst(_contractName);
 	if (!m_options.output.dir.empty())
 		createFile(
 			m_compiler->filesystemFriendlyName(_contractName) + "_opt_yul_ast.json",
 			util::jsonPrint(
-				m_compiler->yulIROptimizedAst(_contractName),
+				yulIROptimizedAst.value_or(Json{}),
 				m_options.formatting.json
 			)
 		);
@@ -353,7 +358,7 @@ void CommandLineInterface::handleIROptimizedAst(std::string const& _contractName
 	{
 		sout() << "Optimized IR AST:" << std::endl;
 		sout() << util::jsonPrint(
-			m_compiler->yulIROptimizedAst(_contractName),
+			yulIROptimizedAst.value_or(Json{}),
 			m_options.formatting.json
 		) << std::endl;
 	}
