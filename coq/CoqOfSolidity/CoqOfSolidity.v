@@ -8,6 +8,9 @@ Require Export RecordUpdate.
 Require Export Lia.
 From Hammer Require Export Tactics.
 
+(* Activate the modulo arithmetic in [lia] *)
+Ltac Zify.zify_post_hook ::= Z.to_euclidean_division_equations.
+
 Global Set Primitive Projections.
 Global Set Printing Projections.
 Global Open Scope char_scope.
