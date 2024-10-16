@@ -1,7 +1,7 @@
 {
 	"language": "Solidity",
 	"sources": {
-		"C": {"urls": ["standard_ir_ast_undeployable_contract_requested/in.sol"]}
+		"C": {"urls": ["standard_undeployable_contract_all_outputs/in.sol"]}
 	},
 	"settings": {
 		"outputSelection": {
