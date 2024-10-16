@@ -363,8 +363,5 @@ Statement BodyCopier::operator()(FunctionDefinition const&)
 
 YulName BodyCopier::translateIdentifier(YulName _name)
 {
-	if (m_variableReplacements.count(_name))
-		return m_variableReplacements.at(_name);
-	else
-		return _name;
+	return util::valueOrDefault(m_variableReplacements, _name, _name);
 }
