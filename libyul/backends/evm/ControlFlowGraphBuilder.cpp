@@ -349,8 +349,8 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 		CFG::Assignment{_switch.debugData, {ghostVarSlot}}
 	});
 
-	BuiltinFunction const* equalityBuiltin = m_dialect.equalityFunction();
-	yulAssert(equalityBuiltin, "");
+	std::optional<BuiltinHandle> const& equalityBuiltinHandle = m_dialect.equalityFunction();
+	yulAssert(equalityBuiltinHandle);
 
 	// Artificially generate:
 	// eq(<literal>, <ghostVariable>)
@@ -363,7 +363,7 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 		CFG::Operation& operation = m_currentBlock->operations.emplace_back(CFG::Operation{
 			Stack{ghostVarSlot, LiteralSlot{_case.value->value.value(), debugDataOf(*_case.value)}},
 			Stack{TemporarySlot{ghostCall, 0}},
-			CFG::BuiltinCall{debugDataOf(_case), *equalityBuiltin, ghostCall, 2},
+			CFG::BuiltinCall{debugDataOf(_case), m_dialect.builtin(*equalityBuiltinHandle), ghostCall, 2},
 		});
 		return operation.output.front();
 	};
@@ -516,24 +516,25 @@ Stack const& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _cal
 
 	Stack const* output = nullptr;
 	bool canContinue = true;
-	if (BuiltinFunction const* builtin = m_dialect.builtin(_call.functionName.name))
+	if (std::optional<BuiltinHandle> const& builtinHandle = m_dialect.findBuiltin(_call.functionName.name.str()))
 	{
+		auto const& builtin = m_dialect.builtin(*builtinHandle);
 		Stack inputs;
 		for (auto&& [idx, arg]: _call.arguments | ranges::views::enumerate | ranges::views::reverse)
-			if (!builtin->literalArgument(idx).has_value())
+			if (!builtin.literalArgument(idx).has_value())
 				inputs.emplace_back(std::visit(*this, arg));
-		CFG::BuiltinCall builtinCall{_call.debugData, *builtin, _call, inputs.size()};
+		CFG::BuiltinCall builtinCall{_call.debugData, builtin, _call, inputs.size()};
 		output = &m_currentBlock->operations.emplace_back(CFG::Operation{
 			// input
 			std::move(inputs),
 			// output
-			ranges::views::iota(0u, builtin->numReturns) | ranges::views::transform([&](size_t _i) {
+			ranges::views::iota(0u, builtin.numReturns) | ranges::views::transform([&](size_t _i) {
 				return TemporarySlot{_call, _i};
 			}) | ranges::to<Stack>,
 			// operation
 			std::move(builtinCall)
 		}).output;
-		canContinue = builtin->controlFlowSideEffects.canContinue;
+		canContinue = builtin.controlFlowSideEffects.canContinue;
 	}
 	else
 	{
