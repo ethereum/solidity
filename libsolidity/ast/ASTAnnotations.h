@@ -342,6 +342,9 @@ struct FunctionCallAnnotation: ExpressionAnnotation
 	util::SetOnce<FunctionCallKind> kind;
 	/// If true, this is the external call of a try statement.
 	bool tryCall = false;
+	/// The original contract calling the function - actual calling contract may be different,
+	/// e.g. in case is inlining Internal library function call.
+	ContractDefinition const* origCallingContract = nullptr;
 };
 
 /// Experimental Solidity annotations.

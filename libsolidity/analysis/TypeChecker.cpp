@@ -2699,6 +2699,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	case Type::Category::Function:
 		functionType = dynamic_cast<FunctionType const*>(expressionType);
 		funcCallAnno.kind = FunctionCallKind::FunctionCall;
+		funcCallAnno.origCallingContract = dynamic_cast<ContractDefinition const*>(currentDefinitionScope());
 
 		if (auto memberAccess = dynamic_cast<MemberAccess const*>(&_functionCall.expression()))
 		{
