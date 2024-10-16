@@ -1,0 +1,11 @@
+{
+    "errors": [
+        {
+            "component": "general",
+            "formattedMessage": "\"evm.deployedBytecode.ethdebug\" cannot be used for Yul.",
+            "message": "\"evm.deployedBytecode.ethdebug\" cannot be used for Yul.",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}

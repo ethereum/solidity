@@ -1,0 +1,214 @@
+{
+    "contracts": {
+        "a.sol": {
+            "A1": {
+                "evm": {
+                    "bytecode": {
+                        "ethdebug": {}
+                    }
+                },
+                "irOptimized": "/// ethdebug: enabled
+/// @use-src 0:\"a.sol\"
+object \"A1_14\" {
+    code {
+        {
+            /// @src 0:58:123  \"contract A1 { function a(uint x) public pure { assert(x > 0); } }\"
+            let _1 := memoryguard(0x80)
+            mstore(64, _1)
+            if callvalue() { revert(0, 0) }
+            let _2 := datasize(\"A1_14_deployed\")
+            codecopy(_1, dataoffset(\"A1_14_deployed\"), _2)
+            return(_1, _2)
+        }
+    }
+    /// @use-src 0:\"a.sol\"
+    object \"A1_14_deployed\" {
+        code {
+            {
+                /// @src 0:58:123  \"contract A1 { function a(uint x) public pure { assert(x > 0); } }\"
+                if iszero(lt(calldatasize(), 4))
+                {
+                    if eq(0xf0fdf834, shr(224, calldataload(0)))
+                    {
+                        if callvalue() { revert(0, 0) }
+                        if slt(add(calldatasize(), not(3)), 32) { revert(0, 0) }
+                        if /** @src 0:112:117  \"x > 0\" */ iszero(/** @src 0:58:123  \"contract A1 { function a(uint x) public pure { assert(x > 0); } }\" */ calldataload(4))
+                        {
+                            mstore(0, shl(224, 0x4e487b71))
+                            mstore(4, 1)
+                            revert(0, 0x24)
+                        }
+                        return(0, 0)
+                    }
+                }
+                revert(0, 0)
+            }
+        }
+        data \".metadata\" hex\"<BYTECODE REMOVED>\"
+    }
+}
+"
+            },
+            "A2": {
+                "evm": {
+                    "bytecode": {
+                        "ethdebug": {}
+                    }
+                },
+                "irOptimized": "/// ethdebug: enabled
+/// @use-src 0:\"a.sol\"
+object \"A2_27\" {
+    code {
+        {
+            /// @src 0:124:189  \"contract A2 { function a(uint x) public pure { assert(x > 0); } }\"
+            let _1 := memoryguard(0x80)
+            mstore(64, _1)
+            if callvalue() { revert(0, 0) }
+            let _2 := datasize(\"A2_27_deployed\")
+            codecopy(_1, dataoffset(\"A2_27_deployed\"), _2)
+            return(_1, _2)
+        }
+    }
+    /// @use-src 0:\"a.sol\"
+    object \"A2_27_deployed\" {
+        code {
+            {
+                /// @src 0:124:189  \"contract A2 { function a(uint x) public pure { assert(x > 0); } }\"
+                if iszero(lt(calldatasize(), 4))
+                {
+                    if eq(0xf0fdf834, shr(224, calldataload(0)))
+                    {
+                        if callvalue() { revert(0, 0) }
+                        if slt(add(calldatasize(), not(3)), 32) { revert(0, 0) }
+                        if /** @src 0:178:183  \"x > 0\" */ iszero(/** @src 0:124:189  \"contract A2 { function a(uint x) public pure { assert(x > 0); } }\" */ calldataload(4))
+                        {
+                            mstore(0, shl(224, 0x4e487b71))
+                            mstore(4, 1)
+                            revert(0, 0x24)
+                        }
+                        return(0, 0)
+                    }
+                }
+                revert(0, 0)
+            }
+        }
+        data \".metadata\" hex\"<BYTECODE REMOVED>\"
+    }
+}
+"
+            }
+        },
+        "b.sol": {
+            "A1": {
+                "evm": {
+                    "bytecode": {
+                        "ethdebug": {}
+                    }
+                },
+                "irOptimized": "/// ethdebug: enabled
+/// @use-src 1:\"b.sol\"
+object \"A1_42\" {
+    code {
+        {
+            /// @src 1:58:123  \"contract A1 { function b(uint x) public pure { assert(x > 0); } }\"
+            let _1 := memoryguard(0x80)
+            mstore(64, _1)
+            if callvalue() { revert(0, 0) }
+            let _2 := datasize(\"A1_42_deployed\")
+            codecopy(_1, dataoffset(\"A1_42_deployed\"), _2)
+            return(_1, _2)
+        }
+    }
+    /// @use-src 1:\"b.sol\"
+    object \"A1_42_deployed\" {
+        code {
+            {
+                /// @src 1:58:123  \"contract A1 { function b(uint x) public pure { assert(x > 0); } }\"
+                if iszero(lt(calldatasize(), 4))
+                {
+                    if eq(0xcd580ff3, shr(224, calldataload(0)))
+                    {
+                        if callvalue() { revert(0, 0) }
+                        if slt(add(calldatasize(), not(3)), 32) { revert(0, 0) }
+                        if /** @src 1:112:117  \"x > 0\" */ iszero(/** @src 1:58:123  \"contract A1 { function b(uint x) public pure { assert(x > 0); } }\" */ calldataload(4))
+                        {
+                            mstore(0, shl(224, 0x4e487b71))
+                            mstore(4, 1)
+                            revert(0, 0x24)
+                        }
+                        return(0, 0)
+                    }
+                }
+                revert(0, 0)
+            }
+        }
+        data \".metadata\" hex\"<BYTECODE REMOVED>\"
+    }
+}
+"
+            },
+            "B2": {
+                "evm": {
+                    "bytecode": {
+                        "ethdebug": {}
+                    }
+                },
+                "irOptimized": "/// ethdebug: enabled
+/// @use-src 1:\"b.sol\"
+object \"B2_55\" {
+    code {
+        {
+            /// @src 1:124:189  \"contract B2 { function b(uint x) public pure { assert(x > 0); } }\"
+            let _1 := memoryguard(0x80)
+            mstore(64, _1)
+            if callvalue() { revert(0, 0) }
+            let _2 := datasize(\"B2_55_deployed\")
+            codecopy(_1, dataoffset(\"B2_55_deployed\"), _2)
+            return(_1, _2)
+        }
+    }
+    /// @use-src 1:\"b.sol\"
+    object \"B2_55_deployed\" {
+        code {
+            {
+                /// @src 1:124:189  \"contract B2 { function b(uint x) public pure { assert(x > 0); } }\"
+                if iszero(lt(calldatasize(), 4))
+                {
+                    if eq(0xcd580ff3, shr(224, calldataload(0)))
+                    {
+                        if callvalue() { revert(0, 0) }
+                        if slt(add(calldatasize(), not(3)), 32) { revert(0, 0) }
+                        if /** @src 1:178:183  \"x > 0\" */ iszero(/** @src 1:124:189  \"contract B2 { function b(uint x) public pure { assert(x > 0); } }\" */ calldataload(4))
+                        {
+                            mstore(0, shl(224, 0x4e487b71))
+                            mstore(4, 1)
+                            revert(0, 0x24)
+                        }
+                        return(0, 0)
+                    }
+                }
+                revert(0, 0)
+            }
+        }
+        data \".metadata\" hex\"<BYTECODE REMOVED>\"
+    }
+}
+"
+            }
+        }
+    },
+    "ethdebug": {
+        "sources": [
+            "a.sol",
+            "b.sol"
+        ]
+    },
+    "sources": {
+        "a.sol": {
+            "id": 0
+        },
+        "b.sol": {
+            "id": 1
+        }
+    }
+}

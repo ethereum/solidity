@@ -1,0 +1,11 @@
+{
+	"language": "Yul",
+	"sources": {
+		"C": {"urls": ["standard_yul_debug_info_print_all/in.yul"]}
+	},
+	"settings": {
+		"outputSelection": {
+			"*": {"*": ["evm.deployedBytecode.ethdebug"]}
+		}
+	}
+}
