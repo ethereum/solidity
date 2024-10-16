@@ -1138,6 +1138,7 @@ public:
 	{}
 
 	Category category() const override { return Category::UserDefinedValueType; }
+	TypeResult unaryOperatorResult(Token _operator) const override;
 	Type const& underlyingType() const;
 	UserDefinedValueTypeDefinition const& definition() const { return m_definition; }
 
