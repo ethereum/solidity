@@ -2,10 +2,11 @@ Require Import CoqOfSolidity.CoqOfSolidity.
 Require Import CoqOfSolidity.proofs.CoqOfSolidity.
 Require Import CoqOfSolidity.simulations.CoqOfSolidity.
 Require Import CoqOfSolidity.contracts.scl.mulmuladdX_fullgen_b4.contract_shallow.
+Require Import CoqOfSolidity.contracts.scl.mulmuladdX_fullgen_b4.curve.
 Import Stdlib.
 Import RunO.
 
-Module Q.
+Module Params.
   (* store Qx, Qy, Q'x, Q'y p, a, gx, gy, gx2pow128, gy2pow128  *)
   Record t : Set := {
     Qx : U256.t;
@@ -14,14 +15,14 @@ Module Q.
     Q'y : U256.t;
     p : U256.t;
     a : U256.t;
-    gx : U256.t;
-    gy : U256.t;
-    gx2pow128 : U256.t;
-    gy2pow128 : U256.t;
+    Gx : U256.t;
+    Gy : U256.t;
+    G'x : U256.t;
+    G'y : U256.t;
   }.
-End Q.
+End Params.
 
-Definition ecAddn2 (P1 : PZZ.t) (P2 : PA.t) (p : U256.t) : PZZ.t :=
+Definition ecAddn2 (p : U256.t) (P1 : PZZ.t) (P2 : PA.t) : PZZ.t :=
   let usr'dollar'x1 := P1.(PZZ.X) in
   let usr'dollar'y1 := P1.(PZZ.Y) in
   let usr'dollar'zz1 := P1.(PZZ.ZZ) in
@@ -86,10 +87,9 @@ Definition ecAddn2 (P1 : PZZ.t) (P2 : PA.t) (p : U256.t) : PZZ.t :=
 Lemma run_usr'dollar'ecAddn2 codes environment state
     (P1_X P1_Y P1_ZZ P1_ZZZ P2_X P2_Y : U256.t) (p : U256.t) :
   let output :=
-    ecAddn2
+    ecAddn2 p
       {| PZZ.X := P1_X; PZZ.Y := P1_Y; PZZ.ZZ := P1_ZZ; PZZ.ZZZ := P1_ZZZ |}
-      {| PA.X := P2_X; PA.Y := P2_Y |}
-      p in
+      {| PA.X := P2_X; PA.Y := P2_Y |} in
   let output := Result.Ok (output.(PZZ.X), output.(PZZ.Y), output.(PZZ.ZZ), output.(PZZ.ZZZ)) in
   {{? codes, environment, Some state |
     Contract_91.Contract_91_deployed.usr'dollar'ecAddn2 P1_X P1_Y P1_ZZ P1_ZZZ P2_X P2_Y p ⇓
@@ -108,10 +108,9 @@ Qed.
 Lemma run_usr'dollar'ecAddn2_2189 codes environment state
     (P1_X P1_Y P2_X P2_Y : U256.t) (p : U256.t) :
   let output :=
-    ecAddn2
+    ecAddn2 p
       {| PZZ.X := P1_X; PZZ.Y := P1_Y; PZZ.ZZ := 1; PZZ.ZZZ := 1 |}
-      {| PA.X := P2_X; PA.Y := P2_Y |}
-      p in
+      {| PA.X := P2_X; PA.Y := P2_Y |} in
   let output := Result.Ok (output.(PZZ.X), output.(PZZ.Y), output.(PZZ.ZZ), output.(PZZ.ZZZ)) in
   {{? codes, environment, Some state |
     Contract_91.Contract_91_deployed.usr'dollar'ecAddn2_2189 P1_X P1_Y P2_X P2_Y p ⇓
@@ -130,17 +129,11 @@ Qed.
 Module Ts.
   Definition t : Set := list PZZ.t.
 
-  Fixpoint get (Ts : t) (index : nat) : PZZ.t :=
-    match Ts with
-    | nil => PZZ.zero
-    | T :: Ts =>
-      match index with
-      | O => T
-      | S index => get Ts index
-      end
-    end.
+  Definition get (Ts : t) (index : nat) : PZZ.t :=
+    List.nth index Ts PZZ.zero.
 End Ts.
 
+(*
 (* For-loop bounded by some [fuel]. *)
 Fixpoint for_loop {State : Set}
     (fuel : nat)
@@ -161,7 +154,9 @@ Fixpoint for_loop {State : Set}
     else
       state
   end.
+*)
 
+(*
 Definition get_Ts (Q : Q.t) : list PZZ.t :=
   (* let _modulusp:=mload(add(mload(0x40), _Ap)) *)
   let _modulusp := Q.(Q.p) in
@@ -297,8 +292,7 @@ Definition get_Ts (Q : Q.t) : list PZZ.t :=
   (* mstore4(mload(0x40), 1920, X,Y,ZZ,ZZZ) *)
   let Ts := Ts ++ [T] in
   Ts.
-
-
+*)
 
 (*
   {
@@ -352,17 +346,7 @@ Definition ecDblNeg (a p : Z) (P : PZZ.t) : PZZ.t :=
     PZZ.ZZZ := ZZZ
   |}.
 
-Definition get_s u v mask :=
-  Pure.add
-    (Pure.add
-      (Pure.sub 1 (Pure.iszero (Pure.and u mask)))
-      (Pure.shl 1 (Pure.sub 1 (Pure.iszero (Pure.and (Pure.shr 128 u) mask))))
-    )
-    (Pure.add
-      (Pure.shl 2 (Pure.sub 1 (Pure.iszero (Pure.and v mask))))
-      (Pure.shl 3 (Pure.sub 1 (Pure.iszero (Pure.and (Pure.shr 128 v) mask))))
-    ).
-
+(*
 Module MainLoop.
   Module State.
     Record t : Set := {
@@ -401,7 +385,7 @@ Module MainLoop.
     let T1:=add(add(sub(1,iszero(and(scalar_u, mask))), shl(1,sub(1,iszero(and(shr(128, scalar_u), mask))))),
       add(shl(2,sub(1,iszero(and(scalar_v, mask)))), shl(3,sub(1,iszero(and(shr(128, scalar_v), mask))))))
     *)
-    let s := get_s u v mask in
+    let s := get_selector u v mask in
     (*
     if iszero(T1) {
                   Y := sub(_p, Y)
@@ -529,7 +513,9 @@ Module MainLoop.
     |} in
     state.
 End MainLoop.
+*)
 
+(*
 Definition sim_fun_ecGenMulmuladdX_store_2814_beginning (Q : Q.t) (scalar_u scalar_v : U256.t) :
     unit :=
   (*
@@ -547,6 +533,129 @@ Definition sim_fun_ecGenMulmuladdX_store_2814_beginning (Q : Q.t) (scalar_u scal
   let _modulusp := Q.(Q.p) in
   let Ts := get_Ts Q in
   tt.
+*)
+
+Module PointsSelector.
+  Record t : Set := {
+    u_low : bool;
+    u_high : bool;
+    v_low : bool;
+    v_high : bool;
+  }.
+
+  Definition is_zero (selector : t) : bool :=
+    match selector with
+    | Build_t false false false false => true
+    | _ => false
+    end.
+
+  Definition to_Z (selector : t) : Z :=
+    let 'Build_t u_low u_high v_low v_high := selector in
+    Z.b2z u_low + 2 * Z.b2z u_high + 4 * Z.b2z v_low + 8 * Z.b2z v_high.
+
+  Definition add_points (p : Z) (Q Q' G G' : PA.t) (selector : t) : PZZ.t :=
+    List.fold_left (ecAddn2 p) [Q; Q'; G; G'] PZZ.zero.
+End PointsSelector.
+
+Module U128.
+  Definition t : Set :=
+    Z.
+
+  Module Valid.
+    Definition t (n : Z) : Prop :=
+      0 <= n < 2 ^ 128.
+  End Valid.
+End U128.
+
+Module HighLow.
+  Definition high (x : U256.t) : U256.t :=
+    x / (2 ^ 128).
+
+  Definition low (x : U256.t) : U256.t :=
+    x mod (2 ^ 128).
+
+  Definition merge (high low : U256.t) : U256.t :=
+    high * (2 ^ 128) + low.
+
+  Lemma merge_high_low_eq (x : U256.t) :
+    merge (high x) (low x) = x.
+  Proof.
+    unfold U256.Valid.t, high, low, merge in *.
+    lia.
+  Qed.
+
+  Lemma test_bit_merge_low_eq (n_low n_high : U128.t) (index : Z)
+      (H_n_low : U128.Valid.t n_low)
+      (H_n_high : U128.Valid.t n_high)
+      (H_index : 0 <= index < 128) :
+    Z.testbit (merge n_high n_low) index = Z.testbit n_low index.
+  Proof.
+    unfold merge, U128.Valid.t in *.
+    apply Z.b2z_inj.
+    repeat rewrite Z.testbit_spec' by lia.
+  Admitted.
+
+  Lemma high_merge_eq (n_low n_high : U128.t)
+      (H_n_low : U128.Valid.t n_low)
+      (H_n_high : U128.Valid.t n_high) :
+    high (merge n_high n_low) = n_high.
+  Proof.
+    unfold high, merge, U128.Valid.t in *.
+    lia.
+  Qed.
+
+  Definition raw_get_selector (u v mask : U256.t) : U256.t :=
+    Pure.add
+      (Pure.add
+        (Pure.sub 1 (Pure.iszero (Pure.and u mask)))
+        (Pure.shl 1 (Pure.sub 1 (Pure.iszero (Pure.and (Pure.shr 128 u) mask))))
+      )
+      (Pure.add
+        (Pure.shl 2 (Pure.sub 1 (Pure.iszero (Pure.and v mask))))
+        (Pure.shl 3 (Pure.sub 1 (Pure.iszero (Pure.and (Pure.shr 128 v) mask))))
+      ).
+
+  Definition get_selector (u_low u_high v_low v_high : U256.t) (index : Z) : PointsSelector.t :=
+    {|
+      PointsSelector.u_low := Z.testbit u_low index;
+      PointsSelector.u_high := Z.testbit u_high index;
+      PointsSelector.v_low := Z.testbit v_low index;
+      PointsSelector.v_high := Z.testbit v_high index
+    |}.
+
+  Lemma get_selector_eq (u_low u_high v_low v_high : U256.t) (index : Z)
+      (H_u_low : U128.Valid.t u_low)
+      (H_u_high : U128.Valid.t u_high)
+      (H_v_low : U128.Valid.t v_low)
+      (H_v_high : U128.Valid.t v_high)
+      (H_index : 0 <= index < 128) :
+    PointsSelector.to_Z (get_selector u_low u_high v_low v_high index) =
+    raw_get_selector (merge u_high u_low) (merge v_high v_low) (2 ^ index).
+  Proof.
+    unfold PointsSelector.to_Z, raw_get_selector, get_selector, merge.
+    unfold Pure.and, Pure.add, Pure.sub, Pure.iszero, Pure.shl, Pure.shr.
+    unfold U128.Valid.t in *.
+    assert (H_land_eq :
+        forall (a b : Z),
+        0 <= a ->
+        (Z.land a b =? 0) =
+        negb (0 <? Z.land a b)
+      ). {
+      intros.
+      destruct (Z.land_nonneg a b).
+      lia.
+    }
+    repeat rewrite H_land_eq by lia.
+    repeat rewrite <- Arith2.Z_testbit_alt by lia.
+    pose proof (H_test_low := test_bit_merge_low_eq).
+    unfold merge in H_test_low.
+    repeat rewrite H_test_low by (unfold U128.Valid.t; lia).
+    pose proof (H_test_high := high_merge_eq).
+    unfold high, merge in H_test_high.
+    repeat rewrite H_test_high by (unfold U128.Valid.t; lia).
+    repeat destruct (Z.testbit _ _); reflexivity.
+  Qed.
+End HighLow.
 
 Ltac load_store_line :=
   with_strategy opaque [ecAddn2] (
@@ -567,29 +676,43 @@ Ltac load_store_line :=
     try p
   ).
 
-Lemma run_fun_ecGenMulmuladdX_store_2814_beginning codes environment state
+Lemma run_fun_ecGenMulmuladdX_store_2814 codes environment state
     (
       mem0 mem1 mem3 mem4 mem5 mem6 mem7 mem8
       mem12 mem13 mem14 :
       U256.t
     )
-    (Q : Q.t) (scalar_u scalar_v : U256.t) :
+    (Q Q' G G' : PA.t) (p a : Z) (u_low u_high v_low v_high : U256.t) :
+  let u := HighLow.merge u_high u_low in
+  let v := HighLow.merge v_high v_low in
+  let params := {|
+    Params.Qx := Q.(PA.X);
+    Params.Qy := Q.(PA.Y);
+    Params.Q'x := Q'.(PA.X);
+    Params.Q'y := Q'.(PA.Y);
+    Params.p := p;
+    Params.a := a;
+    Params.Gx := G.(PA.X);
+    Params.Gy := G.(PA.Y);
+    Params.G'x := G'.(PA.X);
+    Params.G'y := G'.(PA.Y)
+  |} in
   let memoryguard : U256.t := 0 in
-  let location_Q : U256.t := 32 * 15 in
+  let params_offset : U256.t := 32 * 15 in
   let memory_start : list U256.t :=
     [
-      mem0; mem1; memoryguard; mem3; mem4; mem5; mem6; mem7; mem8; scalar_u;
-      location_Q; scalar_v; mem12; mem13; mem14;
-      Q.(Q.Qx);
-      Q.(Q.Qy);
-      Q.(Q.Q'x);
-      Q.(Q.Q'y);
-      Q.(Q.p);
-      Q.(Q.a);
-      Q.(Q.gx);
-      Q.(Q.gy);
-      Q.(Q.gx2pow128);
-      Q.(Q.gy2pow128)
+      mem0; mem1; memoryguard; mem3; mem4; mem5; mem6; mem7; mem8; u;
+      params_offset; v; mem12; mem13; mem14;
+      params.(Params.Qx);
+      params.(Params.Qy);
+      params.(Params.Q'x);
+      params.(Params.Q'y);
+      params.(Params.p);
+      params.(Params.a);
+      params.(Params.Gx);
+      params.(Params.Gy);
+      params.(Params.G'x);
+      params.(Params.G'y)
     ] ++ List.repeat 0 200 in
   let state_start :=
       make_state environment state memory_start [] in
@@ -604,23 +727,22 @@ Lemma run_fun_ecGenMulmuladdX_store_2814_beginning codes environment state
     output
   | Some state_end ?}}.
 Proof.
-  simpl.
+  intros u v; simpl.
   unfold Contract_91.Contract_91_deployed.fun_ecGenMulmuladdX_store_2814.
   l. {
     repeat load_store_line.
     l. {
       unfold Shallow.if_, Pure.iszero.
-      instantiate (2 := Result.Ok (BlockUnit.Tt, if scalar_u =? 0 then _ else _)).
-      destruct (scalar_u =? 0); s; [|p].
+      instantiate (2 := Result.Ok (BlockUnit.Tt, if u =? 0 then _ else _)).
+      destruct (u =? 0); s; [|p].
       load_store_line.
     }
     s.
     lu.
     match goal with
     | |- context [Shallow.if_ ?condition] =>
-      replace condition with (Z.b2z ((scalar_u =? 0) && (scalar_v =? 0)))
-    end.
-    2: {
+      replace condition with (Z.b2z ((u =? 0) && (v =? 0)))
+    end. 2: {
       unfold Pure.iszero.
       now repeat destruct (_ =? 0).
     }
@@ -629,37 +751,55 @@ Proof.
       destruct condition eqn:H_u_v_eq; s
     end.
     { load_store_line. }
-    { repeat load_store_line.
+    { (* Here we fill the memory with all the possible combinations of additions *)
+      repeat load_store_line.
+      (* We simplify these additions that are a little bit too unfolded *)
+      repeat match goal with
+      | t := ecAddn2 _ ?P1 ?P2 : _ |- _ =>
+        match P1 with
+        | {| PZZ.X := ?P.(PA.X) |} =>
+          change P1 with (PZZ.of_PA P) in t
+        end ||
+        match goal with
+        | P := _ : _ |- _ =>
+          change P1 with P in t
+        end ||
+        match P2 with
+        | {| PA.X := ?P.(PA.X) |} =>
+          change P2 with P in t
+        end
+      end.
+      (* Computation of the most-significant bit *)
       l. {
         change (Pure.shl 127 1) with (2 ^ Z.of_nat (128 - 1)).
         set (index := 128%nat).
         assert (H_index_le : (index <= 128)%nat) by lia.
         assert (H_get_s :
-          forall i, Z.of_nat index <= i <= 127 -> get_s scalar_u scalar_v i = 0
+          forall i, Z.of_nat index <= i <= 127 -> get_selector u v i = 0
         ) by lia.
-        Ltac foo index word2 :=
+        (* Ltac foo index word2 :=
           let index := eval cbv in (Z.to_nat (index / 32)) in
           eapply (Memory.update_at index word2);
             try apply get_memory_make_state_eq;
             [|reflexivity|];
             unfold List.replace_nth;
-            CanonizeState.execute.
-        foo 0xe0 (
+            CanonizeState.execute. *)
+        apply_memory_update_at 0xe0 (
           if (index =? 128)%nat then
             0
           else
-            get_s scalar_u scalar_v (Z.of_nat index)
+            get_selector u v (Z.of_nat index)
         ). {
           reflexivity.
         }
-        foo 0x01a0 (2 ^ (Z.of_nat index - 1)). {
+        apply_memory_update_at 0x01a0 (2 ^ (Z.of_nat index - 1)). {
           reflexivity.
         }
         induction index.
         { (* The base case, corresponding to a bit position of `-1`, is impossible to reach. *)
           assert (H_u_v_zero :
-            (forall i, 0 <= i <= 127 -> get_s scalar_u scalar_v i = 0) ->
-            scalar_u = 0 /\ scalar_v = 0
+            (forall i, 0 <= i <= 127 -> get_selector u scalar_v i = 0) ->
+            u = 0 /\ scalar_v = 0
           ) by admit.
           exfalso; lia.
         }
@@ -691,7 +831,7 @@ Proof.
         }
         { induction index.
           { assert (H_u_v_zero :
-              (forall i, 0 <= i <= 127 -> get_s scalar_u scalar_v i = 0) ->
+              (forall i, 0 <= i <= 127 -> get_selector scalar_u scalar_v i = 0) ->
               scalar_u = 0 /\ scalar_v = 0
             ) by admit.
             exfalso; lia.
@@ -720,7 +860,7 @@ Proof.
               c. {
                 match goal with
                 | |- context[mstore _ ?value] =>
-                  change value with (get_s scalar_u scalar_v (2 ^ 127))
+                  change value with (get_selector scalar_u scalar_v (2 ^ 127))
                 end.
                 apply_run_mstore.
               }

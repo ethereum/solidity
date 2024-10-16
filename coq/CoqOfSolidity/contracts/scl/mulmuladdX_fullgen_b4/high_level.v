@@ -1,7 +1,8 @@
 Require Import CoqOfSolidity.CoqOfSolidity.
 Require Import CoqOfSolidity.simulations.CoqOfSolidity.
 Import Stdlib.
-Require Import CoqOfSolidity.contracts.scl.mulmuladdX_fullgen_b4.contract_shallow_by_hand.
+Require Import CoqOfSolidity.contracts.scl.mulmuladdX_fullgen_b4.curve.
+Require Import CoqOfSolidity.contracts.scl.mulmuladdX_fullgen_b4.run.
 
 Ltac show_equality_modulo :=
   repeat (
@@ -18,7 +19,7 @@ Ltac show_equality_modulo :=
   ).
 
 (** Normalized addition of two point, must not be neutral input. *)
-Definition high_ecAddn2 (P1 : PZZ.t) (P2 : PA.t) (p : U256.t) : PZZ.t :=
+Definition ecAddn2 (P1 : PZZ.t) (P2 : PA.t) (p : U256.t) : PZZ.t :=
   let x1 := P1.(PZZ.X) in
   let y1 := P1.(PZZ.Y) in
   let zz1 := P1.(PZZ.ZZ) in
@@ -52,7 +53,7 @@ Lemma ecAddn2_eq (P1 : PZZ.t) (P2 : PA.t) (p : Z)
     (H_P2 : PA.Valid.t p P2)
     (H_p : 2 <= p < 2^256) :
   ecAddn2 P1 P2 p =
-  high_ecAddn2 P1 P2 p.
+  ecAddn2 P1 P2 p.
 Proof.
   destruct H_P1, H_P2.
   unfold Zp.Valid.t in *.
@@ -144,25 +145,6 @@ Axiom P_add_eq_high_ecAddn2 :
   forall (a p : Z) (P1 : PZZ.t) (P2 : PA.t),
   P.add a p (PZZ.to_P p P1) (Some P2) =
   PZZ.to_P p (high_ecAddn2 P1 P2 p).
-
-Module PointsSelector.
-  Record t : Set := {
-    u_low : bool;
-    u_high : bool;
-    v_low : bool;
-    v_high : bool;
-  }.
-
-  Definition is_zero (selector : t) : bool :=
-    match selector with
-    | Build_t false false false false => true
-    | _ => false
-    end.
-
-  Definition to_Z (selector : t) : Z :=
-    let 'Build_t u_low u_high v_low v_high := selector in
-    Z.b2z u_low + 2 * Z.b2z u_high + 4 * Z.b2z v_low + 8 * Z.b2z v_high.
-End PointsSelector.
 
 (** We make explicit the list of points that we add to be sure to be in the same order as in the
     source code. *)
