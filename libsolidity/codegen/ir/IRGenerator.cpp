@@ -141,7 +141,11 @@ std::string IRGenerator::generate(
 					<sourceLocationCommentDeployed>
 					<memoryInitDeployed>
 					<?library>
-					let called_via_delegatecall := iszero(eq(loadimmutable("<library_address>"), address()))
+						<?eof>
+							let called_via_delegatecall := iszero(eq(auxdataloadn(<library_address_data_offset>), address()))
+						<!eof>
+							let called_via_delegatecall := iszero(eq(loadimmutable("<library_address>"), address()))
+						</eof>
 					</library>
 					<dispatch>
 					<deployedFunctions>
@@ -200,7 +204,15 @@ std::string IRGenerator::generate(
 	// Do not register immutables to avoid assignment.
 	t("DeployedObject", IRNames::deployedObject(_contract));
 	t("sourceLocationCommentDeployed", dispenseLocationComment(_contract));
-	t("library_address", IRNames::libraryAddressImmutable());
+	auto const eof = m_context.eofVersion().has_value();
+	t("eof", eof);
+	if (!eof)
+		t("library_address", IRNames::libraryAddressImmutable());
+	else
+		// TODO: We assume that libraries do not have immutable variables. The address is stored in 0 offset of
+		//  auxiliary data section. Is it correct?
+		t("library_address_data_offset", "0");
+
 	t("dispatch", dispatchRoutine(_contract));
 	std::set<FunctionDefinition const*> deployedFunctionList = generateQueuedFunctions();
 	generateInternalDispatchFunctions(_contract);
@@ -532,27 +544,39 @@ std::string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 		{
 			solAssert(paramTypes.empty(), "");
 			solUnimplementedAssert(type->sizeOnStack() == 1);
-			return Whiskers(R"(
+
+			auto t = Whiskers(R"(
 				<astIDComment><sourceLocationComment>
 				function <functionName>() -> rval {
-					rval := loadimmutable("<id>")
+					<?eof>
+						rval := auxdataloadn(<id>)
+					<!eof>
+						rval := loadimmutable("<id>")
+					</eof>
 				}
 				<contractSourceLocationComment>
-			)")
-			(
+				)");
+			t(
 				"astIDComment",
 				m_context.debugInfoSelection().astID ?
 					"/// @ast-id " + std::to_string(_varDecl.id()) + "\n" :
 					""
-			)
-			("sourceLocationComment", dispenseLocationComment(_varDecl))
-			(
+			);
+			t("sourceLocationComment", dispenseLocationComment(_varDecl));
+			t(
 				"contractSourceLocationComment",
 				dispenseLocationComment(m_context.mostDerivedContract())
-			)
-			("functionName", functionName)
-			("id", std::to_string(_varDecl.id()))
-			.render();
+			);
+			t("functionName", functionName);
+
+			auto const eof = m_context.eofVersion().has_value();
+			t("eof", eof);
+			if (!eof)
+				t("id", std::to_string(_varDecl.id()));
+			else
+				t("id", std::to_string(m_context.immutableVariableOffsetInDataSection(_varDecl)));
+
+			return t.render();
 		}
 		else if (_varDecl.isConstant())
 		{
@@ -940,38 +964,78 @@ void IRGenerator::generateConstructors(ContractDefinition const& _contract)
 std::string IRGenerator::deployCode(ContractDefinition const& _contract)
 {
 	Whiskers t(R"X(
-		let <codeOffset> := <allocateUnbounded>()
-		codecopy(<codeOffset>, dataoffset("<object>"), datasize("<object>"))
-		<#immutables>
-			setimmutable(<codeOffset>, "<immutableName>", <value>)
-		</immutables>
-		return(<codeOffset>, datasize("<object>"))
+		<?eof>
+			<?library>
+				let libraryAddressOffset := <allocateUnbounded>()
+				mstore(libraryAddressOffset, address())
+				returncontract("<object>", libraryAddressOffset, 32)
+			<!library>
+				returncontract("<object>", <immutablesOffset>, <immutablesSize>)
+			</library>
+		<!eof>
+			let <codeOffset> := <allocateUnbounded>()
+			codecopy(<codeOffset>, dataoffset("<object>"), datasize("<object>"))
+			<#immutables>
+				setimmutable(<codeOffset>, "<immutableName>", <value>)
+			</immutables>
+			return(<codeOffset>, datasize("<object>"))
+		</eof>
 	)X");
+	auto const eof = m_context.eofVersion().has_value();
+	auto const isLibrary = _contract.isLibrary();
+	t("eof", eof);
 	t("allocateUnbounded", m_utils.allocateUnboundedFunction());
-	t("codeOffset", m_context.newYulVariable());
+	if (!eof)
+		t("codeOffset", m_context.newYulVariable());
+	else
+		t("library", isLibrary);
+
 	t("object", IRNames::deployedObject(_contract));
 
 	std::vector<std::map<std::string, std::string>> immutables;
-	if (_contract.isLibrary())
+	if (isLibrary)
 	{
 		solAssert(ContractType(_contract).immutableVariables().empty(), "");
-		immutables.emplace_back(std::map<std::string, std::string>{
-			{"immutableName"s, IRNames::libraryAddressImmutable()},
-			{"value"s, "address()"}
-		});
-
+		if (!eof)
+		{
+			immutables.emplace_back(std::map<std::string, std::string>{
+				{"immutableName"s, IRNames::libraryAddressImmutable()},
+				{"value"s, "address()"}
+			});
+			t("immutables", std::move(immutables));
+		}
+		// For EOF library address is stored in 0 offset of auxiliary data section.
 	}
 	else
-		for (VariableDeclaration const* immutable: ContractType(_contract).immutableVariables())
+	{
+		if (!eof)
 		{
-			solUnimplementedAssert(immutable->type()->isValueType());
-			solUnimplementedAssert(immutable->type()->sizeOnStack() == 1);
-			immutables.emplace_back(std::map<std::string, std::string>{
-				{"immutableName"s, std::to_string(immutable->id())},
-				{"value"s, "mload(" + std::to_string(m_context.immutableMemoryOffset(*immutable)) + ")"}
-			});
+			for (VariableDeclaration const* immutable: ContractType(_contract).immutableVariables())
+			{
+				solUnimplementedAssert(immutable->type()->isValueType());
+				solUnimplementedAssert(immutable->type()->sizeOnStack() == 1);
+				immutables.emplace_back(std::map<std::string, std::string>{
+					{"immutableName"s, std::to_string(immutable->id())},
+					{"value"s, "mload(" + std::to_string(m_context.immutableMemoryOffset(*immutable)) + ")"}
+				});
+			}
+
+			t("immutables", std::move(immutables));
 		}
-	t("immutables", std::move(immutables));
+		else
+		{
+			auto const& immutableVariables = ContractType(_contract).immutableVariables();
+			for (VariableDeclaration const* immutable: immutableVariables)
+			{
+				solUnimplementedAssert(immutable->type()->isValueType());
+				solUnimplementedAssert(immutable->type()->sizeOnStack() == 1);
+			}
+
+			t("immutablesOffset", std::to_string(m_context.immutablesMemoryOffset()));
+			t("immutablesSize", std::to_string(m_context.immutablesMemorySize()));
+		}
+	}
+
 	return t.render();
 }
 
@@ -1095,11 +1159,13 @@ void IRGenerator::resetContext(ContractDefinition const& _contract, ExecutionCon
 	);
 	IRGenerationContext newContext(
 		m_evmVersion,
+		m_eofVersion,
 		_context,
 		m_context.revertStrings(),
 		m_context.sourceIndices(),
 		m_context.debugInfoSelection(),
-		m_context.soliditySourceProvider()
+		m_context.soliditySourceProvider(),
+		m_context.immutableVariablesOffsetsInDataSection()
 	);
 	m_context = std::move(newContext);
 
