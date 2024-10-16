@@ -42,7 +42,7 @@ enum class OptimisationPreset
 struct OptimiserSettings
 {
 	static char constexpr DefaultYulOptimiserSteps[] =
-		"dhfoDgvulfnTUtnIf"            // None of these can make stack problems worse
+		"dfDvulfnTUtnIf"               // None of these can make stack problems worse
 
 		"xa[r]EscLM"                   // Turn into SSA and simplify
 		"Vcul [j]"                     // Reverse SSA
@@ -51,13 +51,13 @@ struct OptimiserSettings
 
 		"Trpeul"                       // Run functional expression inliner
 		"xa[r]cL"                      // Turn into SSA again and simplify
-		"gvifM"                        // Run full inliner
+		"vifM"                         // Run full inliner
 		"CTUca[r]LSsTFOtfDnca[r]Iulc"  // SSA plus simplify
 
 		"scCTUt"
-		"gvifM"                        // Run full inliner
+		"vifM"                         // Run full inliner
 		"x[scCTUt] TOntnfDIul"         // Perform structural simplification
-		"gvifM"                        // Run full inliner
+		"vifM"                         // Run full inliner
 
 		"jmul[jul] VcTOcul jmul";      // Make source short and pretty
 
