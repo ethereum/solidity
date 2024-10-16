@@ -169,3 +169,44 @@ Modifiers
 - ``override``: States that this function, modifier or public state variable changes
   the behavior of a function or modifier in a base contract.
 
+Optimizer Step Dependencies
+===========================
+
+=========================================== =============================================================== ===========================================
+Step                                        Steps that should run before                                    Steps that should run after
+=========================================== =============================================================== ===========================================
+:ref:`a <ssa-transform>`                    ExpressionSplitter, CommonSubexpressionEliminator               UnusedAssignEliminator
+:ref:`C <conditional-simplifier>`           SSATransform, DeadCodeEliminator
+:ref:`c <common-subexpression-eliminator>`  ExpressionSplitter, SSATransform [#]_                           UnusedPruner, UnusedAssignEliminator
+:ref:`D <dead-code-eliminator>`
+:ref:`d <var-decl-initializer>`
+:ref:`E <equal-store-eliminator>`           ExpressionSplitter, SSATransform, CommonSubexpressionEliminator
+:ref:`e <expression-inliner>`
+:ref:`F <function-specializer>`             LiteralRematerialiser
+:ref:`f <block-flattener>`
+:ref:`g <function-grouper>`
+:ref:`h <function-hoister>`
+:ref:`I <for-loop-condition-into-body>`     StructuralSimplifier
+:ref:`i <full-inliner>`                     FunctionHoister, ExpressionSplitter
+:ref:`j <expression-joiner>`
+:ref:`L <load-resolver>`                    SSATransform
+:ref:`l <circular-references-pruner>`
+:ref:`M <loop-invariant-code-motion>`       ExpressionSplitter, SSATransform, ForLoopConditionIntoBody
+:ref:`m <rematerialiser>`
+:ref:`n <control-flow-simplifier>`
+:ref:`O <for-loop-condition-out-of-body>`   LiteralRematerialiser
+:ref:`o <for-loop-init-rewriter>`
+:ref:`p <unused-function-parameter-pruner>` LiteralRematerialiser                                           FullInliner, UnusedPruner
+:ref:`r <unused-assign-eliminator>`
+:ref:`S <unused-store-eliminator>`          SSATransform
+:ref:`s <expression-simplifier>`            ExpressionSplitter, SSATransform, CommonSubexpressionEliminator
+:ref:`T <literal-rematerialiser>`
+:ref:`t <structural-simplifier>`            LiteralRematerialiser
+:ref:`U <conditional-unsimplifier>`
+:ref:`u <unused-pruner>`
+:ref:`V <ssa-reverser>`                                                                                     CommonSubexpressionEliminator, UnusedPruner
+:ref:`v <equivalent-function-combiner>`                                                                     UnusedPruner
+:ref:`x <expression-splitter>`              ForLoopConditionIntoBody
+=========================================== =============================================================== ===========================================
+
+.. [#] It is enough if SSATransform was used once at any point before running the step.

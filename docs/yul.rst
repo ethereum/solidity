@@ -1024,6 +1024,8 @@ option.
 
 See :ref:`Using the Commandline Compiler <commandline-compiler>` for details about the Solidity linker.
 
+.. _yul-memoryguard:
+
 memoryguard
 ^^^^^^^^^^^
 
