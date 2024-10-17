@@ -58,7 +58,7 @@ std::vector<Statement> generateMemoryStore(
 
 FunctionCall generateMemoryLoad(Dialect const& _dialect, langutil::DebugData::ConstPtr const& _debugData, LiteralValue const& _mpos)
 {
-	std::optional<BuiltinHandle> const& memoryLoadHandle = _dialect.memoryStoreFunctionHandle();
+	std::optional<BuiltinHandle> const& memoryLoadHandle = _dialect.memoryLoadFunctionHandle();
 	yulAssert(memoryLoadHandle);
 	return FunctionCall{
 		_debugData,
