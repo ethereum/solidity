@@ -9,7 +9,7 @@ are used as function arguments or in assignments.
 
 Unlike :ref:`reference types <reference-types>`, value type declarations do not
 specify a data location since they are small enough to be stored on the stack.
-The only exception are :ref:`state variables <structure-state-variables>`.
+The only exception is :ref:`state variables <structure-state-variables>`.
 Those are by default located in storage, but can also be marked as
 :ref:`transient <transient-storage>`, :ref:`constant or immutable <constants>`.
 
@@ -204,7 +204,7 @@ must be explicit via ``payable(<address>)``.
 Explicit conversions to and from ``address`` are allowed for ``uint160``, integer literals,
 ``bytes20`` and contract types.
 
-Only expressions of type ``address`` and contract-type can be converted to the type ``address
+Only expressions of type ``address`` and contract type can be converted to the type ``address
 payable`` via the explicit conversion ``payable(...)``. For contract-type, this conversion is only
 allowed if the contract can receive Ether, i.e., the contract either has a :ref:`receive
 <receive-ether-function>` or a payable fallback function. Note that ``payable(0)`` is valid and is
@@ -215,7 +215,7 @@ an exception to this rule.
     declare its type as ``address payable`` to make this requirement visible. Also,
     try to make this distinction or conversion as early as possible.
 
-    The distinction between ``address`` and ``address payable`` was introduced with version 0.5.0.
+    The distinction between ``address`` and ``address payable`` was introduced in version 0.5.0.
     Also starting from that version, contracts are not implicitly convertible to the ``address`` type, but can still be explicitly converted to
     ``address`` or to ``address payable``, if they have a receive or payable fallback function.
 
