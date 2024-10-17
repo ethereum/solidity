@@ -117,6 +117,7 @@ protected:
 	bool const m_objectAccess;
 	langutil::EVMVersion const m_evmVersion;
 	std::optional<uint8_t> m_eofVersion;
+	std::unordered_map<std::string_view, BuiltinHandle> m_builtinFunctionsByName;
 	std::vector<std::optional<BuiltinFunctionForEVM>> m_functions;
 	std::array<std::unique_ptr<BuiltinFunctionForEVM>, verbatimIdOffset> mutable m_verbatimFunctions;
 	std::set<std::string, std::less<>> m_reserved;
