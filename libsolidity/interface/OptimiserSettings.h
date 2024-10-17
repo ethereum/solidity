@@ -47,6 +47,8 @@ struct OptimiserSettings
 		"xa[r]EscLM"                   // Turn into SSA and simplify
 		"Vcul [j]"                     // Reverse SSA
 
+		"k"                            // preprocessing after some simplifications
+
 		// should have good "compilability" property here.
 
 		"Trpeul"                       // Run functional expression inliner

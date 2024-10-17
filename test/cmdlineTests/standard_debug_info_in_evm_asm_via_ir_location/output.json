@@ -280,7 +280,9 @@ sub_0: assembly {
       immutable(\"0xe4b1702d9298fee62dfeccc57d322a463ad55ca201256d01f62b45b2e1c21c10\")
         /* \"C\":120:122  41 */
       dup1
+        /* \"C\":96:122  int constant constVar = 41 */
       0x29
+        /* \"C\":120:122  41 */
       add
       swap1
       dup2
@@ -626,7 +628,9 @@ sub_0: assembly {
       immutable(\"0xe4b1702d9298fee62dfeccc57d322a463ad55ca201256d01f62b45b2e1c21c10\")
         /* \"C\":120:122  41 */
       dup1
+        /* \"C\":96:122  int constant constVar = 41 */
       0x29
+        /* \"C\":120:122  41 */
       add
       swap1
       dup2
