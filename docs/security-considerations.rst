@@ -259,7 +259,8 @@ Let's say you have a wallet contract like this:
         }
     }
 
-Now someone tricks you into sending Ether to the address of this attack wallet:
+Now someone tricks **you** into sending Ether from the ``TxUserWallet`` wallet contract
+to the address of this attack wallet:
 
 .. code-block:: solidity
 
@@ -281,11 +282,23 @@ Now someone tricks you into sending Ether to the address of this attack wallet:
         }
     }
 
-If your wallet had checked ``msg.sender`` for authorization, it would get the address of the attack wallet,
-instead of the owner's address.
-But by checking ``tx.origin``, it gets the original address that kicked off the transaction,
-which is still the owner's address.
 The attack wallet instantly drains all your funds.
+
+How it happens?
+
+You call ``TxUserWallet.transferTo(<address of TxAttackWallet>, <some amount>)``. 
+Since you are the owner of the ``TxUserWallet``, the ``require`` statement will pass and it will call ``transfer``.
+
+Then ``TxAttackWallet`` will receive the message call and trigger ``receive`` that in turn will start another transfer
+from your contract wallet to the owner of the ``TxAttackWallet``: 
+``TxUserWallet(<msg.sender: your TxUserWallet>).transferTo(owner, msg.sender.balance)``.
+
+``TxUserWallet`` will receive the call again, check the ``tx.origin`` (which is **you**) and drain all funds.
+If your wallet had checked ``msg.sender`` for authorization, it would get the address of the attack wallet,
+instead of **your** address.
+But by checking ``tx.origin``, it gets the original address that kicked off the transaction (**you**),
+which is the owner's address of ``TxUserWallet``.
+
 
 .. _underflow-overflow:
 
