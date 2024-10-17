@@ -29,7 +29,7 @@
 namespace solidity::yul
 {
 
-struct EVMDialect;
+class EVMDialect;
 
 /**
  * Gas meter for expressions only involving literals, identifiers and

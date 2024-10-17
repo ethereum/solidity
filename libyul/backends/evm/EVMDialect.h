@@ -72,17 +72,16 @@ public:
 
 	BuiltinFunctionForEVM const& builtin(BuiltinHandle const& _handle) const override;
 
-	/// @returns true if the identifier is reserved. This includes the builtins too.
 	bool reservedIdentifier(std::string_view _name) const override;
 
-	std::optional<BuiltinHandle> discardFunction() const override { return m_discardFunction; }
-	std::optional<BuiltinHandle> equalityFunction() const override { return m_equalityFunction; }
-	std::optional<BuiltinHandle> booleanNegationFunction() const override { return m_booleanNegationFunction; }
-	std::optional<BuiltinHandle> memoryStoreFunction() const override { return m_memoryStoreFunction; }
-	std::optional<BuiltinHandle> memoryLoadFunction() const override { return m_memoryLoadFunction; }
-	std::optional<BuiltinHandle> storageStoreFunction() const override { return m_storageStoreFunction; }
-	std::optional<BuiltinHandle> storageLoadFunction() const override { return m_storageLoadFunction; }
-	std::optional<BuiltinHandle> hashFunction() const override { return m_hashFunction; }
+	std::optional<BuiltinHandle> discardFunctionHandle() const override { return m_discardFunction; }
+	std::optional<BuiltinHandle> equalityFunctionHandle() const override { return m_equalityFunction; }
+	std::optional<BuiltinHandle> booleanNegationFunctionHandle() const override { return m_booleanNegationFunction; }
+	std::optional<BuiltinHandle> memoryStoreFunctionHandle() const override { return m_memoryStoreFunction; }
+	std::optional<BuiltinHandle> memoryLoadFunctionHandle() const override { return m_memoryLoadFunction; }
+	std::optional<BuiltinHandle> storageStoreFunctionHandle() const override { return m_storageStoreFunction; }
+	std::optional<BuiltinHandle> storageLoadFunctionHandle() const override { return m_storageLoadFunction; }
+	std::optional<BuiltinHandle> hashFunctionHandle() const override { return m_hashFunction; }
 
 	static EVMDialect const& strictAssemblyForEVM(langutil::EVMVersion _evmVersion, std::optional<uint8_t> _eofVersion);
 	static EVMDialect const& strictAssemblyForEVMObjects(langutil::EVMVersion _evmVersion, std::optional<uint8_t> _eofVersion);

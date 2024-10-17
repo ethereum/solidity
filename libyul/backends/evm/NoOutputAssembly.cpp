@@ -38,13 +38,13 @@ namespace
 
 void modifyBuiltinToNoOutput(BuiltinFunctionForEVM& _builtin)
 {
-	_builtin.generateCode = [fun=_builtin](FunctionCall const& _call, AbstractAssembly& _assembly, BuiltinContext&)
+	_builtin.generateCode = [_builtin](FunctionCall const& _call, AbstractAssembly& _assembly, BuiltinContext&)
 	{
 		for (size_t i: ranges::views::iota(0u, _call.arguments.size()))
-			if (!fun.literalArgument(i))
+			if (!_builtin.literalArgument(i))
 				_assembly.appendInstruction(evmasm::Instruction::POP);
 
-		for (size_t i = 0; i < fun.numReturns; i++)
+		for (size_t i = 0; i < _builtin.numReturns; i++)
 			_assembly.appendConstant(u256(0));
 	};
 }

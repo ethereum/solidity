@@ -53,7 +53,7 @@ void ForLoopConditionOutOfBody::operator()(ForLoop& _forLoop)
 	if (!SideEffectsCollector(m_dialect, *firstStatement.condition).movable())
 		return;
 
-	YulName const iszero = YulName{m_dialect.builtin(*m_dialect.booleanNegationFunctionHandle()).name};
+	YulName const iszero{m_dialect.builtin(*m_dialect.booleanNegationFunctionHandle()).name};
 	langutil::DebugData::ConstPtr debugData = debugDataOf(*firstStatement.condition);
 
 	if (

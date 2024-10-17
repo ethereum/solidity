@@ -74,16 +74,15 @@ struct Dialect
 	/// @returns true if the identifier is reserved. This includes the builtins too.
 	virtual bool reservedIdentifier(std::string_view _name) const { return findBuiltin(_name).has_value(); }
 
-	// todo these are handles, not functions
-	virtual std::optional<BuiltinHandle> discardFunction() const { return std::nullopt; }
-	virtual std::optional<BuiltinHandle> equalityFunction() const { return std::nullopt; }
-	virtual std::optional<BuiltinHandle> booleanNegationFunction() const { return std::nullopt; }
+	virtual std::optional<BuiltinHandle> discardFunctionHandle() const { return std::nullopt; }
+	virtual std::optional<BuiltinHandle> equalityFunctionHandle() const { return std::nullopt; }
+	virtual std::optional<BuiltinHandle> booleanNegationFunctionHandle() const { return std::nullopt; }
 
-	virtual std::optional<BuiltinHandle> memoryStoreFunction() const { return std::nullopt; }
-	virtual std::optional<BuiltinHandle> memoryLoadFunction() const { return std::nullopt; }
-	virtual std::optional<BuiltinHandle> storageStoreFunction() const { return std::nullopt; }
-	virtual std::optional<BuiltinHandle> storageLoadFunction() const { return std::nullopt; }
-	virtual std::optional<BuiltinHandle> hashFunction() const { return std::nullopt; }
+	virtual std::optional<BuiltinHandle> memoryStoreFunctionHandle() const { return std::nullopt; }
+	virtual std::optional<BuiltinHandle> memoryLoadFunctionHandle() const { return std::nullopt; }
+	virtual std::optional<BuiltinHandle> storageStoreFunctionHandle() const { return std::nullopt; }
+	virtual std::optional<BuiltinHandle> storageLoadFunctionHandle() const { return std::nullopt; }
+	virtual std::optional<BuiltinHandle> hashFunctionHandle() const { return std::nullopt; }
 
 	Literal zeroLiteral() const;
 
