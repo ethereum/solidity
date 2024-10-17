@@ -503,14 +503,16 @@ public:
 		std::vector<ASTPointer<InheritanceSpecifier>> _baseContracts,
 		std::vector<ASTPointer<ASTNode>> _subNodes,
 		ContractKind _contractKind = ContractKind::Contract,
-		bool _abstract = false
+		bool _abstract = false,
+		ASTPointer<Expression> storageBaseLocationExpression = ASTPointer<Expression>()
 	):
 		Declaration(_id, _location, _name, std::move(_nameLocation)),
 		StructurallyDocumented(_documentation),
 		m_baseContracts(std::move(_baseContracts)),
 		m_subNodes(std::move(_subNodes)),
 		m_contractKind(_contractKind),
-		m_abstract(_abstract)
+		m_abstract(_abstract),
+		m_storageBaseLocationExpression(storageBaseLocationExpression)
 	{}
 
 	void accept(ASTVisitor& _visitor) override;
@@ -591,6 +593,7 @@ private:
 	std::vector<ASTPointer<ASTNode>> m_subNodes;
 	ContractKind m_contractKind;
 	bool m_abstract{false};
+	ASTPointer<Expression> m_storageBaseLocationExpression;
 
 	util::LazyInit<std::vector<std::pair<util::FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList[2];
 	util::LazyInit<std::vector<EventDefinition const*>> m_interfaceEvents;
