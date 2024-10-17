@@ -57,14 +57,14 @@ void yul::removeEmptyBlocks(Block& _block)
 
 bool yul::isRestrictedIdentifier(Dialect const& _dialect, YulName const& _identifier)
 {
-	return _identifier.empty() || hasLeadingOrTrailingDot(_identifier.str()) || TokenTraits::isYulKeyword(_identifier.str()) || _dialect.reservedIdentifier(_identifier);
+	return _identifier.empty() || hasLeadingOrTrailingDot(_identifier.str()) || TokenTraits::isYulKeyword(_identifier.str()) || _dialect.reservedIdentifier(_identifier.str());
 }
 
 std::optional<evmasm::Instruction> yul::toEVMInstruction(Dialect const& _dialect, YulName const& _name)
 {
 	if (auto const* dialect = dynamic_cast<EVMDialect const*>(&_dialect))
-		if (BuiltinFunctionForEVM const* builtin = dialect->builtin(_name))
-			return builtin->instruction;
+		if (std::optional<BuiltinHandle> const builtinHandle = dialect->findBuiltin(_name.str()))
+			return dialect->builtin(*builtinHandle).instruction;
 	return std::nullopt;
 }
 

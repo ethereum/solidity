@@ -72,7 +72,7 @@ struct CopyTranslate: public yul::ASTCopier
 
 	yul::YulName translateIdentifier(yul::YulName _name) override
 	{
-		if (m_dialect.builtin(_name))
+		if (m_dialect.findBuiltin(_name.str()))
 			return _name;
 		else
 			return yul::YulName{"usr$" + _name.str()};

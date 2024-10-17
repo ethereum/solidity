@@ -21,13 +21,16 @@
 
 #pragma once
 
-#include <libyul/YulName.h>
+#include <libyul/Builtins.h>
 #include <libyul/ControlFlowSideEffects.h>
+#include <libyul/Exceptions.h>
 #include <libyul/SideEffects.h>
+#include <libyul/YulString.h>
 
-#include <vector>
-#include <set>
 #include <optional>
+#include <string>
+#include <string_view>
+#include <vector>
 
 namespace solidity::yul
 {
@@ -38,7 +41,7 @@ struct Literal;
 
 struct BuiltinFunction
 {
-	YulName name;
+	std::string name;
 	size_t numParameters;
 	size_t numReturns;
 	SideEffects sideEffects;
@@ -56,29 +59,32 @@ struct BuiltinFunction
 
 struct Dialect
 {
+	static size_t constexpr verbatimMaxInputSlots = 100;
+	static size_t constexpr verbatimMaxOutputSlots = 100;
+
 	/// Noncopiable.
 	Dialect(Dialect const&) = delete;
 	Dialect& operator=(Dialect const&) = delete;
 
-	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
-	virtual BuiltinFunction const* builtin(YulName /*_name*/) const { return nullptr; }
+	/// @returns the builtin function of the given name or a null if it is not a builtin function.
+	virtual std::optional<BuiltinHandle> findBuiltin(std::string_view /*_name*/) const { return std::nullopt; }
+
+	virtual BuiltinFunction const& builtin(BuiltinHandle const&) const { yulAssert(false); }
 
 	/// @returns true if the identifier is reserved. This includes the builtins too.
-	virtual bool reservedIdentifier(YulName _name) const { return builtin(_name) != nullptr; }
+	virtual bool reservedIdentifier(std::string_view _name) const { return findBuiltin(_name).has_value(); }
 
-	virtual BuiltinFunction const* discardFunction() const { return nullptr; }
-	virtual BuiltinFunction const* equalityFunction() const { return nullptr; }
-	virtual BuiltinFunction const* booleanNegationFunction() const { return nullptr; }
+	virtual std::optional<BuiltinHandle> discardFunctionHandle() const { return std::nullopt; }
+	virtual std::optional<BuiltinHandle> equalityFunctionHandle() const { return std::nullopt; }
+	virtual std::optional<BuiltinHandle> booleanNegationFunctionHandle() const { return std::nullopt; }
 
-	virtual BuiltinFunction const* memoryStoreFunction() const { return nullptr; }
-	virtual BuiltinFunction const* memoryLoadFunction() const { return nullptr; }
-	virtual BuiltinFunction const* storageStoreFunction() const { return nullptr; }
-	virtual BuiltinFunction const* storageLoadFunction() const { return nullptr; }
-	virtual YulName hashFunction() const { return YulName{}; }
+	virtual std::optional<BuiltinHandle> memoryStoreFunctionHandle() const { return std::nullopt; }
+	virtual std::optional<BuiltinHandle> memoryLoadFunctionHandle() const { return std::nullopt; }
+	virtual std::optional<BuiltinHandle> storageStoreFunctionHandle() const { return std::nullopt; }
+	virtual std::optional<BuiltinHandle> storageLoadFunctionHandle() const { return std::nullopt; }
+	virtual std::optional<BuiltinHandle> hashFunctionHandle() const { return std::nullopt; }
 
 	Literal zeroLiteral() const;
-
-	virtual std::set<YulName> fixedFunctionNames() const { return {}; }
 
 	Dialect() = default;
 	virtual ~Dialect() = default;

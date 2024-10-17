@@ -15,6 +15,7 @@ add_library(yul
 	AsmParser.h
 	AsmPrinter.cpp
 	AsmPrinter.h
+	Builtins.h
 	YulStack.h
 	YulStack.cpp
 	CompilabilityChecker.cpp

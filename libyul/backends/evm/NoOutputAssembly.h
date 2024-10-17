@@ -90,9 +90,11 @@ private:
 /**
  * EVM dialect that does not generate any code.
  */
-struct NoOutputEVMDialect: public EVMDialect
+struct NoOutputEVMDialect: EVMDialect
 {
 	explicit NoOutputEVMDialect(EVMDialect const& _copyFrom);
+
+	BuiltinFunctionForEVM const& builtin(BuiltinHandle const& _handle) const override;
 };
 
 

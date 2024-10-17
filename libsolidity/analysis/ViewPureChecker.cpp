@@ -66,9 +66,9 @@ public:
 	void operator()(yul::FunctionCall const& _funCall)
 	{
 		if (yul::EVMDialect const* dialect = dynamic_cast<decltype(dialect)>(&m_dialect))
-			if (yul::BuiltinFunctionForEVM const* fun = dialect->builtin(_funCall.functionName.name))
-				if (fun->instruction)
-					checkInstruction(nativeLocationOf(_funCall), *fun->instruction);
+			if (std::optional<yul::BuiltinHandle> builtinHandle = dialect->findBuiltin(_funCall.functionName.name.str()))
+				if (auto const& instruction = dialect->builtin(*builtinHandle).instruction)
+					checkInstruction(nativeLocationOf(_funCall), *instruction);
 
 		for (auto const& arg: _funCall.arguments)
 			std::visit(*this, arg);

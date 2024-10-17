@@ -74,10 +74,11 @@ struct MiniEVMInterpreter
 
 	u256 operator()(FunctionCall const& _funCall)
 	{
-		BuiltinFunctionForEVM const* fun = m_dialect.builtin(_funCall.functionName.name);
-		yulAssert(fun, "Expected builtin function.");
-		yulAssert(fun->instruction, "Expected EVM instruction.");
-		return eval(*fun->instruction, _funCall.arguments);
+		std::optional<BuiltinHandle> funHandle = m_dialect.findBuiltin(_funCall.functionName.name.str());
+		yulAssert(funHandle, "Expected builtin function.");
+		BuiltinFunctionForEVM const& fun = m_dialect.builtin(*funHandle);
+		yulAssert(fun.instruction, "Expected EVM instruction.");
+		return eval(*fun.instruction, _funCall.arguments);
 	}
 	u256 operator()(Literal const& _literal)
 	{
@@ -195,7 +196,9 @@ Representation RepresentationFinder::represent(
 		Identifier{m_debugData, _instruction},
 		{ASTCopier{}.translate(*_argument.expression)}
 	});
-	repr.cost = _argument.cost + m_meter.instructionCosts(*m_dialect.builtin(_instruction)->instruction);
+	repr.cost = _argument.cost + m_meter.instructionCosts(
+		*m_dialect.builtin(*m_dialect.findBuiltin(_instruction.str())).instruction
+	);
 	return repr;
 }
 
@@ -211,7 +214,8 @@ Representation RepresentationFinder::represent(
 		Identifier{m_debugData, _instruction},
 		{ASTCopier{}.translate(*_arg1.expression), ASTCopier{}.translate(*_arg2.expression)}
 	});
-	repr.cost = m_meter.instructionCosts(*m_dialect.builtin(_instruction)->instruction) + _arg1.cost + _arg2.cost;
+	repr.cost = m_meter.instructionCosts(
+		*m_dialect.builtin(*m_dialect.findBuiltin(_instruction.str())).instruction) + _arg1.cost + _arg2.cost;
 	return repr;
 }
 
