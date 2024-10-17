@@ -1,0 +1,13 @@
+{
+	"language": "Solidity",
+	"sources": {
+		"C": {"urls": ["standard_yul_cfg_json_export/in.sol"]}
+	},
+	"settings": {
+		"optimizer": {
+			"enabled": true
+		},
+		"viaIR": true,
+		"outputSelection": {"*": {"*": ["yulCFGJson"]}}
+	}
+}

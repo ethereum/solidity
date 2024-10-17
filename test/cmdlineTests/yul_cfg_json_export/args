@@ -1,0 +1,1 @@
+--via-ir --optimize --yul-cfg-json --pretty-json --json-indent 4
