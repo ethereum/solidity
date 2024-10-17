@@ -70,7 +70,7 @@ public:
 
 	std::optional<BuiltinHandle> findBuiltin(std::string_view _name) const override;
 
-	BuiltinFunctionForEVM const& builtin(BuiltinHandle const& handle) const override;
+	BuiltinFunctionForEVM const& builtin(BuiltinHandle const& _handle) const override;
 
 	/// @returns true if the identifier is reserved. This includes the builtins too.
 	bool reservedIdentifier(std::string_view _name) const override;
@@ -108,6 +108,7 @@ protected:
 	bool const m_objectAccess;
 	langutil::EVMVersion const m_evmVersion;
 	std::optional<uint8_t> m_eofVersion;
+	std::unordered_map<std::string_view, BuiltinHandle> m_builtinFunctionsByName;
 	std::vector<std::optional<BuiltinFunctionForEVM>> m_functions;
 	std::array<std::unique_ptr<BuiltinFunctionForEVM>, verbatimIDOffset> mutable m_verbatimFunctions{};
 	std::set<std::string, std::less<>> m_reserved;
