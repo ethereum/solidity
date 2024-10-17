@@ -70,7 +70,19 @@ struct EVMDialect: Dialect
 	/// @returns the builtin function of the given name or null if it is not a builtin function.
 	std::optional<BuiltinHandle> findBuiltin(std::string_view _name) const override;
 
-	BuiltinFunctionForEVM const& builtin(BuiltinHandle const& handle) const override;
+	BuiltinFunctionForEVM const& builtin(BuiltinHandle const& handle) const override
+	{
+		if (isVerbatimHandle(handle))
+		{
+			auto const& verbatimFunctionPtr = m_verbatimFunctions.at(handle.id);
+			yulAssert(verbatimFunctionPtr);
+			return *verbatimFunctionPtr;
+		}
+
+		auto const& maybeBuiltin = m_functions.at(handle.id - verbatimIdOffset);
+		yulAssert(maybeBuiltin.has_value());
+		return *maybeBuiltin;
+	}
 
 	/// @returns true if the identifier is reserved. This includes the builtins too.
 	bool reservedIdentifier(std::string_view _name) const override;
@@ -94,9 +106,10 @@ struct EVMDialect: Dialect
 
 	static SideEffects sideEffectsOfInstruction(evmasm::Instruction _instruction);
 
-	std::vector<BuiltinFunctionForEVM> const& verbatimFunctions() const { return m_verbatimFunctions; }
-
 protected:
+	static bool constexpr isVerbatimHandle(BuiltinHandle const& _handle) { return _handle.id < verbatimIdOffset; }
+	static BuiltinFunctionForEVM createVerbatimFunctionFromHandle(BuiltinHandle const& _handle);
+	static BuiltinFunctionForEVM createVerbatimFunction(size_t _arguments, size_t _returnVariables);
 	BuiltinHandle verbatimFunction(size_t _arguments, size_t _returnVariables) const;
 
 	static size_t constexpr verbatimIdOffset = verbatimMaxInputSlots * verbatimMaxOutputSlots;
@@ -105,7 +118,7 @@ protected:
 	langutil::EVMVersion const m_evmVersion;
 	std::optional<uint8_t> m_eofVersion;
 	std::vector<std::optional<BuiltinFunctionForEVM>> m_functions;
-	std::vector<BuiltinFunctionForEVM> mutable m_verbatimFunctions;
+	std::array<std::unique_ptr<BuiltinFunctionForEVM>, verbatimIdOffset> mutable m_verbatimFunctions;
 	std::set<std::string, std::less<>> m_reserved;
 
 	std::optional<BuiltinHandle> m_discardFunction;
