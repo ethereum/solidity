@@ -45,6 +45,17 @@ using namespace solidity::util;
 namespace
 {
 
+size_t constexpr toContinuousVerbatimIndex(size_t _arguments, size_t _returnVariables)
+{
+	return _arguments + _returnVariables * EVMDialect::verbatimMaxInputSlots;
+}
+
+std::tuple<size_t, size_t> constexpr verbatimIndexToArgsAndRets(size_t _index)
+{
+	size_t const numRets = _index / EVMDialect::verbatimMaxInputSlots;
+	return std::make_tuple(_index - numRets * EVMDialect::verbatimMaxInputSlots, numRets);
+}
+
 BuiltinFunctionForEVM createEVMFunction(
 	langutil::EVMVersion _evmVersion,
 	std::string const& _name,
@@ -408,7 +419,7 @@ EVMDialect::EVMDialect(langutil::EVMVersion _evmVersion, std::optional<uint8_t> 
 	for (auto const& [index, maybeBuiltin]: m_functions | ranges::views::enumerate)
 		if (maybeBuiltin)
 			// ids are offset by the maximum number of verbatim functions
-			m_builtinFunctionsByName[maybeBuiltin->name] = BuiltinHandle{index + verbatimIdOffset};
+			m_builtinFunctionsByName[maybeBuiltin->name] = BuiltinHandle{index + verbatimIDOffset};
 
 	m_discardFunction = findBuiltin("pop");
 	m_equalityFunction = findBuiltin("eq");
@@ -499,16 +510,13 @@ SideEffects EVMDialect::sideEffectsOfInstruction(evmasm::Instruction _instructio
 	};
 }
 
-BuiltinHandle EVMDialect::verbatimFunction(size_t _arguments, size_t _returnVariables) const
+BuiltinFunctionForEVM EVMDialect::createVerbatimFunctionFromHandle(BuiltinHandle const& _handle)
 {
-	auto const it = std::find_if(m_verbatimFunctions.begin(), m_verbatimFunctions.end(), [&](BuiltinFunctionForEVM const& _function) {
-		return _function.numParameters == 1 + _arguments && _function.numReturns == _returnVariables;
-	});
-	yulAssert(_arguments <= verbatimMaxInputSlots);
-	yulAssert(_returnVariables <= verbatimMaxOutputSlots);
-	if (it != m_verbatimFunctions.end())
-		return {static_cast<size_t>(std::distance(m_verbatimFunctions.begin(), it))};
+	return std::apply(createVerbatimFunction, verbatimIndexToArgsAndRets(_handle.id));
+}
 
+BuiltinFunctionForEVM EVMDialect::createVerbatimFunction(size_t _arguments, size_t _returnVariables)
+{
 	BuiltinFunctionForEVM builtinFunction = createFunction(
 		"verbatim_" + std::to_string(_arguments) + "i_" + std::to_string(_returnVariables) + "o",
 		1 + _arguments,
@@ -531,17 +539,22 @@ BuiltinHandle EVMDialect::verbatimFunction(size_t _arguments, size_t _returnVari
 		}
 	);
 	builtinFunction.isMSize = true;
-	m_verbatimFunctions.push_back(std::move(builtinFunction));
-	yulAssert(m_verbatimFunctions.size() <= verbatimIdOffset);
-	return {m_verbatimFunctions.size() - 1};
+	return builtinFunction;
 }
 
-BuiltinFunctionForEVM const& EVMDialect::builtin(BuiltinHandle const& handle) const
+BuiltinHandle EVMDialect::verbatimFunction(size_t _arguments, size_t _returnVariables) const
 {
-	if (handle.id < verbatimIdOffset)
-		return m_verbatimFunctions.at(handle.id);
+	yulAssert(_arguments <= verbatimMaxInputSlots);
+	yulAssert(_returnVariables <= verbatimMaxOutputSlots);
 
-	auto const& maybeBuiltin = m_functions.at(handle.id - verbatimIdOffset);
-	yulAssert(maybeBuiltin.has_value());
-	return *maybeBuiltin;
+	auto const verbatimIndex = toContinuousVerbatimIndex(_arguments, _returnVariables);
+	yulAssert(verbatimIndex < verbatimIDOffset);
+
+	if (
+		auto& backingData = m_verbatimFunctions[verbatimIndex];
+		!backingData
+	)
+		backingData = std::make_unique<BuiltinFunctionForEVM>(createVerbatimFunction(_arguments, _returnVariables));
+
+	return {verbatimIndex};
 }

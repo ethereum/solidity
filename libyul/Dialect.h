@@ -59,16 +59,16 @@ struct BuiltinFunction
 
 struct Dialect
 {
-	static size_t constexpr verbatimMaxInputSlots = 100;
-	static size_t constexpr verbatimMaxOutputSlots = 100;
-
 	/// Noncopiable.
 	Dialect(Dialect const&) = delete;
 	Dialect& operator=(Dialect const&) = delete;
 
-	/// @returns the builtin function of the given name or a null if it is not a builtin function.
+    /// Finds a builtin by name and returns the corresponding handle.
+	/// @returns Builtin handle or null if the name does not match any builtin in the dialect.
 	virtual std::optional<BuiltinHandle> findBuiltin(std::string_view /*_name*/) const { return std::nullopt; }
 
+    /// Retrieves the description of a builtin function by its handle.
+    /// Note that handles are dialect-specific and can be used only with a dialect that created them.
 	virtual BuiltinFunction const& builtin(BuiltinHandle const&) const { yulAssert(false); }
 
 	/// @returns true if the identifier is reserved. This includes the builtins too.

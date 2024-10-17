@@ -62,8 +62,9 @@ struct BuiltinFunctionForEVM: public BuiltinFunction
  * The main difference is that the builtin functions take an AbstractAssembly for the
  * code generation.
  */
-struct EVMDialect: Dialect
+class EVMDialect: public Dialect
 {
+public:
 	/// Constructor, should only be used internally. Use the factory functions below.
 	EVMDialect(langutil::EVMVersion _evmVersion, std::optional<uint8_t> _eofVersion, bool _objectAccess);
 
@@ -93,18 +94,22 @@ struct EVMDialect: Dialect
 
 	static SideEffects sideEffectsOfInstruction(evmasm::Instruction _instruction);
 
-	std::vector<BuiltinFunctionForEVM> const& verbatimFunctions() const { return m_verbatimFunctions; }
+	static size_t constexpr verbatimMaxInputSlots = 100;
+	static size_t constexpr verbatimMaxOutputSlots = 100;
 
 protected:
+	static bool constexpr isVerbatimHandle(BuiltinHandle const& _handle) { return _handle.id < verbatimIDOffset; }
+	static BuiltinFunctionForEVM createVerbatimFunctionFromHandle(BuiltinHandle const& _handle);
+	static BuiltinFunctionForEVM createVerbatimFunction(size_t _arguments, size_t _returnVariables);
 	BuiltinHandle verbatimFunction(size_t _arguments, size_t _returnVariables) const;
 
-	static size_t constexpr verbatimIdOffset = verbatimMaxInputSlots * verbatimMaxOutputSlots;
+	static size_t constexpr verbatimIDOffset = verbatimMaxInputSlots * verbatimMaxOutputSlots;
 
 	bool const m_objectAccess;
 	langutil::EVMVersion const m_evmVersion;
 	std::optional<uint8_t> m_eofVersion;
 	std::vector<std::optional<BuiltinFunctionForEVM>> m_functions;
-	std::vector<BuiltinFunctionForEVM> mutable m_verbatimFunctions;
+	std::array<std::unique_ptr<BuiltinFunctionForEVM>, verbatimIDOffset> mutable m_verbatimFunctions{};
 	std::set<std::string, std::less<>> m_reserved;
 
 	std::optional<BuiltinHandle> m_discardFunction;
