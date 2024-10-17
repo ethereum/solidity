@@ -108,11 +108,15 @@ void OptimiserSuite::run(
 	std::set<YulName> reservedIdentifiers = _externallyUsedIdentifiers;
 	reservedIdentifiers += _dialect.fixedFunctionNames();
 
-	auto astRoot = std::get<Block>(Disambiguator(
-		_dialect,
-		*_object.analysisInfo,
-		reservedIdentifiers
-	)(_object.code()->root()));
+	Block astRoot;
+	{
+		PROFILER_PROBE("Disambiguator", probe);
+		astRoot = std::get<Block>(Disambiguator(
+			_dialect,
+			*_object.analysisInfo,
+			reservedIdentifiers
+		)(_object.code()->root()));
+	}
 
 	NameDispenser dispenser{_dialect, astRoot, reservedIdentifiers};
 	OptimiserStepContext context{_dialect, dispenser, reservedIdentifiers, _expectedExecutionsPerDeployment};
@@ -123,7 +127,10 @@ void OptimiserSuite::run(
 	// ForLoopInitRewriter. Run them first to be able to run arbitrary sequences safely.
 	suite.runSequence("hgfo", astRoot);
 
-	NameSimplifier::run(suite.m_context, astRoot);
+	{
+		PROFILER_PROBE("NameSimplifier", probe);
+		NameSimplifier::run(suite.m_context, astRoot);
+	}
 	// Now the user-supplied part
 	suite.runSequence(_optimisationSequence, astRoot);
 
@@ -135,6 +142,7 @@ void OptimiserSuite::run(
 	// message once we perform code generation.
 	if (!usesOptimizedCodeGenerator)
 	{
+		PROFILER_PROBE("StackCompressor", probe);
 		_object.setCode(std::make_shared<AST>(std::move(astRoot)));
 		astRoot = std::get<1>(StackCompressor::run(
 			_dialect,
@@ -154,32 +162,46 @@ void OptimiserSuite::run(
 	if (evmDialect)
 	{
 		yulAssert(_meter, "");
-		ConstantOptimiser{*evmDialect, *_meter}(astRoot);
+		{
+			PROFILER_PROBE("ConstantOptimiser", probe);
+			ConstantOptimiser{*evmDialect, *_meter}(astRoot);
+		}
 		if (usesOptimizedCodeGenerator)
 		{
-			_object.setCode(std::make_shared<AST>(std::move(astRoot)));
-			astRoot = std::get<1>(StackCompressor::run(
-				_dialect,
-				_object,
-				_optimizeStackAllocation,
-				stackCompressorMaxIterations
-			));
+			{
+				PROFILER_PROBE("StackCompressor", probe);
+				_object.setCode(std::make_shared<AST>(std::move(astRoot)));
+				astRoot = std::get<1>(StackCompressor::run(
+					_dialect,
+					_object,
+					_optimizeStackAllocation,
+					stackCompressorMaxIterations
+				));
+			}
 			if (evmDialect->providesObjectAccess())
 			{
+				PROFILER_PROBE("StackLimitEvader", probe);
 				_object.setCode(std::make_shared<AST>(std::move(astRoot)));
 				astRoot = StackLimitEvader::run(suite.m_context, _object);
 			}
 		}
 		else if (evmDialect->providesObjectAccess() && _optimizeStackAllocation)
 		{
+			PROFILER_PROBE("StackLimitEvader", probe);
 			_object.setCode(std::make_shared<AST>(std::move(astRoot)));
 			astRoot = StackLimitEvader::run(suite.m_context, _object);
 		}
 	}
 
 	dispenser.reset(astRoot);
-	NameSimplifier::run(suite.m_context, astRoot);
-	VarNameCleaner::run(suite.m_context, astRoot);
+	{
+		PROFILER_PROBE("NameSimplifier", probe);
+		NameSimplifier::run(suite.m_context, astRoot);
+	}
+	{
+		PROFILER_PROBE("VarNameCleaner", probe);
+		VarNameCleaner::run(suite.m_context, astRoot);
+	}
 
 	_object.setCode(std::make_shared<AST>(std::move(astRoot)));
 	_object.analysisInfo = std::make_shared<AsmAnalysisInfo>(AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, _object));
