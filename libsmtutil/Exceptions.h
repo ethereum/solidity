@@ -48,4 +48,25 @@ struct SMTLogicError: virtual util::Exception {};
 		"SMT assertion failed" \
 	)
 
+
+// Error to indicate that some problem occurred during an interaction with external solver.
+// This could be a problem with calling the solver or unexpected situation during the processing of solver's response.
+struct SMTSolverInteractionError: virtual util::Exception {};
+
+#if !BOOST_PP_VARIADICS_MSVC
+#define smtSolverInteractionAssert(...) BOOST_PP_OVERLOAD(smtSolverInteractionAssert_,__VA_ARGS__)(__VA_ARGS__)
+#else
+#define smtSolverInteractionAssert(...) BOOST_PP_CAT(BOOST_PP_OVERLOAD(smtSolverInteractionAssert_,__VA_ARGS__)(__VA_ARGS__),BOOST_PP_EMPTY())
+#endif
+
+#define smtSolverInteractionAssert_1(CONDITION) \
+	smtSolverInteractionAssert_2((CONDITION), "")
+
+#define smtSolverInteractionAssert_2(CONDITION, DESCRIPTION) \
+	assertThrowWithDefaultDescription( \
+		(CONDITION), \
+		::solidity::smtutil::SMTSolverInteractionError, \
+		(DESCRIPTION), \
+		"Encountered problem during interaction with a solver" \
+	)
 }

@@ -2,59 +2,35 @@
     "errors": [
         {
             "component": "general",
-            "errorCode": "9302",
-            "formattedMessage": "Warning: Return value of low-level calls not used.
- --> A:7:7:
-  |
-7 | \t\t\t\t\t\t_a.call(\"\");
-  | \t\t\t\t\t\t^^^^^^^^^^^
+            "errorCode": "1391",
+            "formattedMessage": "Info: CHC: 1 verification condition(s) proved safe! Enable the model checker option \"show proved safe\" to see all of them.
 
 ",
-            "message": "Return value of low-level calls not used.",
-            "severity": "warning",
-            "sourceLocation": {
-                "end": 143,
-                "file": "A",
-                "start": 132
-            },
-            "type": "Warning"
+            "message": "CHC: 1 verification condition(s) proved safe! Enable the model checker option \"show proved safe\" to see all of them.",
+            "severity": "info",
+            "type": "Info"
         },
         {
             "component": "general",
-            "errorCode": "6328",
-            "formattedMessage": "Warning: CHC: Assertion violation happens here.
-Counterexample:
-x = 0
-_a = 0x0
+            "errorCode": "1180",
+            "formattedMessage": "Info: Contract invariant(s) for A:test:
+(true || !(x >= 1))
+Reentrancy property(ies) for A:test:
+(((<errorCode> = 0) && (x!6 = x!4) && (x' = x)) || true || true || true || true)
+<errorCode> = 0 -> no errors
+<errorCode> = 1 -> Assertion failed at assert(x == 0)
 
-Transaction trace:
-test.constructor()
-State: x = 0
-test.f(0x0)
-    _a.call(\"\") -- untrusted external call
- --> A:8:7:
-  |
-8 | \t\t\t\t\t\tassert(x == 10);
-  | \t\t\t\t\t\t^^^^^^^^^^^^^^^
 
 ",
-            "message": "CHC: Assertion violation happens here.
-Counterexample:
-x = 0
-_a = 0x0
-
-Transaction trace:
-test.constructor()
-State: x = 0
-test.f(0x0)
-    _a.call(\"\") -- untrusted external call",
-            "severity": "warning",
-            "sourceLocation": {
-                "end": 166,
-                "file": "A",
-                "start": 151
-            },
-            "type": "Warning"
+            "message": "Contract invariant(s) for A:test:
+(true || !(x >= 1))
+Reentrancy property(ies) for A:test:
+(((<errorCode> = 0) && (x!6 = x!4) && (x' = x)) || true || true || true || true)
+<errorCode> = 0 -> no errors
+<errorCode> = 1 -> Assertion failed at assert(x == 0)
+",
+            "severity": "info",
+            "type": "Info"
         }
     ],
     "sources": {

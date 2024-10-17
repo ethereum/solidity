@@ -105,7 +105,7 @@ protected:
 	std::string checkSatAndGetValuesCommand(std::vector<Expression> const& _expressionsToEvaluate);
 
 	/// Communicates with the solver via the callback. Throws SMTSolverError on error.
-	std::string querySolver(std::string const& _input);
+	virtual std::string querySolver(std::string const& _input);
 
 	SMTLib2Commands m_commands;
 	SMTLib2Context m_context;

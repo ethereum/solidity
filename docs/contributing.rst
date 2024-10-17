@@ -93,7 +93,7 @@ Prerequisites
 
 For running all compiler tests you may want to optionally install a few
 dependencies (`evmone <https://github.com/ethereum/evmone/releases>`_,
-`libz3 <https://github.com/Z3Prover/z3>`_, `Eldarica <https://github.com/uuverifiers/eldarica/>`_,
+`z3 <https://github.com/Z3Prover/z3>`_, `Eldarica <https://github.com/uuverifiers/eldarica/>`_,
 `cvc5 <https://github.com/cvc5/cvc5>`).
 
 On macOS systems, some of the testing scripts expect GNU coreutils to be installed.
@@ -132,13 +132,12 @@ flag to ``scripts/soltest.sh``.
 The ``evmone`` library should end with the file name
 extension ``.so`` on Linux, ``.dll`` on Windows systems and ``.dylib`` on macOS.
 
-For running SMT tests, the ``libz3`` library must be installed and locatable
-by ``cmake`` during compiler configure stage.
-A few SMT tests use ``Eldarica`` instead of ``Z3``.
-``Eldarica`` is a runtime dependency, its executable (``eld``) must be present in ``PATH`` for the tests to pass.
+For running SMT tests, the ``z3`` executable must be present in ``PATH``.
+A few SMT tests use ``Eldarica`` instead of ``z3``.
+These requry its executable (``eld``) to be present in ``PATH`` for the tests to pass.
 However, if ``Eldarica`` is not found, these tests will be automatically skipped.
 
-If the ``libz3`` library is not installed on your system, you should disable the
+If ``z3`` is not present on your system, you should disable the
 SMT tests by exporting ``SMT_FLAGS=--no-smt`` before running ``./scripts/tests.sh`` or
 running ``./scripts/soltest.sh --no-smt``.
 These tests are ``libsolidity/smtCheckerTests``.
@@ -167,7 +166,7 @@ See especially:
 .. note::
 
     Those working in a Windows environment wanting to run the above basic sets
-    without libz3. Using Git Bash, you use: ``./build/test/Release/soltest.exe -- --no-smt``.
+    without z3. Using Git Bash, you use: ``./build/test/Release/soltest.exe -- --no-smt``.
     If you are running this in plain Command Prompt, use ``.\build\test\Release\soltest.exe -- --no-smt``.
 
 If you want to debug using GDB, make sure you build differently than the "usual".

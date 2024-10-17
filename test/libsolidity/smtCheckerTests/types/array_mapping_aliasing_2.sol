@@ -34,16 +34,7 @@ contract C
 // ====
 // SMTEngine: all
 // SMTIgnoreCex: yes
-// SMTIgnoreOS: macos
+// SMTTargets: assert
 // ----
-// Warning 6368: (439-453): CHC: Out of bounds access happens here.
-// Warning 6368: (465-480): CHC: Out of bounds access might happen here.
-// Warning 6368: (492-508): CHC: Out of bounds access happens here.
-// Warning 6368: (492-511): CHC: Out of bounds access happens here.
-// Warning 6368: (622-636): CHC: Out of bounds access happens here.
-// Warning 6368: (737-752): CHC: Out of bounds access might happen here.
-// Warning 6368: (850-866): CHC: Out of bounds access happens here.
-// Warning 6368: (850-869): CHC: Out of bounds access happens here.
-// Warning 6328: (936-956): CHC: Assertion violation happens here.
-// Warning 6368: (1029-1043): CHC: Out of bounds access might happen here.
+// Warning 6328: (936-956): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 0\n\nTransaction trace:\nC.constructor()\nC.g(0)\n    C.f(map) -- counterexample incomplete; parameter name used instead of value -- internal call
 // Info 1391: CHC: 3 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

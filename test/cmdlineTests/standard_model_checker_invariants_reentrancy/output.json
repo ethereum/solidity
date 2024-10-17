@@ -2,20 +2,20 @@
     "errors": [
         {
             "component": "general",
-            "errorCode": "9302",
-            "formattedMessage": "Warning: Return value of low-level calls not used.
- --> A:7:7:
+            "errorCode": "2018",
+            "formattedMessage": "Warning: Function state mutability can be restricted to view
+ --> A:6:6:
   |
-7 | \t\t\t\t\t\t_a.call(\"\");
-  | \t\t\t\t\t\t^^^^^^^^^^^
+6 | \t\t\t\t\tfunction f() public {
+  | \t\t\t\t\t^ (Relevant source part starts here and spans across multiple lines).
 
 ",
-            "message": "Return value of low-level calls not used.",
+            "message": "Function state mutability can be restricted to view",
             "severity": "warning",
             "sourceLocation": {
-                "end": 143,
+                "end": 144,
                 "file": "A",
-                "start": 132
+                "start": 94
             },
             "type": "Warning"
         },
@@ -33,16 +33,16 @@
             "component": "general",
             "errorCode": "1180",
             "formattedMessage": "Info: Reentrancy property(ies) for A:test:
-(((!(x <= 0) || !(<errorCode> >= 1)) && (!(x <= 0) || !(x' >= 1))) || true)
+(((<errorCode> = 0) && (x!6 = x!4) && (x' = x)) || true || true || true || true)
 <errorCode> = 0 -> no errors
-<errorCode> = 1 -> Assertion failed at assert(x < 10)
+<errorCode> = 1 -> Assertion failed at assert(x == 0)
 
 
 ",
             "message": "Reentrancy property(ies) for A:test:
-(((!(x <= 0) || !(<errorCode> >= 1)) && (!(x <= 0) || !(x' >= 1))) || true)
+(((<errorCode> = 0) && (x!6 = x!4) && (x' = x)) || true || true || true || true)
 <errorCode> = 0 -> no errors
-<errorCode> = 1 -> Assertion failed at assert(x < 10)
+<errorCode> = 1 -> Assertion failed at assert(x == 0)
 ",
             "severity": "info",
             "type": "Info"

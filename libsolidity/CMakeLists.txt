@@ -141,6 +141,10 @@ set(sources
 	formal/SymbolicVariables.h
 	formal/VariableUsage.cpp
 	formal/VariableUsage.h
+	formal/Z3CHCSmtLib2Interface.cpp
+	formal/Z3CHCSmtLib2Interface.h
+	formal/Z3SMTLib2Interface.cpp
+	formal/Z3SMTLib2Interface.h
 	interface/ABI.cpp
 	interface/ABI.h
 	interface/CompilerStack.cpp
@@ -220,3 +224,9 @@ set(sources
 
 add_library(solidity ${sources})
 target_link_libraries(solidity PUBLIC yul evmasm langutil smtutil solutil Boost::boost fmt::fmt-header-only Threads::Threads)
+if (EMSCRIPTEN)
+    if(NOT ${Z3_FOUND})
+            message(FATAL_ERROR "Z3 library must be present for EMSCRIPTEN build")
+    endif()
+    target_link_libraries(solidity PUBLIC z3::libz3)
+endif()
