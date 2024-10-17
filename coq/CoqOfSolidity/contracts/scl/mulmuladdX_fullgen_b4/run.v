@@ -657,6 +657,52 @@ Module HighLow.
   Qed.
 End HighLow.
 
+Module MostSignificantBit.
+  Fixpoint get (u_low u_high v_low v_high : U256.t) (index : nat) :
+      option PointsSelector.t :=
+    let selector := HighLow.get_selector u_low u_high v_low v_high (Z.of_nat index) in
+    if PointsSelector.is_zero selector then
+      match index with
+      | O => None (* we should never reach this case is the values are not all zero *)
+      | S index' => get u_low u_high v_low v_high index'
+      end
+    else
+      Some selector.
+
+  Fixpoint get_until (u_low u_high v_low v_high : U256.t) (index until_index : nat) :
+      option PointsSelector.t :=
+    if (index <? until_index)%nat then
+      None
+    else
+    let selector := HighLow.get_selector u_low u_high v_low v_high (Z.of_nat index) in
+    if PointsSelector.is_zero selector then
+      match index with
+      | O => None
+      | S index' => get_until u_low u_high v_low v_high index' until_index
+      end
+    else
+      Some selector.
+
+  Lemma get_until_eq (u_low u_high v_low v_high : U256.t) (index : nat) :
+    get_until u_low u_high v_low v_high index 0 =
+    get u_low u_high v_low v_high index.
+  Proof.
+    induction index; cbn; best.
+  Qed.
+
+  (* Module Loop.
+    Module State.
+      Record t : Set := {
+        ZZZ : U256.t;
+        log_mask : Z;
+      }.
+
+      Definition to_output (fuel : nat) (state : t) : BlockUnit.t :=
+        get_until
+    End State.
+  End Loop. *)
+End MostSignificantBit.
+
 Ltac load_store_line :=
   with_strategy opaque [ecAddn2] (
     (* We do that to avoid an exponential increase of the output *)
@@ -675,6 +721,60 @@ Ltac load_store_line :=
     s;
     try p
   ).
+
+(* Lemma run_loop_most_significant_bit codes environment state
+    (
+      mem0 mem1 mem2 mem3 mem4 mem5 mem6 mem7 mem8 mem9
+      mem10 mem11 mem12 mem13 mem14 :
+      U256.t
+    )
+    (Q Q' G G' : PA.t) (p a : Z) (u_low u_high v_low v_high : U256.t) :
+  let u := HighLow.merge u_high u_low in
+  let v := HighLow.merge v_high v_low in
+  let params := {|
+    Params.Qx := Q.(PA.X);
+    Params.Qy := Q.(PA.Y);
+    Params.Q'x := Q'.(PA.X);
+    Params.Q'y := Q'.(PA.Y);
+    Params.p := p;
+    Params.a := a;
+    Params.Gx := G.(PA.X);
+    Params.Gy := G.(PA.Y);
+    Params.G'x := G'.(PA.X);
+    Params.G'y := G'.(PA.Y)
+  |} in
+  let memoryguard : U256.t := 0 in
+  let params_offset : U256.t := 32 * 15 in
+  let memory_start : list U256.t :=
+    [
+      mem0; mem1; memoryguard; mem3; mem4; mem5; mem6; mem7; mem8; u;
+      params_offset; v; mem12; mem13; mem14;
+      params.(Params.Qx);
+      params.(Params.Qy);
+      params.(Params.Q'x);
+      params.(Params.Q'y);
+      params.(Params.p);
+      params.(Params.a);
+      params.(Params.Gx);
+      params.(Params.Gy);
+      params.(Params.G'x);
+      params.(Params.G'y)
+    ] ++ List.repeat 0 200 in
+  let state_start :=
+      make_state environment state memory_start [] in
+  let memory_end : list U256.t :=
+    [1; 2; 3; 4; 5; 6] in
+  let state_end :=
+    make_state environment state memory_end [] in
+  (* let output := sim_fun_ecGenMulmuladdX_store_2814_beginning Q scalar_u scalar_v in *)
+  let output := Result.Ok tt in
+  {{? codes, environment, Some state_start |
+    Contract_91.Contract_91_deployed.fun_ecGenMulmuladdX_store_2814 ⇓
+    output
+  | Some state_end ?}}.
+Proof. *)
+
+
 
 Lemma run_fun_ecGenMulmuladdX_store_2814 codes environment state
     (
@@ -772,11 +872,11 @@ Proof.
       (* Computation of the most-significant bit *)
       l. {
         change (Pure.shl 127 1) with (2 ^ Z.of_nat (128 - 1)).
-        set (index := 128%nat).
-        assert (H_index_le : (index <= 128)%nat) by lia.
-        assert (H_get_s :
+        set (fuel := 128%nat).
+        (* assert (H_index_le : (index <= 128)%nat) by lia. *)
+        (* assert (H_get_s :
           forall i, Z.of_nat index <= i <= 127 -> get_selector u v i = 0
-        ) by lia.
+        ) by lia. *)
         (* Ltac foo index word2 :=
           let index := eval cbv in (Z.to_nat (index / 32)) in
           eapply (Memory.update_at index word2);
@@ -784,28 +884,50 @@ Proof.
             [|reflexivity|];
             unfold List.replace_nth;
             CanonizeState.execute. *)
-        apply_memory_update_at 0xe0 (
-          if (index =? 128)%nat then
-            0
-          else
-            get_selector u v (Z.of_nat index)
-        ). {
+        set (get_mask := fun (fuel : nat) => 2 ^ Z.of_nat (128 - 1)).
+        set (mask_address := 0x01a0).
+        set (get_result := fun (fuel : nat) =>
+          MostSignificantBit.get_until u_low u_high v_low v_high 127 fuel
+        ).
+        set (get_ZZZ := fun (fuel : nat) =>
+          match get_result fuel with
+          | Some selector => PointsSelector.to_Z selector
+          | None => 0
+          end
+        ).
+        set (ZZZ_address := 0xe0).
+        apply_memory_update_at mask_address (get_mask fuel). {
           reflexivity.
         }
-        apply_memory_update_at 0x01a0 (2 ^ (Z.of_nat index - 1)). {
+        apply_memory_update_at ZZZ_address (get_ZZZ fuel). {
           reflexivity.
         }
-        induction index.
+        induction fuel.
         { (* The base case, corresponding to a bit position of `-1`, is impossible to reach. *)
-          assert (H_u_v_zero :
+          (* assert (H_u_v_zero :
             (forall i, 0 <= i <= 127 -> get_selector u scalar_v i = 0) ->
             u = 0 /\ scalar_v = 0
           ) by admit.
-          exfalso; lia.
+          exfalso; lia. *)
+          admit.
         }
-        { eapply LoopStep.
+        { 
+          eapply LoopStep with
+            (output_inter :=
+              match get_result fuel with
+              | None => Result.Ok (BlockUnit.Tt, tt)
+              | Some _ => Result.Ok (BlockUnit.Break, tt)
+              end
+            )
+            (state_inter :=
+
+            ).
           { (* for body *)
-            load_store_line.
+            with_strategy opaque [MostSignificantBit.get_until] load_store_line.
+            set (_127 := 127%nat).
+            unfold MostSignificantBit.get_until at 2.
+            with_strategy opaque [MostSignificantBit.get_until] s.
+            unfold _127; clear _127.
             destruct (index =? 127)%nat eqn:?; s.
             { l. {
                 load_store_line.
