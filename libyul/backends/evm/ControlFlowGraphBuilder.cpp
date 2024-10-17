@@ -349,7 +349,7 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 		CFG::Assignment{_switch.debugData, {ghostVarSlot}}
 	});
 
-	std::optional<BuiltinHandle> const& equalityBuiltinHandle = m_dialect.equalityFunction();
+	std::optional<BuiltinHandle> const& equalityBuiltinHandle = m_dialect.equalityFunctionHandle();
 	yulAssert(equalityBuiltinHandle);
 
 	// Artificially generate:
