@@ -20,8 +20,10 @@
  * Converts inline assembly AST to JSON format
  */
 
-#include <libyul/AST.h>
 #include <libyul/AsmJsonConverter.h>
+
+#include <libyul/AST.h>
+#include <libyul/Dialect.h>
 #include <libyul/Exceptions.h>
 #include <libyul/Utilities.h>
 #include <libsolutil/CommonData.h>
@@ -83,6 +85,14 @@ Json AsmJsonConverter::operator()(Identifier const& _node) const
 	return ret;
 }
 
+Json AsmJsonConverter::operator()(BuiltinName const& _node) const
+{
+	// represents BuiltinName also with YulIdentifier node type to avoid a breaking change in the JSON interface
+	Json ret = createAstNode(originLocationOf(_node), nativeLocationOf(_node), "YulIdentifier");
+	ret["name"] = m_dialect.builtin(_node.handle).name;
+	return ret;
+}
+
 Json AsmJsonConverter::operator()(Assignment const& _node) const
 {
 	yulAssert(_node.variableNames.size() >= 1, "Invalid assignment syntax");
@@ -96,7 +106,7 @@ Json AsmJsonConverter::operator()(Assignment const& _node) const
 Json AsmJsonConverter::operator()(FunctionCall const& _node) const
 {
 	Json ret = createAstNode(originLocationOf(_node), nativeLocationOf(_node), "YulFunctionCall");
-	ret["functionName"] = (*this)(_node.functionName);
+	ret["functionName"] = std::visit(*this, _node.functionName);
 	ret["arguments"] = vectorOfVariantsToJson(_node.arguments);
 	return ret;
 }
