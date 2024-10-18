@@ -65,6 +65,18 @@ struct BuiltinFunctionForEVM: public BuiltinFunction
 class EVMDialect: public Dialect
 {
 public:
+	/// Handles to (depending on dialect, potentially existing) builtins, which are not accessible via the
+	/// `...FunctionHandle` functions of `Dialect` and of which it is statically known, that they are needed in,
+	/// e.g., certain optimization steps.
+	struct AuxiliaryBuiltinHandles
+	{
+		std::optional<BuiltinHandle> add;
+		std::optional<BuiltinHandle> exp;
+		std::optional<BuiltinHandle> mul;
+		std::optional<BuiltinHandle> not_;
+		std::optional<BuiltinHandle> shl;
+		std::optional<BuiltinHandle> sub;
+	};
 	/// Constructor, should only be used internally. Use the factory functions below.
 	EVMDialect(langutil::EVMVersion _evmVersion, std::optional<uint8_t> _eofVersion, bool _objectAccess);
 
@@ -82,6 +94,7 @@ public:
 	std::optional<BuiltinHandle> storageStoreFunctionHandle() const override { return m_storageStoreFunction; }
 	std::optional<BuiltinHandle> storageLoadFunctionHandle() const override { return m_storageLoadFunction; }
 	std::optional<BuiltinHandle> hashFunctionHandle() const override { return m_hashFunction; }
+	AuxiliaryBuiltinHandles const& auxiliaryBuiltinHandles() const { return m_auxiliaryBuiltinHandles; }
 
 	static EVMDialect const& strictAssemblyForEVM(langutil::EVMVersion _evmVersion, std::optional<uint8_t> _eofVersion);
 	static EVMDialect const& strictAssemblyForEVMObjects(langutil::EVMVersion _evmVersion, std::optional<uint8_t> _eofVersion);
@@ -120,6 +133,7 @@ protected:
 	std::optional<BuiltinHandle> m_storageStoreFunction;
 	std::optional<BuiltinHandle> m_storageLoadFunction;
 	std::optional<BuiltinHandle> m_hashFunction;
+	AuxiliaryBuiltinHandles m_auxiliaryBuiltinHandles;
 };
 
 }

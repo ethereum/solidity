@@ -429,6 +429,15 @@ EVMDialect::EVMDialect(langutil::EVMVersion _evmVersion, std::optional<uint8_t> 
 	m_storageStoreFunction = findBuiltin("sstore");
 	m_storageLoadFunction = findBuiltin("sload");
 	m_hashFunction = findBuiltin("keccak256");
+
+	m_discardFunction = findBuiltin("pop");
+	m_equalityFunction = findBuiltin("eq");
+	m_booleanNegationFunction = findBuiltin("iszero");
+	m_memoryStoreFunction = findBuiltin("mstore");
+	m_memoryLoadFunction = findBuiltin("mload");
+	m_storageStoreFunction = findBuiltin("sstore");
+	m_storageLoadFunction = findBuiltin("sload");
+	m_hashFunction = findBuiltin("keccak256");
 }
 
 std::optional<BuiltinHandle> EVMDialect::findBuiltin(std::string_view _name) const
