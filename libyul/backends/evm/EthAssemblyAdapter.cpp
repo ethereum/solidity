@@ -175,6 +175,11 @@ void EthAssemblyAdapter::appendImmutableAssignment(std::string const& _identifie
 	m_assembly.appendImmutableAssignment(_identifier);
 }
 
+void EthAssemblyAdapter::appendAuxDataStore()
+{
+	m_assembly.appendAuxDataStore();
+}
+
 void EthAssemblyAdapter::appendAuxDataLoadN(uint16_t _offset)
 {
 	m_assembly.appendAuxDataLoadN(_offset);
