@@ -481,7 +481,7 @@ void CompilerContext::appendInlineAssembly(
 	// so we essentially only optimize the ABI functions.
 	if (_optimiserSettings.runYulOptimiser && _localVariables.empty())
 	{
-		yul::Object obj;
+		yul::Object obj{dialect};
 		obj.setCode(parserResult, std::make_shared<yul::AsmAnalysisInfo>(analysisInfo));
 
 		solAssert(!dialect.providesObjectAccess());
