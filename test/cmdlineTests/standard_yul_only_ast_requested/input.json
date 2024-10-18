@@ -1,0 +1,24 @@
+{
+	"language": "Yul",
+	"sources":
+	{
+		"C":
+		{
+			"content": "{ let x := mload(0) sstore(add(x, 1), 0) }"
+		}
+	},
+	"settings":
+	{
+		"optimizer": {
+			"enabled": true,
+			"details": {
+				"yul": true
+			}
+		},
+		"viaIR": true,
+		"outputSelection":
+		{
+			"*": { "": ["ast"] }
+		}
+	}
+}
