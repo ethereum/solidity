@@ -52,6 +52,7 @@ std::string Object::toString(
 	yulAssert(debugData, "No debug data");
 
 	std::string inner = "code " + AsmPrinter(
+		m_dialect,
 		debugData->sourceNames,
 		_debugInfoSelection,
 		_soliditySourceProvider
@@ -96,7 +97,7 @@ Json Object::toJson() const
 
 	Json codeJson;
 	codeJson["nodeType"] = "YulCode";
-	codeJson["block"] = AsmJsonConverter(0 /* sourceIndex */)(code()->root());
+	codeJson["block"] = AsmJsonConverter(m_dialect, 0 /* sourceIndex */)(code()->root());
 
 	Json subObjectsJson = Json::array();
 	for (std::shared_ptr<ObjectNode> const& subObject: subObjects)
