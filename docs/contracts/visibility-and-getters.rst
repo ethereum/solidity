@@ -189,6 +189,35 @@ to write a function, for example:
 Now you can use ``getArray()`` to retrieve the entire array, instead of
 ``myArray(i)``, which returns a single element per call.
 
+When you have a public state variable of a struct type, calling the
+getter function will return either a tuple containing the struct's members
+(if there are multiple members) or just a single member 
+(if the struct has only one member). For example:
+
+.. code-block:: solidity
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.4.0 <0.9.0;
+
+    contract structExample {
+        struct simpleStruct {
+            bool b;
+        }
+        struct compleStruct {
+            uint a;
+            bool b;
+        }
+        simpleStruct public ss;
+        compleStruct public cs;
+        function f() public view {
+            bool b1 = this.ss();
+            (uint a, bool b2) = this.cs();
+        }
+    }
+
+``this.ss()``'s return type is bool, while ``this.cs()``'s return type is 
+a tuple of uint and bool.
+
 The next example is more complex:
 
 .. code-block:: solidity
