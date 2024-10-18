@@ -58,6 +58,7 @@ public:
 
 	IRGenerationContext(
 		langutil::EVMVersion _evmVersion,
+		std::optional<uint8_t> _eofVersion,
 		ExecutionContext _executionContext,
 		RevertStrings _revertStrings,
 		std::map<std::string, unsigned> _sourceIndices,
@@ -65,6 +66,7 @@ public:
 		langutil::CharStreamProvider const* _soliditySourceProvider
 	):
 		m_evmVersion(_evmVersion),
+		m_eofVersion(_eofVersion),
 		m_executionContext(_executionContext),
 		m_revertStrings(_revertStrings),
 		m_sourceIndices(std::move(_sourceIndices)),
@@ -134,6 +136,7 @@ public:
 	YulUtilFunctions utils();
 
 	langutil::EVMVersion evmVersion() const { return m_evmVersion; }
+	std::optional<uint8_t> eofVersion() const { return m_eofVersion; }
 	ExecutionContext executionContext() const { return m_executionContext; }
 
 	void setArithmetic(Arithmetic _value) { m_arithmetic = _value; }
@@ -160,6 +163,7 @@ public:
 
 private:
 	langutil::EVMVersion m_evmVersion;
+	std::optional<uint8_t> m_eofVersion;
 	ExecutionContext m_executionContext;
 	RevertStrings m_revertStrings;
 	std::map<std::string, unsigned> m_sourceIndices;

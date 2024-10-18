@@ -57,6 +57,8 @@ enum AssemblyItemType
 	AuxDataLoadN,
 	/// Stores value in a memory which which will be appended to EOF data section as static axuliary data.
 	AuxDataStore,
+	EofCreate, /// Creates new contract using subcontainer as initcode
+	ReturnContract, /// Returns new container along (with auxiliary data section) to be deployed
 	VerbatimBytecode ///< Contains data that is inserted into the bytecode code section without modification.
 };
 
@@ -65,6 +67,7 @@ enum class Precision { Precise , Approximate };
 class Assembly;
 class AssemblyItem;
 using AssemblyItems = std::vector<AssemblyItem>;
+using ContainerID = uint8_t;
 
 class AssemblyItem
 {
@@ -93,6 +96,15 @@ public:
 		m_verbatimBytecode{{_arguments, _returnVariables, std::move(_verbatimData)}},
 		m_debugData{langutil::DebugData::create()}
 	{}
+
+	static AssemblyItem eofCreate(ContainerID _containerID, langutil::DebugData::ConstPtr _debugData = langutil::DebugData::create())
+	{
+		return AssemblyItem(EofCreate, _containerID, _debugData);
+	}
+	static AssemblyItem returnContract(ContainerID _containerID, langutil::DebugData::ConstPtr _debugData = langutil::DebugData::create())
+	{
+		return AssemblyItem(ReturnContract, _containerID, _debugData);
+	}
 
 	AssemblyItem(AssemblyItem const&) = default;
 	AssemblyItem(AssemblyItem&&) = default;
