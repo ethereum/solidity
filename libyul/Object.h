@@ -91,7 +91,7 @@ struct ObjectDebugData
 class Object: public ObjectNode
 {
 public:
-	Object(Dialect const& _dialect): m_dialect(_dialect) {}
+	explicit Object(Dialect const& _dialect): m_dialect(_dialect) {}
 	/// @returns a (parseable) string representation.
 	std::string toString(
 		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
@@ -139,6 +139,9 @@ public:
 
 	/// @returns the name of the special metadata data object.
 	static std::string metadataName() { return ".metadata"; }
+
+	/// @returns the object's dialect.
+	Dialect const& dialect() const { return m_dialect; }
 
 private:
 	Dialect const& m_dialect;

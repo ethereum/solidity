@@ -23,8 +23,9 @@
 
 #include <libyul/backends/evm/EVMDialect.h>
 
-#include <libyul/Dialect.h>
 #include <libyul/AST.h>
+#include <libyul/Dialect.h>
+#include <libyul/Utilities.h>
 
 #include <liblangutil/Token.h>
 #include <libsolutil/CommonData.h>
@@ -60,11 +61,11 @@ bool yul::isRestrictedIdentifier(Dialect const& _dialect, YulName const& _identi
 	return _identifier.empty() || hasLeadingOrTrailingDot(_identifier.str()) || TokenTraits::isYulKeyword(_identifier.str()) || _dialect.reservedIdentifier(_identifier.str());
 }
 
-std::optional<evmasm::Instruction> yul::toEVMInstruction(Dialect const& _dialect, YulName const& _name)
+std::optional<evmasm::Instruction> yul::toEVMInstruction(Dialect const& _dialect, FunctionName const& _name)
 {
 	if (auto const* dialect = dynamic_cast<EVMDialect const*>(&_dialect))
-		if (std::optional<BuiltinHandle> const builtinHandle = dialect->findBuiltin(_name.str()))
-			return dialect->builtin(*builtinHandle).instruction;
+		if (BuiltinFunctionForEVM const* builtin = resolveBuiltinFunctionForEVM(_name, *dialect))
+			return builtin->instruction;
 	return std::nullopt;
 }
 

@@ -2258,7 +2258,7 @@ bool IRGeneratorForStatements::visit(InlineAssembly const& _inlineAsm)
 
 	solAssert(std::holds_alternative<yul::Block>(modified));
 
-	appendCode() << yul::AsmPrinter()(std::get<yul::Block>(modified)) << "\n";
+	appendCode() << yul::AsmPrinter(_inlineAsm.dialect())(std::get<yul::Block>(modified)) << "\n";
 	return false;
 }
 

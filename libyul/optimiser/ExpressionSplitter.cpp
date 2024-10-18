@@ -26,6 +26,7 @@
 
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
+#include <libyul/Utilities.h>
 
 #include <libsolutil/CommonData.h>
 
@@ -41,10 +42,10 @@ void ExpressionSplitter::run(OptimiserStepContext& _context, Block& _ast)
 
 void ExpressionSplitter::operator()(FunctionCall& _funCall)
 {
-	std::optional<BuiltinHandle> builtinHandle = m_dialect.findBuiltin(_funCall.functionName.name.str());
+	BuiltinFunction const* builtin = resolveBuiltinFunction(_funCall.functionName, m_dialect);
 
 	for (size_t i = _funCall.arguments.size(); i > 0; i--)
-		if (!builtinHandle || !m_dialect.builtin(*builtinHandle).literalArgument(i - 1))
+		if (!builtin || !builtin->literalArgument(i - 1))
 			outlineExpression(_funCall.arguments[i - 1]);
 }
 

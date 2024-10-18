@@ -28,6 +28,9 @@
 namespace solidity::yul
 {
 
+class YulString;
+using YulName = YulString;
+
 enum class LiteralKind;
 class LiteralValue;
 struct Literal;
@@ -46,11 +49,17 @@ struct Continue;
 struct Leave;
 struct ExpressionStatement;
 struct Block;
+struct BuiltinName;
+struct BuiltinHandle;
 class AST;
 
 struct NameWithDebugData;
 
 using Expression = std::variant<FunctionCall, Identifier, Literal>;
+using FunctionName = std::variant<Identifier, BuiltinName>;
+/// Type that can refer to both user-defined functions and built-ins.
+/// Technically the AST allows these names to overlap, but this is not possible to represent in the source.
+using FunctionHandle = std::variant<YulName, BuiltinHandle>;
 using Statement = std::variant<ExpressionStatement, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Break, Continue, Leave, Block>;
 
 }

@@ -25,6 +25,7 @@
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/ControlFlowSideEffectsCollector.h>
+#include <libyul/Utilities.h>
 #include <libyul/AST.h>
 #include <libyul/AsmPrinter.h>
 
@@ -79,10 +80,13 @@ void UnusedAssignEliminator::operator()(FunctionCall const& _functionCall)
 	UnusedStoreBase::operator()(_functionCall);
 
 	ControlFlowSideEffects sideEffects;
-	if (std::optional<BuiltinHandle> const builtinHandle = m_dialect.findBuiltin(_functionCall.functionName.name.str()))
-		sideEffects = m_dialect.builtin(*builtinHandle).controlFlowSideEffects;
+	if (BuiltinFunction const* builtin = resolveBuiltinFunction(_functionCall.functionName, m_dialect))
+		sideEffects = builtin->controlFlowSideEffects;
 	else
-		sideEffects = m_controlFlowSideEffects.at(_functionCall.functionName.name);
+	{
+		yulAssert(std::holds_alternative<Identifier>(_functionCall.functionName));
+		sideEffects = m_controlFlowSideEffects.at(std::get<Identifier>(_functionCall.functionName).name);
+	}
 
 	if (!sideEffects.canContinue)
 		// We do not return from the current function, so it is OK to also

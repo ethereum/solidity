@@ -33,8 +33,13 @@ void EquivalentFunctionCombiner::run(OptimiserStepContext&, Block& _ast)
 
 void EquivalentFunctionCombiner::operator()(FunctionCall& _funCall)
 {
-	auto it = m_duplicates.find(_funCall.functionName.name);
-	if (it != m_duplicates.end())
-		_funCall.functionName.name = it->second->name;
+	if (!isBuiltinFunctionCall(_funCall))
+	{
+		auto* identifier = std::get_if<Identifier>(&_funCall.functionName);
+		yulAssert(identifier);
+		auto it = m_duplicates.find(identifier->name);
+		if (it != m_duplicates.end())
+			identifier->name = it->second->name;
+	}
 	ASTModifier::operator()(_funCall);
 }

@@ -60,7 +60,7 @@ protected:
 			m_values[name].value = expression;
 
 		m_object->setCode(std::make_shared<AST>(std::move(astRoot)));
-		return KnowledgeBase([this](YulName _var) { return util::valueOrNullptr(m_values, _var); });
+		return KnowledgeBase([this](YulName _var) { return util::valueOrNullptr(m_values, _var); }, m_dialect);
 	}
 
 	EVMDialect m_dialect{solidity::test::CommonOptions::get().evmVersion(),

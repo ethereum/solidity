@@ -100,6 +100,7 @@ protected:
 	Case translate(Case const& _case);
 	virtual Identifier translate(Identifier const& _identifier);
 	Literal translate(Literal const& _literal);
+	FunctionName translate(FunctionName const& _functionName);
 	NameWithDebugData translate(NameWithDebugData const& _typedName);
 
 	virtual void enterScope(Block const&) { }

@@ -68,7 +68,8 @@ private:
 		BuiltinContext& _builtinContext,
 		UseNamedLabels _useNamedLabelsForFunctions,
 		CFG const& _dfg,
-		StackLayout const& _stackLayout
+		StackLayout const& _stackLayout,
+		EVMDialect const& _dialect
 	);
 
 	/// Assert that it is valid to transition from @a _currentStack to @a _desiredStack.
@@ -101,6 +102,7 @@ private:
 	BuiltinContext& m_builtinContext;
 	CFG const& m_dfg;
 	StackLayout const& m_stackLayout;
+	EVMDialect const& m_dialect;
 	Stack m_stack;
 	std::map<yul::FunctionCall const*, AbstractAssembly::LabelID> m_returnLabels;
 	std::map<CFG::BasicBlock const*, AbstractAssembly::LabelID> m_blockLabels;

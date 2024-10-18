@@ -43,7 +43,7 @@ UnusedPruner::UnusedPruner(
 	Dialect const& _dialect,
 	Block& _ast,
 	bool _allowMSizeOptimization,
-	std::map<YulName, SideEffects> const* _functionSideEffects,
+	std::map<FunctionHandle, SideEffects> const* _functionSideEffects,
 	std::set<YulName> const& _externallyUsedFunctions
 ):
 	m_dialect(_dialect),
@@ -94,7 +94,7 @@ void UnusedPruner::operator()(Block& _block)
 				else if (varDecl.variables.size() == 1 && m_dialect.discardFunctionHandle())
 					statement = ExpressionStatement{varDecl.debugData, FunctionCall{
 						varDecl.debugData,
-						{varDecl.debugData, YulName{m_dialect.builtin(*m_dialect.discardFunctionHandle()).name}},
+						BuiltinName{varDecl.debugData, *m_dialect.discardFunctionHandle()},
 						{*std::move(varDecl.value)}
 					}};
 			}
@@ -121,7 +121,7 @@ void UnusedPruner::runUntilStabilised(
 	Dialect const& _dialect,
 	Block& _ast,
 	bool _allowMSizeOptimization,
-	std::map<YulName, SideEffects> const* _functionSideEffects,
+	std::map<FunctionHandle, SideEffects> const* _functionSideEffects,
 	std::set<YulName> const& _externallyUsedFunctions
 )
 {
@@ -146,7 +146,7 @@ void UnusedPruner::runUntilStabilisedOnFullAST(
 	std::set<YulName> const& _externallyUsedFunctions
 )
 {
-	std::map<YulName, SideEffects> functionSideEffects =
+	std::map<FunctionHandle, SideEffects> functionSideEffects =
 		SideEffectsPropagator::sideEffects(_dialect, CallGraphGenerator::callGraph(_ast));
 	bool allowMSizeOptimization = !MSizeFinder::containsMSize(_dialect, _ast);
 	runUntilStabilised(_dialect, _ast, allowMSizeOptimization, &functionSideEffects, _externallyUsedFunctions);
@@ -157,7 +157,7 @@ bool UnusedPruner::used(YulName _name) const
 	return m_references.count(_name) && m_references.at(_name) > 0;
 }
 
-void UnusedPruner::subtractReferences(std::map<YulName, size_t> const& _subtrahend)
+void UnusedPruner::subtractReferences(std::map<FunctionHandle, size_t> const& _subtrahend)
 {
 	for (auto const& ref: _subtrahend)
 	{

@@ -60,7 +60,7 @@ TestCase::TestResult ControlFlowSideEffectsTest::run(std::ostream& _stream, std:
 		solidity::test::CommonOptions::get().evmVersion(),
 		solidity::test::CommonOptions::get().eofVersion()
 	);
-	Object obj = {dialect};
+	Object obj{dialect};
 	auto parsingResult = yul::test::parse(m_source);
 	obj.setCode(parsingResult.first, parsingResult.second);
 	if (!obj.hasCode())

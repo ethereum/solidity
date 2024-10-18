@@ -23,7 +23,9 @@
  */
 
 #include <libyul/AsmJsonImporter.h>
+
 #include <libyul/AST.h>
+#include <libyul/Dialect.h>
 #include <libyul/Exceptions.h>
 #include <libyul/Utilities.h>
 
@@ -255,7 +257,16 @@ FunctionCall AsmJsonImporter::createFunctionCall(Json const& _node)
 	for (auto const& var: member(_node, "arguments"))
 		functionCall.arguments.emplace_back(createExpression(var));
 
-	functionCall.functionName = createIdentifier(member(_node, "functionName"));
+	auto const functionNameNode = member(_node, "functionName");
+	auto const name = member(functionNameNode, "name").get<std::string>();
+	if (std::optional<BuiltinHandle> builtinHandle = m_dialect.findBuiltin(name))
+	{
+		auto builtin = createAsmNode<BuiltinName>(functionNameNode);
+		builtin.handle = *builtinHandle;
+		functionCall.functionName = builtin;
+	}
+	else
+		functionCall.functionName = createIdentifier(functionNameNode);
 
 	return functionCall;
 }

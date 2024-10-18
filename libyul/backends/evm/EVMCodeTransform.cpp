@@ -230,22 +230,22 @@ void CodeTransform::operator()(FunctionCall const& _call)
 	yulAssert(m_scope, "");
 
 	m_assembly.setSourceLocation(originLocationOf(_call));
-	if (std::optional<BuiltinHandle> builtinHandle = m_dialect.findBuiltin(_call.functionName.name.str()))
+	if (BuiltinFunctionForEVM const* builtin = resolveBuiltinFunctionForEVM(_call.functionName, m_dialect))
 	{
-		BuiltinFunctionForEVM const& builtin = m_dialect.builtin(*builtinHandle);
 		for (auto&& [i, arg]: _call.arguments | ranges::views::enumerate | ranges::views::reverse)
-			if (!builtin.literalArgument(i))
+			if (!builtin->literalArgument(i))
 				visitExpression(arg);
 		m_assembly.setSourceLocation(originLocationOf(_call));
-		builtin.generateCode(_call, m_assembly, m_builtinContext);
+		builtin->generateCode(_call, m_assembly, m_builtinContext);
 	}
 	else
 	{
+		yulAssert(std::holds_alternative<Identifier>(_call.functionName));
 		AbstractAssembly::LabelID returnLabel = m_assembly.newLabelId();
 		m_assembly.appendLabelReference(returnLabel);
 
 		Scope::Function* function = nullptr;
-		yulAssert(m_scope->lookup(_call.functionName.name, GenericVisitor{
+		yulAssert(m_scope->lookup(std::get<Identifier>(_call.functionName).name, GenericVisitor{
 			[](Scope::Variable&) { yulAssert(false, "Expected function name."); },
 			[&](Scope::Function& _function) { function = &_function; }
 		}), "Function name not found.");

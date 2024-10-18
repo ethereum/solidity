@@ -92,5 +92,6 @@ std::string_view resolveFunctionName(FunctionName const& _functionName, Dialect 
 
 BuiltinFunction const* resolveBuiltinFunction(FunctionName const& _functionName, Dialect const& _dialect);
 BuiltinFunctionForEVM const* resolveBuiltinFunctionForEVM(FunctionName const& _functionName, EVMDialect const& _dialect);
+FunctionHandle functionNameToHandle(FunctionName const& _functionName);
 
 }

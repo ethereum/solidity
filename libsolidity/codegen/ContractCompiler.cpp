@@ -932,7 +932,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 
 	// Only used in the scope below, but required to live outside to keep the
 	// std::shared_ptr's alive
-	yul::Object object = {_inlineAssembly.dialect()};
+	yul::Object object{_inlineAssembly.dialect()};
 
 	// The optimiser cannot handle external references
 	if (

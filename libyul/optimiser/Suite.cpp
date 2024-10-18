@@ -486,7 +486,7 @@ void OptimiserSuite::runSequence(std::vector<std::string> const& _steps, Block& 
 			else
 			{
 				std::cout << "== Running " << step << " changed the AST." << std::endl;
-				std::cout << AsmPrinter{}(_ast) << std::endl;
+				std::cout << AsmPrinter{m_context.dialect}(_ast) << std::endl;
 				copy = std::make_unique<Block>(std::get<Block>(ASTCopier{}(_ast)));
 			}
 		}

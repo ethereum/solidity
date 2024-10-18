@@ -142,6 +142,7 @@ std::optional<h256> ObjectOptimizer::calculateCacheKey(
 )
 {
 	AsmPrinter asmPrinter(
+		languageToDialect(_settings.language, _settings.evmVersion, _settings.eofVersion),
 		_debugData.sourceNames,
 		DebugInfoSelection::All()
 	);

@@ -269,3 +269,12 @@ BuiltinFunctionForEVM const* yul::resolveBuiltinFunctionForEVM(FunctionName cons
 	return std::visit(visitor, _functionName);
 }
 
+FunctionHandle yul::functionNameToHandle(FunctionName const& _functionName)
+{
+	GenericVisitor visitor{
+		[&](Identifier const& _identifier) -> FunctionHandle { return _identifier.name; },
+		[&](BuiltinName const& _builtin) -> FunctionHandle { return _builtin.handle; }
+	};
+	return std::visit(visitor, _functionName);
+}
+

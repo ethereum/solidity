@@ -97,9 +97,9 @@ yul::Block yul::test::disambiguate(std::string const& _source)
 	return std::get<Block>(Disambiguator(defaultDialect(), *result.second, {})(result.first->root()));
 }
 
-std::string yul::test::format(std::string const& _source)
+std::string yul::test::format(std::string const& _source, Dialect const& _dialect)
 {
-	return yul::AsmPrinter()(parse(_source).first->root());
+	return yul::AsmPrinter(_dialect)(parse(_source).first->root());
 }
 
 namespace

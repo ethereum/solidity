@@ -309,42 +309,39 @@ void ExpressionEvaluator::operator()(Identifier const& _identifier)
 void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 {
 	std::vector<std::optional<LiteralKind>> const* literalArguments = nullptr;
-	if (std::optional<BuiltinHandle> builtinHandle = m_dialect.findBuiltin(_funCall.functionName.name.str()))
-		if (
-			auto const& args = m_dialect.builtin(*builtinHandle).literalArguments;
-			!args.empty()
-		)
-			literalArguments = &args;
+	if (BuiltinFunction const* builtin = resolveBuiltinFunction(_funCall.functionName, m_dialect))
+		if (!builtin->literalArguments.empty())
+			literalArguments = &builtin->literalArguments;
 	evaluateArgs(_funCall.arguments, literalArguments);
 
 	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
 	{
-		if (std::optional<BuiltinHandle> builtinHandle = dialect->findBuiltin(_funCall.functionName.name.str()))
+		if (BuiltinFunctionForEVM const* fun = resolveBuiltinFunctionForEVM(_funCall.functionName, *dialect))
 		{
-			auto const& fun = dialect->builtin(*builtinHandle);
 			EVMInstructionInterpreter interpreter(dialect->evmVersion(), m_state, m_disableMemoryTrace);
 
-			u256 const value = interpreter.evalBuiltin(fun, _funCall.arguments, values());
+			u256 const value = interpreter.evalBuiltin(*fun, _funCall.arguments, values());
 
 			if (
 				!m_disableExternalCalls &&
-				fun.instruction &&
-				evmasm::isCallInstruction(*fun.instruction)
+				fun->instruction &&
+				evmasm::isCallInstruction(*fun->instruction)
 			)
-				runExternalCall(*fun.instruction);
+				runExternalCall(*fun->instruction);
 
 			setValue(value);
 			return;
 		}
 	}
 
+	yulAssert(!isBuiltinFunctionCall(_funCall));
 	Scope* scope = &m_scope;
 	for (; scope; scope = scope->parent)
-		if (scope->names.count(_funCall.functionName.name))
+		if (scope->names.count(std::get<Identifier>(_funCall.functionName).name))
 			break;
 	yulAssert(scope, "");
 
-	FunctionDefinition const* fun = scope->names.at(_funCall.functionName.name);
+	FunctionDefinition const* fun = scope->names.at(std::get<Identifier>(_funCall.functionName).name);
 	yulAssert(fun, "Function not found.");
 	yulAssert(m_values.size() == fun->parameters.size(), "");
 	std::map<YulName, u256> variables;

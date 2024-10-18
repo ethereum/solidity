@@ -29,6 +29,7 @@
 #include <libyul/backends/evm/EVMDialect.h>
 
 #include <libsolutil/StringUtils.h>
+#include <libsolutil/Visitor.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -86,20 +87,26 @@ TestCase::TestResult FunctionSideEffects::run(std::ostream& _stream, std::string
 		solidity::test::CommonOptions::get().evmVersion(),
 		solidity::test::CommonOptions::get().eofVersion()
 	);
-	Object obj = {dialect};
+	Object obj{dialect};
 	auto parsingResult = yul::test::parse(m_source);
 	obj.setCode(parsingResult.first, parsingResult.second);
 	if (!obj.hasCode())
 		BOOST_THROW_EXCEPTION(std::runtime_error("Parsing input failed."));
 
-	std::map<YulName, SideEffects> functionSideEffects = SideEffectsPropagator::sideEffects(
+	std::map<FunctionHandle, SideEffects> functionSideEffects = SideEffectsPropagator::sideEffects(
 		dialect,
 		CallGraphGenerator::callGraph(obj.code()->root())
 	);
 
 	std::map<std::string, std::string> functionSideEffectsStr;
 	for (auto const& fun: functionSideEffects)
-		functionSideEffectsStr[fun.first.str()] = toString(fun.second);
+	{
+		auto const& functionNameStr = std::visit(GenericVisitor{
+			[](YulName const& _name) { return _name.str(); },
+			[&](BuiltinHandle const& _builtin) { return dialect.builtin(_builtin).name; }
+		}, fun.first);
+		functionSideEffectsStr[functionNameStr] = toString(fun.second);
+	}
 
 	m_obtainedResult.clear();
 	for (auto const& fun: functionSideEffectsStr)

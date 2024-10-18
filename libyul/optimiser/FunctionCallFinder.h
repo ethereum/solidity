@@ -21,25 +21,27 @@
 #pragma once
 
 #include <libyul/ASTForward.h>
-#include <libyul/YulName.h>
 
+#include <string_view>
 #include <vector>
 
 namespace solidity::yul
 {
+
+struct Dialect;
 
 /**
  * Finds all calls to a function of a given name using an ASTModifier.
  *
  * Prerequisite: Disambiguator
  */
-std::vector<FunctionCall*> findFunctionCalls(Block& _block, YulName _functionName);
+std::vector<FunctionCall*> findFunctionCalls(Block& _block, std::string_view _functionName, Dialect const& _dialect);
 
 /**
  * Finds all calls to a function of a given name using an ASTWalker.
  *
  * Prerequisite: Disambiguator
  */
-std::vector<FunctionCall const*> findFunctionCalls(Block const& _block, YulName _functionName);
+std::vector<FunctionCall const*> findFunctionCalls(Block const& _block, std::string_view _functionName, Dialect const& _dialect);
 
 }

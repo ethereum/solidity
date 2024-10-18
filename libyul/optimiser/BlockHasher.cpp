@@ -23,6 +23,8 @@
 #include <libyul/AST.h>
 #include <libyul/Utilities.h>
 
+#include <libsolutil/Visitor.h>
+
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
@@ -49,6 +51,25 @@ void ASTHasherBase::hashLiteral(solidity::yul::Literal const& _literal)
 	else
 		hash64(std::hash<std::string>{}(_literal.value.builtinStringLiteralValue()));
 	hash8(_literal.value.unlimited());
+}
+
+void ASTHasherBase::hashFunctionCall(FunctionCall const& _funCall)
+{
+	hash64(compileTimeLiteralHash("FunctionCall"));
+	GenericVisitor visitor{
+		[&](BuiltinName const& _builtin)
+		{
+			hash64(compileTimeLiteralHash("Builtin"));
+			hash64(_builtin.handle.id);
+		},
+		[&](Identifier const& _identifier)
+		{
+			hash64(compileTimeLiteralHash("UserDefined"));
+			hash64(_identifier.name.hash());
+			hash64(_funCall.arguments.size());
+		}
+	};
+	std::visit(visitor, _funCall.functionName);
 }
 
 std::map<Block const*, uint64_t> BlockHasher::run(Block const& _block)
@@ -86,8 +107,7 @@ void BlockHasher::operator()(Identifier const& _identifier)
 void BlockHasher::operator()(FunctionCall const& _funCall)
 {
 	hash64(compileTimeLiteralHash("FunctionCall"));
-	hash64(_funCall.functionName.name.hash());
-	hash64(_funCall.arguments.size());
+	hashFunctionCall(_funCall);
 	ASTWalker::operator()(_funCall);
 }
 
@@ -219,7 +239,6 @@ void ExpressionHasher::operator()(Identifier const& _identifier)
 void ExpressionHasher::operator()(FunctionCall const& _funCall)
 {
 	hash64(compileTimeLiteralHash("FunctionCall"));
-	hash64(_funCall.functionName.name.hash());
-	hash64(_funCall.arguments.size());
+	hashFunctionCall(_funCall);
 	ASTWalker::operator()(_funCall);
 }
