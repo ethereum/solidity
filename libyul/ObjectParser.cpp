@@ -49,7 +49,7 @@ std::shared_ptr<Object> ObjectParser::parse(std::shared_ptr<Scanner> const& _sca
 		if (currentToken() == Token::LBrace)
 		{
 			// Special case: Code-only form.
-			object = std::make_shared<Object>();
+			object = std::make_shared<Object>(m_dialect);
 			object->name = "object";
 			auto sourceNameMapping = tryParseSourceNameMapping();
 			object->debugData = std::make_shared<ObjectDebugData>(ObjectDebugData{sourceNameMapping});
@@ -74,7 +74,7 @@ std::shared_ptr<Object> ObjectParser::parseObject(Object* _containingObject)
 {
 	RecursionGuard guard(*this);
 
-	std::shared_ptr<Object> ret = std::make_shared<Object>();
+	std::shared_ptr<Object> ret = std::make_shared<Object>(m_dialect);
 
 	auto sourceNameMapping = tryParseSourceNameMapping();
 	ret->debugData = std::make_shared<ObjectDebugData>(ObjectDebugData{sourceNameMapping});
