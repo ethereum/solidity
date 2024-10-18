@@ -133,13 +133,21 @@ BOOST_AUTO_TEST_SUITE(YulParser)
 
 BOOST_AUTO_TEST_CASE(builtins_analysis)
 {
-	struct SimpleDialect: public Dialect
+	struct SimpleDialect: Dialect
 	{
-		BuiltinFunction const* builtin(YulName _name) const override
+		std::optional<BuiltinHandle> findBuiltin(std::string_view _name) const override
 		{
-			return _name == "builtin"_yulname ? &f : nullptr;
+			if (_name == "builtin")
+				return BuiltinHandle{std::numeric_limits<size_t>::max()};
+			return std::nullopt;
 		}
-		BuiltinFunction f{"builtin"_yulname, 2, 3, {}, {}, false, {}};
+
+		BuiltinFunction const& builtin(BuiltinHandle const& handle) const override
+		{
+			BOOST_REQUIRE(handle.id == std::numeric_limits<size_t>::max());
+			return f;
+		}
+		BuiltinFunction f{"builtin", 2, 3, {}, {}, false, {}};
 	};
 
 	SimpleDialect dialect;

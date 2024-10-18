@@ -193,7 +193,7 @@ Json YulControlFlowGraphExporter::toJson(Json& _ret, SSACFG const& _cfg, SSACFG:
 			if (!builtinArgsJson.empty())
 				opJson["builtinArgs"] = builtinArgsJson;
 
-			opJson["op"] = _call.builtin.get().name.str();
+			opJson["op"] = _call.builtin.get().name;
 		},
 	}, _operation.kind);
 

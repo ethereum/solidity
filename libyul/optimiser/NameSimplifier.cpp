@@ -67,7 +67,7 @@ void NameSimplifier::operator()(Identifier& _identifier)
 void NameSimplifier::operator()(FunctionCall& _funCall)
 {
 	// The visitor on its own does not visit the function name.
-	if (!m_context.dialect.builtin(_funCall.functionName.name))
+	if (!m_context.dialect.findBuiltin(_funCall.functionName.name.str()))
 		(*this)(_funCall.functionName);
 	ASTModifier::operator()(_funCall);
 }

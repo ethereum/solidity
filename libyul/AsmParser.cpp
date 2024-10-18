@@ -432,7 +432,7 @@ Statement Parser::parseStatement()
 
 			auto const& identifier = std::get<Identifier>(elementary);
 
-			if (m_dialect.builtin(identifier.name))
+			if (m_dialect.findBuiltin(identifier.name.str()))
 				fatalParserError(6272_error, "Cannot assign to builtin function \"" + identifier.name.str() + "\".");
 
 			assignment.variableNames.emplace_back(identifier);
@@ -515,7 +515,7 @@ Expression Parser::parseExpression(bool _unlimitedLiteralArgument)
 		{
 			if (currentToken() == Token::LParen)
 				return parseCall(std::move(operation));
-			if (m_dialect.builtin(_identifier.name))
+			if (m_dialect.findBuiltin(_identifier.name.str()))
 				fatalParserError(
 					7104_error,
 					nativeLocationOf(_identifier),
@@ -676,10 +676,11 @@ FunctionCall Parser::parseCall(std::variant<Literal, Identifier>&& _initialOp)
 	FunctionCall ret;
 	ret.functionName = std::move(std::get<Identifier>(_initialOp));
 	ret.debugData = ret.functionName.debugData;
-	auto const isUnlimitedLiteralArgument = [f=m_dialect.builtin(ret.functionName.name)](size_t const index) {
-		if (f && index < f->literalArguments.size())
-			return f->literalArgument(index).has_value();
-		return false;
+	auto const isUnlimitedLiteralArgument = [handle=m_dialect.findBuiltin(ret.functionName.name.str()), this](size_t const index) {
+		if (!handle)
+			return false;
+		auto const& function = m_dialect.builtin(*handle);
+		return index < function.literalArguments.size() && function.literalArgument(index).has_value();
 	};
 	size_t argumentIndex {0};
 	expectToken(Token::LParen);
@@ -718,7 +719,7 @@ NameWithDebugData Parser::parseNameWithDebugData()
 YulName Parser::expectAsmIdentifier()
 {
 	YulName name{currentLiteral()};
-	if (currentToken() == Token::Identifier && m_dialect.builtin(name))
+	if (currentToken() == Token::Identifier && m_dialect.findBuiltin(name.str()))
 		fatalParserError(5568_error, "Cannot use builtin function name \"" + name.str() + "\" as identifier name.");
 	// NOTE: We keep the expectation here to ensure the correct source location for the error above.
 	expectToken(Token::Identifier);

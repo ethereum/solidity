@@ -503,7 +503,7 @@ u256 EVMInstructionInterpreter::evalBuiltin(
 	if (_fun.instruction)
 		return eval(*_fun.instruction, _evaluatedArguments);
 
-	std::string fun = _fun.name.str();
+	std::string const& fun = _fun.name;
 	// Evaluate datasize/offset/copy instructions
 	if (fun == "datasize" || fun == "dataoffset")
 	{

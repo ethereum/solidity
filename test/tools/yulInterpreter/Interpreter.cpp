@@ -309,25 +309,29 @@ void ExpressionEvaluator::operator()(Identifier const& _identifier)
 void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 {
 	std::vector<std::optional<LiteralKind>> const* literalArguments = nullptr;
-	if (BuiltinFunction const* builtin = m_dialect.builtin(_funCall.functionName.name))
-		if (!builtin->literalArguments.empty())
-			literalArguments = &builtin->literalArguments;
+	if (std::optional<BuiltinHandle> builtinHandle = m_dialect.findBuiltin(_funCall.functionName.name.str()))
+		if (
+			auto const& args = m_dialect.builtin(*builtinHandle).literalArguments;
+			!args.empty()
+		)
+			literalArguments = &args;
 	evaluateArgs(_funCall.arguments, literalArguments);
 
 	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
 	{
-		if (BuiltinFunctionForEVM const* fun = dialect->builtin(_funCall.functionName.name))
+		if (std::optional<BuiltinHandle> builtinHandle = dialect->findBuiltin(_funCall.functionName.name.str()))
 		{
+			auto const& fun = dialect->builtin(*builtinHandle);
 			EVMInstructionInterpreter interpreter(dialect->evmVersion(), m_state, m_disableMemoryTrace);
 
-			u256 const value = interpreter.evalBuiltin(*fun, _funCall.arguments, values());
+			u256 const value = interpreter.evalBuiltin(fun, _funCall.arguments, values());
 
 			if (
 				!m_disableExternalCalls &&
-				fun->instruction &&
-				evmasm::isCallInstruction(*fun->instruction)
+				fun.instruction &&
+				evmasm::isCallInstruction(*fun.instruction)
 			)
-				runExternalCall(*fun->instruction);
+				runExternalCall(*fun.instruction);
 
 			setValue(value);
 			return;

@@ -114,8 +114,8 @@ void UnusedStoreEliminator::operator()(FunctionCall const& _functionCall)
 		applyOperation(op);
 
 	ControlFlowSideEffects sideEffects;
-	if (auto builtin = m_dialect.builtin(_functionCall.functionName.name))
-		sideEffects = builtin->controlFlowSideEffects;
+	if (std::optional<BuiltinHandle> const builtinHandle = m_dialect.findBuiltin(_functionCall.functionName.name.str()))
+		sideEffects = m_dialect.builtin(*builtinHandle).controlFlowSideEffects;
 	else
 		sideEffects = m_controlFlowSideEffects.at(_functionCall.functionName.name);
 
@@ -230,8 +230,8 @@ std::vector<UnusedStoreEliminator::Operation> UnusedStoreEliminator::operationsF
 
 	YulName functionName = _functionCall.functionName.name;
 	SideEffects sideEffects;
-	if (BuiltinFunction const* f = m_dialect.builtin(functionName))
-		sideEffects = f->sideEffects;
+	if (std::optional<BuiltinHandle> const builtinHandle = m_dialect.findBuiltin(functionName.str()))
+		sideEffects = m_dialect.builtin(*builtinHandle).sideEffects;
 	else
 		sideEffects = m_functionSideEffects.at(functionName);
 

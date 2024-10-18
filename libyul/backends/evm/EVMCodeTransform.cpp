@@ -230,13 +230,14 @@ void CodeTransform::operator()(FunctionCall const& _call)
 	yulAssert(m_scope, "");
 
 	m_assembly.setSourceLocation(originLocationOf(_call));
-	if (BuiltinFunctionForEVM const* builtin = m_dialect.builtin(_call.functionName.name))
+	if (std::optional<BuiltinHandle> builtinHandle = m_dialect.findBuiltin(_call.functionName.name.str()))
 	{
+		BuiltinFunctionForEVM const& builtin = m_dialect.builtin(*builtinHandle);
 		for (auto&& [i, arg]: _call.arguments | ranges::views::enumerate | ranges::views::reverse)
-			if (!builtin->literalArgument(i))
+			if (!builtin.literalArgument(i))
 				visitExpression(arg);
 		m_assembly.setSourceLocation(originLocationOf(_call));
-		builtin->generateCode(_call, m_assembly, m_builtinContext);
+		builtin.generateCode(_call, m_assembly, m_builtinContext);
 	}
 	else
 	{
