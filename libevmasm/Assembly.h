@@ -80,6 +80,7 @@ public:
 	AssemblyItem newPushImmutable(std::string const& _identifier);
 	AssemblyItem newImmutableAssignment(std::string const& _identifier);
 	AssemblyItem newAuxDataLoadN(size_t offset);
+	AssemblyItem newAuxDataStore();
 
 	AssemblyItem const& append(AssemblyItem _i);
 	AssemblyItem const& append(bytes const& _data) { return append(newData(_data)); }
@@ -91,12 +92,25 @@ public:
 	void appendProgramSize() { append(AssemblyItem(PushProgramSize)); }
 	void appendLibraryAddress(std::string const& _identifier) { append(newPushLibraryAddress(_identifier)); }
 	void appendImmutable(std::string const& _identifier) { append(newPushImmutable(_identifier)); }
-	void appendImmutableAssignment(std::string const& _identifier) { append(newImmutableAssignment(_identifier)); }
+	void appendImmutableAssignment(std::string const& _identifier) { append(newImmutableAssignment(_identifier));}
+
 	void appendAuxDataLoadN(uint16_t _offset) { append(newAuxDataLoadN(_offset));}
+	void appendAuxDataStore() { append(newAuxDataStore());}
 
 	void appendVerbatim(bytes _data, size_t _arguments, size_t _returnVariables)
 	{
 		append(AssemblyItem(std::move(_data), _arguments, _returnVariables));
+	}
+
+	AssemblyItem appendEOFCreate(ContainerID _containerId)
+	{
+		assertThrow(_containerId < m_subs.size(), AssemblyException, "EOF Create of undefined container");
+		return append(AssemblyItem::eofCreate(_containerId));
+	}
+	AssemblyItem appendReturnContract(ContainerID _containerId)
+	{
+		assertThrow(_containerId < m_subs.size(), AssemblyException, "Return undefined container id");
+		return append(AssemblyItem::returnContract(_containerId));
 	}
 
 	AssemblyItem appendJump() { auto ret = append(newPushTag()); append(Instruction::JUMP); return ret; }

@@ -425,6 +425,19 @@ size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 							"The \"verbatim_*\" builtins cannot be used with empty bytecode."
 						);
 				}
+				else if (functionName == "eofcreate" || functionName == "returncontract")
+				{
+					auto const& argumentAsLiteral = std::get<Literal>(arg);
+					// FIXME: m_dataNames contains root object name which means we can call EOF creation function with
+					// root container which is wrong. Is should be possible to call these functions with direct
+					// subcontainers only.
+					if (!m_dataNames.count(formatLiteral(argumentAsLiteral)))
+						m_errorReporter.typeError(
+							8970_error,
+							nativeLocationOf(arg),
+							"Unknown object \"" + formatLiteral(argumentAsLiteral) + "\"."
+						);
+				}
 				expectUnlimitedStringLiteral(std::get<Literal>(arg));
 				continue;
 			}

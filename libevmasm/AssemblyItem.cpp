@@ -104,6 +104,12 @@ std::pair<std::string, std::string> AssemblyItem::nameAndData(langutil::EVMVersi
 		return {"VERBATIM", util::toHex(verbatimData())};
 	case AuxDataLoadN:
 		return {"AUXDATALOADN", util::toString(data())};
+	case AuxDataStore:
+		return {"AUXDATASTORE", ""};
+	case EofCreate:
+		return {"EOFCREATE", util::toString(data())};
+	case ReturnContract:
+		return {"RETURNCONTRACT", util::toString(data())};
 	case UndefinedItem:
 		solAssert(false);
 	}
@@ -167,6 +173,12 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength, langutil::EVMVersion _
 		return std::get<2>(*m_verbatimBytecode).size();
 	case AuxDataLoadN:
 		return 1 + 2;
+	case AuxDataStore:
+		return 1;
+	case EofCreate:
+		return 2;
+	case ReturnContract:
+		return 2;
 	case UndefinedItem:
 		solAssert(false);
 	}
@@ -183,6 +195,12 @@ size_t AssemblyItem::arguments() const
 	else if (type() == VerbatimBytecode)
 		return std::get<0>(*m_verbatimBytecode);
 	else if (type() == AssignImmutable)
+		return 2;
+	else if (type() == AuxDataStore)
+		return 3;
+	else if (type() == EofCreate)
+		return 4;
+	else if (type() == ReturnContract)
 		return 2;
 	else
 		return 0;
@@ -210,9 +228,13 @@ size_t AssemblyItem::returnValues() const
 		return 0;
 	case VerbatimBytecode:
 		return std::get<1>(*m_verbatimBytecode);
+	case ReturnContract:
+		return 0;
 	case AuxDataLoadN:
+	case EofCreate:
 		return 1;
 	case AssignImmutable:
+	case AuxDataStore:
 	case UndefinedItem:
 		break;
 	}
@@ -237,11 +259,14 @@ bool AssemblyItem::canBeFunctional() const
 	case PushDeployTimeAddress:
 	case PushImmutable:
 	case AuxDataLoadN:
+	case EofCreate:
 		return true;
 	case Tag:
+	case ReturnContract:
 		return false;
 	case AssignImmutable:
 	case VerbatimBytecode:
+	case AuxDataStore:
 	case UndefinedItem:
 		break;
 	}
@@ -344,6 +369,15 @@ std::string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 		assertThrow(data() <= std::numeric_limits<size_t>::max(), AssemblyException, "Invalid auxdataloadn argument.");
 		text = "auxdataloadn(" +  std::to_string(static_cast<size_t>(data())) + ")";
 		break;
+	case AuxDataStore:
+		text = "auxdatastore()";
+		break;
+	case EofCreate:
+		text = "eofcreate(" +  std::to_string(static_cast<size_t>(data())) + ")";
+		break;
+	case ReturnContract:
+		text = "returcontract(" +  std::to_string(static_cast<size_t>(data())) + ")";
+		break;
 	}
 	if (m_jumpType == JumpType::IntoFunction || m_jumpType == JumpType::OutOfFunction)
 	{
@@ -413,6 +447,15 @@ std::ostream& solidity::evmasm::operator<<(std::ostream& _out, AssemblyItem cons
 		break;
 	case AuxDataLoadN:
 		_out << " AuxDataLoadN " << util::toString(_item.data());
+		break;
+	case AuxDataStore:
+		_out << " AuxDataStore";
+		break;
+	case EofCreate:
+		_out << " EofCreate" << util::toString(_item.data());
+		break;
+	case ReturnContract:
+		_out << " ReturnContract" << util::toString(_item.data());
 		break;
 	case UndefinedItem:
 		_out << " ???";

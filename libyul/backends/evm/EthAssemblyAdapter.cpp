@@ -128,6 +128,16 @@ std::pair<std::shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> EthAssembl
 	return {std::make_shared<EthAssemblyAdapter>(*assembly), static_cast<size_t>(sub.data())};
 }
 
+void EthAssemblyAdapter::appendEofCreate(ContainerID _containerID)
+{
+	m_assembly.appendEOFCreate(_containerID);
+}
+
+void EthAssemblyAdapter::appendReturnContract(ContainerID _containerID)
+{
+	m_assembly.appendReturnContract(_containerID);
+}
+
 void EthAssemblyAdapter::appendDataOffset(std::vector<AbstractAssembly::SubID> const& _subPath)
 {
 	if (auto it = m_dataHashBySubId.find(_subPath[0]); it != m_dataHashBySubId.end())
@@ -173,6 +183,11 @@ void EthAssemblyAdapter::appendImmutable(std::string const& _identifier)
 void EthAssemblyAdapter::appendImmutableAssignment(std::string const& _identifier)
 {
 	m_assembly.appendImmutableAssignment(_identifier);
+}
+
+void EthAssemblyAdapter::appendAuxDataStore()
+{
+	m_assembly.appendAuxDataStore();
 }
 
 void EthAssemblyAdapter::appendAuxDataLoadN(uint16_t _offset)

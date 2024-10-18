@@ -134,6 +134,21 @@ void NoOutputAssembly::appendAuxDataLoadN(uint16_t)
 	yulAssert(false, "auxdataloadn not implemented.");
 }
 
+void NoOutputAssembly::appendAuxDataStore()
+{
+	yulAssert(false, "auxdatastore not implemented.");
+}
+
+void NoOutputAssembly::appendEofCreate(ContainerID)
+{
+	yulAssert(false, "eofcreate not implemented.");
+
+}
+void NoOutputAssembly::appendReturnContract(ContainerID)
+{
+	yulAssert(false, "returncontract not implemented.");
+}
+
 NoOutputEVMDialect::NoOutputEVMDialect(EVMDialect const& _copyFrom):
 	EVMDialect(_copyFrom.evmVersion(), _copyFrom.eofVersion(), _copyFrom.providesObjectAccess())
 {

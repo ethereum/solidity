@@ -722,6 +722,11 @@ AssemblyItem Assembly::newAuxDataLoadN(size_t _offset)
 	return AssemblyItem{AuxDataLoadN, _offset};
 }
 
+AssemblyItem Assembly::newAuxDataStore()
+{
+	return AssemblyItem{AuxDataStore};
+}
+
 Assembly& Assembly::optimise(OptimiserSettings const& _settings)
 {
 	optimiseInternal(_settings, {});
@@ -1335,10 +1340,15 @@ std::map<uint16_t, uint16_t> Assembly::findReferencedContainers() const
 	std::set<uint16_t> referencedSubcontainersIds;
 	solAssert(m_subs.size() <= 0x100); // According to EOF spec
 
-	// TODO: Implement properly when opcodes referring sub containers added.
-	for (uint16_t i = 0; i < m_subs.size(); ++i)
-		referencedSubcontainersIds.insert(static_cast<uint16_t>(i));
-	// END TODO
+	for (auto&& codeSection: m_codeSections)
+		for (AssemblyItem const& item: codeSection.items)
+			if (item.type() == EofCreate || item.type() == ReturnContract)
+			{
+				solAssert(item.data() <= std::numeric_limits<uint8_t>::max(),
+					"Invalid EofCreate/ReturnContract index value.");
+				auto const containerId = static_cast<uint16_t>(item.data());
+				referencedSubcontainersIds.insert(containerId);
+			}
 
 	std::map<uint16_t, uint16_t> replacements;
 	uint8_t nUnreferenced = 0;
@@ -1393,6 +1403,24 @@ LinkerObject const& Assembly::assembleEOF() const
 	m_tagPositionsInBytecode = std::vector<size_t>(m_usedTags, std::numeric_limits<size_t>::max());
 	std::map<size_t, uint16_t> dataSectionRef;
 
+	bool storesAuxData = false;
+	bool loadsAuxData = false;
+
+	for (auto& codeSection: m_codeSections)
+	{
+		for (auto const& item: codeSection.items)
+			if (item.type() == AuxDataStore)
+				storesAuxData = true;
+			else if (item.type() == AuxDataLoadN)
+				loadsAuxData = true;
+		if (storesAuxData || loadsAuxData)
+			assertThrow(
+				storesAuxData != loadsAuxData,
+				AssemblyException,
+				"Cannot store and load auxilairy data in the same assembly subroutine."
+			);
+	}
+
 	for (auto&& [codeSectionIndex, codeSection]: m_codeSections | ranges::views::enumerate)
 	{
 		auto const sectionStart = ret.bytecode.size();
@@ -1405,7 +1433,11 @@ LinkerObject const& Assembly::assembleEOF() const
 			switch (item.type())
 			{
 			case Operation:
-				solAssert(item.instruction() != Instruction::DATALOADN);
+				solAssert(
+					item.instruction() != Instruction::DATALOADN &&
+					item.instruction() != Instruction::RETURNCONTRACT &&
+					item.instruction() != Instruction::EOFCREATE
+				);
 				solAssert(!(item.instruction() >= Instruction::PUSH0 && item.instruction() <= Instruction::PUSH32));
 				ret.bytecode += assembleOperation(item);
 				break;
@@ -1417,6 +1449,18 @@ LinkerObject const& Assembly::assembleEOF() const
 				auto const [pushLibraryAddressBytecode, linkRef] = assemblePushLibraryAddress(item, ret.bytecode.size());
 				ret.bytecode += pushLibraryAddressBytecode;
 				ret.linkReferences.insert(linkRef);
+				break;
+			}
+			case EofCreate:
+			{
+				ret.bytecode.push_back(static_cast<uint8_t>(Instruction::EOFCREATE));
+				ret.bytecode.push_back(static_cast<uint8_t>(item.data()));
+				break;
+			}
+			case ReturnContract:
+			{
+				ret.bytecode.push_back(static_cast<uint8_t>(Instruction::RETURNCONTRACT));
+				ret.bytecode.push_back(static_cast<uint8_t>(item.data()));
 				break;
 			}
 			case VerbatimBytecode:
@@ -1435,6 +1479,13 @@ LinkerObject const& Assembly::assembleEOF() const
 				ret.bytecode.push_back(uint8_t(Instruction::DATALOADN));
 				dataSectionRef[ret.bytecode.size()] = static_cast<uint16_t>(item.data());
 				appendBigEndianUint16(ret.bytecode, item.data());
+				break;
+			}
+			case AuxDataStore:
+			{
+				// Expect 3 elements on stack (source, dest_base, value_offset_dest)
+				ret.bytecode.push_back(uint8_t(Instruction::ADD));
+				ret.bytecode.push_back(uint8_t(Instruction::MSTORE));
 				break;
 			}
 			default:
