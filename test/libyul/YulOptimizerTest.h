@@ -29,7 +29,7 @@ using ErrorList = std::vector<std::shared_ptr<Error const>>;
 namespace solidity::yul
 {
 struct AsmAnalysisInfo;
-struct Object;
+class Object;
 struct Dialect;
 }
 

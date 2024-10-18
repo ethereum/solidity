@@ -37,7 +37,7 @@ namespace solidity::yul
 {
 struct AsmAnalysisInfo;
 struct Block;
-struct Object;
+class Object;
 struct Dialect;
 class AST;
 }

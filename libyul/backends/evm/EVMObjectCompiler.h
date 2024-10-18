@@ -26,7 +26,7 @@
 
 namespace solidity::yul
 {
-struct Object;
+class Object;
 class AbstractAssembly;
 class EVMDialect;
 

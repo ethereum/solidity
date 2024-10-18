@@ -30,7 +30,7 @@ namespace solidity::yul
 {
 
 struct Dialect;
-struct Object;
+class Object;
 struct FunctionDefinition;
 
 /**

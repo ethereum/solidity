@@ -34,7 +34,7 @@ namespace solidity::yul
 {
 
 struct FunctionCall;
-struct Object;
+class Object;
 
 /**
  * Context used during code generation.
