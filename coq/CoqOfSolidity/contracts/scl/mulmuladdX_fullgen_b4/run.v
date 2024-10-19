@@ -870,7 +870,7 @@ Proof.
         end
       end.
       (* Computation of the most-significant bit *)
-      l. {
+      (* l. {
         change (Pure.shl 127 1) with (2 ^ Z.of_nat (128 - 1)).
         set (fuel := 128%nat).
         (* assert (H_index_le : (index <= 128)%nat) by lia. *)
@@ -911,19 +911,60 @@ Proof.
           exfalso; lia. *)
           admit.
         }
-        { 
+        { match goal with
+          | |- context[Some (make_state _ _ ?mem _)] =>
+            set (memory := mem)
+          end.
           eapply LoopStep with
             (output_inter :=
-              match get_result fuel with
+              match get_result (S fuel) with
               | None => Result.Ok (BlockUnit.Tt, tt)
               | Some _ => Result.Ok (BlockUnit.Break, tt)
               end
             )
             (state_inter :=
-
+              let memory :=
+                match get_result (S fuel) with
+                | None =>
+                  let memory :=
+                    List.replace_nth (Z.to_nat (mask_address / 32)) memory (get_mask fuel) in
+                  let memory :=
+                    List.replace_nth (Z.to_nat (ZZZ_address / 32)) memory (get_ZZZ fuel) in
+                  memory
+                | Some _ => memory
+                end in
+              Some (make_state environment state memory [])
             ).
           { (* for body *)
-            with_strategy opaque [MostSignificantBit.get_until] load_store_line.
+            unfold memory; clear memory.
+            repeat match goal with
+            | |- context[List.replace_nth ?n _ _] =>
+              let n' := eval cbv in n in
+              change n with n';
+              unfold List.replace_nth
+            end.
+            with_strategy opaque [get_ZZZ get_mask] load_store_line.
+            unfold Pure.iszero.
+            destruct (get_ZZZ (S fuel) =? 0) eqn:H_ZZZ_eq in |- *.
+            { l. {
+                with_strategy opaque [get_ZZZ get_mask] load_store_line.
+              }
+              with_strategy opaque [get_ZZZ get_mask] load_store_line.
+              unfold get_ZZZ in H_ZZZ_eq.
+              admit.
+            }
+            { unfold get_ZZZ in H_ZZZ_eq.
+              destruct (get_result (S fuel)).
+              { p. }
+              { lia. }
+            }
+          }
+          { (* for end *)
+
+          }
+        }
+        *)
+        
             set (_127 := 127%nat).
             unfold MostSignificantBit.get_until at 2.
             with_strategy opaque [MostSignificantBit.get_until] s.

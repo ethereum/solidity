@@ -171,7 +171,10 @@ def statement_to_coq(node) -> tuple[Callable[[set[str]], str], set[str], set[str
     elif node_type == 'YulVariableDeclaration':
         variable_names = node.get('variables', [])
         variables = variable_names_to_coq(True, variable_names)
-        value = expression_to_coq(node.get('value'))
+        value = \
+            expression_to_coq(node.get('value')) \
+            if node.get('value') is not None \
+            else "0"
         return (
             lambda _:
                 f"let~ {variables} := [[ {value} ]] in",
@@ -232,6 +235,8 @@ def statement_to_coq(node) -> tuple[Callable[[set[str]], str], set[str], set[str
                 block_to_coq(None, case.get('body')),
             )
             for case in node.get('cases', [])
+            # TODO: handle the default case in a switch
+            if case.get('value') != "default"
         ]
         commonly_updated_vars: set[str] = {
             name
@@ -278,7 +283,8 @@ def statement_to_coq(node) -> tuple[Callable[[set[str]], str], set[str], set[str
         # We have not yet seen a case where the pre block is not empty, so this is not
         # tested and we prefer to return an exception.
         if not is_pre_empty_block(node.get('pre')):
-            raise Exception("Non-empty pre block in for loop no handled")
+            # raise Exception("Non-empty pre block in for loop not handled")
+            print("Non-empty pre block in for loop not handled", file=sys.stderr)
 
         condition = expression_to_coq(node.get('condition'))
         post, post_updated_vars = block_to_coq(None, node.get('post'))
