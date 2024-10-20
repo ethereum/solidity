@@ -553,8 +553,46 @@ Module PointsSelector.
     let 'Build_t u_low u_high v_low v_high := selector in
     Z.b2z u_low + 2 * Z.b2z u_high + 4 * Z.b2z v_low + 8 * Z.b2z v_high.
 
-  Definition add_points (p : Z) (Q Q' G G' : PA.t) (selector : t) : PZZ.t :=
-    List.fold_left (ecAddn2 p) [Q; Q'; G; G'] PZZ.zero.
+  (** We make explicit the list of points that we add to be sure to be in the same order as in the
+    source code. *)
+  Definition get_points (p : U256.t) (Q Q' G G' : PA.t) (selector : PointsSelector.t) :
+      list PA.t :=
+    let '{|
+      u_low := u_low;
+      u_high := u_high;
+      v_low := v_low;
+      v_high := v_high
+    |} := selector in
+    match u_low, u_high, v_low, v_high with
+    | false, false, false, false => []
+    | true, false, false, false => [G]
+    | false, true, false, false => [G']
+    | true, true, false, false => [G'; G]
+    | false, false, true, false => [Q]
+    | true, false, true, false => [Q; G]
+    | false, true, true, false => [G'; Q]
+    | true, true, true, false => [G'; Q; G]
+    | false, false, false, true => [Q']
+    | true, false, false, true => [Q'; G]
+    | false, true, false, true => [Q'; G']
+    | true, true, false, true => [Q'; G'; G]
+    | false, false, true, true => [Q; Q']
+    | true, false, true, true => [Q; Q'; G]
+    | false, true, true, true => [G'; Q; Q']
+    | true, true, true, true => [G'; Q; Q'; G]
+    end.
+
+  (** Add all the elements in the list or return zero, without ever adding zero itself as the
+      operation is not defined for it. *)
+  Fixpoint add_points (p : U256.t) (Qs : list PA.t) : PZZ.t :=
+    match Qs with
+    | [] => PZZ.zero
+    | [Q] => PZZ.of_PA Q
+    | Q :: Qs => ecAddn2 p (add_points p Qs) Q
+    end.
+
+  Definition get_point (p : U256.t) (Q Q' G G' : PA.t) (selector : PointsSelector.t) : PZZ.t :=
+    add_points p (List.rev (get_points p Q Q' G G' selector)).
 End PointsSelector.
 
 Module U128.
@@ -687,7 +725,7 @@ Module MostSignificantBit.
     get_until u_low u_high v_low v_high index 0 =
     get u_low u_high v_low v_high index.
   Proof.
-    induction index; cbn; best.
+    induction index; cbn; hauto lq: on.
   Qed.
 
   (* Module Loop.
@@ -704,7 +742,7 @@ Module MostSignificantBit.
 End MostSignificantBit.
 
 Ltac load_store_line :=
-  with_strategy opaque [ecAddn2] (
+  with_strategy opaque [ecAddn2 Z.pow] (
     (* We do that to avoid an exponential increase of the output *)
     try set (ecAddn2 _ _ _) in |- *;
     l; [repeat (
@@ -774,7 +812,92 @@ Ltac load_store_line :=
   | Some state_end ?}}.
 Proof. *)
 
-
+Lemma run_get_point_coordinate codes environment state
+    (
+      mem0 mem1 mem2 mem3 mem4 mem5 mem6 mem7 mem8 mem9
+      mem10 mem11 mem12 mem13 mem14 mem15 mem16 mem17 mem18 mem19
+      mem20 mem21 mem22 mem23 mem24 mem25 mem26 mem27 mem28 mem29
+      mem30 mem31 mem32 mem33 mem34 mem35 mem36 mem37 mem38 mem39
+      mem40 mem41 mem42 mem43 mem44 mem45 mem46 mem47 mem48 mem49
+      mem50 mem51 mem52 mem53 mem54 mem55 mem56 mem57 mem58 mem59
+      mem60 mem61 mem62 mem63
+      : U256.t
+    )
+    (memory_suffix : list U256.t)
+    (Q Q' G G' : PA.t) (p : Z)
+    (selector : PointsSelector.t)
+    (start_state' : State.t) :
+  let memory_prefix : list U256.t := [
+    mem0; mem1; mem2; mem3; mem4; mem5; mem6; mem7; mem8; mem9;
+    mem10; mem11; mem12; mem13; mem14; mem15; mem16; mem17; mem18; mem19;
+    mem20; mem21; mem22; mem23; mem24; mem25; mem26; mem27; mem28; mem29;
+    mem30; mem31; mem32; mem33; mem34; mem35; mem36; mem37; mem38; mem39;
+    mem40; mem41; mem42; mem43; mem44; mem45; mem46; mem47; mem48; mem49;
+    mem50; mem51; mem52; mem53; mem54; mem55; mem56; mem57; mem58; mem59;
+    mem60; mem61; mem62; mem63
+  ] in
+  let P0 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t false false false false) in
+  let P1 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t true false false false) in
+  let P2 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t false true false false) in
+  let P3 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t true true false false) in
+  let P4 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t false false true false) in
+  let P5 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t true false true false) in
+  let P6 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t false true true false) in
+  let P7 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t true true true false) in
+  let P8 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t false false false true) in
+  let P9 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t true false false true) in
+  let P10 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t false true false true) in
+  let P11 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t true true false true) in
+  let P12 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t false false true true) in
+  let P13 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t true false true true) in
+  let P14 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t false true true true) in
+  let P15 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t true true true true) in
+  let memory : list U256.t :=
+    memory_prefix ++
+    [P0.(PZZ.X); P0.(PZZ.Y); P0.(PZZ.ZZ); P0.(PZZ.ZZZ)] ++
+    [P1.(PZZ.X); P1.(PZZ.Y); P1.(PZZ.ZZ); P1.(PZZ.ZZZ)] ++
+    [P2.(PZZ.X); P2.(PZZ.Y); P2.(PZZ.ZZ); P2.(PZZ.ZZZ)] ++
+    [P3.(PZZ.X); P3.(PZZ.Y); P3.(PZZ.ZZ); P3.(PZZ.ZZZ)] ++
+    [P4.(PZZ.X); P4.(PZZ.Y); P4.(PZZ.ZZ); P4.(PZZ.ZZZ)] ++
+    [P5.(PZZ.X); P5.(PZZ.Y); P5.(PZZ.ZZ); P5.(PZZ.ZZZ)] ++
+    [P6.(PZZ.X); P6.(PZZ.Y); P6.(PZZ.ZZ); P6.(PZZ.ZZZ)] ++
+    [P7.(PZZ.X); P7.(PZZ.Y); P7.(PZZ.ZZ); P7.(PZZ.ZZZ)] ++
+    [P8.(PZZ.X); P8.(PZZ.Y); P8.(PZZ.ZZ); P8.(PZZ.ZZZ)] ++
+    [P9.(PZZ.X); P9.(PZZ.Y); P9.(PZZ.ZZ); P9.(PZZ.ZZZ)] ++
+    [P10.(PZZ.X); P10.(PZZ.Y); P10.(PZZ.ZZ); P10.(PZZ.ZZZ)] ++
+    [P11.(PZZ.X); P11.(PZZ.Y); P11.(PZZ.ZZ); P11.(PZZ.ZZZ)] ++
+    [P12.(PZZ.X); P12.(PZZ.Y); P12.(PZZ.ZZ); P12.(PZZ.ZZZ)] ++
+    [P13.(PZZ.X); P13.(PZZ.Y); P13.(PZZ.ZZ); P13.(PZZ.ZZZ)] ++
+    [P14.(PZZ.X); P14.(PZZ.Y); P14.(PZZ.ZZ); P14.(PZZ.ZZZ)] ++
+    [P15.(PZZ.X); P15.(PZZ.Y); P15.(PZZ.ZZ); P15.(PZZ.ZZZ)] ++
+    memory_suffix in
+  let start_state := make_state environment state memory [] in
+  start_state' = start_state ->
+  {{? codes, environment, Some start_state' |
+    mload (Pure.add (Pure.add 0 2048) (Pure.shl 7 (PointsSelector.to_Z selector))) ⇓
+    Result.Ok (PointsSelector.get_point p Q Q' G G' selector).(PZZ.X)
+  | Some start_state' ?}} /\
+  {{? codes, environment, Some start_state' |
+    mload (Pure.add (Pure.add (Pure.add 0 2048) (Pure.shl 7 (PointsSelector.to_Z selector))) 32) ⇓
+    Result.Ok (PointsSelector.get_point p Q Q' G G' selector).(PZZ.Y)
+  | Some start_state' ?}} /\
+  {{? codes, environment, Some start_state' |
+    mload (Pure.add (Pure.add (Pure.add 0 2048) (Pure.shl 7 (PointsSelector.to_Z selector))) 64) ⇓
+    Result.Ok (PointsSelector.get_point p Q Q' G G' selector).(PZZ.ZZ)
+  | Some start_state' ?}} /\
+  {{? codes, environment, Some start_state' |
+    mload (Pure.add (Pure.add (Pure.add 0 2048) (Pure.shl 7 (PointsSelector.to_Z selector))) 96) ⇓
+    Result.Ok (PointsSelector.get_point p Q Q' G G' selector).(PZZ.ZZZ)
+  | Some start_state' ?}}.
+Proof.
+  intros * H_state.
+  rewrite H_state.
+  unfold start_state.
+  repeat split;
+    destruct selector as [u_low u_high v_low v_high];
+    destruct u_low, u_high, v_low, v_high;
+    apply_run_mload.
+Qed.
 
 Lemma run_fun_ecGenMulmuladdX_store_2814 codes environment state
     (
@@ -782,7 +905,11 @@ Lemma run_fun_ecGenMulmuladdX_store_2814 codes environment state
       mem12 mem13 mem14 :
       U256.t
     )
-    (Q Q' G G' : PA.t) (p a : Z) (u_low u_high v_low v_high : U256.t) :
+    (Q Q' G G' : PA.t) (p a : Z) (u_low u_high v_low v_high : U256.t)
+    (H_u_low : U128.Valid.t u_low)
+    (H_u_high : U128.Valid.t u_high)
+    (H_v_low : U128.Valid.t v_low)
+    (H_v_high : U128.Valid.t v_high) :
   let u := HighLow.merge u_high u_low in
   let v := HighLow.merge v_high v_low in
   let params := {|
@@ -869,8 +996,187 @@ Proof.
           change P2 with P in t
         end
       end.
+      (* We flatten the additions *)
+      repeat match goal with
+      | _ := ?t : PZZ.t |- _ =>
+        let t' := eval cbv - [ecAddn2 PZZ.of_PA] in t in
+        progress change t with t' in * |-
+      end.
+      (* We show that the memory is equal to the description based on selectors *)
+      set (P0 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t false false false false)).
+      set (P1 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t true false false false)).
+      set (P2 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t false true false false)).
+      set (P3 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t true true false false)).
+      set (P4 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t false false true false)).
+      set (P5 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t true false true false)).
+      set (P6 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t false true true false)).
+      set (P7 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t true true true false)).
+      set (P8 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t false false false true)).
+      set (P9 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t true false false true)).
+      set (P10 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t false true false true)).
+      set (P11 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t true true false true)).
+      set (P12 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t false false true true)).
+      set (P13 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t true false true true)).
+      set (P14 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t false true true true)).
+      set (P15 := PointsSelector.get_point p Q Q' G G' (PointsSelector.Build_t true true true true)).
+      apply_memory_update_at (2048 + 0 * 32) P0.(PZZ.X); [reflexivity|].
+      apply_memory_update_at (2048 + 1 * 32) P0.(PZZ.Y); [reflexivity|].
+      apply_memory_update_at (2048 + 2 * 32) P0.(PZZ.ZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 3 * 32) P0.(PZZ.ZZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 4 * 32) P1.(PZZ.X); [reflexivity|].
+      apply_memory_update_at (2048 + 5 * 32) P1.(PZZ.Y); [reflexivity|].
+      apply_memory_update_at (2048 + 6 * 32) P1.(PZZ.ZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 7 * 32) P1.(PZZ.ZZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 8 * 32) P2.(PZZ.X); [reflexivity|].
+      apply_memory_update_at (2048 + 9 * 32) P2.(PZZ.Y); [reflexivity|].
+      apply_memory_update_at (2048 + 10 * 32) P2.(PZZ.ZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 11 * 32) P2.(PZZ.ZZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 12 * 32) P3.(PZZ.X); [reflexivity|].
+      apply_memory_update_at (2048 + 13 * 32) P3.(PZZ.Y); [reflexivity|].
+      apply_memory_update_at (2048 + 14 * 32) P3.(PZZ.ZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 15 * 32) P3.(PZZ.ZZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 16 * 32) P4.(PZZ.X); [reflexivity|].
+      apply_memory_update_at (2048 + 17 * 32) P4.(PZZ.Y); [reflexivity|].
+      apply_memory_update_at (2048 + 18 * 32) P4.(PZZ.ZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 19 * 32) P4.(PZZ.ZZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 20 * 32) P5.(PZZ.X); [reflexivity|].
+      apply_memory_update_at (2048 + 21 * 32) P5.(PZZ.Y); [reflexivity|].
+      apply_memory_update_at (2048 + 22 * 32) P5.(PZZ.ZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 23 * 32) P5.(PZZ.ZZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 24 * 32) P6.(PZZ.X); [reflexivity|].
+      apply_memory_update_at (2048 + 25 * 32) P6.(PZZ.Y); [reflexivity|].
+      apply_memory_update_at (2048 + 26 * 32) P6.(PZZ.ZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 27 * 32) P6.(PZZ.ZZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 28 * 32) P7.(PZZ.X); [reflexivity|].
+      apply_memory_update_at (2048 + 29 * 32) P7.(PZZ.Y); [reflexivity|].
+      apply_memory_update_at (2048 + 30 * 32) P7.(PZZ.ZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 31 * 32) P7.(PZZ.ZZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 32 * 32) P8.(PZZ.X); [reflexivity|].
+      apply_memory_update_at (2048 + 33 * 32) P8.(PZZ.Y); [reflexivity|].
+      apply_memory_update_at (2048 + 34 * 32) P8.(PZZ.ZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 35 * 32) P8.(PZZ.ZZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 36 * 32) P9.(PZZ.X); [reflexivity|].
+      apply_memory_update_at (2048 + 37 * 32) P9.(PZZ.Y); [reflexivity|].
+      apply_memory_update_at (2048 + 38 * 32) P9.(PZZ.ZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 39 * 32) P9.(PZZ.ZZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 40 * 32) P10.(PZZ.X); [reflexivity|].
+      apply_memory_update_at (2048 + 41 * 32) P10.(PZZ.Y); [reflexivity|].
+      apply_memory_update_at (2048 + 42 * 32) P10.(PZZ.ZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 43 * 32) P10.(PZZ.ZZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 44 * 32) P11.(PZZ.X); [reflexivity|].
+      apply_memory_update_at (2048 + 45 * 32) P11.(PZZ.Y); [reflexivity|].
+      apply_memory_update_at (2048 + 46 * 32) P11.(PZZ.ZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 47 * 32) P11.(PZZ.ZZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 48 * 32) P12.(PZZ.X); [reflexivity|].
+      apply_memory_update_at (2048 + 49 * 32) P12.(PZZ.Y); [reflexivity|].
+      apply_memory_update_at (2048 + 50 * 32) P12.(PZZ.ZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 51 * 32) P12.(PZZ.ZZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 52 * 32) P13.(PZZ.X); [reflexivity|].
+      apply_memory_update_at (2048 + 53 * 32) P13.(PZZ.Y); [reflexivity|].
+      apply_memory_update_at (2048 + 54 * 32) P13.(PZZ.ZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 55 * 32) P13.(PZZ.ZZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 56 * 32) P14.(PZZ.X); [reflexivity|].
+      apply_memory_update_at (2048 + 57 * 32) P14.(PZZ.Y); [reflexivity|].
+      apply_memory_update_at (2048 + 58 * 32) P14.(PZZ.ZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 59 * 32) P14.(PZZ.ZZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 60 * 32) P15.(PZZ.X); [reflexivity|].
+      apply_memory_update_at (2048 + 61 * 32) P15.(PZZ.Y); [reflexivity|].
+      apply_memory_update_at (2048 + 62 * 32) P15.(PZZ.ZZ); [reflexivity|].
+      apply_memory_update_at (2048 + 63 * 32) P15.(PZZ.ZZZ); [reflexivity|].
+      (* Remove unused definitions *)
+      repeat match reverse goal with
+      | t := _ : PZZ.t |- _ => clear t
+      end.
+      set (mask_address := 0x01a0).
+      set (ZZZ_address := 0xe0).
       (* Computation of the most-significant bit *)
-      (* l. {
+      l. {
+        eapply LoopOneStepUnsafe with (default_output := Result.Ok (BlockUnit.Tt, tt)). {
+          load_store_line.
+          l. {
+            load_store_line.
+          }
+          load_store_line.
+        }
+        apply_memory_update_at mask_address (2 ^ 126). {
+          reflexivity.
+        }
+        apply_memory_update_at ZZZ_address (HighLow.raw_get_selector u v (2 ^ 127)). {
+          reflexivity.
+        }
+        p.
+      }
+      repeat load_store_line.
+      unfold u, v.
+      Ltac run_load_coordinate :=
+        l; [
+          try (c; [p|]; with_strategy opaque [Z.pow] s);
+          c; [
+            rewrite <- HighLow.get_selector_eq by (try assumption; lia);
+            eapply run_get_point_coordinate; reflexivity
+          |];
+          c; [
+            apply_run_mstore
+          |];
+          CanonizeState.execute;
+          p
+        |].
+      do 4 run_load_coordinate.
+      load_store_line.
+      (* Main for loop *)
+      
+      rewrite <- HighLow.get_selector_eq by (try assumption; lia).
+      rewrite <- HighLow.get_selector_eq by (try assumption; lia).
+        
+        (* Start of the handling of the [mload] *)
+        rewrite <- HighLow.get_selector_eq by (try assumption; lia).
+        set (selector := HighLow.get_selector _ _ _ _ _).
+        set (P := PointsSelector.add_points p (PointsSelector.get_points p Q Q' G G' selector)).
+        destruct selector as [ [] [] [] [] ].
+        { c. {
+            apply_run_mload.
+          }
+          match goal with
+          | |- context[Result.Ok ?X] =>
+            set (PX := X) at 2;
+            cbv - [ecAddn2 PZZ.of_PA] in PX
+          end.
+          replace PX with P.(PZZ.X) by reflexivity.
+          unfold P; clear P PX.
+          c. {
+            apply_run_mstore.
+          }
+          CanonizeState.execute.
+          p.
+        }
+          cbn in P.
+          cbv - [ecAddn2 PZZ.of_PA] in w.
+
+          set (w' := PointsSelector.add_points p Q Q' G G' ).
+        }
+        (* We simplify the [mload] *)
+        c. {
+          apply_run_mload.
+        repeat (
+      c; [
+        p ||
+        apply_run_mload ||
+        apply_run_mstore ||
+        apply run_usr'dollar'ecAddn2 ||
+        apply run_usr'dollar'ecAddn2_2189
+      |];
+      CanonizeState.execute;
+      s
+    ).
+        load_store_line.
+      }
+      load_store_line.
+      l. {
+        unfold ZZZ_address.
+        load_store_line.
+      }
+      (* Computation of the most-significant bit *)
+      l. {
         change (Pure.shl 127 1) with (2 ^ Z.of_nat (128 - 1)).
         set (fuel := 128%nat).
         (* assert (H_index_le : (index <= 128)%nat) by lia. *)
@@ -885,7 +1191,6 @@ Proof.
             unfold List.replace_nth;
             CanonizeState.execute. *)
         set (get_mask := fun (fuel : nat) => 2 ^ Z.of_nat (128 - 1)).
-        set (mask_address := 0x01a0).
         set (get_result := fun (fuel : nat) =>
           MostSignificantBit.get_until u_low u_high v_low v_high 127 fuel
         ).
@@ -895,7 +1200,6 @@ Proof.
           | None => 0
           end
         ).
-        set (ZZZ_address := 0xe0).
         apply_memory_update_at mask_address (get_mask fuel). {
           reflexivity.
         }
@@ -963,7 +1267,6 @@ Proof.
 
           }
         }
-        *)
         
             set (_127 := 127%nat).
             unfold MostSignificantBit.get_until at 2.

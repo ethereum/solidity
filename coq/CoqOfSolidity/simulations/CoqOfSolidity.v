@@ -1582,6 +1582,22 @@ Module RunO.
     }
   Qed.
 
+  (** As a simplification, to start a proof. Here we assume we only do one step of the loop
+      execution. *)
+  Lemma LoopOneStepUnsafe codes environment {In Out : Set}
+      (init : In)
+      (body : In -> LowM.t Out)
+      (break_with : Out -> In + Out)
+      (k : Out -> LowM.t Out)
+      output output_inter state state_inter state'
+      default_output
+      (H_body : {{? codes, environment, state | body init ⇓ output_inter | state_inter ?}})
+      (H_k : {{? codes, environment, state_inter | k default_output ⇓ output | state' ?}}) :
+    {{? codes, environment, state |
+      LowM.Loop init body break_with k ⇓ output
+    | state' ?}}.
+  Admitted.
+
   Lemma PureEq codes environment {A : Set} (output output' : A) state state' :
     output = output' ->
     state = state' ->
