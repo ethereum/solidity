@@ -742,7 +742,7 @@ Module MostSignificantBit.
 End MostSignificantBit.
 
 Ltac load_store_line :=
-  with_strategy opaque [ecAddn2 Z.pow] (
+  with_strategy opaque [ecAddn2 Z.pow PointsSelector.get_point HighLow.get_selector] (
     (* We do that to avoid an exponential increase of the output *)
     try set (ecAddn2 _ _ _) in |- *;
     l; [repeat (
@@ -1123,8 +1123,251 @@ Proof.
         |].
       do 4 run_load_coordinate.
       load_store_line.
+      set (P_127 := PointsSelector.get_point p Q Q' G G' _) in |- *.
       (* Main for loop *)
-      
+      l. {
+        eapply LoopOneStepUnsafe with (default_output := Result.Ok (BlockUnit.Tt, tt)). {
+          load_store_line.
+          l. {
+            set (P_127_X_address := 5 * 32).
+            set (P_127_Y_address := 8 * 32).
+            set (P_127_ZZ_address := 14 * 32).
+            set (P_127_ZZZ_address := 7 * 32).
+            load_store_line.
+            load_store_line.
+            load_store_line.
+            load_store_line.
+            load_store_line.
+            load_store_line.
+            set (dbl_neg_P_127 := ecDblNeg a p P_127).
+            (* This special optimization is made by the Solidity compiler *)
+            replace (Pure.add p (Pure.not 1)) with (Pure.sub p 2). 2: {
+              unfold Pure.add, Pure.sub, Pure.not.
+              lia.
+            }
+            apply_memory_update_at P_127_X_address dbl_neg_P_127.(PZZ.X); [reflexivity|].
+            apply_memory_update_at P_127_Y_address dbl_neg_P_127.(PZZ.Y); [reflexivity|].
+            apply_memory_update_at P_127_ZZ_address dbl_neg_P_127.(PZZ.ZZ); [reflexivity|].
+            apply_memory_update_at P_127_ZZZ_address dbl_neg_P_127.(PZZ.ZZZ); [reflexivity|].
+            l. {
+              repeat (c; [
+                apply_run_mload ||
+                p
+              |]).
+              change (Result.Ok _) with (Result.Ok (HighLow.raw_get_selector u v (2 ^ 126))).
+              unfold u, v.
+              rewrite <- HighLow.get_selector_eq by (try assumption; lia).
+              p.
+            }
+            (* We flatten the control flow because there is going to be an `if` with a `continue` *)
+            lu.
+            c; [p|].
+            with_strategy opaque [Z.pow] s.
+            match goal with
+            | |- context[Shallow.if_ ?condition] =>
+              let condition' := eval unfold Pure.iszero in condition in
+              change condition with condition'
+            end.
+            destruct (PointsSelector.to_Z _ =? 0) eqn:H_is_selector_zero.
+            { (* The selector is zero *)
+              load_store_line.
+            }
+            { (* The selector is not zero *)
+              l. {
+                repeat (c; [
+                  apply_run_mload ||
+                  p
+                |]).
+                with_strategy opaque [Z.pow] s.
+                c. {
+                  eapply run_get_point_coordinate; reflexivity.
+                }
+                p.
+              }
+              set (P_126 := PointsSelector.get_point p Q Q' G G' _) in |- *.
+              load_store_line.
+              l. {
+                c. {
+                  eapply run_get_point_coordinate; reflexivity.
+                }
+                p.
+              }
+              fold P_126.
+              load_store_line.
+              (* Flattening the control flow to anticipate an `if` *)
+              lu.
+              repeat (c; [
+                apply_run_mload ||
+                p
+              |]).
+              fold @LowM.let_.
+              unfold Pure.iszero at 1.
+              destruct (dbl_neg_P_127.(PZZ.ZZ) =? 0).
+              { (* Case is zero *)
+                load_store_line.
+                l. {
+                  repeat (c; [
+                    apply_run_mload ||
+                    p
+                  |]).
+                  s.
+                  c. {
+                    eapply run_get_point_coordinate; reflexivity.
+                  }
+                  c. {
+                    apply_run_mstore.
+                  }
+                  CanonizeState.execute.
+                  p.
+                }
+                l. {
+                  repeat (c; [
+                    apply_run_mload ||
+                    p
+                  |]).
+                  s.
+                  c. {
+                    eapply run_get_point_coordinate; reflexivity.
+                  }
+                  c. {
+                    apply_run_mstore.
+                  }
+                  CanonizeState.execute.
+                  p.
+                }
+                l. {
+                  repeat (c; [
+                    apply_run_mload ||
+                    p
+                  |]).
+                  s.
+                  c. {
+                    eapply run_get_point_coordinate; reflexivity.
+                  }
+                  c. {
+                    apply_run_mstore.
+                  }
+                  CanonizeState.execute.
+                  p.
+                }
+                fold @LowM.let_.
+                (* This is the end of a control-flow branch *)
+                admit.
+              }
+              { (* Case is not zero *)
+                l. {
+                  repeat (c; [
+                    apply_run_mload ||
+                    p
+                  |]).
+                  s.
+                  c. {
+                    eapply run_get_point_coordinate; reflexivity.
+                  }
+                  fold P_126.
+                  repeat (c; [
+                    apply_run_mload ||
+                    p
+                  |]).
+                  p.
+                }
+                l. {
+                  repeat (c; [
+                    apply_run_mload ||
+                    p
+                  |]).
+                  c. {
+                    apply_run_mstore.
+                  }
+                  CanonizeState.execute.
+                  p.
+                }
+                l. {
+                  repeat (c; [
+                    apply_run_mload ||
+                    p
+                  |]).
+                  c. {
+                    eapply run_get_point_coordinate; reflexivity.
+                  }
+                  fold P_126.
+                  p.
+                }
+                load_store_line.
+                (* `if continue` *)
+                lu.
+                c. {
+                  p.
+                }
+                fold @LowM.let_.
+                unfold Pure.iszero at 1.
+                match goal with
+                | |- context[if ?condition then _ else _] => destruct condition
+                end.
+                { lu.
+                  c. {
+                    p.
+                  }
+                  fold @LowM.let_.
+                  unfold Pure.iszero at 1.
+                  match goal with
+                  | |- context[if ?condition then _ else _] => destruct condition
+                  end.
+                  { load_store_line.
+                    load_store_line.
+                    load_store_line.
+                    (* Too slow, we should factorize the expressions *)
+                    admit.
+                  }
+                  { load_store_line.
+                    load_store_line.
+                    load_store_line.
+                    (* Too slow, we should factorize the expressions *)
+                    admit.
+
+                  }
+                }
+              }
+
+              Ltac cbn_goal :=
+                match goal with
+                | |- {{? _, _, _ | ?expr1 ⇓ ?expr2 | ?state_end ?}} =>
+                  let expr1' := eval cbn in expr1 in
+                  change expr1 with expr1';
+                  let expr2' := eval cbn in expr2 in
+                  change expr2 with expr2';
+                  let state_end' := eval cbn in state_end in
+                  change state_end with state_end'
+                end.
+              cbn in P_126.
+              
+              
+              (* with_strategy opaque [Z.pow] s. *)
+                run_load_coordinate.
+                match goal with
+                | |- context[shl 7 ?selector] =>
+                  replace selector with (PointsSelector.to_Z (HighLow.get_selector u_low u_high v_low v_high 126))
+                end. 2: {
+                  apply HighLow.get_selector_eq; try assumption; lia.
+                }
+                end.
+              }
+              
+            unfold Pure.iszero at 1.
+            match goal with
+            | |- context[if ?condition then _ else _] => destruct condition eqn:H_is_selector_zero
+            end.
+            { (* The selector is zero *)
+            }
+            fold HighLow.raw_get_selector.
+            rewrite <- HighLow.get_selector_eq.
+            (* Next line: let selector *)
+            load_store_line.
+            load_store_line.
+            load_store_line.
+          }
+        }
+      }
       rewrite <- HighLow.get_selector_eq by (try assumption; lia).
       rewrite <- HighLow.get_selector_eq by (try assumption; lia).
         
