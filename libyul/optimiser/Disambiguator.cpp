@@ -32,7 +32,7 @@ using namespace solidity::util;
 
 YulName Disambiguator::translateIdentifier(YulName _originalName)
 {
-	if (m_dialect.builtin(_originalName) || m_externallyUsedIdentifiers.count(_originalName))
+	if (m_dialect.findBuiltin(_originalName.str()) || m_externallyUsedIdentifiers.count(_originalName))
 		return _originalName;
 
 	assertThrow(!m_scopes.empty() && m_scopes.back(), OptimizerException, "");

@@ -299,7 +299,7 @@ size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 	std::optional<size_t> numReturns;
 	std::vector<std::optional<LiteralKind>> const* literalArguments = nullptr;
 
-	if (BuiltinFunction const* f = m_dialect.builtin(_funCall.functionName.name))
+	if (std::optional<BuiltinHandle> handle = m_dialect.findBuiltin(_funCall.functionName.name.str()))
 	{
 		if (_funCall.functionName.name == "selfdestruct"_yulname)
 			m_errorReporter.warning(
@@ -327,13 +327,14 @@ size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 				"The use of transient storage for reentrancy guards that are cleared at the end of the call is safe."
 			);
 
-		numParameters = f->numParameters;
-		numReturns = f->numReturns;
-		if (!f->literalArguments.empty())
-			literalArguments = &f->literalArguments;
+		BuiltinFunction const& f = m_dialect.builtin(*handle);
+		numParameters = f.numParameters;
+		numReturns = f.numReturns;
+		if (!f.literalArguments.empty())
+			literalArguments = &f.literalArguments;
 
 		validateInstructions(_funCall);
-		m_sideEffects += f->sideEffects;
+		m_sideEffects += f.sideEffects;
 	}
 	else if (m_currentScope->lookup(_funCall.functionName.name, GenericVisitor{
 		[&](Scope::Variable const&)
@@ -628,7 +629,7 @@ void AsmAnalyzer::expectValidIdentifier(YulName _identifier, SourceLocation cons
 			"\"" + _identifier.str() + "\" is not a valid identifier (contains consecutive dots)."
 		);
 
-	if (m_dialect.reservedIdentifier(_identifier))
+	if (m_dialect.reservedIdentifier(_identifier.str()))
 		m_errorReporter.declarationError(
 			5017_error,
 			_location,
@@ -639,14 +640,16 @@ void AsmAnalyzer::expectValidIdentifier(YulName _identifier, SourceLocation cons
 bool AsmAnalyzer::validateInstructions(std::string const& _instructionIdentifier, langutil::SourceLocation const& _location)
 {
 	// NOTE: This function uses the default EVM version instead of the currently selected one.
-	auto const builtin = EVMDialect::strictAssemblyForEVM(EVMVersion{}, std::nullopt).builtin(YulName(_instructionIdentifier));
-	if (builtin && builtin->instruction.has_value())
-		return validateInstructions(builtin->instruction.value(), _location);
+	auto const& defaultEVMDialect = EVMDialect::strictAssemblyForEVM(EVMVersion{}, std::nullopt);
+	auto const builtinHandle = defaultEVMDialect.findBuiltin(_instructionIdentifier);
+	if (builtinHandle && defaultEVMDialect.builtin(*builtinHandle).instruction.has_value())
+		return validateInstructions(*defaultEVMDialect.builtin(*builtinHandle).instruction, _location);
 
 	// TODO: Change `prague()` to `EVMVersion{}` once EOF gets deployed
-	auto const eofBuiltin = EVMDialect::strictAssemblyForEVM(EVMVersion::prague(), 1).builtin(YulName(_instructionIdentifier));
-	if (eofBuiltin && eofBuiltin->instruction.has_value())
-		return validateInstructions(eofBuiltin->instruction.value(), _location);
+	auto const& eofDialect = EVMDialect::strictAssemblyForEVM(EVMVersion::prague(), 1);
+	auto const eofBuiltinHandle = eofDialect.findBuiltin(_instructionIdentifier);
+	if (eofBuiltinHandle && eofDialect.builtin(*eofBuiltinHandle).instruction.has_value())
+		return validateInstructions(*eofDialect.builtin(*eofBuiltinHandle).instruction, _location);
 
 	return false;
 }

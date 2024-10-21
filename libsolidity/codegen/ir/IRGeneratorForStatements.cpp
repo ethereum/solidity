@@ -84,7 +84,7 @@ struct CopyTranslate: public yul::ASTCopier
 		// from the Yul dialect we are compiling to. So we are assuming here that the builtin
 		// functions are identical. This should not be a problem for now since everything
 		// is EVM anyway.
-		if (m_dialect.builtin(_name))
+		if (m_dialect.findBuiltin(_name.str()))
 			return _name;
 		else
 			return yul::YulName{"usr$" + _name.str()};

@@ -271,8 +271,8 @@ ControlFlowNode const* ControlFlowSideEffectsCollector::nextProcessableNode(Func
 
 ControlFlowSideEffects const& ControlFlowSideEffectsCollector::sideEffects(FunctionCall const& _call) const
 {
-	if (auto const* builtin = m_dialect.builtin(_call.functionName.name))
-		return builtin->controlFlowSideEffects;
+	if (std::optional<BuiltinHandle> builtinHandle = m_dialect.findBuiltin(_call.functionName.name.str()))
+		return m_dialect.builtin(*builtinHandle).controlFlowSideEffects;
 	else
 		return m_functionSideEffects.at(m_functionReferences.at(&_call));
 }

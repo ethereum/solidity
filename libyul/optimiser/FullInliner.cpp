@@ -131,7 +131,7 @@ std::map<YulName, size_t> FullInliner::callDepths() const
 	// Remove calls to builtin functions.
 	for (auto& call: cg.functionCalls)
 		for (auto it = call.second.begin(); it != call.second.end();)
-			if (m_dialect.builtin(*it))
+			if (m_dialect.findBuiltin(it->str()))
 				it = call.second.erase(it);
 			else
 				++it;
