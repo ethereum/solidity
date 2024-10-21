@@ -157,12 +157,21 @@ it evaluates to a state variable.  If it is accessed externally
         }
     }
 
+Getter functions do not always return the entire state variable,
+arrays and structs are two exceptions.
+
 If you have a ``public`` state variable of array type, then you can only retrieve
 single elements of the array via the generated getter function. This mechanism
-exists to avoid high gas costs when returning an entire array. You can use
-arguments to specify which individual element to return, for example
-``myArray(0)``. If you want to return an entire array in one call, then you need
-to write a function, for example:
+exists to avoid high gas costs when returning an entire array.
+When you declare a public state variable of a struct type,
+the generated getter function does not return the struct as a single object in memory.
+Instead, due to historical design choices and early limitations in the ABI encoding of structs,
+the getter function returns the individual members of the struct as separate elements within a tuple.
+If the struct contains multiple members, the getter function returns a tuple with each member as a
+distinct element. Conversely, if the struct has only one member, the getter function simply returns
+that member directly instead of wrapping it in a tuple.
+
+Below is an example to include the above two cases.
 
 .. code-block:: solidity
 
@@ -185,22 +194,6 @@ to write a function, for example:
             return myArray;
         }
     }
-
-Now you can use ``getArray()`` to retrieve the entire array, instead of
-``myArray(i)``, which returns a single element per call.
-
-When you declare a public state variable of a struct type,
-the generated getter function does not return the struct as a single object in memory.
-Instead, due to historical design choices and early limitations in the ABI encoding of structs,
-the getter function returns the individual members of the struct as separate elements within a tuple.
-If the struct contains multiple members, the getter function returns a tuple with each member as a
-distinct element. Conversely, if the struct has only one member, the getter function simply returns
-that member directly instead of wrapping it in a tuple. For example:
-
-.. code-block:: solidity
-
-    // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.9.0;
 
     contract StructExample {
         // Struct Definition with single member
@@ -228,41 +221,4 @@ that member directly instead of wrapping it in a tuple. For example:
         }
         */
 
-    }
-
-``this.simpleStruct()``'s return type is bool, while ``this.complexStruct()``'s return type is
-a tuple of uint and bool.
-
-The next example is more complex:
-
-.. code-block:: solidity
-
-    // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.9.0;
-
-    contract Complex {
-        struct Data {
-            uint a;
-            bytes3 b;
-            mapping(uint => uint) map;
-            uint[3] c;
-            uint[] d;
-            bytes e;
-        }
-        mapping(uint => mapping(bool => Data[])) public data;
-    }
-
-It generates a function of the following form. The mapping and arrays (with the
-exception of byte arrays) in the struct are omitted because there is no good way
-to select individual struct members or provide a key for the mapping:
-
-.. code-block:: solidity
-
-    function data(uint arg1, bool arg2, uint arg3)
-        public
-        returns (uint a, bytes3 b, bytes memory e)
-    {
-        a = data[arg1][arg2][arg3].a;
-        b = data[arg1][arg2][arg3].b;
-        e = data[arg1][arg2][arg3].e;
     }
