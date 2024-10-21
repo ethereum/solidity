@@ -1,5 +1,5 @@
 Optimized IR:
-/// @use-src 0:"CoqOfSolidity/contracts/erc20/erc20.sol"
+/// @use-src 0:"CoqOfSolidity/contracts/erc20/contract.sol"
 object "Erc20_403" {
     code {
         {
@@ -51,7 +51,7 @@ object "Erc20_403" {
             }
         }
     }
-    /// @use-src 0:"CoqOfSolidity/contracts/erc20/erc20.sol"
+    /// @use-src 0:"CoqOfSolidity/contracts/erc20/contract.sol"
     object "Erc20_403_deployed" {
         code {
             {
@@ -307,7 +307,7 @@ object "Erc20_403" {
                 log3(_5, /** @src 0:65:3516  "contract Erc20 {..." */ 0x20, /** @src 0:2251:2276  "Transfer(from, to, value)" */ 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef, _2, _1)
             }
         }
-        data ".metadata" hex"a2646970667358221220ee4f1ea49e67226a410c5d04adfff380859cc37369e61289b29e7f878c4941bb64736f6c634300081b0033"
+        data ".metadata" hex"a26469706673582212201a1fe65a5b6e9a889cfa2e0e3e08138191bebe93076641e37824cf6a4c5c784264736f6c634300081b0033"
     }
 }
 
