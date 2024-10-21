@@ -33,6 +33,23 @@ using namespace solidity::yul;
 using namespace solidity::util;
 using namespace solidity::langutil;
 
+namespace
+{
+
+void modifyBuiltinToNoOutput(BuiltinFunctionForEVM& _builtin)
+{
+	_builtin.generateCode = [_builtin](FunctionCall const& _call, AbstractAssembly& _assembly, BuiltinContext&)
+	{
+		for (size_t i: ranges::views::iota(0u, _call.arguments.size()))
+			if (!_builtin.literalArgument(i))
+				_assembly.appendInstruction(evmasm::Instruction::POP);
+
+		for (size_t i = 0; i < _builtin.numReturns; i++)
+			_assembly.appendConstant(u256(0));
+	};
+}
+
+}
 
 void NoOutputAssembly::appendInstruction(evmasm::Instruction _instr)
 {
@@ -138,16 +155,21 @@ NoOutputEVMDialect::NoOutputEVMDialect(EVMDialect const& _copyFrom):
 	EVMDialect(_copyFrom.evmVersion(), _copyFrom.eofVersion(), _copyFrom.providesObjectAccess())
 {
 	for (auto& fun: m_functions)
-	{
-		size_t returns = fun.second.numReturns;
-		fun.second.generateCode = [=](FunctionCall const& _call, AbstractAssembly& _assembly, BuiltinContext&)
-		{
-			for (size_t i: ranges::views::iota(0u, _call.arguments.size()))
-				if (!fun.second.literalArgument(i))
-					_assembly.appendInstruction(evmasm::Instruction::POP);
+		if (fun)
+			modifyBuiltinToNoOutput(*fun);
+}
 
-			for (size_t i = 0; i < returns; i++)
-				_assembly.appendConstant(u256(0));
-		};
-	}
+BuiltinFunctionForEVM const& NoOutputEVMDialect::builtin(BuiltinHandle const& _handle) const
+{
+	if (isVerbatimHandle(_handle))
+		// for verbatims the modification is performed lazily as they are stored in a lookup table fashion
+		if (
+			auto& builtin = m_verbatimFunctions[_handle.id];
+			!builtin
+		)
+		{
+			builtin = std::make_unique<BuiltinFunctionForEVM>(createVerbatimFunctionFromHandle(_handle));
+			modifyBuiltinToNoOutput(*builtin);
+		}
+	return EVMDialect::builtin(_handle);
 }

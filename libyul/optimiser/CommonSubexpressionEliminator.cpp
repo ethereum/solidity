@@ -72,13 +72,14 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 	{
 		FunctionCall& funCall = std::get<FunctionCall>(_e);
 
-		if (BuiltinFunction const* builtin = m_dialect.builtin(funCall.functionName.name))
+		if (std::optional<BuiltinHandle> builtinHandle = m_dialect.findBuiltin(funCall.functionName.name.str()))
 		{
+			BuiltinFunction const& builtin = m_dialect.builtin(*builtinHandle);
 			for (size_t i = funCall.arguments.size(); i > 0; i--)
 				// We should not modify function arguments that have to be literals
 				// Note that replacing the function call entirely is fine,
 				// if the function call is movable.
-				if (!builtin->literalArgument(i - 1))
+				if (!builtin.literalArgument(i - 1))
 					visit(funCall.arguments[i - 1]);
 
 			descend = false;

@@ -349,12 +349,12 @@ void SSAControlFlowGraphBuilder::operator()(Switch const& _switch)
 				{*_case.value /* skip second argument */ }
 			});
 			auto outputValue = m_graph.newVariable(m_currentBlock);
-			BuiltinFunction const* builtin = m_dialect.builtin(ghostCall.functionName.name);
+			std::optional<BuiltinHandle> builtinHandle = m_dialect.findBuiltin(ghostCall.functionName.name.str());
 			currentBlock().operations.emplace_back(SSACFG::Operation{
 				{outputValue},
 				SSACFG::BuiltinCall{
 					debugDataOf(_case),
-					*builtin,
+					m_dialect.builtin(*builtinHandle),
 					ghostCall
 				},
 				{m_graph.newLiteral(debugDataOf(_case), _case.value->value.value()), expression}
@@ -546,15 +546,16 @@ std::vector<SSACFG::ValueId> SSAControlFlowGraphBuilder::visitFunctionCall(Funct
 {
 	bool canContinue = true;
 	SSACFG::Operation operation = [&](){
-		if (BuiltinFunction const* builtin = m_dialect.builtin(_call.functionName.name))
+		if (std::optional<BuiltinHandle> const& builtinHandle = m_dialect.findBuiltin(_call.functionName.name.str()))
 		{
-			SSACFG::Operation result{{}, SSACFG::BuiltinCall{_call.debugData, *builtin, _call}, {}};
+			auto const& builtinFunction = m_dialect.builtin(*builtinHandle);
+			SSACFG::Operation result{{}, SSACFG::BuiltinCall{_call.debugData, builtinFunction, _call}, {}};
 			for (auto&& [idx, arg]: _call.arguments | ranges::views::enumerate | ranges::views::reverse)
-				if (!builtin->literalArgument(idx).has_value())
+				if (!builtinFunction.literalArgument(idx).has_value())
 					result.inputs.emplace_back(std::visit(*this, arg));
-			for (size_t i = 0; i < builtin->numReturns; ++i)
+			for (size_t i = 0; i < builtinFunction.numReturns; ++i)
 				result.outputs.emplace_back(m_graph.newVariable(m_currentBlock));
-			canContinue = builtin->controlFlowSideEffects.canContinue;
+			canContinue = builtinFunction.controlFlowSideEffects.canContinue;
 			return result;
 		}
 		else

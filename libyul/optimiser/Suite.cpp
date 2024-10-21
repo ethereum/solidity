@@ -106,7 +106,6 @@ void OptimiserSuite::run(
 		evmDialect->evmVersion().canOverchargeGasForCall() &&
 		evmDialect->providesObjectAccess();
 	std::set<YulName> reservedIdentifiers = _externallyUsedIdentifiers;
-	reservedIdentifiers += _dialect.fixedFunctionNames();
 
 	Block astRoot;
 	{

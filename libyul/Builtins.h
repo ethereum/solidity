@@ -15,41 +15,21 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 // SPDX-License-Identifier: GPL-3.0
-/**
- * Compiler that transforms Yul Objects to EVM bytecode objects.
- */
 
 #pragma once
 
-#include <optional>
-#include <cstdint>
+#include <cstddef>
 
 namespace solidity::yul
 {
-struct Object;
-class AbstractAssembly;
-class EVMDialect;
 
-class EVMObjectCompiler
+/// Handle to reference a builtin function in the AST
+struct BuiltinHandle
 {
-public:
-	static void compile(
-		Object const& _object,
-		AbstractAssembly& _assembly,
-		EVMDialect const& _dialect,
-		bool _optimize,
-		std::optional<uint8_t> _eofVersion
-	);
-private:
-	EVMObjectCompiler(AbstractAssembly& _assembly, EVMDialect const& _dialect, std::optional<uint8_t> _eofVersion):
-		m_assembly(_assembly), m_dialect(_dialect), m_eofVersion(_eofVersion)
-	{}
+	size_t id;
 
-	void run(Object const& _object, bool _optimize);
-
-	AbstractAssembly& m_assembly;
-	EVMDialect const& m_dialect;
-	std::optional<uint8_t> m_eofVersion;
+	bool operator==(BuiltinHandle const& _other) const { return id == _other.id; }
+	bool operator<(BuiltinHandle const& _other) const { return id < _other.id; }
 };
 
 }

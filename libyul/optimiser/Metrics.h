@@ -28,7 +28,7 @@ namespace solidity::yul
 {
 
 struct Dialect;
-struct EVMDialect;
+class EVMDialect;
 
 /**
  * Weights to be assigned to specific yul statements and expressions by a metric.
