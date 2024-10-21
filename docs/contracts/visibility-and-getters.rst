@@ -189,10 +189,13 @@ to write a function, for example:
 Now you can use ``getArray()`` to retrieve the entire array, instead of
 ``myArray(i)``, which returns a single element per call.
 
-When you have a public state variable of a struct type, calling the compiler  
-generated getter function will return either a tuple containing the struct's members  
-(if there are multiple members) or just a single member  
-(if the struct has only one member). For example:  
+When you declare a public state variable of a struct type,
+the generated getter function does not return the struct as a single object in memory.
+Instead, due to historical design choices and early limitations in the ABI encoding of structs,
+the getter function returns the individual members of the struct as separate elements within a tuple.
+If the struct contains multiple members, the getter function returns a tuple with each member as a
+distinct element. Conversely, if the struct has only one member, the getter function simply returns
+that member directly instead of wrapping it in a tuple. For example:
 
 .. code-block:: solidity
 
