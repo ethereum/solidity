@@ -722,6 +722,11 @@ AssemblyItem Assembly::newAuxDataLoadN(size_t _offset)
 	return AssemblyItem{AuxDataLoadN, _offset};
 }
 
+AssemblyItem Assembly::newAuxDataStore()
+{
+	return AssemblyItem{AuxDataStore};
+}
+
 Assembly& Assembly::optimise(OptimiserSettings const& _settings)
 {
 	optimiseInternal(_settings, {});
@@ -1393,6 +1398,24 @@ LinkerObject const& Assembly::assembleEOF() const
 	m_tagPositionsInBytecode = std::vector<size_t>(m_usedTags, std::numeric_limits<size_t>::max());
 	std::map<size_t, uint16_t> dataSectionRef;
 
+	bool storesAuxData = false;
+	bool loadsAuxData = false;
+
+	for (auto& codeSection: m_codeSections)
+	{
+		for (auto const& item: codeSection.items)
+			if (item.type() == AuxDataStore)
+				storesAuxData = true;
+			else if (item.type() == AuxDataLoadN)
+				loadsAuxData = true;
+		if (storesAuxData || loadsAuxData)
+			solRequire(
+				storesAuxData != loadsAuxData,
+				AssemblyException,
+				"Cannot store and load auxiliary data in the same assembly subroutine."
+			);
+	}
+
 	for (auto&& [codeSectionIndex, codeSection]: m_codeSections | ranges::views::enumerate)
 	{
 		auto const sectionStart = ret.bytecode.size();
@@ -1435,6 +1458,13 @@ LinkerObject const& Assembly::assembleEOF() const
 				ret.bytecode.push_back(uint8_t(Instruction::DATALOADN));
 				dataSectionRef[ret.bytecode.size()] = static_cast<uint16_t>(item.data());
 				appendBigEndianUint16(ret.bytecode, item.data());
+				break;
+			}
+			case AuxDataStore:
+			{
+				// Expect 3 elements on stack (source, dest_base, value_offset_dest)
+				ret.bytecode.push_back(uint8_t(Instruction::ADD));
+				ret.bytecode.push_back(uint8_t(Instruction::MSTORE));
 				break;
 			}
 			default:

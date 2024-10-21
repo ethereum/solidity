@@ -174,6 +174,7 @@ std::set<YulName> createReservedIdentifiers(langutil::EVMVersion _evmVersion)
 		"setimmutable"_yulname,
 		"loadimmutable"_yulname,
 		"auxdataloadn"_yulname,
+		"auxdatastore"_yulname,
 	};
 	return reserved;
 }
@@ -349,6 +350,30 @@ std::map<YulName, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _ev
 		}
 		else // EOF context
 		{
+			builtins.emplace(createFunction(
+				"auxdatastore",
+				3,
+				0,
+				SideEffects{
+					false,               // movable
+					false,               // movableApartFromEffects
+					false,               // canBeRemoved
+					false,               // canBeRemovedIfNotMSize
+					true,                // cannotLoop
+					SideEffects::None,   // otherState
+					SideEffects::None,   // storage
+					SideEffects::Write,  // memory
+					SideEffects::None    // transientStorage
+				},
+				{std::nullopt, std::nullopt, std::nullopt},
+				[](
+					FunctionCall const&,
+					AbstractAssembly& _assembly,
+					BuiltinContext&
+				) {
+					_assembly.appendAuxDataStore();
+				}
+				));
 			builtins.emplace(createFunction(
 				"auxdataloadn",
 				1,

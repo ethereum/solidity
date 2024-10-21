@@ -110,7 +110,10 @@ public:
 	/// Appends loading an immutable variable.
 	virtual void appendImmutable(std::string const& _identifier) = 0;
 	/// Appends an assignment to an immutable variable.
-	virtual void appendImmutableAssignment(std::string const& _identifier) = 0;
+	virtual void appendImmutableAssignment(std::string const&) = 0;
+
+	/// Appends store to a memory used fill aux data section of EOF container
+	virtual void appendAuxDataStore() = 0;
 
 	/// Appends an operation that loads 32 bytes of data from a known offset relative to the start of the static_aux_data area of the EOF data section.
 	/// Note that static_aux_data is only a part or the data section.

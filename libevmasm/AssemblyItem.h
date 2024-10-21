@@ -55,6 +55,7 @@ enum AssemblyItemType
 	/// Loads 32 bytes from static auxiliary data of EOF data section. The offset does *not* have to be always from the beginning
 	/// of the data EOF section. More details here: https://github.com/ipsilon/eof/blob/main/spec/eof.md#data-section-lifecycle
 	AuxDataLoadN,
+	AuxDataStore, ///< Stores value in memory which will be appended to EOF data section as static auxiliary data.
 	VerbatimBytecode ///< Contains data that is inserted into the bytecode code section without modification.
 };
 

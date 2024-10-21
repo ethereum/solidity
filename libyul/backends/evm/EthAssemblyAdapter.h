@@ -65,6 +65,7 @@ public:
 	void appendImmutable(std::string const& _identifier) override;
 	void appendImmutableAssignment(std::string const& _identifier) override;
 
+	void appendAuxDataStore() override;
 	void appendAuxDataLoadN(uint16_t _offset) override;
 
 	void markAsInvalid() override;
