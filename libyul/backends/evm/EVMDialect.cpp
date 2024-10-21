@@ -173,6 +173,7 @@ std::set<YulName> createReservedIdentifiers(langutil::EVMVersion _evmVersion)
 		"datacopy"_yulname,
 		"setimmutable"_yulname,
 		"loadimmutable"_yulname,
+		"auxdataloadn"_yulname,
 	};
 	return reserved;
 }
