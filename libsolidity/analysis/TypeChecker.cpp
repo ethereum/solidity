@@ -231,6 +231,43 @@ bool TypeChecker::visit(ImportDirective const&)
 	return false;
 }
 
+void TypeChecker::endVisit(ContractDefinition const& _contract)
+{
+	if (
+		ASTPointer<Expression> const baseLocation = _contract.storageBaseLocationExpression()
+	)
+	{
+		if (!*baseLocation->annotation().isPure)
+		{
+			if (auto functionCall = dynamic_cast<FunctionCall const*>(baseLocation.get()))
+				if (
+					auto const* identifier = dynamic_cast<Identifier const*>(&functionCall->expression());
+					identifier && identifier->name() == "erc7201"
+				)
+					return;
+
+			m_errorReporter.typeError(
+				77_error,
+				baseLocation->location(),
+				"The contract base location must be an expression that can be evaluated at compilation time."
+			);
+		}
+		auto const* expressionType = type(*baseLocation);
+		BoolResult result = expressionType->isImplicitlyConvertibleTo(*TypeProvider::uint256());
+		if (!result)
+		{
+			m_errorReporter.typeErrorConcatenateDescriptions(
+				76_error,
+				baseLocation->location(),
+				"Contract storage base location must be "
+				"in range of type uint256. Current type is " +
+				expressionType->humanReadableName(),
+				result.message()
+			);
+		}
+	}
+}
+
 void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 {
 	auto base = dynamic_cast<ContractDefinition const*>(&dereference(_inheritance.name()));
