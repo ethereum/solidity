@@ -118,7 +118,7 @@ BuiltinFunctionForEVM createFunction(
 	return f;
 }
 
-std::set<std::string, std::less<>> createReservedIdentifiers(langutil::EVMVersion _evmVersion)
+std::set<std::string, std::less<>> createReservedIdentifiers(langutil::EVMVersion _evmVersion, std::optional<uint8_t> _eofVersion)
 {
 	// TODO remove this in 0.9.0. We allow creating functions or identifiers in Yul with the name
 	// basefee for VMs before london.
@@ -186,6 +186,12 @@ std::set<std::string, std::less<>> createReservedIdentifiers(langutil::EVMVersio
 		"setimmutable",
 		"loadimmutable",
 	};
+
+	if (_eofVersion.has_value())
+		reserved += std::vector<std::string>{
+			"auxdataloadn",
+		};
+
 	return reserved;
 }
 
@@ -414,7 +420,7 @@ EVMDialect::EVMDialect(langutil::EVMVersion _evmVersion, std::optional<uint8_t> 
 	m_evmVersion(_evmVersion),
 	m_eofVersion(_eofVersion),
 	m_functions(createBuiltins(_evmVersion, _eofVersion, _objectAccess)),
-	m_reserved(createReservedIdentifiers(_evmVersion))
+	m_reserved(createReservedIdentifiers(_evmVersion, _eofVersion))
 {
 	for (auto const& [index, maybeBuiltin]: m_functions | ranges::views::enumerate)
 		if (maybeBuiltin)
