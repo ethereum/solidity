@@ -39,19 +39,7 @@ using namespace solidity::frontend;
 using namespace solidity::langutil;
 using namespace solidity::util;
 
-static std::vector<EVMVersion> s_evmVersions = {
-	EVMVersion::homestead(),
-	EVMVersion::tangerineWhistle(),
-	EVMVersion::spuriousDragon(),
-	EVMVersion::byzantium(),
-	EVMVersion::constantinople(),
-	EVMVersion::petersburg(),
-	EVMVersion::istanbul(),
-	EVMVersion::berlin(),
-	EVMVersion::london(),
-	EVMVersion::paris(),
-	EVMVersion::prague()
-};
+static std::vector<EVMVersion> s_evmVersions = EVMVersion::allVersions();
 
 void FuzzerUtil::testCompilerJsonInterface(std::string const& _input, bool _optimize, bool _quiet)
 {
