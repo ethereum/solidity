@@ -47,7 +47,6 @@ using namespace solidity::yul;
 void FullInliner::run(OptimiserStepContext& _context, Block& _ast)
 {
 	FullInliner inliner{_ast, _context.dispenser, _context.dialect};
-	inliner.run(Pass::InlineTiny);
 	inliner.run(Pass::InlineRest);
 }
 
