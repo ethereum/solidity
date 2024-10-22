@@ -38,6 +38,12 @@ non-persistent area where function arguments are stored, and behaves mostly like
     allocate such types.
 
 .. note::
+    Arrays and structs with ``calldata`` data location declared in a function body must be assigned before
+    use. Arrays and structs with ``calldata`` data location as the returned parameters of a function
+    must be assigned before returning. This rule is enforced by the compiler to allow complex initialization patterns.
+    A workaround is assign the variable to itself after declaration.
+
+.. note::
     Prior to version 0.6.9 data location for reference-type arguments was limited to
     ``calldata`` in external functions, ``memory`` in public functions and either
     ``memory`` or ``storage`` in internal and private ones.
