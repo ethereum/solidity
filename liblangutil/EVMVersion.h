@@ -91,6 +91,10 @@ public:
 		return std::nullopt;
 	}
 
+	bool isExperimental() const {
+		return m_version == Version::Prague;
+	}
+
 	bool operator==(EVMVersion const& _other) const { return m_version == _other.m_version; }
 	bool operator<(EVMVersion const& _other) const { return m_version < _other.m_version; }
 

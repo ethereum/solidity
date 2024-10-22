@@ -592,6 +592,16 @@ General Information)").c_str(),
 	;
 	desc.add(inputOptions);
 
+	auto const annotateEVMVersion = [](EVMVersion const& _version) {
+		return _version.name() + (_version.isExperimental() ? " (experimental)" : "");
+	};
+	std::vector<EVMVersion> allEVMVersions = EVMVersion::allVersions();
+	std::string annotatedEVMVersions = util::joinHumanReadable(
+		allEVMVersions | ranges::views::transform(annotateEVMVersion),
+		", ",
+		" or "
+	);
+
 	po::options_description outputOptions("Output Options");
 	outputOptions.add_options()
 		(
@@ -606,7 +616,7 @@ General Information)").c_str(),
 		(
 			g_strEVMVersion.c_str(),
 			po::value<std::string>()->value_name("version")->default_value(EVMVersion{}.name()),
-			("Select desired EVM version. Either " + util::joinHumanReadable(EVMVersion::allVersions(), ", ", " or ") + ".").c_str()
+			("Select desired EVM version: " + annotatedEVMVersions + ".").c_str()
 		)
 	;
 	if (!_forHelp) // Note: We intentionally keep this undocumented for now.
