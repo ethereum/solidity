@@ -30,10 +30,6 @@
 
 #include <utility>
 
-#ifdef HAVE_Z3_DLOPEN
-#include <z3_version.h>
-#endif
-
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::langutil;
@@ -151,9 +147,6 @@ void BMC::analyze(SourceUnit const& _source, std::map<ASTNode const*, std::set<V
 			SourceLocation(),
 			"BMC analysis was not possible. No SMT solver (Z3 or cvc5) was available."
 			" None of the installed solvers was enabled."
-#ifdef HAVE_Z3_DLOPEN
-			" Install libz3.so." + std::to_string(Z3_MAJOR_VERSION) + "." + std::to_string(Z3_MINOR_VERSION) + " to enable Z3."
-#endif
 		);
 }
 

@@ -1049,7 +1049,7 @@ jobs:
     <<: *base_ubuntu2004_xlarge
     environment:
       <<: *base_ubuntu2004_xlarge_env
-      CMAKE_OPTIONS: -DCMAKE_BUILD_TYPE=Release -DUSE_Z3_DLOPEN=ON -DSOLC_STATIC_STDLIBS=ON
+      CMAKE_OPTIONS: -DCMAKE_BUILD_TYPE=Release -DSOLC_STATIC_STDLIBS=ON
     steps:
       - checkout
       - run_build
