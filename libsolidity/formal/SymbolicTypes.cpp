@@ -29,6 +29,20 @@
 using namespace solidity::util;
 using namespace solidity::smtutil;
 
+
+namespace
+{
+	// HACK to get around Z3 bug in printing type names with spaces (https://github.com/Z3Prover/z3/issues/6850)
+	// Should be fixed in Z3 4.13.0
+	// TODO: Remove this afterwards
+	void sanitizeTypeName(std::string& name)
+	{
+		std::replace(name.begin(), name.end(), ' ', '_');
+		std::replace(name.begin(), name.end(), '(', '[');
+		std::replace(name.begin(), name.end(), ')', ']');
+	}
+}
+
 namespace solidity::frontend::smt
 {
 
@@ -137,6 +151,7 @@ SortPointer smtSort(frontend::Type const& _type)
 		else
 			tupleName = _type.toString(true);
 
+		sanitizeTypeName(tupleName);
 		tupleName += "_tuple";
 
 		return std::make_shared<TupleSort>(
@@ -148,7 +163,8 @@ SortPointer smtSort(frontend::Type const& _type)
 	case Kind::Tuple:
 	{
 		std::vector<std::string> members;
-		auto const& tupleName = _type.toString(true);
+		auto tupleName = _type.toString(true);
+		sanitizeTypeName(tupleName);
 		std::vector<SortPointer> sorts;
 
 		if (auto const* tupleType = dynamic_cast<frontend::TupleType const*>(&_type))
