@@ -1,7 +1,5 @@
 # Inherit default options
 include("${CMAKE_CURRENT_LIST_DIR}/default.cmake")
-# Enable Z3
-set(USE_Z3 ON CACHE BOOL "Enable Z3" FORCE)
 # Build fuzzing binaries
 set(OSSFUZZ ON CACHE BOOL "Enable fuzzer build" FORCE)
 # Use libfuzzer as the fuzzing back-end

@@ -260,6 +260,3 @@ if(COVERAGE)
 	endif()
 	add_compile_options(-g --coverage)
 endif()
-
-# SMT Solvers integration
-option(USE_Z3 "Allow compiling with Z3 SMT solver integration" ON)
