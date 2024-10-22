@@ -21,6 +21,8 @@
 
 #pragma once
 
+#include <libsolutil/Assertions.h>
+
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -105,7 +107,7 @@ public:
 		case Version::Cancun: return "cancun";
 		case Version::Prague: return "prague";
 		}
-		return "INVALID";
+		util::unreachable();
 	}
 
 	/// Has the RETURNDATACOPY and RETURNDATASIZE opcodes.
