@@ -26,6 +26,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <vector>
 
 #include <boost/operators.hpp>
 
@@ -64,9 +65,8 @@ public:
 	static EVMVersion cancun() { return {Version::Cancun}; }
 	static EVMVersion prague() { return {Version::Prague}; }
 
-	static std::optional<EVMVersion> fromString(std::string const& _version)
-	{
-		for (auto const& v: {
+	static std::vector<EVMVersion> allVersions() {
+		return {
 			homestead(),
 			tangerineWhistle(),
 			spuriousDragon(),
@@ -79,8 +79,13 @@ public:
 			paris(),
 			shanghai(),
 			cancun(),
-			prague()
-		})
+			prague(),
+		};
+	}
+
+	static std::optional<EVMVersion> fromString(std::string const& _version)
+	{
+		for (auto const& v: allVersions())
 			if (_version == v.name())
 				return v;
 		return std::nullopt;

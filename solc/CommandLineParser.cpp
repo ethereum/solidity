@@ -606,8 +606,7 @@ General Information)").c_str(),
 		(
 			g_strEVMVersion.c_str(),
 			po::value<std::string>()->value_name("version")->default_value(EVMVersion{}.name()),
-			"Select desired EVM version. Either homestead, tangerineWhistle, spuriousDragon, "
-			"byzantium, constantinople, petersburg, istanbul, berlin, london, paris, shanghai, cancun or prague."
+			("Select desired EVM version. Either " + util::joinHumanReadable(EVMVersion::allVersions(), ", ", " or ") + ".").c_str()
 		)
 	;
 	if (!_forHelp) // Note: We intentionally keep this undocumented for now.
