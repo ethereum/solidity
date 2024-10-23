@@ -1,4 +1,4 @@
-include(${CMAKE_SOURCE_DIR}/cmake/submodules.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/submodules.cmake)
 initialize_submodule(range-v3)
 
 add_library(range-v3 INTERFACE IMPORTED)
