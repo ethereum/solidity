@@ -1,0 +1,45 @@
+{
+    "contracts": {
+        "contract.sol": {
+            "Storage": {
+                "evm": {
+                    "bytecode": {
+                        "subAssemblyOffsets": {
+                            "subs": [
+                                {
+                                    "isCreation": true,
+                                    "length": 1789,
+                                    "start": 0,
+                                    "subs": [
+                                        {
+                                            "isCreation": false,
+                                            "length": 781,
+                                            "start": 1008
+                                        },
+                                        {
+                                            "isCreation": true,
+                                            "length": 131,
+                                            "start": 1658,
+                                            "subs": [
+                                                {
+                                                    "isCreation": false,
+                                                    "length": 105,
+                                                    "start": 1684
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "sources": {
+        "contract.sol": {
+            "id": 0
+        }
+    }
+}

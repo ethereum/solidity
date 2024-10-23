@@ -9,7 +9,23 @@
                         "linkReferences": {},
                         "object": "<BYTECODE REMOVED>",
                         "opcodes":"<OPCODES REMOVED>",
-                        "sourceMap":"<SOURCEMAP REMOVED>"
+                        "sourceMap":"<SOURCEMAP REMOVED>",
+                        "subAssemblyOffsets": {
+                            "subs": [
+                                {
+                                    "isCreation": true,
+                                    "length": 131,
+                                    "start": 0,
+                                    "subs": [
+                                        {
+                                            "isCreation": false,
+                                            "length": 105,
+                                            "start": 26
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
                     }
                 }
             }

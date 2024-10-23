@@ -8,7 +8,23 @@
                         "linkReferences": {},
                         "object": "<BYTECODE REMOVED>",
                         "opcodes":"<OPCODES REMOVED>",
-                        "sourceMap": ""
+                        "sourceMap": "",
+                        "subAssemblyOffsets": {
+                            "subs": [
+                                {
+                                    "isCreation": true,
+                                    "length": 1,
+                                    "start": 0,
+                                    "subs": [
+                                        {
+                                            "isCreation": false,
+                                            "length": 75,
+                                            "start": 18446744073709551542
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
                     },
                     "deployedBytecode": {
                         "functionDebugData": {},
@@ -25,7 +41,16 @@
                         },
                         "object": "<BYTECODE REMOVED>__$d553ddd21b3d8da0d69a6510c170f4a77b$__<BYTECODE REMOVED>",
                         "opcodes":"<OPCODES REMOVED>",
-                        "sourceMap":"<SOURCEMAP REMOVED>"
+                        "sourceMap":"<SOURCEMAP REMOVED>",
+                        "subAssemblyOffsets": {
+                            "subs": [
+                                {
+                                    "isCreation": false,
+                                    "length": 75,
+                                    "start": 0
+                                }
+                            ]
+                        }
                     }
                 }
             }

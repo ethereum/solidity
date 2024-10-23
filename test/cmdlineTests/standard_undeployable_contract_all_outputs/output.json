@@ -16,7 +16,10 @@
                         "linkReferences": {},
                         "object": "",
                         "opcodes": "",
-                        "sourceMap": ""
+                        "sourceMap": "",
+                        "subAssemblyOffsets": {
+                            "subs": []
+                        }
                     },
                     "deployedBytecode": {
                         "functionDebugData": {},
@@ -25,7 +28,10 @@
                         "linkReferences": {},
                         "object": "",
                         "opcodes": "",
-                        "sourceMap": ""
+                        "sourceMap": "",
+                        "subAssemblyOffsets": {
+                            "subs": []
+                        }
                     },
                     "gasEstimates": null,
                     "legacyAssembly": null,
@@ -65,7 +71,10 @@
                         "linkReferences": {},
                         "object": "",
                         "opcodes": "",
-                        "sourceMap": ""
+                        "sourceMap": "",
+                        "subAssemblyOffsets": {
+                            "subs": []
+                        }
                     },
                     "deployedBytecode": {
                         "functionDebugData": {},
@@ -74,7 +83,10 @@
                         "linkReferences": {},
                         "object": "",
                         "opcodes": "",
-                        "sourceMap": ""
+                        "sourceMap": "",
+                        "subAssemblyOffsets": {
+                            "subs": []
+                        }
                     },
                     "gasEstimates": null,
                     "legacyAssembly": null,

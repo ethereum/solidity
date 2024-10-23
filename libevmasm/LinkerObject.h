@@ -58,6 +58,16 @@ struct LinkerObject
 	/// Bytecode offsets of named tags like function entry points.
 	std::map<std::string, FunctionDebugData> functionDebugData;
 
+	struct SubAssembly {
+		size_t start;
+		size_t length;
+		bool isCreation;
+		std::string bytecode;
+		std::vector<SubAssembly> subs {};
+	};
+
+	std::vector<SubAssembly> subAssemblyData;
+
 	/// Appends the bytecode of @a _other and incorporates its link references.
 	void append(LinkerObject const& _other);
 

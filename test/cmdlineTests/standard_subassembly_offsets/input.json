@@ -1,0 +1,19 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contract.sol": {
+      "content": "// SPDX-License-Identifier: GPL-3.0\npragma solidity >=0.7.0 <0.9.0;\ncontract A {}\ncontract Storage { uint256 public number; bytes public code = type(A).creationCode; function store(uint256 num) public { number = num; }}"
+    }
+  },
+  "settings": {
+    "evmVersion": "cancun",
+    "outputSelection": {
+      "*": {
+        "Storage": [
+          "evm.bytecode.subAssemblyOffsets"
+        ]
+      }
+    }
+  }
+}
+

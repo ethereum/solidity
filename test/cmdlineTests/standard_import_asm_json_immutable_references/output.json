@@ -8,7 +8,23 @@
                         "linkReferences": {},
                         "object": "<BYTECODE REMOVED>",
                         "opcodes":"<OPCODES REMOVED>",
-                        "sourceMap":"<SOURCEMAP REMOVED>"
+                        "sourceMap":"<SOURCEMAP REMOVED>",
+                        "subAssemblyOffsets": {
+                            "subs": [
+                                {
+                                    "isCreation": true,
+                                    "length": 5,
+                                    "start": 0,
+                                    "subs": [
+                                        {
+                                            "isCreation": false,
+                                            "length": 87,
+                                            "start": 18446744073709551534
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
                     },
                     "deployedBytecode": {
                         "functionDebugData": {},
@@ -23,7 +39,16 @@
                         "linkReferences": {},
                         "object": "<BYTECODE REMOVED>",
                         "opcodes":"<OPCODES REMOVED>",
-                        "sourceMap":"<SOURCEMAP REMOVED>"
+                        "sourceMap":"<SOURCEMAP REMOVED>",
+                        "subAssemblyOffsets": {
+                            "subs": [
+                                {
+                                    "isCreation": false,
+                                    "length": 87,
+                                    "start": 0
+                                }
+                            ]
+                        }
                     }
                 }
             }

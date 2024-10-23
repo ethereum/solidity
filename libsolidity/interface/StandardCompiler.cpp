@@ -237,7 +237,7 @@ bool isArtifactRequested(Json const& _outputSelection, std::string const& _file,
 std::vector<std::string> evmObjectComponents(std::string const& _objectKind)
 {
 	solAssert(_objectKind == "bytecode" || _objectKind == "deployedBytecode", "");
-	std::vector<std::string> components{"", ".object", ".opcodes", ".sourceMap", ".functionDebugData", ".generatedSources", ".linkReferences"};
+	std::vector<std::string> components{"", ".object", ".opcodes", ".sourceMap", ".functionDebugData", ".generatedSources", ".linkReferences", ".subAssemblyOffsets"};
 	if (_objectKind == "deployedBytecode")
 		components.push_back(".immutableReferences");
 	return util::applyMap(components, [&](auto const& _s) { return "evm." + _objectKind + _s; });
@@ -374,6 +374,24 @@ Json formatImmutableReferences(std::map<u256, evmasm::LinkerObject::ImmutableRef
 	return ret;
 }
 
+Json formatSubAssemblyOffsets(std::vector<evmasm::LinkerObject::SubAssembly> const& _subAssemblyOffsets)
+{
+	Json subs = Json::array();
+
+	for (auto const& subAssembly : _subAssemblyOffsets)
+	{
+		Json subAssemblyInfo;
+		subAssemblyInfo["start"] = Json::number_unsigned_t(subAssembly.start);
+		subAssemblyInfo["length"] = Json::number_unsigned_t(subAssembly.length);
+		subAssemblyInfo["isCreation"] = Json::boolean_t(subAssembly.isCreation);
+		if (!subAssembly.subs.empty())
+			subAssemblyInfo["subs"] = formatSubAssemblyOffsets(subAssembly.subs);
+		subs.emplace_back(subAssemblyInfo);
+	}
+
+	return subs;
+}
+
 Json collectEVMObject(
 	langutil::EVMVersion _evmVersion,
 	evmasm::LinkerObject const& _object,
@@ -398,6 +416,12 @@ Json collectEVMObject(
 		output["immutableReferences"] = formatImmutableReferences(_object.immutableReferences);
 	if (_artifactRequested("generatedSources"))
 		output["generatedSources"] = std::move(_generatedSources);
+	if (_artifactRequested("subAssemblyOffsets"))
+	{
+		Json ret = Json::object();
+		ret["subs"] = formatSubAssemblyOffsets(_object.subAssemblyData);
+		output["subAssemblyOffsets"] = std::move(ret);
+	}
 	return output;
 }
 
