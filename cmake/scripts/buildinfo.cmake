@@ -1,7 +1,7 @@
 # generates BuildInfo.h
 #
 # this module expects
-# ETH_SOURCE_DIR - main CMAKE_SOURCE_DIR
+# ETH_SOURCE_DIR - main CMAKE_CURRENT_SOURCE_DIR
 # ETH_DST_DIR - main CMAKE_BINARY_DIR
 # ETH_BUILD_TYPE
 # ETH_BUILD_PLATFORM
