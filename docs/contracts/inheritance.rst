@@ -229,7 +229,7 @@ The way around this is to use ``super``:
 If ``Final`` calls a function of ``super``, it does not simply
 call this function on one of its base contracts.  Rather, it
 calls this function on the next base contract in the final
-inheritance graph, so it will call ``Base1.emitEvent()`` (note that
+inheritance graph, so it will call ``Base2.emitEvent()`` (note that
 the final inheritance sequence is -- starting with the most
 derived contract: Final, Base2, Base1, Emittable, Owned).
 The actual function that is called when using super is
