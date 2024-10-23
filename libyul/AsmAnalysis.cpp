@@ -86,12 +86,13 @@ bool AsmAnalyzer::analyze(Block const& _block)
 
 AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect, Object const& _object)
 {
-	return analyzeStrictAssertCorrect(_dialect, _object.code()->root(), _object.qualifiedDataNames());
+	return analyzeStrictAssertCorrect(_dialect, _object.code()->root(), _object.name, _object.qualifiedDataNames());
 }
 
 AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(
 	Dialect const& _dialect,
 	Block const& _astRoot,
+	std::string const& _objectName,
 	std::set<std::string> const& _qualifiedDataNames
 )
 {
@@ -102,6 +103,7 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(
 		analysisInfo,
 		errors,
 		_dialect,
+		_objectName,
 		{},
 		_qualifiedDataNames
 	).analyze(_astRoot);

@@ -60,6 +60,7 @@ public:
 		AsmAnalysisInfo& _analysisInfo,
 		langutil::ErrorReporter& _errorReporter,
 		Dialect const& _dialect,
+		std::string const& _objectName,
 		ExternalIdentifierAccess::Resolver _resolver = ExternalIdentifierAccess::Resolver(),
 		std::set<std::string> _dataNames = {}
 	):
@@ -67,7 +68,8 @@ public:
 		m_info(_analysisInfo),
 		m_errorReporter(_errorReporter),
 		m_dialect(_dialect),
-		m_dataNames(std::move(_dataNames))
+		m_dataNames(std::move(_dataNames)),
+		m_objectName(std::move(_objectName))
 	{
 		if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&m_dialect))
 		{
@@ -84,6 +86,7 @@ public:
 	static AsmAnalysisInfo analyzeStrictAssertCorrect(
 		Dialect const& _dialect,
 		Block const& _astRoot,
+		std::string const& _objectName,
 		std::set<std::string> const& _qualifiedDataNames
 	);
 
@@ -132,6 +135,8 @@ private:
 	Dialect const& m_dialect;
 	/// Names of data objects to be referenced by builtin functions with literal arguments.
 	std::set<std::string> m_dataNames;
+	/// Current object name
+	std::string m_objectName;
 	ForLoop const* m_currentForLoop = nullptr;
 	/// Worst side effects encountered during analysis (including within defined functions).
 	SideEffects m_sideEffects;

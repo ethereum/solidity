@@ -72,7 +72,8 @@ std::shared_ptr<AST> parse(std::string const& _source, Dialect const& _dialect, 
 		if (yul::AsmAnalyzer(
 			analysisInfo,
 			errorReporter,
-			_dialect
+			_dialect,
+			""
 		).analyze(parserResult->root()))
 			return parserResult;
 	}

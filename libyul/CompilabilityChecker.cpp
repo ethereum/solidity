@@ -44,6 +44,7 @@ CompilabilityChecker::CompilabilityChecker(
 		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(
 			noOutputDialect,
 			_object.code()->root(),
+			_object.name,
 			_object.qualifiedDataNames()
 		);
 
