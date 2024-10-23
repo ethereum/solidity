@@ -235,10 +235,11 @@ bool SSACFGValidator::consumeStatement(Statement const& _statement)
 					yulAssert(!_switch.cases.empty());
 					auto const validateGhostEq = [this, cond](SSACFG::Operation const& _operation)
 					{
+						yulAssert(m_context.dialect.equalityFunctionHandle());
 						yulAssert(std::holds_alternative<SSACFG::BuiltinCall>(_operation.kind));
 						yulAssert(
 							&std::get<SSACFG::BuiltinCall>(_operation.kind).builtin.get()
-							== m_context.dialect.equalityFunction());
+							== &m_context.dialect.builtin(*m_context.dialect.equalityFunctionHandle()));
 						yulAssert(_operation.inputs.size() == 2);
 						yulAssert(cond->size() == 1);
 						yulAssert(_operation.inputs.back() == *cond->begin());
@@ -477,13 +478,14 @@ std::optional<std::vector<std::set<SSACFG::ValueId>>> SSACFGValidator::consumeEx
 	return std::visit(util::GenericVisitor{
 		[&](FunctionCall const& _call) -> std::optional<std::vector<std::set<SSACFG::ValueId>>>
 		{
-			BuiltinFunction const* builtin = m_context.dialect.builtin(_call.functionName.name);
+			std::optional<BuiltinHandle> builtinHandle = m_context.dialect.findBuiltin(_call.functionName.name.str());
+			BuiltinFunction const* builtin = builtinHandle ? &m_context.dialect.builtin(*builtinHandle) : nullptr;
 			size_t idx = _call.arguments.size();
 			std::vector<std::tuple<size_t, Expression const*, std::vector<std::set<SSACFG::ValueId>>>> gatheredArguments;
 			for(auto& _arg: _call.arguments | ranges::views::reverse)
 			{
 				--idx;
-				if (builtin && builtin->literalArgument(idx).has_value())
+				if (builtinHandle && builtin->literalArgument(idx).has_value())
 					continue;
 				if (auto arg = consumeExpression(_arg))
 					gatheredArguments.emplace_back(idx, &_arg, *arg);
@@ -570,7 +572,8 @@ bool SSACFGValidator::validateCall(std::variant<SSACFG::BuiltinCall, SSACFG::Cal
 	return std::visit(util::GenericVisitor{
 		[&](SSACFG::BuiltinCall const& _call)
 		{
-			auto const* builtin = m_context.dialect.builtin(_functionName.name);
+			std::optional<BuiltinHandle> builtinHandle = m_context.dialect.findBuiltin(_functionName.name.str());
+			BuiltinFunction const* builtin = builtinHandle ? &m_context.dialect.builtin(*builtinHandle) : nullptr;
 			yulAssert(&_call.builtin.get() == builtin);
 			yulAssert(builtin->numReturns == _numOutputs);
 			return builtin->controlFlowSideEffects.canContinue;
