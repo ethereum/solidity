@@ -119,7 +119,7 @@ std::vector<std::string> parseValuesFromResponse(std::string const& _response)
 	std::stringstream ss(_response);
 	std::string answer;
 	ss >> answer;
-	smtAssert(answer == "sat");
+	smtSolverInteractionRequire(answer == "sat", "SMT: Parsing model values only possible after sat answer");
 
 	std::vector<SMTLib2Expression> parsedOutput;
 	SMTLib2Parser parser(ss);
@@ -130,16 +130,16 @@ std::vector<std::string> parseValuesFromResponse(std::string const& _response)
 	}
 	catch(SMTLib2Parser::ParsingException&)
 	{
-		return {};
+		smtSolverInteractionRequire(false, "Error during parsing SMT answer");
 	}
-	smtAssert(parsedOutput.size() == 1, "SMT: Expected model values as a single s-expression");
+	smtSolverInteractionRequire(parsedOutput.size() == 1, "SMT: Expected model values as a single s-expression");
 	auto const& values = parsedOutput[0];
-	smtAssert(!isAtom(values));
+	smtSolverInteractionRequire(!isAtom(values), "Invalid format of values in SMT answer");
 	std::vector<std::string> parsedValues;
 	for (auto const& nameValuePair: asSubExpressions(values))
 	{
-		smtAssert(!isAtom(nameValuePair));
-		smtAssert(asSubExpressions(nameValuePair).size() == 2);
+		smtSolverInteractionRequire(!isAtom(nameValuePair), "Invalid format of values in SMT answer");
+		smtSolverInteractionRequire(asSubExpressions(nameValuePair).size() == 2, "Invalid format of values in SMT answer");
 		auto const& value = asSubExpressions(nameValuePair)[1];
 		parsedValues.push_back(value.toString());
 	}

@@ -260,9 +260,3 @@ if(COVERAGE)
 	endif()
 	add_compile_options(-g --coverage)
 endif()
-
-# SMT Solvers integration
-option(USE_Z3 "Allow compiling with Z3 SMT solver integration" ON)
-if(UNIX AND NOT APPLE)
-	option(USE_Z3_DLOPEN "Dynamically load the Z3 SMT solver instead of linking against it." OFF)
-endif()

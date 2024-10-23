@@ -20,21 +20,15 @@
 
 #include <libsolidity/formal/Cvc5SMTLib2Interface.h>
 #include <libsolidity/formal/SymbolicTypes.h>
+#include <libsolidity/formal/Z3SMTLib2Interface.h>
 
 #include <libsmtutil/SMTLib2Interface.h>
 #include <libsmtutil/SMTPortfolio.h>
-#ifdef HAVE_Z3
-#include <libsmtutil/Z3Interface.h>
-#endif
 
 #include <liblangutil/CharStream.h>
 #include <liblangutil/CharStreamProvider.h>
 
 #include <utility>
-
-#ifdef HAVE_Z3_DLOPEN
-#include <z3_version.h>
-#endif
 
 using namespace solidity;
 using namespace solidity::util;
@@ -61,10 +55,8 @@ BMC::BMC(
 		solvers.emplace_back(std::make_unique<SMTLib2Interface>(_smtlib2Responses, _smtCallback, _settings.timeout));
 	if (_settings.solvers.cvc5)
 		solvers.emplace_back(std::make_unique<Cvc5SMTLib2Interface>(_smtCallback, _settings.timeout));
-#ifdef HAVE_Z3
-	if (_settings.solvers.z3 && Z3Interface::available())
-		solvers.emplace_back(std::make_unique<Z3Interface>(_settings.timeout));
-#endif
+	if (_settings.solvers.z3 )
+		solvers.emplace_back(std::make_unique<Z3SMTLib2Interface>(_smtCallback, _settings.timeout));
 	m_interface = std::make_unique<SMTPortfolio>(std::move(solvers), _settings.timeout);
 #if defined (HAVE_Z3)
 	if (m_settings.solvers.z3)
@@ -155,9 +147,6 @@ void BMC::analyze(SourceUnit const& _source, std::map<ASTNode const*, std::set<V
 			SourceLocation(),
 			"BMC analysis was not possible. No SMT solver (Z3 or cvc5) was available."
 			" None of the installed solvers was enabled."
-#ifdef HAVE_Z3_DLOPEN
-			" Install libz3.so." + std::to_string(Z3_MAJOR_VERSION) + "." + std::to_string(Z3_MINOR_VERSION) + " to enable Z3."
-#endif
 		);
 }
 
@@ -1201,7 +1190,7 @@ void BMC::checkCondition(
 		m_errorReporter.warning(1584_error, _location, "BMC: At least two SMT solvers provided conflicting answers. Results might not be sound.");
 		break;
 	case smtutil::CheckResult::ERROR:
-		m_errorReporter.warning(1823_error, _location, "BMC: Error trying to invoke SMT solver.");
+		m_errorReporter.warning(1823_error, _location, "BMC: Error during interaction with the SMT solver.");
 		break;
 	}
 
