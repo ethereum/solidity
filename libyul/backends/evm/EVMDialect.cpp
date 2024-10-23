@@ -543,6 +543,12 @@ BuiltinFunctionForEVM EVMDialect::createVerbatimFunction(size_t _arguments, size
 			);
 		}
 	);
+	// Worse control flow side effects because verbatim can do anything.
+	builtinFunction.controlFlowSideEffects = {
+		true, // canTerminate
+		true, // canRevert
+		true  // canContinue
+	};
 	builtinFunction.isMSize = true;
 	return builtinFunction;
 }
