@@ -208,11 +208,11 @@ std::string IRGenerator::generate(
 	t("DeployedObject", IRNames::deployedObject(_contract));
 	t("sourceLocationCommentDeployed", dispenseLocationComment(_contract));
 	t("eof", eof);
-	if (!eof)
-		t("library_address", IRNames::libraryAddressImmutable());
-	else
+	if (_contract.isLibrary())
 	{
-		if (_contract.isLibrary())
+		if (!eof)
+			t("library_address", IRNames::libraryAddressImmutable());
+		else
 			t("library_address_immutable_offset", std::to_string(m_context.libraryAddressImmutableOffsetRelative()));
 	}
 
@@ -1013,7 +1013,6 @@ std::string IRGenerator::deployCode(ContractDefinition const& _contract)
 		}
 
 		t("auxDataStart", std::to_string(CompilerUtils::generalPurposeMemoryStart));
-		// TODO: Make sure that we cannot use reservedMemory() here
 		t("auxDataSize", std::to_string(m_context.reservedMemorySize()));
 	}
 

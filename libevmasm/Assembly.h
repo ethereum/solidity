@@ -101,12 +101,12 @@ public:
 
 	AssemblyItem appendEOFCreate(ContainerID _containerId)
 	{
-		assertThrow(_containerId < m_subs.size(), AssemblyException, "EOF Create of undefined container");
+		solAssert(_containerId < m_subs.size(), "EOF Create of undefined container.");
 		return append(AssemblyItem::eofCreate(_containerId));
 	}
 	AssemblyItem appendReturnContract(ContainerID _containerId)
 	{
-		assertThrow(_containerId < m_subs.size(), AssemblyException, "Return undefined container id");
+		solAssert(_containerId < m_subs.size(), "Return undefined container ID.");
 		return append(AssemblyItem::returnContract(_containerId));
 	}
 

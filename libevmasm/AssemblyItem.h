@@ -55,8 +55,8 @@ enum AssemblyItemType
 	/// Loads 32 bytes from static auxiliary data of EOF data section. The offset does *not* have to be always from the beginning
 	/// of the data EOF section. More details here: https://github.com/ipsilon/eof/blob/main/spec/eof.md#data-section-lifecycle
 	AuxDataLoadN,
-	EofCreate, ///< Creates new contract using subcontainer as initcode
-	ReturnContract, ///< Returns new container along (with auxiliary data section) to be deployed
+	EOFCreate, ///< Creates new contract using subcontainer as initcode
+	ReturnContract, ///< Returns new container (with auxiliary data filled in) to be deployed
 	VerbatimBytecode ///< Contains data that is inserted into the bytecode code section without modification.
 };
 
@@ -97,11 +97,11 @@ public:
 
 	static AssemblyItem eofCreate(ContainerID _containerID, langutil::DebugData::ConstPtr _debugData = langutil::DebugData::create())
 	{
-		return AssemblyItem(EofCreate, _containerID, _debugData);
+		return AssemblyItem(EOFCreate, _containerID, std::move(_debugData));
 	}
 	static AssemblyItem returnContract(ContainerID _containerID, langutil::DebugData::ConstPtr _debugData = langutil::DebugData::create())
 	{
-		return AssemblyItem(ReturnContract, _containerID, _debugData);
+		return AssemblyItem(ReturnContract, _containerID, std::move(_debugData));
 	}
 
 	AssemblyItem(AssemblyItem const&) = default;

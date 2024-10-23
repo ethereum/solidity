@@ -3,10 +3,7 @@ object "a" {
         mstore(0, eofcreate("b", 0, 0, 0, 0))
         return(0, 32)
     }
-
-    data "data1" "Hello, World!"
 }
-
 // ====
 // EVMVersion: >=shanghai
 // bytecodeFormat: >=EOFv1

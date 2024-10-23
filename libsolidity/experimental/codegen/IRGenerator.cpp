@@ -82,7 +82,6 @@ std::string IRGenerator::run(
 			}
 		}
 	)");
-	t("eof", m_eofVersion.has_value());
 	t("CreationObject", IRNames::creationObject(_contract));
 	t("DeployedObject", IRNames::deployedObject(_contract));
 	t("code", generate(_contract));

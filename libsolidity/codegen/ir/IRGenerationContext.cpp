@@ -123,6 +123,7 @@ size_t IRGenerationContext::reservedMemorySize() const
 void IRGenerationContext::registerLibraryAddressImmutable()
 {
 	solAssert(m_reservedMemory.has_value(), "Reserved memory has already been reset.");
+	solAssert(!m_libraryAddressImmutableOffset.has_value());
 	m_libraryAddressImmutableOffset = CompilerUtils::generalPurposeMemoryStart + *m_reservedMemory;
 	*m_reservedMemory += 32;
 }

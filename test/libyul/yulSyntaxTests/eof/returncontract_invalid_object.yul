@@ -2,10 +2,7 @@ object "a" {
     code {
         returncontract("b", 0, 0)
     }
-
-    data "data1" "Hello, World!"
 }
-
 // ====
 // EVMVersion: >=shanghai
 // bytecodeFormat: >=EOFv1

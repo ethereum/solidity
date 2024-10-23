@@ -372,7 +372,7 @@ bool SemanticInformation::isDeterministic(AssemblyItem const& _item)
 {
 	assertThrow(_item.type() != VerbatimBytecode, AssemblyException, "");
 
-	if (_item.type() == evmasm::EofCreate)
+	if (_item.type() == evmasm::EOFCreate)
 		return false;
 	else if (_item.type() != evmasm::Operation)
 		return true;
@@ -634,9 +634,9 @@ bool SemanticInformation::invalidInViewFunctions(Instruction _instruction)
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
 	case Instruction::DELEGATECALL:
-		// According to EOF spec https://eips.ethereum.org/EIPS/eip-7620#eofcreate
+	// According to EOF spec https://eips.ethereum.org/EIPS/eip-7620#eofcreate
 	case Instruction::EOFCREATE:
-		// According to EOF spec https://eips.ethereum.org/EIPS/eip-7620#returncontract
+	// According to EOF spec https://eips.ethereum.org/EIPS/eip-7620#returncontract
 	case Instruction::RETURNCONTRACT:
 	case Instruction::CREATE2:
 	case Instruction::SELFDESTRUCT:

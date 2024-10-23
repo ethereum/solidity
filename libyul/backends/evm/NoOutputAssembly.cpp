@@ -151,7 +151,7 @@ void NoOutputAssembly::appendAuxDataLoadN(uint16_t)
 	yulAssert(false, "auxdataloadn not implemented.");
 }
 
-void NoOutputAssembly::appendEofCreate(ContainerID)
+void NoOutputAssembly::appendEOFCreate(ContainerID)
 {
 	yulAssert(false, "eofcreate not implemented.");
 

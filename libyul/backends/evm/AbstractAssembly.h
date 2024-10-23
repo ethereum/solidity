@@ -119,9 +119,9 @@ public:
 	/// The function is meant to allow indexing into static_aux_data in a way that's independent of the size of pre_deploy_data.
 	virtual void appendAuxDataLoadN(uint16_t _offset) = 0;
 
-	/// Appends EOF contract creation instruction which takes creation code from subcontainer with _containerID
-	virtual void appendEofCreate(ContainerID _containerID) = 0;
-	/// Appends EOF contract return instruction which returns a subcontainer id (_containerID) along with auxiliary data section
+	/// Appends EOF contract creation instruction which takes creation code from subcontainer with _containerID.
+	virtual void appendEOFCreate(ContainerID _containerID) = 0;
+	/// Appends EOF contract return instruction which returns a subcontainer ID (_containerID) with auxiliary data filled in.
 	virtual void appendReturnContract(ContainerID _containerID) = 0;
 	/// Appends data to the very end of the bytecode. Repeated calls concatenate.
 	/// EOF auxiliary data in data section and the auxiliary data are different things.

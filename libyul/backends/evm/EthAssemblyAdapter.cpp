@@ -128,7 +128,7 @@ std::pair<std::shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> EthAssembl
 	return {std::make_shared<EthAssemblyAdapter>(*assembly), static_cast<size_t>(sub.data())};
 }
 
-void EthAssemblyAdapter::appendEofCreate(ContainerID _containerID)
+void EthAssemblyAdapter::appendEOFCreate(ContainerID _containerID)
 {
 	m_assembly.appendEOFCreate(_containerID);
 }

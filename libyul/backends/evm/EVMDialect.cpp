@@ -386,10 +386,10 @@ std::vector<std::optional<BuiltinFunctionForEVM>> createBuiltins(langutil::EVMVe
 				AbstractAssembly& _assembly,
 				BuiltinContext&
 			) {
-				yulAssert(_call.arguments.size() == 1, "");
+				yulAssert(_call.arguments.size() == 1);
 				Literal const* literal = std::get_if<Literal>(&_call.arguments.front());
 				yulAssert(literal, "");
-				yulAssert(literal->value.value() <= std::numeric_limits<uint16_t>::max(), "");
+				yulAssert(literal->value.value() <= std::numeric_limits<uint16_t>::max());
 				_assembly.appendAuxDataLoadN(static_cast<uint16_t>(literal->value.value()));
 			}
 		));
@@ -410,8 +410,8 @@ std::vector<std::optional<BuiltinFunctionForEVM>> createBuiltins(langutil::EVMVe
 				Literal const* literal = std::get_if<Literal>(&_call.arguments.front());
 				auto const* containerID = valueOrNullptr(context.subIDs, formatLiteral(*literal));
 				yulAssert(containerID != nullptr);
-				yulAssert(*containerID <= std::numeric_limits<AbstractAssembly::ContainerID>::max(), "");
-				_assembly.appendEofCreate(static_cast<AbstractAssembly::ContainerID>(*containerID));
+				yulAssert(*containerID <= std::numeric_limits<AbstractAssembly::ContainerID>::max());
+				_assembly.appendEOFCreate(static_cast<AbstractAssembly::ContainerID>(*containerID));
 			}
 			));
 
@@ -433,7 +433,7 @@ std::vector<std::optional<BuiltinFunctionForEVM>> createBuiltins(langutil::EVMVe
 					yulAssert(literal);
 					auto const* containerID = valueOrNullptr(context.subIDs, formatLiteral(*literal));
 					yulAssert(containerID != nullptr);
-					yulAssert(*containerID <= std::numeric_limits<AbstractAssembly::ContainerID>::max(), "");
+					yulAssert(*containerID <= std::numeric_limits<AbstractAssembly::ContainerID>::max());
 					_assembly.appendReturnContract(static_cast<AbstractAssembly::ContainerID>(*containerID));
 				}
 			));

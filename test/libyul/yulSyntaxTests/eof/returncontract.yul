@@ -2,13 +2,11 @@ object "b" {
     code {
         returncontract("c", 0, 0)
     }
+
     object "c" {
-        code {
-        }
+        code {}
     }
 }
-
-
 // ====
 // EVMVersion: >=shanghai
 // bytecodeFormat: >=EOFv1

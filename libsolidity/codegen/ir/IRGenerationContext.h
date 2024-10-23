@@ -178,7 +178,7 @@ private:
 	/// Memory offsets reserved for the values of immutable variables during contract creation.
 	/// This map is empty in the runtime context.
 	std::map<VariableDeclaration const*, size_t> m_immutableVariables;
-	std::optional<size_t> m_libraryAddressImmutableOffset = {};
+	std::optional<size_t> m_libraryAddressImmutableOffset;
 	/// Total amount of reserved memory. Reserved memory is used to store
 	/// immutable variables during contract creation.
 	std::optional<size_t> m_reservedMemory = {0};

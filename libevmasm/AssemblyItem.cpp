@@ -104,7 +104,7 @@ std::pair<std::string, std::string> AssemblyItem::nameAndData(langutil::EVMVersi
 		return {"VERBATIM", util::toHex(verbatimData())};
 	case AuxDataLoadN:
 		return {"AUXDATALOADN", util::toString(data())};
-	case EofCreate:
+	case EOFCreate:
 		return {"EOFCREATE", util::toString(data())};
 	case ReturnContract:
 		return {"RETURNCONTRACT", util::toString(data())};
@@ -171,7 +171,7 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength, langutil::EVMVersion _
 		return std::get<2>(*m_verbatimBytecode).size();
 	case AuxDataLoadN:
 		return 1 + 2;
-	case EofCreate:
+	case EOFCreate:
 		return 2;
 	case ReturnContract:
 		return 2;
@@ -192,7 +192,7 @@ size_t AssemblyItem::arguments() const
 		return std::get<0>(*m_verbatimBytecode);
 	else if (type() == AssignImmutable)
 		return 2;
-	else if (type() == EofCreate)
+	else if (type() == EOFCreate)
 		return 4;
 	else if (type() == ReturnContract)
 		return 2;
@@ -225,7 +225,7 @@ size_t AssemblyItem::returnValues() const
 	case ReturnContract:
 		return 0;
 	case AuxDataLoadN:
-	case EofCreate:
+	case EOFCreate:
 		return 1;
 	case AssignImmutable:
 	case UndefinedItem:
@@ -252,7 +252,7 @@ bool AssemblyItem::canBeFunctional() const
 	case PushDeployTimeAddress:
 	case PushImmutable:
 	case AuxDataLoadN:
-	case EofCreate:
+	case EOFCreate:
 		return true;
 	case Tag:
 	case ReturnContract:
@@ -361,7 +361,7 @@ std::string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 		assertThrow(data() <= std::numeric_limits<size_t>::max(), AssemblyException, "Invalid auxdataloadn argument.");
 		text = "auxdataloadn(" +  std::to_string(static_cast<size_t>(data())) + ")";
 		break;
-	case EofCreate:
+	case EOFCreate:
 		text = "eofcreate(" +  std::to_string(static_cast<size_t>(data())) + ")";
 		break;
 	case ReturnContract:
@@ -437,8 +437,8 @@ std::ostream& solidity::evmasm::operator<<(std::ostream& _out, AssemblyItem cons
 	case AuxDataLoadN:
 		_out << " AuxDataLoadN " << util::toString(_item.data());
 		break;
-	case EofCreate:
-		_out << " EofCreate" << util::toString(_item.data());
+	case EOFCreate:
+		_out << " EOFCreate" << util::toString(_item.data());
 		break;
 	case ReturnContract:
 		_out << " ReturnContract" << util::toString(_item.data());

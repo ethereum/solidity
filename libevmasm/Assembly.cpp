@@ -1337,7 +1337,7 @@ std::map<uint16_t, uint16_t> Assembly::findReferencedContainers() const
 
 	for (auto&& codeSection: m_codeSections)
 		for (AssemblyItem const& item: codeSection.items)
-			if (item.type() == EofCreate || item.type() == ReturnContract)
+			if (item.type() == EOFCreate || item.type() == ReturnContract)
 			{
 				solAssert(item.data() <= m_subs.size(), "Invalid subcontainer index.");
 				auto const containerId = static_cast<ContainerID>(item.data());
@@ -1427,7 +1427,7 @@ LinkerObject const& Assembly::assembleEOF() const
 				ret.linkReferences.insert(linkRef);
 				break;
 			}
-			case EofCreate:
+			case EOFCreate:
 			{
 				ret.bytecode.push_back(static_cast<uint8_t>(Instruction::EOFCREATE));
 				ret.bytecode.push_back(static_cast<uint8_t>(item.data()));
