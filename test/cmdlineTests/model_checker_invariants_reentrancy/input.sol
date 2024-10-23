@@ -2,8 +2,7 @@
 pragma solidity >=0.0;
 contract test {
 	uint x;
-    function f(address _a) public {
-		_a.call("");
-		assert(x < 10);
-    }
+	function f() public view {
+		assert(x == 0);
+	}
 }

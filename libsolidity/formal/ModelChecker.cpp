@@ -17,12 +17,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/formal/ModelChecker.h>
-#ifdef HAVE_Z3
-#include <libsmtutil/Z3Interface.h>
-#endif
-#ifdef HAVE_Z3_DLOPEN
-#include <z3_version.h>
-#endif
 
 #include <boost/process.hpp>
 
@@ -170,8 +164,10 @@ SMTSolverChoice ModelChecker::availableSolvers()
 	smtutil::SMTSolverChoice available = smtutil::SMTSolverChoice::SMTLIB2();
 	available.eld = !boost::process::search_path("eld").empty();
 	available.cvc5 = !boost::process::search_path("cvc5").empty();
-#ifdef HAVE_Z3
-	available.z3 = solidity::smtutil::Z3Interface::available();
+#ifdef EMSCRIPTEN_BUILD
+	available.z3 = true;
+#else
+	available.z3 = !boost::process::search_path("z3").empty();
 #endif
 	return available;
 }
@@ -211,9 +207,6 @@ SMTSolverChoice ModelChecker::checkRequestedSolvers(SMTSolverChoice _enabled, Er
 			8158_error,
 			SourceLocation(),
 			"Solver z3 was selected for SMTChecker but it is not available."
-#ifdef HAVE_Z3_DLOPEN
-			" libz3.so." + std::to_string(Z3_MAJOR_VERSION) + "." + std::to_string(Z3_MINOR_VERSION) + " was not found."
-#endif
 		);
 	}
 

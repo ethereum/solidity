@@ -421,6 +421,7 @@ void SSAControlFlowGraphBuilder::operator()(ForLoop const& _loop)
 
 	if (constantCondition.has_value())
 	{
+		std::visit(*this, *_loop.condition);
 		if (*constantCondition)
 		{
 			jump(debugDataOf(*_loop.condition), loopBody);
