@@ -99,6 +99,17 @@ public:
 		append(AssemblyItem(std::move(_data), _arguments, _returnVariables));
 	}
 
+	AssemblyItem appendEOFCreate(ContainerID _containerId)
+	{
+		assertThrow(_containerId < m_subs.size(), AssemblyException, "EOF Create of undefined container");
+		return append(AssemblyItem::eofCreate(_containerId));
+	}
+	AssemblyItem appendReturnContract(ContainerID _containerId)
+	{
+		assertThrow(_containerId < m_subs.size(), AssemblyException, "Return undefined container id");
+		return append(AssemblyItem::returnContract(_containerId));
+	}
+
 	AssemblyItem appendJump() { auto ret = append(newPushTag()); append(Instruction::JUMP); return ret; }
 	AssemblyItem appendJumpI() { auto ret = append(newPushTag()); append(Instruction::JUMPI); return ret; }
 	AssemblyItem appendJump(AssemblyItem const& _tag) { auto ret = append(_tag.pushTag()); append(Instruction::JUMP); return ret; }

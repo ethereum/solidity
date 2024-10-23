@@ -184,6 +184,34 @@ std::vector<SemanticInformation::Operation> SemanticInformation::readWriteOperat
 			Operation{Location::TransientStorage, Effect::Read, {}, {}, {}},
 			Operation{Location::TransientStorage, Effect::Write, {}, {}, {}}
 		};
+	case Instruction::EOFCREATE:
+		return std::vector<Operation>{
+			Operation{
+				Location::Memory,
+				Effect::Read,
+				2,
+				3,
+				{}
+			},
+			Operation{Location::Storage, Effect::Read, {}, {}, {}},
+			Operation{Location::Storage, Effect::Write, {}, {}, {}},
+			Operation{Location::TransientStorage, Effect::Read, {}, {}, {}},
+			Operation{Location::TransientStorage, Effect::Write, {}, {}, {}}
+		};
+	case Instruction::RETURNCONTRACT:
+		return std::vector<Operation>{
+			Operation{
+				Location::Memory,
+				Effect::Read,
+				0,
+				1,
+				{}
+			},
+			Operation{Location::Storage, Effect::Read, {}, {}, {}},
+			Operation{Location::Storage, Effect::Write, {}, {}, {}},
+			Operation{Location::TransientStorage, Effect::Read, {}, {}, {}},
+			Operation{Location::TransientStorage, Effect::Write, {}, {}, {}}
+		};
 	case Instruction::MSIZE:
 		// This is just to satisfy the assert below.
 		return std::vector<Operation>{};
@@ -280,8 +308,11 @@ bool SemanticInformation::isJumpInstruction(AssemblyItem const& _item)
 
 bool SemanticInformation::altersControlFlow(AssemblyItem const& _item)
 {
-	if (_item.type() != evmasm::Operation)
+	if (_item.type() == evmasm::ReturnContract)
+		return true;
+	else if (_item.type() != evmasm::Operation)
 		return false;
+
 	switch (_item.instruction())
 	{
 	// note that CALL, CALLCODE and CREATE do not really alter the control flow, because we
@@ -293,6 +324,7 @@ bool SemanticInformation::altersControlFlow(AssemblyItem const& _item)
 	case Instruction::STOP:
 	case Instruction::INVALID:
 	case Instruction::REVERT:
+	case Instruction::RETURNCONTRACT:
 		return true;
 	default:
 		return false;
@@ -301,7 +333,9 @@ bool SemanticInformation::altersControlFlow(AssemblyItem const& _item)
 
 bool SemanticInformation::terminatesControlFlow(AssemblyItem const& _item)
 {
-	if (_item.type() != evmasm::Operation)
+	if (_item.type() == evmasm::ReturnContract)
+		return true;
+	else if (_item.type() != evmasm::Operation)
 		return false;
 	return terminatesControlFlow(_item.instruction());
 }
@@ -315,6 +349,7 @@ bool SemanticInformation::terminatesControlFlow(Instruction _instruction)
 	case Instruction::STOP:
 	case Instruction::INVALID:
 	case Instruction::REVERT:
+	case Instruction::RETURNCONTRACT:
 		return true;
 	default:
 		return false;
@@ -337,7 +372,9 @@ bool SemanticInformation::isDeterministic(AssemblyItem const& _item)
 {
 	assertThrow(_item.type() != VerbatimBytecode, AssemblyException, "");
 
-	if (_item.type() != evmasm::Operation)
+	if (_item.type() == evmasm::EofCreate)
+		return false;
+	else if (_item.type() != evmasm::Operation)
 		return true;
 
 	switch (_item.instruction())
@@ -357,6 +394,7 @@ bool SemanticInformation::isDeterministic(AssemblyItem const& _item)
 	case Instruction::EXTCODEHASH:
 	case Instruction::RETURNDATACOPY: // depends on previous calls
 	case Instruction::RETURNDATASIZE:
+	case Instruction::EOFCREATE:
 		return false;
 	default:
 		return true;
@@ -436,6 +474,8 @@ SemanticInformation::Effect SemanticInformation::memory(Instruction _instruction
 	case Instruction::LOG2:
 	case Instruction::LOG3:
 	case Instruction::LOG4:
+	case Instruction::EOFCREATE:
+	case Instruction::RETURNCONTRACT:
 		return SemanticInformation::Read;
 
 	default:
@@ -473,6 +513,8 @@ SemanticInformation::Effect SemanticInformation::storage(Instruction _instructio
 	case Instruction::CREATE:
 	case Instruction::CREATE2:
 	case Instruction::SSTORE:
+	case Instruction::EOFCREATE:
+	case Instruction::RETURNCONTRACT:
 		return SemanticInformation::Write;
 
 	case Instruction::SLOAD:
@@ -494,6 +536,8 @@ SemanticInformation::Effect SemanticInformation::transientStorage(Instruction _i
 	case Instruction::CREATE:
 	case Instruction::CREATE2:
 	case Instruction::TSTORE:
+	case Instruction::EOFCREATE:
+	case Instruction::RETURNCONTRACT:
 		return SemanticInformation::Write;
 
 	case Instruction::TLOAD:
@@ -514,6 +558,8 @@ SemanticInformation::Effect SemanticInformation::otherState(Instruction _instruc
 	case Instruction::DELEGATECALL:
 	case Instruction::CREATE:
 	case Instruction::CREATE2:
+	case Instruction::EOFCREATE:
+	case Instruction::RETURNCONTRACT:
 	case Instruction::SELFDESTRUCT:
 	case Instruction::STATICCALL: // because it can affect returndatasize
 		// Strictly speaking, log0, .., log4 writes to the state, but the EVM cannot read it, so they
@@ -588,6 +634,10 @@ bool SemanticInformation::invalidInViewFunctions(Instruction _instruction)
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
 	case Instruction::DELEGATECALL:
+		// According to EOF spec https://eips.ethereum.org/EIPS/eip-7620#eofcreate
+	case Instruction::EOFCREATE:
+		// According to EOF spec https://eips.ethereum.org/EIPS/eip-7620#returncontract
+	case Instruction::RETURNCONTRACT:
 	case Instruction::CREATE2:
 	case Instruction::SELFDESTRUCT:
 		return true;

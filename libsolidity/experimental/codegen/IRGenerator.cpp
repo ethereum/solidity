@@ -67,6 +67,7 @@ std::string IRGenerator::run(
 	std::map<ContractDefinition const*, std::string_view const> const& /*_otherYulSources*/
 )
 {
+	solUnimplementedAssert(!m_eofVersion.has_value(), "Experimental IRGenerator not implemented for EOF");
 
 	Whiskers t(R"(
 		object "<CreationObject>" {
@@ -81,6 +82,7 @@ std::string IRGenerator::run(
 			}
 		}
 	)");
+	t("eof", m_eofVersion.has_value());
 	t("CreationObject", IRNames::creationObject(_contract));
 	t("DeployedObject", IRNames::deployedObject(_contract));
 	t("code", generate(_contract));

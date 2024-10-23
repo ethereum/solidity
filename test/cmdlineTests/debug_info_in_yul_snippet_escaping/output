@@ -312,6 +312,7 @@ object "D_27" {
                 var__5_mpos := zero_t_string_memory_ptr_1_mpos
 
                 /// @src 0:446:491  "new /// @src 0:149:156  \"new C()\"..."
+
                 let _2 := allocate_unbounded()
                 let _3 := add(_2, datasize("C_2"))
                 if or(gt(_3, 0xffffffffffffffff), lt(_3, _2)) { panic_error_0x41() }
