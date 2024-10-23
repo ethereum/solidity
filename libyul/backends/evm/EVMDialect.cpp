@@ -68,20 +68,7 @@ BuiltinFunctionForEVM createEVMFunction(
 	f.numParameters = static_cast<size_t>(info.args);
 	f.numReturns = static_cast<size_t>(info.ret);
 	f.sideEffects = EVMDialect::sideEffectsOfInstruction(_instruction);
-	if (evmasm::SemanticInformation::terminatesControlFlow(_instruction))
-	{
-		f.controlFlowSideEffects.canContinue = false;
-		if (evmasm::SemanticInformation::reverts(_instruction))
-		{
-			f.controlFlowSideEffects.canTerminate = false;
-			f.controlFlowSideEffects.canRevert = true;
-		}
-		else
-		{
-			f.controlFlowSideEffects.canTerminate = true;
-			f.controlFlowSideEffects.canRevert = false;
-		}
-	}
+	f.controlFlowSideEffects = ControlFlowSideEffects::fromInstruction(_instruction);
 	f.isMSize = _instruction == evmasm::Instruction::MSIZE;
 	f.literalArguments.clear();
 	f.instruction = _instruction;
@@ -100,6 +87,7 @@ BuiltinFunctionForEVM createFunction(
 	size_t _params,
 	size_t _returns,
 	SideEffects _sideEffects,
+	ControlFlowSideEffects _controlFlowSideEffects,
 	std::vector<std::optional<LiteralKind>> _literalArguments,
 	std::function<void(FunctionCall const&, AbstractAssembly&, BuiltinContext&)> _generateCode
 )
@@ -111,6 +99,7 @@ BuiltinFunctionForEVM createFunction(
 	f.numParameters = _params;
 	f.numReturns = _returns;
 	f.sideEffects = _sideEffects;
+	f.controlFlowSideEffects = _controlFlowSideEffects;
 	f.literalArguments = std::move(_literalArguments);
 	f.isMSize = false;
 	f.instruction = {};
@@ -231,16 +220,17 @@ std::vector<std::optional<BuiltinFunctionForEVM>> createBuiltins(langutil::EVMVe
 		size_t _params,
 		size_t _returns,
 		SideEffects _sideEffects,
+		ControlFlowSideEffects _controlFlowSideEffects,
 		std::vector<std::optional<LiteralKind>> _literalArguments,
 		std::function<void(FunctionCall const&, AbstractAssembly&, BuiltinContext&)> _generateCode
 	) -> std::optional<BuiltinFunctionForEVM>
 	{
 		if (!_objectAccess)
 			return std::nullopt;
-		return createFunction(_name, _params, _returns, _sideEffects, std::move(_literalArguments), std::move(_generateCode));
+		return createFunction(_name, _params, _returns, _sideEffects, _controlFlowSideEffects, std::move(_literalArguments), std::move(_generateCode));
 	};
 
-	builtins.emplace_back(createIfObjectAccess("linkersymbol", 1, 1, SideEffects{}, {LiteralKind::String}, [](
+	builtins.emplace_back(createIfObjectAccess("linkersymbol", 1, 1, SideEffects{}, ControlFlowSideEffects{}, {LiteralKind::String}, [](
 		FunctionCall const& _call,
 		AbstractAssembly& _assembly,
 		BuiltinContext&
@@ -254,6 +244,7 @@ std::vector<std::optional<BuiltinFunctionForEVM>> createBuiltins(langutil::EVMVe
 		1,
 		1,
 		SideEffects{},
+		ControlFlowSideEffects{},
 		{LiteralKind::Number},
 		[](
 			FunctionCall const& _call,
@@ -268,7 +259,7 @@ std::vector<std::optional<BuiltinFunctionForEVM>> createBuiltins(langutil::EVMVe
 	);
 	if (!_eofVersion.has_value())
 	{
-		builtins.emplace_back(createIfObjectAccess("datasize", 1, 1, SideEffects{}, {LiteralKind::String}, [](
+		builtins.emplace_back(createIfObjectAccess("datasize", 1, 1, SideEffects{}, ControlFlowSideEffects{}, {LiteralKind::String}, [](
 			FunctionCall const& _call,
 			AbstractAssembly& _assembly,
 			BuiltinContext& _context
@@ -289,7 +280,7 @@ std::vector<std::optional<BuiltinFunctionForEVM>> createBuiltins(langutil::EVMVe
 				_assembly.appendDataSize(subIdPath);
 			}
 		}));
-		builtins.emplace_back(createIfObjectAccess("dataoffset", 1, 1, SideEffects{}, {LiteralKind::String}, [](
+		builtins.emplace_back(createIfObjectAccess("dataoffset", 1, 1, SideEffects{}, ControlFlowSideEffects{}, {LiteralKind::String}, [](
 			FunctionCall const& _call,
 			AbstractAssembly& _assembly,
 			BuiltinContext& _context
@@ -325,6 +316,7 @@ std::vector<std::optional<BuiltinFunctionForEVM>> createBuiltins(langutil::EVMVe
 				SideEffects::Write,  // memory
 				SideEffects::None    // transientStorage
 			},
+			ControlFlowSideEffects::fromInstruction(evmasm::Instruction::CODECOPY),
 			{},
 			[](
 				FunctionCall const&,
@@ -349,6 +341,7 @@ std::vector<std::optional<BuiltinFunctionForEVM>> createBuiltins(langutil::EVMVe
 				SideEffects::Write,  // memory
 				SideEffects::None    // transientStorage
 			},
+			ControlFlowSideEffects{},
 			{std::nullopt, LiteralKind::String, std::nullopt},
 			[](
 				FunctionCall const& _call,
@@ -365,6 +358,7 @@ std::vector<std::optional<BuiltinFunctionForEVM>> createBuiltins(langutil::EVMVe
 			1,
 			1,
 			SideEffects{},
+			ControlFlowSideEffects{},
 			{LiteralKind::String},
 			[](
 				FunctionCall const& _call,
@@ -382,7 +376,8 @@ std::vector<std::optional<BuiltinFunctionForEVM>> createBuiltins(langutil::EVMVe
 			"auxdataloadn",
 			1,
 			1,
-			SideEffects{},
+			EVMDialect::sideEffectsOfInstruction(evmasm::Instruction::DATALOADN),
+			ControlFlowSideEffects::fromInstruction(evmasm::Instruction::DATALOADN),
 			{LiteralKind::Number},
 			[](
 				FunctionCall const& _call,
@@ -531,6 +526,7 @@ BuiltinFunctionForEVM EVMDialect::createVerbatimFunction(size_t _arguments, size
 		1 + _arguments,
 		_returnVariables,
 		SideEffects::worst(),
+		ControlFlowSideEffects{},
 		std::vector<std::optional<LiteralKind>>{LiteralKind::String} + std::vector<std::optional<LiteralKind>>(_arguments),
 		[=](
 			FunctionCall const& _call,
