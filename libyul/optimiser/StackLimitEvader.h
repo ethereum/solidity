@@ -27,7 +27,7 @@
 namespace solidity::yul
 {
 
-struct Object;
+class Object;
 
 /**
  * Optimisation stage that assigns memory offsets to variables that would become unreachable if
