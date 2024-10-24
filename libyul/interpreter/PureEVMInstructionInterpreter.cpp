@@ -285,7 +285,7 @@ EvaluationResult PureEVMInstructionInterpreter::evalBuiltin(
 	if (_builtinFunction.instruction)
 		return eval(*_builtinFunction.instruction, _evaluatedArguments);
 
-	std::string functionName = _builtinFunction.name.str();
+	std::string const& functionName = _builtinFunction.name;
 	bool isVerbatim = boost::starts_with(functionName, "verbatim");
 	if (isVerbatim)
 		return ImpureBuiltinEncountered();

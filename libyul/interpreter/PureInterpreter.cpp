@@ -247,9 +247,12 @@ EvaluationResult PureInterpreter::operator()(Identifier const& _identifier)
 EvaluationResult PureInterpreter::operator()(FunctionCall const& _functionCall)
 {
 	std::vector<std::optional<LiteralKind>> const* literalArguments = nullptr;
-	if (BuiltinFunction const* builtin = m_dialect.builtin(_functionCall.functionName.name))
-		if (!builtin->literalArguments.empty())
-			literalArguments = &builtin->literalArguments;
+	if (std::optional<BuiltinHandle> builtinHandle = m_dialect.findBuiltin(_functionCall.functionName.name.str()))
+		if (
+			auto const& args = m_dialect.builtin(*builtinHandle).literalArguments;
+			!args.empty()
+		)
+			literalArguments = &args;
 	EvaluationResult argsRes = evaluateArgs(_functionCall.arguments, literalArguments);
 	if (auto* terminated = std::get_if<ExecutionTerminated>(&argsRes))
 		return *terminated;
@@ -258,10 +261,11 @@ EvaluationResult PureInterpreter::operator()(FunctionCall const& _functionCall)
 
 	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
 	{
-		if (BuiltinFunctionForEVM const* builtinFunction = dialect->builtin(_functionCall.functionName.name))
+		if (std::optional<BuiltinHandle> builtinHandle = dialect->findBuiltin(_functionCall.functionName.name.str()))
 		{
+			auto const& function = dialect->builtin(*builtinHandle);
 			PureEVMInstructionInterpreter interpreter(dialect->evmVersion());
-			return interpreter.evalBuiltin(*builtinFunction, _functionCall.arguments, argsValues);
+			return interpreter.evalBuiltin(function, _functionCall.arguments, argsValues);
 		}
 	}
 

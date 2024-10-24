@@ -104,7 +104,10 @@ std::string YulPureInterpreterTest::interpret() const
 	Block const& block = m_ast->root();
 
 	PureInterpreterState state{m_config};
-	Dialect const& dialect = EVMDialect::strictAssemblyForEVMObjects(solidity::test::CommonOptions::get().evmVersion());
+	Dialect const& dialect = EVMDialect::strictAssemblyForEVMObjects(
+		solidity::test::CommonOptions::get().evmVersion(),
+		solidity::test::CommonOptions::get().eofVersion()
+	);
 	interpreter::Scope rootScope;
 	interpreter::Scope* subscope = rootScope.getSubscope(block);
 
