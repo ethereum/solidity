@@ -103,6 +103,8 @@ add_library(yul
 	optimiser/ConditionalUnsimplifier.h
 	optimiser/ControlFlowSimplifier.cpp
 	optimiser/ControlFlowSimplifier.h
+	optimiser/ConstantFunctionEvaluator.cpp
+	optimiser/ConstantFunctionEvaluator.h
 	optimiser/DataFlowAnalyzer.cpp
 	optimiser/DataFlowAnalyzer.h
 	optimiser/DeadCodeEliminator.cpp
@@ -202,6 +204,10 @@ add_library(yul
 	optimiser/VarDeclInitializer.h
 	optimiser/VarNameCleaner.cpp
 	optimiser/VarNameCleaner.h
+	tools/interpreter/Interpreter.h
+	tools/interpreter/Interpreter.cpp
+	tools/interpreter/EVMInstructionInterpreter.h
+	tools/interpreter/EVMInstructionInterpreter.cpp
 )
 
 target_link_libraries(yul PUBLIC evmasm solutil langutil smtutil fmt::fmt-header-only)
