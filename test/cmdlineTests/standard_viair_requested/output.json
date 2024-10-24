@@ -201,6 +201,7 @@ object \"D_16\" {
             function fun_f_15() {
 
                 /// @src 0:134:141  \"new C()\"
+
                 let _1 := allocate_unbounded()
                 let _2 := add(_1, datasize(\"C_3\"))
                 if or(gt(_2, 0xffffffffffffffff), lt(_2, _1)) { panic_error_0x41() }

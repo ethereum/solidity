@@ -430,6 +430,25 @@ size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 							"The \"verbatim_*\" builtins cannot be used with empty bytecode."
 						);
 				}
+				else if (functionName == "eofcreate" || functionName == "returncontract")
+				{
+					auto const& argumentAsLiteral = std::get<Literal>(arg);
+					auto const formattedLiteral = formatLiteral(argumentAsLiteral);
+
+					if (util::contains(formattedLiteral, '.'))
+						m_errorReporter.typeError(
+							2186_error,
+							nativeLocationOf(arg),
+							"Name required but path given as \"" + functionName + "\" argument."
+						);
+
+					if (!getTopLeveleSubobjectNames(m_dataNames, m_objectName).count(formattedLiteral))
+						m_errorReporter.typeError(
+							8970_error,
+							nativeLocationOf(arg),
+							"Unknown object \"" + formattedLiteral + "\"."
+						);
+				}
 				expectUnlimitedStringLiteral(std::get<Literal>(arg));
 				continue;
 			}
