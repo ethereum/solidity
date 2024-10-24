@@ -34,7 +34,7 @@ Scope::Scope(Scope* const _parent, Block const& _block)
 			m_definedFunctions.emplace(functionDefinition->name, *functionDefinition);
 }
 
-Scope* Scope::getSubscope(Block const& _block)
+Scope* Scope::createSubscope(Block const& _block)
 {
 	auto [it, isNew] = m_subScopes.try_emplace(&_block, nullptr);
 	if (!isNew)

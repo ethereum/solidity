@@ -47,7 +47,7 @@ public:
 		return m_parent;
 	}
 
-	Scope* getSubscope(Block const& _block);
+	Scope* createSubscope(Block const& _block);
 
 	void addDeclaredVariable(YulName const& _name);
 

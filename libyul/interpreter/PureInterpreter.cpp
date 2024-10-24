@@ -298,7 +298,7 @@ EvaluationResult PureInterpreter::evaluateArgs(
 
 void PureInterpreter::enterScope(Block const& _block)
 {
-	m_scope = m_scope->getSubscope(_block);
+	m_scope = m_scope->createSubscope(_block);
 }
 
 void PureInterpreter::leaveScope()
