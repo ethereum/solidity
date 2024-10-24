@@ -152,6 +152,7 @@ function stripCLIDecorations
         -e '/^IR:$/d' \
         -e '/^Optimized IR:$/d' \
         -e '/^EVM assembly:$/d' \
+        -e '/^Yul Control Flow Graph:$/d' \
         -e '/^JSON AST (compact format):$/d' \
         -e '/^Function signatures:$/d' \
         -e '/^Contract Storage Layout:$/d' \

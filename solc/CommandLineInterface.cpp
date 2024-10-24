@@ -148,6 +148,7 @@ static bool needsHumanTargetedStdout(CommandLineOptions const& _options)
 		_options.compiler.outputs.abi ||
 		_options.compiler.outputs.asm_ ||
 		_options.compiler.outputs.asmJson ||
+		_options.compiler.outputs.yulCFGJson ||
 		_options.compiler.outputs.binary ||
 		_options.compiler.outputs.binaryRuntime ||
 		_options.compiler.outputs.metadata ||
@@ -311,6 +312,7 @@ void CommandLineInterface::handleYulCFGExport(std::string const& _contractName)
 		);
 	else
 	{
+		sout() << "Yul Control Flow Graph:" << std::endl;
 		sout() << util::jsonPrint(
 			yulCFGJson.value_or(Json{}),
 			m_options.formatting.json
