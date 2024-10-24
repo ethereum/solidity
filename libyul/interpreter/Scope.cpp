@@ -26,20 +26,23 @@ using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::yul::interpreter;
 
+Scope::Scope(Scope* const _parent, Block const& _block)
+	: m_parent(_parent)
+{
+	for (auto const& statement: _block.statements)
+		if (auto const* functionDefinition = std::get_if<FunctionDefinition>(&statement))
+			m_definedFunctions.emplace(functionDefinition->name, *functionDefinition);
+}
+
 Scope* Scope::getSubscope(Block const& _block)
 {
 	auto [it, isNew] = m_subScopes.try_emplace(&_block, nullptr);
 	if (!isNew)
 		return it->second.get();
 
-	it->second = std::make_unique<Scope>(this);
-	Scope* subscope = it->second.get();
-
-	for (auto const& statement: _block.statements)
-		if (auto const* functionDefinition = std::get_if<FunctionDefinition>(&statement))
-			subscope->m_definedFunctions.emplace(functionDefinition->name, *functionDefinition);
-
-	return subscope;
+	auto& subScope = it->second;
+	subScope = std::make_unique<Scope>(this, _block);
+	return subScope.get();
 }
 
 void Scope::addDeclaredVariable(YulName const& _name)

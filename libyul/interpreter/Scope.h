@@ -40,6 +40,8 @@ public:
 		m_parent(_parent)
 	{}
 
+	Scope(Scope* const _parent, Block const& _block);
+
 	Scope* parent() const
 	{
 		return m_parent;
