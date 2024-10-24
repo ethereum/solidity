@@ -42,7 +42,9 @@ struct DebugInfoSelection
 	static DebugInfoSelection const All(bool _value = true) noexcept;
 	static DebugInfoSelection const None() noexcept { return All(false); }
 	static DebugInfoSelection const Only(bool DebugInfoSelection::* _member) noexcept;
-	static DebugInfoSelection const Default() noexcept { return All(); }
+	static DebugInfoSelection const Default() noexcept { return ExceptExperimental(); }
+	static DebugInfoSelection const Except(std::vector<bool DebugInfoSelection::*> const& _members) noexcept;
+	static DebugInfoSelection const ExceptExperimental() noexcept { return Except({&DebugInfoSelection::ethdebug}); }
 
 	static std::optional<DebugInfoSelection> fromString(std::string_view _input);
 	static std::optional<DebugInfoSelection> fromComponents(
@@ -72,6 +74,7 @@ struct DebugInfoSelection
 			{"location", &DebugInfoSelection::location},
 			{"snippet", &DebugInfoSelection::snippet},
 			{"ast-id", &DebugInfoSelection::astID},
+			{"ethdebug", &DebugInfoSelection::ethdebug},
 		};
 		return components;
 	}
@@ -79,6 +82,7 @@ struct DebugInfoSelection
 	bool location = false; ///< Include source location. E.g. `@src 3:50:100`
 	bool snippet = false;  ///< Include source code snippet next to location. E.g. `@src 3:50:100 "contract C {..."`
 	bool astID = false;    ///< Include ID of the Solidity AST node. E.g. `@ast-id 15`
+	bool ethdebug = false; ///< Include ethdebug related debug information.
 };
 
 std::ostream& operator<<(std::ostream& _stream, DebugInfoSelection const& _selection);

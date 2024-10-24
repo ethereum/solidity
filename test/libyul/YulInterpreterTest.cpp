@@ -71,7 +71,7 @@ bool YulInterpreterTest::parse(std::ostream& _stream, std::string const& _linePr
 		solidity::test::CommonOptions::get().eofVersion(),
 		YulStack::Language::StrictAssembly,
 		solidity::frontend::OptimiserSettings::none(),
-		DebugInfoSelection::All()
+		DebugInfoSelection::ExceptExperimental()
 	);
 	if (stack.parseAndAnalyze("", m_source))
 	{

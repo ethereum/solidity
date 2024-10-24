@@ -1,0 +1,18 @@
+======= Debug Data (ethdebug/format/object) =======
+{"sources":["yul_ethdebug/input.yul"]}
+
+======= yul_ethdebug/input.yul (EVM) =======
+
+Pretty printed source:
+/// ethdebug: enabled
+object "object" {
+    code {
+        {
+            sstore(calldataload(0), calldataload(0x20))
+        }
+    }
+}
+
+
+Debug Data (ethdebug/format/program):
+{"not yet implemented @ MachineAssemblyObject::ethdebug":true}

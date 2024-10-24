@@ -628,6 +628,49 @@ BOOST_AUTO_TEST_CASE(invalid_optimizer_sequence_without_optimize)
 	}
 }
 
+BOOST_AUTO_TEST_CASE(ethdebug)
+{
+	CommandLineOptions commandLineOptions = parseCommandLine({"solc", "contract.sol", "--debug-info", "ethdebug", "--ethdebug", "--via-ir"});
+	BOOST_CHECK_EQUAL(commandLineOptions.compiler.outputs.ethdebug, true);
+	BOOST_CHECK_EQUAL(commandLineOptions.compiler.outputs.ethdebugRuntime, false);
+	BOOST_CHECK_EQUAL(commandLineOptions.output.debugInfoSelection.has_value(), true);
+	BOOST_CHECK_EQUAL(commandLineOptions.output.debugInfoSelection->ethdebug, true);
+	commandLineOptions = parseCommandLine({"solc", "contract.sol", "--debug-info", "ethdebug", "--ethdebug-runtime", "--via-ir"});
+	BOOST_CHECK_EQUAL(commandLineOptions.compiler.outputs.ethdebug, false);
+	BOOST_CHECK_EQUAL(commandLineOptions.compiler.outputs.ethdebugRuntime, true);
+	BOOST_CHECK_EQUAL(commandLineOptions.output.debugInfoSelection.has_value(), true);
+	BOOST_CHECK_EQUAL(commandLineOptions.output.debugInfoSelection->ethdebug, true);
+	commandLineOptions = parseCommandLine({"solc", "contract.sol", "--ethdebug", "--via-ir"});
+	BOOST_CHECK_EQUAL(commandLineOptions.compiler.outputs.ethdebug, true);
+	BOOST_CHECK_EQUAL(commandLineOptions.compiler.outputs.ethdebugRuntime, false);
+	// debug-info "ethdebug" selected implicitly,
+	// if compiled with --ethdebug or --ethdebug-runtime and no debug-info was selected.
+	BOOST_CHECK_EQUAL(commandLineOptions.output.debugInfoSelection.has_value(), true);
+	BOOST_CHECK_EQUAL(commandLineOptions.output.debugInfoSelection->ethdebug, true);
+	commandLineOptions = parseCommandLine({"solc", "contract.sol", "--ethdebug-runtime", "--via-ir"});
+	BOOST_CHECK_EQUAL(commandLineOptions.compiler.outputs.ethdebug, false);
+	BOOST_CHECK_EQUAL(commandLineOptions.compiler.outputs.ethdebugRuntime, true);
+	BOOST_CHECK_EQUAL(commandLineOptions.output.debugInfoSelection.has_value(), true);
+	BOOST_CHECK_EQUAL(commandLineOptions.output.debugInfoSelection->ethdebug, true);
+	commandLineOptions = parseCommandLine({"solc", "contract.sol", "--ethdebug", "--ethdebug-runtime", "--via-ir"});
+	BOOST_CHECK_EQUAL(commandLineOptions.compiler.outputs.ethdebug, true);
+	BOOST_CHECK_EQUAL(commandLineOptions.compiler.outputs.ethdebugRuntime, true);
+	BOOST_CHECK_EQUAL(commandLineOptions.output.debugInfoSelection.has_value(), true);
+	BOOST_CHECK_EQUAL(commandLineOptions.output.debugInfoSelection->ethdebug, true);
+	commandLineOptions = parseCommandLine({"solc", "contract.sol", "--debug-info", "ethdebug", "--ir"});
+	BOOST_CHECK_EQUAL(commandLineOptions.compiler.outputs.ethdebug, false);
+	BOOST_CHECK_EQUAL(commandLineOptions.compiler.outputs.ethdebugRuntime, false);
+	BOOST_CHECK_EQUAL(commandLineOptions.compiler.outputs.ir, true);
+	BOOST_CHECK_EQUAL(commandLineOptions.output.debugInfoSelection.has_value(), true);
+	BOOST_CHECK_EQUAL(commandLineOptions.output.debugInfoSelection->ethdebug, true);
+	commandLineOptions = parseCommandLine({"solc", "contract.sol", "--debug-info", "ethdebug", "--ir-optimized"});
+	BOOST_CHECK_EQUAL(commandLineOptions.compiler.outputs.ethdebug, false);
+	BOOST_CHECK_EQUAL(commandLineOptions.compiler.outputs.ethdebugRuntime, false);
+	BOOST_CHECK_EQUAL(commandLineOptions.compiler.outputs.irOptimized, true);
+	BOOST_CHECK_EQUAL(commandLineOptions.output.debugInfoSelection.has_value(), true);
+	BOOST_CHECK_EQUAL(commandLineOptions.output.debugInfoSelection->ethdebug, true);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // namespace solidity::frontend::test
