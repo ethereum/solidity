@@ -41,22 +41,26 @@ using namespace solidity::evmasm;
 using namespace solidity::yul;
 using namespace solidity::yul::interpreter;
 
+namespace solidity::yul::interpreter::PureEVMInstructionInterpreter {
+
 using solidity::util::h160;
 using solidity::util::h256;
 
-EvaluationResult PureEVMInstructionInterpreter::eval(
-	evmasm::Instruction _instruction,
+EvaluationResult eval(
+	langutil::EVMVersion _evmVersion,
+	BuiltinFunctionForEVM const& _builtinFunction,
 	std::vector<u256> const& _arguments
 )
 {
-	using namespace solidity::evmasm;
-	using evmasm::Instruction;
+	if (!_builtinFunction.instruction)
+		return ImpureBuiltinEncountered();
+	evmasm::Instruction instruction = *_builtinFunction.instruction;
 
-	auto info = instructionInfo(_instruction, m_evmVersion);
+	auto info = instructionInfo(instruction, _evmVersion);
 	yulAssert(static_cast<size_t>(info.args) == _arguments.size());
 
 	auto const& arg = _arguments;
-	switch (_instruction)
+	switch (instruction)
 	{
 	case Instruction::STOP:
 		return ExplicitlyTerminated();
@@ -276,15 +280,4 @@ EvaluationResult PureEVMInstructionInterpreter::eval(
 	util::unreachable();
 }
 
-EvaluationResult PureEVMInstructionInterpreter::evalBuiltin(
-	BuiltinFunctionForEVM const& _builtinFunction,
-	std::vector<Expression> const& /* _arguments */,  // This was required to execute some builtin.
-	std::vector<u256> const& _evaluatedArguments
-)
-{
-	if (_builtinFunction.instruction)
-		return eval(*_builtinFunction.instruction, _evaluatedArguments);
-
-	return ImpureBuiltinEncountered();
 }
-

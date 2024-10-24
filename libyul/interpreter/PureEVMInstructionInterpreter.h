@@ -45,32 +45,13 @@ class YulString;
 struct BuiltinFunctionForEVM;
 }
 
-namespace solidity::yul::interpreter
+namespace solidity::yul::interpreter::PureEVMInstructionInterpreter
 {
 
-/**
- * Interprets EVM instructions based on the current state without side-effect.
- */
-class PureEVMInstructionInterpreter
-{
-public:
-	explicit PureEVMInstructionInterpreter(langutil::EVMVersion _evmVersion):
-		m_evmVersion(_evmVersion)
-	{}
+EvaluationResult eval(
+	langutil::EVMVersion _evmVersion,
+	BuiltinFunctionForEVM const& _builtinFunction,
+	std::vector<u256> const& _arguments
+);
 
-	/// Evaluate instruction
-	EvaluationResult eval(evmasm::Instruction _instruction, std::vector<u256> const& _arguments);
-
-	/// Evaluate builtin function
-	EvaluationResult evalBuiltin(
-		BuiltinFunctionForEVM const& _builtinFunction,
-		std::vector<Expression> const& _arguments,
-		std::vector<u256> const& _evaluatedArguments
-	);
-
-private:
-
-	langutil::EVMVersion m_evmVersion;
-};
-
-} // solidity::yul::test
+}

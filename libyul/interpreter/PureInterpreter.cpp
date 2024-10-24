@@ -239,8 +239,7 @@ EvaluationResult PureInterpreter::operator()(FunctionCall const& _functionCall)
 		if (std::optional<BuiltinHandle> builtinHandle = dialect->findBuiltin(_functionCall.functionName.name.str()))
 		{
 			auto const& function = dialect->builtin(*builtinHandle);
-			PureEVMInstructionInterpreter interpreter(dialect->evmVersion());
-			return interpreter.evalBuiltin(function, _functionCall.arguments, argsValues);
+			return PureEVMInstructionInterpreter::eval(dialect->evmVersion(), function, argsValues);
 		}
 	}
 
