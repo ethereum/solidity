@@ -65,11 +65,11 @@ using LogTraceEntry = std::variant<FunctionCallTrace, FunctionReturnTrace>;
 struct PureInterpreterConfig
 {
 	// set to 0 to disable tracing
-	size_t maxTraceSize = 0;
+	size_t maxTraceSize{};
 
-	size_t maxSteps = 0;
-	size_t maxExprNesting = 0;
-	size_t maxRecursionDepth = 0;
+	size_t maxSteps{};
+	size_t maxExprNesting{};
+	size_t maxRecursionDepth{};
 };
 
 struct PureInterpreterState

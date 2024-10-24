@@ -83,7 +83,7 @@ enum class ControlFlowState
 
 struct ExecutionOk
 {
-	ControlFlowState state;
+	ControlFlowState state{};
 
 	bool operator==(ExecutionOk other) const
 	{

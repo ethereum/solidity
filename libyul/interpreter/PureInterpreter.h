@@ -138,8 +138,8 @@ protected:
 	VariableValuesMap m_variables;
 	Scope* m_scope;
 
-	size_t const m_recursionDepth = 0;
-	unsigned m_expressionNestingLevel = 0;
+	size_t const m_recursionDepth{};
+	unsigned m_expressionNestingLevel{};
 };
 
 }

@@ -37,9 +37,6 @@ class Scope
 {
 public:
 	Scope(Scope* const _parent = nullptr):
-		m_definedFunctions(),
-		m_declaredVariables(),
-		m_subScopes(),
 		m_parent(_parent)
 	{}
 
@@ -59,10 +56,10 @@ public:
 	FunctionDefinition const& getFunction(YulName const& _functionName) const;
 
 private:
-	std::map<YulName, FunctionDefinition const&> m_definedFunctions;
-	std::vector<YulName> m_declaredVariables;
-	std::map<Block const*, std::unique_ptr<Scope>> m_subScopes;
-	Scope* const m_parent;
+	std::map<YulName, FunctionDefinition const&> m_definedFunctions{};
+	std::vector<YulName> m_declaredVariables{};
+	std::map<Block const*, std::unique_ptr<Scope>> m_subScopes{};
+	Scope* const m_parent{};
 };
 
 }
