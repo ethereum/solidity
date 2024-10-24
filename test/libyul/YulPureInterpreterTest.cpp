@@ -108,10 +108,9 @@ std::string YulPureInterpreterTest::interpret() const
 		solidity::test::CommonOptions::get().evmVersion(),
 		solidity::test::CommonOptions::get().eofVersion()
 	);
-	interpreter::Scope rootScope;
-	interpreter::Scope* subscope = rootScope.getSubscope(block);
+	interpreter::Scope rootScope(nullptr, block);
 
-	PureInterpreter interpreter(state, dialect, *subscope, 0);
+	PureInterpreter interpreter(state, dialect, rootScope, 0);
 	ExecutionResult result = interpreter.execute(block.statements);
 	VariableValuesMap const& outerMostVariables = interpreter.allVariables();
 
