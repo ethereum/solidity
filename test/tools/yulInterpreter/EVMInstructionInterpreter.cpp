@@ -488,7 +488,9 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::SWAP16:
 		yulAssert(false, "Impossible in strict assembly.");
 	case Instruction::DATALOADN:
-		solUnimplemented("DATALOADN unimplemented in yul interpreter.");
+	case Instruction::EOFCREATE:
+	case Instruction::RETURNCONTRACT:
+		solUnimplemented("EOF not yet supported by Yul interpreter.");
 	}
 
 	util::unreachable();

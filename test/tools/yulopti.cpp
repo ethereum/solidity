@@ -102,7 +102,8 @@ public:
 			AsmAnalyzer analyzer(
 				*m_analysisInfo,
 				errorReporter,
-				m_dialect
+				m_dialect,
+				""
 			);
 			if (!analyzer.analyze(*m_astRoot) || errorReporter.hasErrors())
 			{

@@ -471,6 +471,7 @@ void CompilerContext::appendInlineAssembly(
 			analysisInfo,
 			errorReporter,
 			dialect,
+			"",
 			identifierAccess.resolve
 		).analyze(parserResult->root());
 	if (!parserResult || errorReporter.hasErrorsWarningsOrInfos() || !analyzerResult)

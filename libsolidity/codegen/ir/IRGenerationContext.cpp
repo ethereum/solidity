@@ -107,10 +107,57 @@ size_t IRGenerationContext::immutableMemoryOffset(VariableDeclaration const& _va
 	return m_immutableVariables.at(&_variable);
 }
 
+size_t IRGenerationContext::immutableMemoryOffsetRelative(VariableDeclaration const& _variable) const
+{
+	auto const absoluteOffset = immutableMemoryOffset(_variable);
+	solAssert(absoluteOffset >= CompilerUtils::generalPurposeMemoryStart);
+	return absoluteOffset - CompilerUtils::generalPurposeMemoryStart;
+}
+
+size_t IRGenerationContext::reservedMemorySize() const
+{
+	solAssert(m_reservedMemory.has_value());
+	return *m_reservedMemory;
+}
+
+void IRGenerationContext::registerLibraryAddressImmutable()
+{
+	solAssert(m_reservedMemory.has_value(), "Reserved memory has already been reset.");
+	solAssert(!m_libraryAddressImmutableOffset.has_value());
+	m_libraryAddressImmutableOffset = CompilerUtils::generalPurposeMemoryStart + *m_reservedMemory;
+	*m_reservedMemory += 32;
+}
+
+size_t IRGenerationContext::libraryAddressImmutableOffset() const
+{
+	solAssert(m_libraryAddressImmutableOffset.has_value());
+	return *m_libraryAddressImmutableOffset;
+}
+
+size_t IRGenerationContext::libraryAddressImmutableOffsetRelative() const
+{
+	solAssert(m_libraryAddressImmutableOffset.has_value());
+	solAssert(m_libraryAddressImmutableOffset >= CompilerUtils::generalPurposeMemoryStart);
+	return *m_libraryAddressImmutableOffset - CompilerUtils::generalPurposeMemoryStart;
+}
+
 size_t IRGenerationContext::reservedMemory()
 {
 	solAssert(m_reservedMemory.has_value(), "Reserved memory was used before.");
 	size_t reservedMemory = *m_reservedMemory;
+
+	// We assume reserved memory contains only immutable variables.
+	// This memory is used i.e. by RETURNCONTRACT to create new EOF container with aux data.
+	size_t immutableVariablesSize = 0;
+	for (auto const* var: keys(m_immutableVariables))
+	{
+		solUnimplementedAssert(var->type()->isValueType());
+		solUnimplementedAssert(var->type()->sizeOnStack() == 1);
+		immutableVariablesSize += var->type()->sizeOnStack() * 32;
+	}
+
+	solAssert(immutableVariablesSize == reservedMemory);
+
 	m_reservedMemory = std::nullopt;
 	return reservedMemory;
 }

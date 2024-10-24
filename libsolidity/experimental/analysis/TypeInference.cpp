@@ -300,6 +300,7 @@ bool TypeInference::visit(InlineAssembly const& _inlineAssembly)
 		*_inlineAssembly.annotation().analysisInfo,
 		m_errorReporter,
 		_inlineAssembly.dialect(),
+		"",
 		identifierAccess
 	);
 	if (!analyzer.analyze(_inlineAssembly.operations().root()))

@@ -1335,10 +1335,14 @@ std::map<uint16_t, uint16_t> Assembly::findReferencedContainers() const
 	std::set<uint16_t> referencedSubcontainersIds;
 	solAssert(m_subs.size() <= 0x100); // According to EOF spec
 
-	// TODO: Implement properly when opcodes referring sub containers added.
-	for (uint16_t i = 0; i < m_subs.size(); ++i)
-		referencedSubcontainersIds.insert(static_cast<uint16_t>(i));
-	// END TODO
+	for (auto&& codeSection: m_codeSections)
+		for (AssemblyItem const& item: codeSection.items)
+			if (item.type() == EOFCreate || item.type() == ReturnContract)
+			{
+				solAssert(item.data() <= m_subs.size(), "Invalid subcontainer index.");
+				auto const containerId = static_cast<ContainerID>(item.data());
+				referencedSubcontainersIds.insert(containerId);
+			}
 
 	std::map<uint16_t, uint16_t> replacements;
 	uint8_t nUnreferenced = 0;
@@ -1405,7 +1409,11 @@ LinkerObject const& Assembly::assembleEOF() const
 			switch (item.type())
 			{
 			case Operation:
-				solAssert(item.instruction() != Instruction::DATALOADN);
+				solAssert(
+					item.instruction() != Instruction::DATALOADN &&
+					item.instruction() != Instruction::RETURNCONTRACT &&
+					item.instruction() != Instruction::EOFCREATE
+				);
 				solAssert(!(item.instruction() >= Instruction::PUSH0 && item.instruction() <= Instruction::PUSH32));
 				ret.bytecode += assembleOperation(item);
 				break;
@@ -1417,6 +1425,18 @@ LinkerObject const& Assembly::assembleEOF() const
 				auto const [pushLibraryAddressBytecode, linkRef] = assemblePushLibraryAddress(item, ret.bytecode.size());
 				ret.bytecode += pushLibraryAddressBytecode;
 				ret.linkReferences.insert(linkRef);
+				break;
+			}
+			case EOFCreate:
+			{
+				ret.bytecode.push_back(static_cast<uint8_t>(Instruction::EOFCREATE));
+				ret.bytecode.push_back(static_cast<uint8_t>(item.data()));
+				break;
+			}
+			case ReturnContract:
+			{
+				ret.bytecode.push_back(static_cast<uint8_t>(Instruction::RETURNCONTRACT));
+				ret.bytecode.push_back(static_cast<uint8_t>(item.data()));
 				break;
 			}
 			case VerbatimBytecode:

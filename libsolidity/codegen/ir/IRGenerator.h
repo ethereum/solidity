@@ -59,6 +59,7 @@ public:
 		m_eofVersion(_eofVersion),
 		m_context(
 			_evmVersion,
+			_eofVersion,
 			ExecutionContext::Creation,
 			_revertStrings,
 			std::move(_sourceIndices),

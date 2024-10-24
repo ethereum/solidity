@@ -42,6 +42,7 @@
 #include <fmt/format.h>
 
 #include <functional>
+#include <iterator>
 
 using namespace std::string_literals;
 using namespace solidity;
@@ -68,6 +69,7 @@ bool AsmAnalyzer::analyze(Block const& _block)
 	auto watcher = m_errorReporter.errorWatcher();
 	try
 	{
+		validateObjectStructure(_block.debugData->nativeLocation);
 		if (!(ScopeFiller(m_info, m_errorReporter))(_block))
 			return false;
 
@@ -86,12 +88,13 @@ bool AsmAnalyzer::analyze(Block const& _block)
 
 AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect, Object const& _object)
 {
-	return analyzeStrictAssertCorrect(_dialect, _object.code()->root(), _object.qualifiedDataNames());
+	return analyzeStrictAssertCorrect(_dialect, _object.code()->root(), _object.name, _object.qualifiedDataNames());
 }
 
 AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(
 	Dialect const& _dialect,
 	Block const& _astRoot,
+	std::string const& _objectName,
 	std::set<std::string> const& _qualifiedDataNames
 )
 {
@@ -102,6 +105,7 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(
 		analysisInfo,
 		errors,
 		_dialect,
+		_objectName,
 		{},
 		_qualifiedDataNames
 	).analyze(_astRoot);
@@ -424,6 +428,25 @@ size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 							1844_error,
 							nativeLocationOf(arg),
 							"The \"verbatim_*\" builtins cannot be used with empty bytecode."
+						);
+				}
+				else if (functionName == "eofcreate" || functionName == "returncontract")
+				{
+					auto const& argumentAsLiteral = std::get<Literal>(arg);
+					auto const formattedLiteral = formatLiteral(argumentAsLiteral);
+
+					if (util::contains(formattedLiteral, '.'))
+						m_errorReporter.typeError(
+							2186_error,
+							nativeLocationOf(arg),
+							"Name required but path given as \"" + functionName + "\" argument."
+						);
+
+					if (!getTopLeveleSubobjectNames(m_dataNames, m_objectName).count(formattedLiteral))
+						m_errorReporter.typeError(
+							8970_error,
+							nativeLocationOf(arg),
+							"Unknown object \"" + formattedLiteral + "\"."
 						);
 				}
 				expectUnlimitedStringLiteral(std::get<Literal>(arg));
@@ -765,4 +788,43 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 bool AsmAnalyzer::validateInstructions(FunctionCall const& _functionCall)
 {
 	return validateInstructions(_functionCall.functionName.name.str(), nativeLocationOf(_functionCall.functionName));
+}
+
+bool AsmAnalyzer::validateObjectStructure(langutil::SourceLocation _astRootLocation)
+{
+	if (m_eofVersion.has_value())
+	{
+		if (util::contains(m_objectName, '.')) // No dots in object name for EOF
+		{
+			m_errorReporter.syntaxError(
+				9822_error,
+				_astRootLocation,
+				fmt::format(
+					"In EOF context object name \"{objectName}\" must not contain 'dot' character.",
+					fmt::arg("objectName", m_objectName)
+				)
+			);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+std::set<std::string> AsmAnalyzer::getTopLeveleSubobjectNames(std::set<std::string> const& _names, std::string const& _objectName)
+{
+	std::set<std::string> topLevelObjectNames;
+
+	for (auto const& name: _names)
+	{
+		auto const objectNamePlusDotPos = name.find(_objectName + '.');
+		if (objectNamePlusDotPos == 0)
+		{
+			const auto remainigString = name.substr(objectNamePlusDotPos);
+			if (!util::contains(remainigString, '.'))
+				topLevelObjectNames.insert(remainigString);
+		}
+	}
+
+	return topLevelObjectNames;
 }
