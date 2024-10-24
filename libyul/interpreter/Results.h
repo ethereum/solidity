@@ -26,42 +26,33 @@
 namespace solidity::yul::interpreter
 {
 
-template<typename T>
-class ExecutionTerminatedCommon
-{
-public:
-	bool operator==(T) const { return true; }
-	bool operator!=(T) const { return false; }
-};
-
-class ExplicitlyTerminated : public ExecutionTerminatedCommon<ExplicitlyTerminated>
+class ExplicitlyTerminated
 {
 };
 
-class StepLimitReached : public ExecutionTerminatedCommon<StepLimitReached>
+class StepLimitReached
 {
 };
 
-class RecursionDepthLimitReached : public ExecutionTerminatedCommon<RecursionDepthLimitReached>
+class RecursionDepthLimitReached
 {
 };
 
-class ExpressionNestingLimitReached : public ExecutionTerminatedCommon<ExpressionNestingLimitReached>
+class ExpressionNestingLimitReached
 {
 };
 
-class ImpureBuiltinEncountered : public ExecutionTerminatedCommon<ImpureBuiltinEncountered>
+class ImpureBuiltinEncountered
 {
 };
 
-class UnlimitedLiteralEncountered : public ExecutionTerminatedCommon<UnlimitedLiteralEncountered>
+class UnlimitedLiteralEncountered
 {
 };
 
-class TraceLimitReached: public ExecutionTerminatedCommon<TraceLimitReached>
+class TraceLimitReached
 {
 };
-
 
 using ExecutionTerminated = std::variant<
 	ExplicitlyTerminated,
