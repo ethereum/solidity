@@ -309,6 +309,7 @@ namespace TokenTraits
 		op == Token::Add || op == Token::Mul || op == Token::Equal || op == Token::NotEqual; }
 	constexpr bool isArithmeticOp(Token op) { return Token::Add <= op && op <= Token::Exp; }
 	constexpr bool isCompareOp(Token op) { return Token::Equal <= op && op <= Token::GreaterThanOrEqual; }
+	constexpr bool isPragmaOp(Token op) { return (Token::LessThan <= op && op <= Token::GreaterThanOrEqual) || op == Token::BitXor; }
 
 	constexpr bool isBitOp(Token op) { return (Token::BitOr <= op && op <= Token::BitAnd) || op == Token::BitNot; }
 	constexpr bool isBooleanOp(Token op) { return (Token::Or <= op && op <= Token::And) || op == Token::Not; }
