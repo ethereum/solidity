@@ -22,6 +22,7 @@
 #include <libyul/optimiser/NameCollector.h>
 
 #include <libyul/AST.h>
+#include <libyul/Utilities.h>
 
 using namespace solidity;
 using namespace solidity::yul;
@@ -55,25 +56,25 @@ void ReferencesCounter::operator()(Identifier const& _identifier)
 
 void ReferencesCounter::operator()(FunctionCall const& _funCall)
 {
-	++m_references[_funCall.functionName.name];
+	++m_references[functionNameToHandle(_funCall.functionName)];
 	ASTWalker::operator()(_funCall);
 }
 
-std::map<YulName, size_t> ReferencesCounter::countReferences(Block const& _block)
+std::map<FunctionHandle, size_t> ReferencesCounter::countReferences(Block const& _block)
 {
 	ReferencesCounter counter;
 	counter(_block);
 	return std::move(counter.m_references);
 }
 
-std::map<YulName, size_t> ReferencesCounter::countReferences(FunctionDefinition const& _function)
+std::map<FunctionHandle, size_t> ReferencesCounter::countReferences(FunctionDefinition const& _function)
 {
 	ReferencesCounter counter;
 	counter(_function);
 	return std::move(counter.m_references);
 }
 
-std::map<YulName, size_t> ReferencesCounter::countReferences(Expression const& _expression)
+std::map<FunctionHandle, size_t> ReferencesCounter::countReferences(Expression const& _expression)
 {
 	ReferencesCounter counter;
 	counter.visit(_expression);

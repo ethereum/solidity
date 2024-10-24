@@ -517,29 +517,29 @@ Stack const& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _cal
 
 	Stack const* output = nullptr;
 	bool canContinue = true;
-	if (std::optional<BuiltinHandle> const& builtinHandle = m_dialect.findBuiltin(_call.functionName.name.str()))
+	if (BuiltinFunction const* builtin = resolveBuiltinFunction(_call.functionName, m_dialect))
 	{
-		auto const& builtin = m_dialect.builtin(*builtinHandle);
 		Stack inputs;
 		for (auto&& [idx, arg]: _call.arguments | ranges::views::enumerate | ranges::views::reverse)
-			if (!builtin.literalArgument(idx).has_value())
+			if (!builtin->literalArgument(idx).has_value())
 				inputs.emplace_back(std::visit(*this, arg));
-		CFG::BuiltinCall builtinCall{_call.debugData, builtin, _call, inputs.size()};
+		CFG::BuiltinCall builtinCall{_call.debugData, *builtin, _call, inputs.size()};
 		output = &m_currentBlock->operations.emplace_back(CFG::Operation{
 			// input
 			std::move(inputs),
 			// output
-			ranges::views::iota(0u, builtin.numReturns) | ranges::views::transform([&](size_t _i) {
+			ranges::views::iota(0u, builtin->numReturns) | ranges::views::transform([&](size_t _i) {
 				return TemporarySlot{_call, _i};
 			}) | ranges::to<Stack>,
 			// operation
 			std::move(builtinCall)
 		}).output;
-		canContinue = builtin.controlFlowSideEffects.canContinue;
+		canContinue = builtin->controlFlowSideEffects.canContinue;
 	}
 	else
 	{
-		Scope::Function const& function = lookupFunction(_call.functionName.name);
+		yulAssert(std::holds_alternative<Identifier>(_call.functionName));
+		Scope::Function const& function = lookupFunction(std::get<Identifier>(_call.functionName).name);
 		canContinue = m_graph.functionInfo.at(&function).canContinue;
 		Stack inputs;
 		if (canContinue)

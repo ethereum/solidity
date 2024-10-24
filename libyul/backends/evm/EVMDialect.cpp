@@ -430,6 +430,13 @@ EVMDialect::EVMDialect(langutil::EVMVersion _evmVersion, std::optional<uint8_t> 
 	m_storageStoreFunction = findBuiltin("sstore");
 	m_storageLoadFunction = findBuiltin("sload");
 	m_hashFunction = findBuiltin("keccak256");
+
+	m_auxiliaryBuiltinHandles.add = EVMDialect::findBuiltin("add");
+	m_auxiliaryBuiltinHandles.exp = EVMDialect::findBuiltin("exp");
+	m_auxiliaryBuiltinHandles.mul = EVMDialect::findBuiltin("mul");
+	m_auxiliaryBuiltinHandles.not_ = EVMDialect::findBuiltin("not");
+	m_auxiliaryBuiltinHandles.shl = EVMDialect::findBuiltin("shl");
+	m_auxiliaryBuiltinHandles.sub = EVMDialect::findBuiltin("sub");
 }
 
 std::optional<BuiltinHandle> EVMDialect::findBuiltin(std::string_view _name) const

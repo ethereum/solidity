@@ -24,6 +24,7 @@
 #include <libyul/AST.h>
 
 #include <libsolutil/Common.h>
+#include <libsolutil/Visitor.h>
 
 using namespace solidity;
 using namespace solidity::yul;
@@ -151,6 +152,15 @@ Block ASTCopier::translate(Block const& _block)
 Case ASTCopier::translate(Case const& _case)
 {
 	return Case{_case.debugData, translate(_case.value), translate(_case.body)};
+}
+
+FunctionName ASTCopier::translate(FunctionName const& _functionName)
+{
+	GenericVisitor visitor{
+		[&](Identifier const& _identifier) -> FunctionName { return translate(_identifier); },
+		[](BuiltinName const& _builtin) -> FunctionName { return _builtin; }
+	};
+	return std::visit(visitor, _functionName);
 }
 
 Identifier ASTCopier::translate(Identifier const& _identifier)

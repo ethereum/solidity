@@ -38,7 +38,7 @@ namespace solidity::yul
 struct AsmAnalysisInfo;
 struct Dialect;
 class GasMeter;
-struct Object;
+class Object;
 
 /**
  * Optimiser suite that combines all steps and also provides the settings for the heuristics.

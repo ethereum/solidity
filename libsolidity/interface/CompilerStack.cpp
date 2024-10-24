@@ -900,7 +900,7 @@ Json CompilerStack::generatedSources(std::string const& _contractName, bool _run
 			yul::EVMDialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(m_evmVersion, m_eofVersion);
 			std::shared_ptr<yul::AST> parserResult = yul::Parser{errorReporter, dialect}.parse(charStream);
 			solAssert(parserResult);
-			sources[0]["ast"] = yul::AsmJsonConverter{sourceIndex}(parserResult->root());
+			sources[0]["ast"] = yul::AsmJsonConverter{dialect, sourceIndex}(parserResult->root());
 			sources[0]["name"] = sourceName;
 			sources[0]["id"] = sourceIndex;
 			sources[0]["language"] = "Yul";

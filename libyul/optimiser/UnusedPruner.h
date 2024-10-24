@@ -64,7 +64,13 @@ public:
 		Dialect const& _dialect,
 		Block& _ast,
 		bool _allowMSizeOptimization,
-		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr,
+		std::map<FunctionHandle, SideEffects> const* _functionSideEffects = nullptr,
+		std::set<YulName> const& _externallyUsedFunctions = {}
+	);
+
+	static void run(
+		Dialect const& _dialect,
+		Block& _ast,
 		std::set<YulName> const& _externallyUsedFunctions = {}
 	);
 
@@ -83,18 +89,18 @@ private:
 		Dialect const& _dialect,
 		Block& _ast,
 		bool _allowMSizeOptimization,
-		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr,
+		std::map<FunctionHandle, SideEffects> const* _functionSideEffects = nullptr,
 		std::set<YulName> const& _externallyUsedFunctions = {}
 	);
 
 	bool used(YulName _name) const;
-	void subtractReferences(std::map<YulName, size_t> const& _subtrahend);
+	void subtractReferences(std::map<FunctionHandle, size_t> const& _subtrahend);
 
 	Dialect const& m_dialect;
 	bool m_allowMSizeOptimization = false;
-	std::map<YulName, SideEffects> const* m_functionSideEffects = nullptr;
+	std::map<FunctionHandle, SideEffects> const* m_functionSideEffects = nullptr;
 	bool m_shouldRunAgain = false;
-	std::map<YulName, size_t> m_references;
+	std::map<FunctionHandle, size_t> m_references;
 };
 
 }

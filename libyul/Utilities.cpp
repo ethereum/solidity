@@ -21,11 +21,15 @@
 
 #include <libyul/Utilities.h>
 
+#include <libyul/backends/evm/EVMDialect.h>
+
 #include <libyul/AST.h>
+#include <libyul/Dialect.h>
 #include <libyul/Exceptions.h>
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/FixedHash.h>
+#include <libsolutil/Visitor.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -237,3 +241,40 @@ bool SwitchCaseCompareByLiteralValue::operator()(Case const* _lhs, Case const* _
 	yulAssert(_lhs && _rhs, "");
 	return Less<Literal*>{}(_lhs->value.get(), _rhs->value.get());
 }
+
+std::string_view yul::resolveFunctionName(FunctionName const& _functionName, Dialect const& _dialect)
+{
+	GenericVisitor visitor{
+		[&](Identifier const& _identifier) -> std::string const& { return _identifier.name.str(); },
+		[&](BuiltinName const& _builtin) -> std::string const& { return _dialect.builtin(_builtin.handle).name; }
+	};
+	return std::visit(visitor, _functionName);
+}
+
+BuiltinFunction const* yul::resolveBuiltinFunction(FunctionName const& _functionName, Dialect const& _dialect)
+{
+	GenericVisitor visitor{
+		[&](Identifier const&) -> BuiltinFunction const* { return nullptr; },
+		[&](BuiltinName const& _builtin) -> BuiltinFunction const* { return &_dialect.builtin(_builtin.handle); }
+	};
+	return std::visit(visitor, _functionName);
+}
+
+BuiltinFunctionForEVM const* yul::resolveBuiltinFunctionForEVM(FunctionName const& _functionName, EVMDialect const& _dialect)
+{
+	GenericVisitor visitor{
+		[&](Identifier const&) -> BuiltinFunctionForEVM const* { return nullptr; },
+		[&](BuiltinName const& _builtin) -> BuiltinFunctionForEVM const* { return &_dialect.builtin(_builtin.handle); }
+	};
+	return std::visit(visitor, _functionName);
+}
+
+FunctionHandle yul::functionNameToHandle(FunctionName const& _functionName)
+{
+	GenericVisitor visitor{
+		[&](Identifier const& _identifier) -> FunctionHandle { return _identifier.name; },
+		[&](BuiltinName const& _builtin) -> FunctionHandle { return _builtin.handle; }
+	};
+	return std::visit(visitor, _functionName);
+}
+

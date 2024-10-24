@@ -98,7 +98,7 @@ private:
 
 	/// @returns a map containing the maximum depths of a call chain starting at each
 	/// function. For recursive functions, the value is one larger than for all others.
-	std::map<YulName, size_t> callDepths() const;
+	std::map<FunctionHandle, size_t> callDepths() const;
 
 	void updateCodeSize(FunctionDefinition const& _fun);
 	void handleBlock(YulName _currentFunctionName, Block& _block);
@@ -114,7 +114,7 @@ private:
 	/// True, if the code contains a ``memoryguard`` and we can expect to be able to move variables to memory later.
 	bool m_hasMemoryGuard = false;
 	/// Set of recursive functions.
-	std::set<YulName> m_recursiveFunctions;
+	std::set<FunctionHandle> m_recursiveFunctions;
 	/// Names of functions to always inline.
 	std::set<YulName> m_singleUse;
 	/// Variables that are constants (used for inlining heuristic)

@@ -106,12 +106,12 @@ void Program::optimise(std::vector<std::string> const& _optimisationSteps)
 
 std::ostream& phaser::operator<<(std::ostream& _stream, Program const& _program)
 {
-	return _stream << AsmPrinter()(_program.m_ast->root());
+	return _stream << AsmPrinter(_program.m_dialect)(_program.m_ast->root());
 }
 
 std::string Program::toJson() const
 {
-	Json serializedAst = AsmJsonConverter(0)(m_ast->root());
+	Json serializedAst = AsmJsonConverter(m_dialect, 0)(m_ast->root());
 	return jsonPrettyPrint(removeNullMembers(std::move(serializedAst)));
 }
 

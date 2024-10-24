@@ -132,7 +132,7 @@ bool IRGeneratorForStatements::visit(InlineAssembly const& _assembly)
 	CopyTranslate bodyCopier{m_context, _assembly.dialect(), _assembly.annotation().externalReferences};
 	yul::Statement modified = bodyCopier(_assembly.operations().root());
 	solAssert(std::holds_alternative<yul::Block>(modified));
-	m_code << yul::AsmPrinter()(std::get<yul::Block>(modified)) << "\n";
+	m_code << yul::AsmPrinter(_assembly.dialect())(std::get<yul::Block>(modified)) << "\n";
 	return false;
 }
 

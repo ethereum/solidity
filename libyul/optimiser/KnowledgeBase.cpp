@@ -32,9 +32,11 @@
 using namespace solidity;
 using namespace solidity::yul;
 
-KnowledgeBase::KnowledgeBase(std::map<YulName, AssignedValue> const& _ssaValues):
+KnowledgeBase::KnowledgeBase(std::map<YulName, AssignedValue> const& _ssaValues, Dialect const& _dialect):
 	m_valuesAreSSA(true),
-	m_variableValues([_ssaValues](YulName _var) { return util::valueOrNullptr(_ssaValues, _var); })
+	m_variableValues([_ssaValues](YulName _var) { return util::valueOrNullptr(_ssaValues, _var); }),
+	m_addBuiltinHandle(_dialect.findBuiltin("add")),
+	m_subBuiltinHandle(_dialect.findBuiltin("sub"))
 {}
 
 bool KnowledgeBase::knownToBeDifferent(YulName _a, YulName _b)
@@ -116,9 +118,12 @@ std::optional<KnowledgeBase::VariableOffset> KnowledgeBase::explore(Expression c
 		return VariableOffset{YulName{}, literal->value.value()};
 	else if (Identifier const* identifier = std::get_if<Identifier>(&_value))
 		return explore(identifier->name);
-	else if (FunctionCall const* f = std::get_if<FunctionCall>(&_value))
+	else if (
+		FunctionCall const* f = std::get_if<FunctionCall>(&_value);
+		f && isBuiltinFunctionCall(*f)
+	)
 	{
-		if (f->functionName.name == "add"_yulname)
+		if (std::get<BuiltinName>(f->functionName).handle == m_addBuiltinHandle)
 		{
 			if (std::optional<VariableOffset> a = explore(f->arguments[0]))
 				if (std::optional<VariableOffset> b = explore(f->arguments[1]))
@@ -132,7 +137,7 @@ std::optional<KnowledgeBase::VariableOffset> KnowledgeBase::explore(Expression c
 						return VariableOffset{a->reference, offset};
 				}
 		}
-		else if (f->functionName.name == "sub"_yulname)
+		else if (std::get<BuiltinName>(f->functionName).handle == m_subBuiltinHandle)
 			if (std::optional<VariableOffset> a = explore(f->arguments[0]))
 				if (std::optional<VariableOffset> b = explore(f->arguments[1]))
 				{

@@ -29,13 +29,13 @@ using namespace solidity::yul;
 
 void InlinableExpressionFunctionFinder::operator()(Identifier const& _identifier)
 {
-	checkAllowed(_identifier.name);
+	checkAllowed(_identifier);
 	ASTWalker::operator()(_identifier);
 }
 
 void InlinableExpressionFunctionFinder::operator()(FunctionCall const& _funCall)
 {
-	checkAllowed(_funCall.functionName.name);
+	checkAllowed(_funCall.functionName);
 	ASTWalker::operator()(_funCall);
 }
 
@@ -66,4 +66,10 @@ void InlinableExpressionFunctionFinder::operator()(FunctionDefinition const& _fu
 		}
 	}
 	ASTWalker::operator()(_function.body);
+}
+void InlinableExpressionFunctionFinder::checkAllowed(FunctionName _name)
+{
+	// disallowed function names can only ever be user-defined `yul::Identifier`s, not builtins
+	if (std::holds_alternative<Identifier>(_name) && m_disallowedIdentifiers.count(std::get<Identifier>(_name).name))
+		m_foundDisallowedIdentifier = true;
 }

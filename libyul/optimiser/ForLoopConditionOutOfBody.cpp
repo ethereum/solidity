@@ -53,18 +53,21 @@ void ForLoopConditionOutOfBody::operator()(ForLoop& _forLoop)
 	if (!SideEffectsCollector(m_dialect, *firstStatement.condition).movable())
 		return;
 
-	YulName const iszero{m_dialect.builtin(*m_dialect.booleanNegationFunctionHandle()).name};
+	std::optional<BuiltinHandle> iszero = m_dialect.booleanNegationFunctionHandle();
+	yulAssert(iszero.has_value());
+	auto const& isZeroHandle = *iszero;
 	langutil::DebugData::ConstPtr debugData = debugDataOf(*firstStatement.condition);
 
 	if (
 		std::holds_alternative<FunctionCall>(*firstStatement.condition) &&
-		std::get<FunctionCall>(*firstStatement.condition).functionName.name == iszero
+		std::holds_alternative<BuiltinName>(std::get<FunctionCall>(*firstStatement.condition).functionName) &&
+		std::get<BuiltinName>(std::get<FunctionCall>(*firstStatement.condition).functionName).handle == isZeroHandle
 	)
 		_forLoop.condition = std::make_unique<Expression>(std::move(std::get<FunctionCall>(*firstStatement.condition).arguments.front()));
 	else
 		_forLoop.condition = std::make_unique<Expression>(FunctionCall{
 			debugData,
-			Identifier{debugData, iszero},
+			BuiltinName{debugData, isZeroHandle},
 			util::make_vector<Expression>(
 				std::move(*firstStatement.condition)
 			)

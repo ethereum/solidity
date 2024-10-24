@@ -24,6 +24,7 @@
 #include <libyul/Exceptions.h>
 #include <libyul/backends/evm/ControlFlow.h>
 #include <libyul/ControlFlowSideEffectsCollector.h>
+#include <libyul/Utilities.h>
 
 #include <libsolutil/Algorithms.h>
 #include <libsolutil/StringUtils.h>
@@ -342,19 +343,21 @@ void SSAControlFlowGraphBuilder::operator()(Switch const& _switch)
 	}
 	else
 	{
+		std::optional<BuiltinHandle> equalityBuiltinHandle = m_dialect.equalityFunctionHandle();
+		yulAssert(equalityBuiltinHandle);
+
 		auto makeValueCompare = [&](Case const& _case) {
 			FunctionCall const& ghostCall = m_graph.ghostCalls.emplace_back(FunctionCall{
 				debugDataOf(_case),
-				Identifier{{}, "eq"_yulname},
+				BuiltinName{{}, *equalityBuiltinHandle},
 				{*_case.value /* skip second argument */ }
 			});
 			auto outputValue = m_graph.newVariable(m_currentBlock);
-			std::optional<BuiltinHandle> builtinHandle = m_dialect.findBuiltin(ghostCall.functionName.name.str());
 			currentBlock().operations.emplace_back(SSACFG::Operation{
 				{outputValue},
 				SSACFG::BuiltinCall{
 					debugDataOf(_case),
-					m_dialect.builtin(*builtinHandle),
+					m_dialect.builtin(*equalityBuiltinHandle),
 					ghostCall
 				},
 				{m_graph.newLiteral(debugDataOf(_case), _case.value->value.value()), expression}
@@ -547,21 +550,21 @@ std::vector<SSACFG::ValueId> SSAControlFlowGraphBuilder::visitFunctionCall(Funct
 {
 	bool canContinue = true;
 	SSACFG::Operation operation = [&](){
-		if (std::optional<BuiltinHandle> const& builtinHandle = m_dialect.findBuiltin(_call.functionName.name.str()))
+		if (BuiltinFunction const* builtin = resolveBuiltinFunction(_call.functionName, m_dialect))
 		{
-			auto const& builtinFunction = m_dialect.builtin(*builtinHandle);
-			SSACFG::Operation result{{}, SSACFG::BuiltinCall{_call.debugData, builtinFunction, _call}, {}};
+			SSACFG::Operation result{{}, SSACFG::BuiltinCall{_call.debugData, *builtin, _call}, {}};
 			for (auto&& [idx, arg]: _call.arguments | ranges::views::enumerate | ranges::views::reverse)
-				if (!builtinFunction.literalArgument(idx).has_value())
+				if (!builtin->literalArgument(idx).has_value())
 					result.inputs.emplace_back(std::visit(*this, arg));
-			for (size_t i = 0; i < builtinFunction.numReturns; ++i)
+			for (size_t i = 0; i < builtin->numReturns; ++i)
 				result.outputs.emplace_back(m_graph.newVariable(m_currentBlock));
-			canContinue = builtinFunction.controlFlowSideEffects.canContinue;
+			canContinue = builtin->controlFlowSideEffects.canContinue;
 			return result;
 		}
 		else
 		{
-			Scope::Function const& function = lookupFunction(_call.functionName.name);
+			YulName const functionName{std::string(resolveFunctionName(_call.functionName, m_dialect))};
+			Scope::Function const& function = lookupFunction(functionName);
 			auto const* definition = findFunctionDefinition(&function);
 			yulAssert(definition);
 			canContinue = m_sideEffects.functionSideEffects().at(definition).canContinue;

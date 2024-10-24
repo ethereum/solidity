@@ -293,15 +293,14 @@ void AsmAnalyzer::operator()(FunctionDefinition const& _funDef)
 
 size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 {
-	yulAssert(!_funCall.functionName.name.empty(), "");
 	auto watcher = m_errorReporter.errorWatcher();
 	std::optional<size_t> numParameters;
 	std::optional<size_t> numReturns;
 	std::vector<std::optional<LiteralKind>> const* literalArguments = nullptr;
 
-	if (std::optional<BuiltinHandle> handle = m_dialect.findBuiltin(_funCall.functionName.name.str()))
+	if (BuiltinFunction const* builtin = resolveBuiltinFunction(_funCall.functionName, m_dialect))
 	{
-		if (_funCall.functionName.name == "selfdestruct"_yulname)
+		if (builtin->name == "selfdestruct")
 			m_errorReporter.warning(
 				1699_error,
 				nativeLocationOf(_funCall.functionName),
@@ -314,7 +313,7 @@ size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 			);
 		else if (
 			m_evmVersion.supportsTransientStorage() &&
-			_funCall.functionName.name == "tstore"_yulname &&
+			builtin->name == "tstore" &&
 			!m_errorReporter.hasError({2394})
 		)
 			m_errorReporter.warning(
@@ -327,16 +326,15 @@ size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 				"The use of transient storage for reentrancy guards that are cleared at the end of the call is safe."
 			);
 
-		BuiltinFunction const& f = m_dialect.builtin(*handle);
-		numParameters = f.numParameters;
-		numReturns = f.numReturns;
-		if (!f.literalArguments.empty())
-			literalArguments = &f.literalArguments;
+		numParameters = builtin->numParameters;
+		numReturns = builtin->numReturns;
+		if (!builtin->literalArguments.empty())
+			literalArguments = &builtin->literalArguments;
 
 		validateInstructions(_funCall);
-		m_sideEffects += f.sideEffects;
+		m_sideEffects += builtin->sideEffects;
 	}
-	else if (m_currentScope->lookup(_funCall.functionName.name, GenericVisitor{
+	else if (m_currentScope->lookup(YulName{std::string(resolveFunctionName(_funCall.functionName, m_dialect))}, GenericVisitor{
 		[&](Scope::Variable const&)
 		{
 			m_errorReporter.typeError(
@@ -352,10 +350,11 @@ size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		}
 	}))
 	{
+		yulAssert(std::holds_alternative<Identifier>(_funCall.functionName));
 		if (m_resolver)
 			// We found a local reference, make sure there is no external reference.
 			m_resolver(
-				_funCall.functionName,
+				std::get<Identifier>(_funCall.functionName),
 				yul::IdentifierContext::NonExternal,
 				m_currentScope->insideFunction()
 			);
@@ -366,7 +365,7 @@ size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 			m_errorReporter.declarationError(
 				4619_error,
 				nativeLocationOf(_funCall.functionName),
-				"Function \"" + _funCall.functionName.name.str() + "\" not found."
+				fmt::format("Function \"{}\" not found.", resolveFunctionName(_funCall.functionName, m_dialect))
 			);
 		yulAssert(!watcher.ok(), "Expected a reported error.");
 	}
@@ -375,10 +374,12 @@ size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		m_errorReporter.typeError(
 			7000_error,
 			nativeLocationOf(_funCall.functionName),
-			"Function \"" + _funCall.functionName.name.str() + "\" expects " +
-			std::to_string(*numParameters) +
-			" arguments but got " +
-			std::to_string(_funCall.arguments.size()) + "."
+			fmt::format(
+				"Function \"{}\" expects {} arguments but got {}.",
+				resolveFunctionName(_funCall.functionName, m_dialect),
+				*numParameters,
+				_funCall.arguments.size()
+			)
 		);
 
 	for (size_t i = _funCall.arguments.size(); i > 0; i--)
@@ -404,7 +405,7 @@ size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 				);
 			else if (*literalArgumentKind == LiteralKind::String)
 			{
-				std::string functionName = _funCall.functionName.name.str();
+				std::string_view functionName = resolveFunctionName(_funCall.functionName, m_dialect);
 				if (functionName == "datasize" || functionName == "dataoffset")
 				{
 					auto const& argumentAsLiteral = std::get<Literal>(arg);
@@ -431,7 +432,7 @@ size_t AsmAnalyzer::operator()(FunctionCall const& _funCall)
 			}
 			else if (*literalArgumentKind == LiteralKind::Number)
 			{
-				std::string functionName = _funCall.functionName.name.str();
+				std::string_view functionName = resolveFunctionName(_funCall.functionName, m_dialect);
 				if (functionName == "auxdataloadn")
 				{
 					auto const& argumentAsLiteral = std::get<Literal>(arg);
@@ -637,7 +638,7 @@ void AsmAnalyzer::expectValidIdentifier(YulName _identifier, SourceLocation cons
 		);
 }
 
-bool AsmAnalyzer::validateInstructions(std::string const& _instructionIdentifier, langutil::SourceLocation const& _location)
+bool AsmAnalyzer::validateInstructions(std::string_view _instructionIdentifier, langutil::SourceLocation const& _location)
 {
 	// NOTE: This function uses the default EVM version instead of the currently selected one.
 	auto const& defaultEVMDialect = EVMDialect::strictAssemblyForEVM(EVMVersion{}, std::nullopt);
@@ -764,5 +765,8 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 
 bool AsmAnalyzer::validateInstructions(FunctionCall const& _functionCall)
 {
-	return validateInstructions(_functionCall.functionName.name.str(), nativeLocationOf(_functionCall.functionName));
+	return validateInstructions(
+		resolveFunctionName(_functionCall.functionName, m_dialect),
+		nativeLocationOf(_functionCall.functionName)
+	);
 }

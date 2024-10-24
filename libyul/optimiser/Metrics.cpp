@@ -137,7 +137,7 @@ void CodeCost::operator()(FunctionCall const& _funCall)
 {
 	ASTWalker::operator()(_funCall);
 
-	if (auto instruction = toEVMInstruction(m_dialect, _funCall.functionName.name))
+	if (auto instruction = toEVMInstruction(m_dialect, _funCall.functionName))
 	{
 		addInstructionCost(*instruction);
 		return;

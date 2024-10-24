@@ -59,12 +59,13 @@ TestCase::TestResult MemoryGuardTest::run(std::ostream& _stream, std::string con
 	m_obtainedResult.clear();
 	for (std::string contractName: compiler().contractNames())
 	{
+		auto const& dialect = EVMDialect::strictAssemblyForEVMObjects(CommonOptions::get().evmVersion(), CommonOptions::get().eofVersion());
 		ErrorList errors;
 		std::optional<std::string> const& ir = compiler().yulIR(contractName);
 		solAssert(ir);
 		auto [object, analysisInfo] = yul::test::parse(
 			*ir,
-			EVMDialect::strictAssemblyForEVMObjects(CommonOptions::get().evmVersion(), CommonOptions::get().eofVersion()),
+			dialect,
 			errors
 		);
 
@@ -78,7 +79,8 @@ TestCase::TestResult MemoryGuardTest::run(std::ostream& _stream, std::string con
 		auto handleObject = [&](std::string const& _kind, Object const& _object) {
 			m_obtainedResult += contractName + "(" + _kind + ") " + (findFunctionCalls(
 				_object.code()->root(),
-				"memoryguard"_yulname
+				"memoryguard",
+				dialect
 			).empty() ? "false" : "true") + "\n";
 		};
 		handleObject("creation", *object);

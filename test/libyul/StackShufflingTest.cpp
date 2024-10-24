@@ -17,9 +17,13 @@
 
 #include <test/libyul/StackShufflingTest.h>
 
+#include <test/Common.h>
+
+#include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/backends/evm/StackHelpers.h>
+
 #include <liblangutil/Scanner.h>
 #include <libsolutil/AnsiColorized.h>
-#include <libyul/backends/evm/StackHelpers.h>
 
 using namespace solidity::util;
 using namespace solidity::langutil;
@@ -137,6 +141,10 @@ StackShufflingTest::StackShufflingTest(std::string const& _filename):
 
 TestCase::TestResult StackShufflingTest::run(std::ostream& _stream, std::string const& _linePrefix, bool _formatted)
 {
+	auto const& dialect = EVMDialect::strictAssemblyForEVMObjects(
+		solidity::test::CommonOptions::get().evmVersion(),
+		solidity::test::CommonOptions::get().eofVersion()
+	);
 	if (!parse(m_source))
 	{
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << std::endl;
@@ -149,14 +157,14 @@ TestCase::TestResult StackShufflingTest::run(std::ostream& _stream, std::string 
 		m_targetStack,
 		[&](unsigned _swapDepth) // swap
 		{
-			output << stackToString(m_sourceStack) << std::endl;
+			output << stackToString(m_sourceStack, dialect) << std::endl;
 			output << "SWAP" << _swapDepth << std::endl;
 		},
 		[&](StackSlot const& _slot) // dupOrPush
 		{
-			output << stackToString(m_sourceStack) << std::endl;
+			output << stackToString(m_sourceStack, dialect) << std::endl;
 			if (canBeFreelyGenerated(_slot))
-				output << "PUSH " << stackSlotToString(_slot) << std::endl;
+				output << "PUSH " << stackSlotToString(_slot, dialect) << std::endl;
 			else
 			{
 				if (auto depth = util::findOffset(m_sourceStack | ranges::views::reverse, _slot))
@@ -166,12 +174,12 @@ TestCase::TestResult StackShufflingTest::run(std::ostream& _stream, std::string 
 			}
 		},
 		[&](){ // pop
-			output << stackToString(m_sourceStack) << std::endl;
+			output << stackToString(m_sourceStack, dialect) << std::endl;
 			output << "POP" << std::endl;
 		}
     );
 
-	output << stackToString(m_sourceStack) << std::endl;
+	output << stackToString(m_sourceStack, dialect) << std::endl;
 	m_obtainedResult = output.str();
 
 	return checkResult(_stream, _linePrefix, _formatted);

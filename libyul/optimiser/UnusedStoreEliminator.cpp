@@ -30,6 +30,7 @@
 #include <libyul/optimiser/KnowledgeBase.h>
 #include <libyul/ControlFlowSideEffectsCollector.h>
 #include <libyul/AST.h>
+#include <libyul/Utilities.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
 
@@ -51,7 +52,7 @@ static std::string const thirtyTwo{"@ 32"};
 
 void UnusedStoreEliminator::run(OptimiserStepContext& _context, Block& _ast)
 {
-	std::map<YulName, SideEffects> functionSideEffects = SideEffectsPropagator::sideEffects(
+	std::map<FunctionHandle, SideEffects> functionSideEffects = SideEffectsPropagator::sideEffects(
 		_context.dialect,
 		CallGraphGenerator::callGraph(_ast)
 	);
@@ -93,7 +94,7 @@ void UnusedStoreEliminator::run(OptimiserStepContext& _context, Block& _ast)
 
 UnusedStoreEliminator::UnusedStoreEliminator(
 	Dialect const& _dialect,
-	std::map<YulName, SideEffects> const& _functionSideEffects,
+	std::map<FunctionHandle, SideEffects> const& _functionSideEffects,
 	std::map<YulName, ControlFlowSideEffects> _controlFlowSideEffects,
 	std::map<YulName, AssignedValue> const& _ssaValues,
 	bool _ignoreMemory
@@ -101,9 +102,9 @@ UnusedStoreEliminator::UnusedStoreEliminator(
 	UnusedStoreBase(_dialect),
 	m_ignoreMemory(_ignoreMemory),
 	m_functionSideEffects(_functionSideEffects),
-	m_controlFlowSideEffects(_controlFlowSideEffects),
+	m_controlFlowSideEffects(std::move(_controlFlowSideEffects)),
 	m_ssaValues(_ssaValues),
-	m_knowledgeBase(_ssaValues)
+	m_knowledgeBase(_ssaValues, _dialect)
 {}
 
 void UnusedStoreEliminator::operator()(FunctionCall const& _functionCall)
@@ -114,10 +115,13 @@ void UnusedStoreEliminator::operator()(FunctionCall const& _functionCall)
 		applyOperation(op);
 
 	ControlFlowSideEffects sideEffects;
-	if (std::optional<BuiltinHandle> const builtinHandle = m_dialect.findBuiltin(_functionCall.functionName.name.str()))
-		sideEffects = m_dialect.builtin(*builtinHandle).controlFlowSideEffects;
+	if (auto builtin = resolveBuiltinFunction(_functionCall.functionName, m_dialect))
+		sideEffects = builtin->controlFlowSideEffects;
 	else
-		sideEffects = m_controlFlowSideEffects.at(_functionCall.functionName.name);
+	{
+		yulAssert(std::holds_alternative<Identifier>(_functionCall.functionName));
+		sideEffects = m_controlFlowSideEffects.at(std::get<Identifier>(_functionCall.functionName).name);
+	}
 
 	if (sideEffects.canTerminate)
 		markActiveAsUsed(Location::Storage);
@@ -153,7 +157,7 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 
 	FunctionCall const* funCall = std::get_if<FunctionCall>(&exprStatement->expression);
 	yulAssert(funCall);
-	std::optional<Instruction> instruction = toEVMInstruction(m_dialect, funCall->functionName.name);
+	std::optional<Instruction> instruction = toEVMInstruction(m_dialect, funCall->functionName);
 	if (!instruction)
 		return;
 
@@ -201,7 +205,7 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 				if (
 					m_knowledgeBase.knownToBeZero(*startOffset) &&
 					lengthCall &&
-					toEVMInstruction(m_dialect, lengthCall->functionName.name) == Instruction::RETURNDATASIZE
+					toEVMInstruction(m_dialect, lengthCall->functionName) == Instruction::RETURNDATASIZE
 				)
 					allowReturndatacopyToBeRemoved = true;
 			}
@@ -228,14 +232,16 @@ std::vector<UnusedStoreEliminator::Operation> UnusedStoreEliminator::operationsF
 {
 	using evmasm::Instruction;
 
-	YulName functionName = _functionCall.functionName.name;
 	SideEffects sideEffects;
-	if (std::optional<BuiltinHandle> const builtinHandle = m_dialect.findBuiltin(functionName.str()))
-		sideEffects = m_dialect.builtin(*builtinHandle).sideEffects;
+	if (BuiltinFunction const* f = resolveBuiltinFunction(_functionCall.functionName, m_dialect))
+		sideEffects = f->sideEffects;
 	else
-		sideEffects = m_functionSideEffects.at(functionName);
+	{
+		yulAssert(std::holds_alternative<Identifier>(_functionCall.functionName));
+		sideEffects = m_functionSideEffects.at(std::get<Identifier>(_functionCall.functionName).name);
+	}
 
-	std::optional<Instruction> instruction = toEVMInstruction(m_dialect, functionName);
+	std::optional<Instruction> instruction = toEVMInstruction(m_dialect, _functionCall.functionName);
 	if (!instruction)
 	{
 		std::vector<Operation> result;

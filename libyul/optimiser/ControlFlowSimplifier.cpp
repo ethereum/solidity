@@ -37,13 +37,13 @@ namespace
 
 ExpressionStatement makeDiscardCall(
 	langutil::DebugData::ConstPtr const& _debugData,
-	BuiltinFunction const& _discardFunction,
+	BuiltinHandle const& _discardFunction,
 	Expression&& _expression
 )
 {
 	return {_debugData, FunctionCall{
 		_debugData,
-		Identifier{_debugData, YulName{_discardFunction.name}},
+		BuiltinName{_debugData, _discardFunction},
 		{std::move(_expression)}
 	}};
 }
@@ -141,7 +141,7 @@ void ControlFlowSimplifier::simplify(std::vector<yul::Statement>& _statements)
 				OptionalStatements s = std::vector<Statement>{};
 				s->emplace_back(makeDiscardCall(
 					_ifStmt.debugData,
-					m_dialect.builtin(*m_dialect.discardFunctionHandle()),
+					*m_dialect.discardFunctionHandle(),
 					std::move(*_ifStmt.condition)
 				));
 				return s;
@@ -184,7 +184,7 @@ OptionalStatements ControlFlowSimplifier::reduceNoCaseSwitch(Switch& _switchStmt
 
 	return make_vector<Statement>(makeDiscardCall(
 		debugDataOf(*_switchStmt.expression),
-		m_dialect.builtin(*discardFunctionHandle),
+		*discardFunctionHandle,
 		std::move(*_switchStmt.expression)
 	));
 }
@@ -199,11 +199,12 @@ OptionalStatements ControlFlowSimplifier::reduceSingleCaseSwitch(Switch& _switch
 	{
 		if (!m_dialect.equalityFunctionHandle())
 			return {};
+		BuiltinName const builtinName{debugData, *m_dialect.equalityFunctionHandle()};
 		return make_vector<Statement>(If{
 			std::move(_switchStmt.debugData),
 			std::make_unique<Expression>(FunctionCall{
 				debugData,
-				Identifier{debugData, YulName{m_dialect.builtin(*m_dialect.equalityFunctionHandle()).name}},
+				builtinName,
 				{std::move(*switchCase.value), std::move(*_switchStmt.expression)}
 			}),
 			std::move(switchCase.body)
@@ -217,7 +218,7 @@ OptionalStatements ControlFlowSimplifier::reduceSingleCaseSwitch(Switch& _switch
 		return make_vector<Statement>(
 			makeDiscardCall(
 				debugData,
-				m_dialect.builtin(*m_dialect.discardFunctionHandle()),
+				*m_dialect.discardFunctionHandle(),
 				std::move(*_switchStmt.expression)
 			),
 			std::move(switchCase.body)
