@@ -132,7 +132,12 @@ Block StackLimitEvader::run(
 	auto astRoot = std::get<Block>(ASTCopier{}(_object.code()->root()));
 	if (evmDialect && evmDialect->evmVersion().canOverchargeGasForCall())
 	{
-		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(*evmDialect, astRoot, _object.qualifiedDataNames());
+		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(
+			*evmDialect,
+			astRoot,
+			_object.name,
+			_object.qualifiedDataNames()
+		);
 		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, *evmDialect, astRoot);
 		run(_context, astRoot, StackLayoutGenerator::reportStackTooDeep(*cfg));
 	}
