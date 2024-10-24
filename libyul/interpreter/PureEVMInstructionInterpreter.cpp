@@ -184,6 +184,7 @@ EvaluationResult PureEVMInstructionInterpreter::eval(
 	case Instruction::TSTORE:
 		return ImpureBuiltinEncountered();
 	// --------------- calls ---------------
+	case Instruction::DATALOADN:
 	case Instruction::CREATE:
 	case Instruction::CREATE2:
 	case Instruction::CALL:
