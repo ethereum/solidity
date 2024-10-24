@@ -21,13 +21,8 @@
 
 #pragma once
 
-#include <libyul/ASTForward.h>
-
 #include <libyul/interpreter/Results.h>
-#include <libyul/interpreter/PureInterpreterState.h>
 
-#include <libsolutil/CommonData.h>
-#include <libsolutil/FixedHash.h>
 #include <libsolutil/Numeric.h>
 
 #include <liblangutil/EVMVersion.h>

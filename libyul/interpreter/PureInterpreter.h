@@ -27,17 +27,6 @@
 #include <libyul/interpreter/types.h>
 
 #include <libyul/ASTForward.h>
-#include <libyul/YulName.h>
-#include <libyul/Exceptions.h>
-
-#include <libevmasm/Instruction.h>
-
-#include <libsolutil/FixedHash.h>
-#include <libsolutil/CommonData.h>
-
-#include <libsolutil/Exceptions.h>
-
-#include <map>
 
 namespace solidity::yul
 {

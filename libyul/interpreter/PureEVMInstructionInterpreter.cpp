@@ -21,20 +21,9 @@
 
 #include <libyul/interpreter/PureEVMInstructionInterpreter.h>
 
-#include <libyul/interpreter/PureInterpreter.h>
-
 #include <libyul/backends/evm/EVMDialect.h>
-#include <libyul/AST.h>
-#include <libyul/Utilities.h>
 
-#include <libevmasm/Instruction.h>
-#include <libevmasm/SemanticInformation.h>
-
-#include <libsolutil/Keccak256.h>
-#include <libsolutil/Numeric.h>
-#include <libsolutil/picosha2.h>
-
-#include <boost/algorithm/string.hpp>
+#include <libsolutil/FixedHash.h>
 
 using namespace solidity;
 using namespace solidity::evmasm;

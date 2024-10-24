@@ -30,8 +30,12 @@
 
 #include <liblangutil/Exceptions.h>
 
+#include <libsolutil/CommonData.h>
+#include <libsolutil/Exceptions.h>
 #include <libsolutil/FixedHash.h>
 #include <libsolutil/Visitor.h>
+
+#include <libevmasm/Instruction.h>
 
 using namespace solidity;
 using namespace solidity::yul;
