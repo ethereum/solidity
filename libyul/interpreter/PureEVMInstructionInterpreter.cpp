@@ -285,24 +285,6 @@ EvaluationResult PureEVMInstructionInterpreter::evalBuiltin(
 	if (_builtinFunction.instruction)
 		return eval(*_builtinFunction.instruction, _evaluatedArguments);
 
-	std::string const& functionName = _builtinFunction.name;
-	bool isVerbatim = boost::starts_with(functionName, "verbatim");
-	if (isVerbatim)
-		return ImpureBuiltinEncountered();
-
-	static std::set<std::string> const NON_INSTRUCTION_BUILTIN_NAME = {
-		"datasize",
-		"dataoffset",
-		"datacopy",
-		"memoryguard",
-		"loadimmutable",
-		"setimmutable",
-		"linkersymbol"
-	};
-	if (NON_INSTRUCTION_BUILTIN_NAME.count(functionName))
-		return ImpureBuiltinEncountered();
-
-	yulAssert(false, "Unknown builtin: " + functionName);
-	return EvaluationOk(0);
+	return ImpureBuiltinEncountered();
 }
 
