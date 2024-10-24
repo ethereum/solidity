@@ -160,7 +160,7 @@ std::variant<std::unique_ptr<AsmAnalysisInfo>, ErrorList> Program::analyzeAST(Di
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	auto analysisInfo = std::make_unique<AsmAnalysisInfo>();
-	AsmAnalyzer analyzer(*analysisInfo, errorReporter, _dialect);
+	AsmAnalyzer analyzer(*analysisInfo, errorReporter, _dialect, "");
 
 	bool analysisSuccessful = analyzer.analyze(_ast.root());
 	if (!analysisSuccessful)

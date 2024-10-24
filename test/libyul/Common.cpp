@@ -84,7 +84,7 @@ std::pair<std::shared_ptr<Object>, std::shared_ptr<yul::AsmAnalysisInfo>> yul::t
 	if (!parserResult->hasCode() || errorReporter.hasErrors())
 		return {};
 	std::shared_ptr<AsmAnalysisInfo> analysisInfo = std::make_shared<AsmAnalysisInfo>();
-	AsmAnalyzer analyzer(*analysisInfo, errorReporter, _dialect, {}, parserResult->qualifiedDataNames());
+	AsmAnalyzer analyzer(*analysisInfo, errorReporter, _dialect, parserResult->name, {}, parserResult->qualifiedDataNames());
 	// TODO this should be done recursively.
 	if (!analyzer.analyze(parserResult->code()->root()) || errorReporter.hasErrors())
 		return {};

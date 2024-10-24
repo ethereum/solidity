@@ -249,15 +249,22 @@ std::tuple<bool, Block> StackCompressor::run(
 	);
 	bool usesOptimizedCodeGenerator = false;
 	if (auto evmDialect = dynamic_cast<EVMDialect const*>(&_dialect))
+	{
 		usesOptimizedCodeGenerator =
 			_optimizeStackAllocation &&
 			evmDialect->evmVersion().canOverchargeGasForCall() &&
 			evmDialect->providesObjectAccess();
+	}
 	bool allowMSizeOptimization = !MSizeFinder::containsMSize(_dialect, _object.code()->root());
 	Block astRoot = std::get<Block>(ASTCopier{}(_object.code()->root()));
 	if (usesOptimizedCodeGenerator)
 	{
-		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, astRoot, _object.qualifiedDataNames());
+		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(
+			_dialect,
+			astRoot,
+			_object.name,
+			_object.qualifiedDataNames()
+		);
 		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, _dialect, astRoot);
 		eliminateVariablesOptimizedCodegen(
 			_dialect,
