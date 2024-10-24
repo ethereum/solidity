@@ -190,6 +190,17 @@ void ErrorReporter::parserError(ErrorId _error, SourceLocation const& _location,
 	);
 }
 
+void ErrorReporter::parserError(ErrorId _error, SourceLocation const& _location, SecondarySourceLocation const& _secondaryLocation, std::string const& _description)
+{
+	error(
+		_error,
+		Error::Type::ParserError,
+		_location,
+		_secondaryLocation,
+		_description
+	);
+}
+
 void ErrorReporter::fatalParserError(ErrorId _error, SourceLocation const& _location, std::string const& _description)
 {
 	fatalError(
