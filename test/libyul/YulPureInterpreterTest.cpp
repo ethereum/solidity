@@ -145,20 +145,19 @@ void YulPureInterpreterTest::dumpExecutionData(
 
 void YulPureInterpreterTest::dumpExecutionResult(std::ostream& _stream, interpreter::ExecutionResult _result) const
 {
-	_stream << std::visit(GenericVisitor {
-		[&](ExecutionOk) { return "ExecutionOk"; },
-		[&](ExecutionTerminated terminated) {
-			return std::visit(GenericVisitor{
-				[&](ExplicitlyTerminated) { return "ExplicitlyTerminated"; },
-				[&](StepLimitReached) { return "StepLimitReached"; },
-				[&](RecursionDepthLimitReached) { return "RecursionDepthLimitReached"; },
-				[&](ExpressionNestingLimitReached) { return "ExpressionNestingLimitReached"; },
-				[&](ImpureBuiltinEncountered) { return "ImpureBuiltinEncountered"; },
-				[&](UnlimitedLiteralEncountered) { return "UnlimitedLiteralEncountered"; },
-				[&](TraceLimitReached) { return "TraceLimitReached"; }
-			}, terminated);
-		}
-	}, _result);
+	if (_result) {
+		_stream << "ExecutionOk";
+	} else {
+		_stream << std::visit(GenericVisitor {
+			[&](ExplicitlyTerminated) { return "ExplicitlyTerminated"; },
+			[&](StepLimitReached) { return "StepLimitReached"; },
+			[&](RecursionDepthLimitReached) { return "RecursionDepthLimitReached"; },
+			[&](ExpressionNestingLimitReached) { return "ExpressionNestingLimitReached"; },
+			[&](ImpureBuiltinEncountered) { return "ImpureBuiltinEncountered"; },
+			[&](UnlimitedLiteralEncountered) { return "UnlimitedLiteralEncountered"; },
+			[&](TraceLimitReached) { return "TraceLimitReached"; }
+		}, _result.error());
+	}
 }
 
 void YulPureInterpreterTest::dumpVariables(

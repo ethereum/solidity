@@ -19,6 +19,7 @@
 #pragma once
 
 #include <libsolutil/Numeric.h>
+#include <boost/outcome.hpp>
 
 #include <variant>
 
@@ -118,7 +119,7 @@ struct EvaluationOk
 	}
 };
 
-using ExecutionResult = std::variant<ExecutionOk, ExecutionTerminated>;
-using EvaluationResult = std::variant<EvaluationOk, ExecutionTerminated>;
+using ExecutionResult = BOOST_OUTCOME_V2_NAMESPACE::result<ExecutionOk, ExecutionTerminated>;
+using EvaluationResult = BOOST_OUTCOME_V2_NAMESPACE::result<EvaluationOk, ExecutionTerminated>;
 
 }

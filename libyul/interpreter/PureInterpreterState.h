@@ -27,6 +27,7 @@
 #include <cstddef>
 #include <variant>
 #include <vector>
+#include <boost/outcome.hpp>
 
 namespace solidity::yul::interpreter
 {
@@ -82,13 +83,15 @@ struct PureInterpreterState
 	/// Will do nothing if config.maxTraceSize == 0
 	///	- the log entry will not be constructed in this case
 	template<typename TraceType, typename... Args>
-	std::optional<TraceLimitReached> addTrace(Args const&... _args)
+	BOOST_OUTCOME_V2_NAMESPACE::result<void, TraceLimitReached> addTrace(Args const&... _args)
 	{
-		if (config.maxTraceSize == 0) return std::nullopt;
+		namespace outcome = BOOST_OUTCOME_V2_NAMESPACE;
+
+		if (config.maxTraceSize == 0) return outcome::success();
 		if (traces.size() > config.maxTraceSize)
 			return TraceLimitReached();
 		traces.emplace_back(std::in_place_type<TraceType>, _args...);
-		return std::nullopt;
+		return outcome::success();
 	}
 
 	void dumpTraces(std::ostream& _out) const;

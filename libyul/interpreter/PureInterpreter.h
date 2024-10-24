@@ -128,12 +128,12 @@ protected:
 
 	/// Increment interpreter step count, returning StepLimitReached if step
 	/// limit is reached.
-	std::optional<ExecutionTerminated> incrementStatementStep();
+	BOOST_OUTCOME_V2_NAMESPACE::result<void, ExecutionTerminated> incrementStatementStep();
 
 	/// Increment evaluation count, returning ExpressionNestingLimitReached if
 	/// the nesting level is beyond the upper bound configured in the
 	/// interpreter state.
-	std::optional<ExecutionTerminated> incrementExpressionStep();
+	BOOST_OUTCOME_V2_NAMESPACE::result<void, ExecutionTerminated> incrementExpressionStep();
 
 	Dialect const& m_dialect;
 	PureInterpreterState& m_state;

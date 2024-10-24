@@ -33,32 +33,25 @@
 #include <libsolutil/FixedHash.h>
 #include <libsolutil/Visitor.h>
 
-
-#include <ostream>
-#include <variant>
-
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::yul::interpreter;
+namespace outcome = BOOST_OUTCOME_V2_NAMESPACE;
 
 using solidity::util::h256;
 
 ExecutionResult PureInterpreter::operator()(ExpressionStatement const& _expressionStatement)
 {
-	EvaluationResult result = evaluate(_expressionStatement.expression, 0);
-	if (auto* terminated = std::get_if<ExecutionTerminated>(&result))
-		return *terminated;
+	BOOST_OUTCOME_TRY(evaluate(_expressionStatement.expression, 0));
 	return ExecutionOk{ControlFlowState::Default};
 }
 
 ExecutionResult PureInterpreter::operator()(Assignment const& _assignment)
 {
 	solAssert(_assignment.value);
-	EvaluationResult evalResult = evaluate(*_assignment.value, _assignment.variableNames.size());
-	if (auto* terminated = std::get_if<ExecutionTerminated>(&evalResult))
-		return *terminated;
+	BOOST_OUTCOME_TRY(EvaluationOk evalResult, evaluate(*_assignment.value, _assignment.variableNames.size()));
 
-	std::vector<u256> const& values = std::move(std::get<EvaluationOk>(evalResult).values);
+	std::vector<u256> const& values = std::move(evalResult.values);
 	for (size_t i = 0; i < values.size(); ++i)
 	{
 		YulName varName = _assignment.variableNames.at(i).name;
@@ -73,10 +66,8 @@ ExecutionResult PureInterpreter::operator()(VariableDeclaration const& _declarat
 	std::vector<u256> values;
 	if (_declaration.value)
 	{
-		EvaluationResult evalResult = evaluate(*_declaration.value, _declaration.variables.size());
-		if (auto* terminated = std::get_if<ExecutionTerminated>(&evalResult))
-			return *terminated;
-		values = std::move(std::get<EvaluationOk>(evalResult).values);
+		BOOST_OUTCOME_TRY(EvaluationOk evalResult, evaluate(*_declaration.value, _declaration.variables.size()));
+		values = std::move(evalResult.values);
 	}
 	else
 	{
@@ -97,11 +88,9 @@ ExecutionResult PureInterpreter::operator()(VariableDeclaration const& _declarat
 ExecutionResult PureInterpreter::operator()(If const& _if)
 {
 	solAssert(_if.condition);
-	EvaluationResult conditionResult = evaluate(*_if.condition, 1);
-	if (auto* terminated = std::get_if<ExecutionTerminated>(&conditionResult))
-		return *terminated;
+	BOOST_OUTCOME_TRY(EvaluationOk conditionResult, evaluate(*_if.condition, 1));
 
-	if (std::get<EvaluationOk>(conditionResult).values.at(0) != 0)
+	if (conditionResult.values.at(0) != 0)
 		return (*this)(_if.body);
 	return ExecutionOk{ControlFlowState::Default};
 }
@@ -111,11 +100,9 @@ ExecutionResult PureInterpreter::operator()(Switch const& _switch)
 	solAssert(_switch.expression);
 	solAssert(!_switch.cases.empty());
 
-	EvaluationResult expressionResult = evaluate(*_switch.expression, 1);
-	if (auto* terminated = std::get_if<ExecutionTerminated>(&expressionResult))
-		return *terminated;
+	BOOST_OUTCOME_TRY(EvaluationOk expressionResult, evaluate(*_switch.expression, 1));
 
-	u256 expressionValue = std::get<EvaluationOk>(expressionResult).values.at(0);
+	u256 expressionValue = expressionResult.values.at(0);
 	for (auto const& currentCase: _switch.cases)
 	{
 		bool caseMatched = false;
@@ -123,10 +110,8 @@ ExecutionResult PureInterpreter::operator()(Switch const& _switch)
 		if (!currentCase.value) caseMatched = true;
 		else
 		{
-			EvaluationResult caseResult = evaluate(*currentCase.value, 1);
-			if (auto* terminated = std::get_if<ExecutionTerminated>(&caseResult))
-				return *terminated;
-			caseMatched = std::get<EvaluationOk>(caseResult).values.at(0) == expressionValue;
+			BOOST_OUTCOME_TRY(EvaluationOk caseResult, evaluate(*currentCase.value, 1));
+			caseMatched = caseResult.values.at(0) == expressionValue;
 		}
 		if (caseMatched)
 			return (*this)(currentCase.body);
@@ -154,37 +139,30 @@ ExecutionResult PureInterpreter::operator()(ForLoop const& _forLoop)
 	while (true)
 	{
 		{
-			EvaluationResult conditionResult = evaluate(*_forLoop.condition, 1);
-			if (auto* terminated = std::get_if<ExecutionTerminated>(&conditionResult))
-				return *terminated;
-			if (std::get<EvaluationOk>(conditionResult).values.at(0) == 0)
+			BOOST_OUTCOME_TRY(EvaluationOk conditionResult, evaluate(*_forLoop.condition, 1));
+			if (conditionResult.values.at(0) == 0)
 				break;
 		}
 
 		// Increment step for each loop iteration for loops with
 		// an empty body and post blocks to prevent a deadlock.
 		if (_forLoop.body.statements.size() == 0 && _forLoop.post.statements.size() == 0)
-			if (auto terminated = incrementStatementStep())
-				return *terminated;
+		{
+			BOOST_OUTCOME_TRY(incrementStatementStep());
+		}
 
 		{
-			ExecutionResult bodyResult = (*this)(_forLoop.body);
-			if (
-				std::holds_alternative<ExecutionTerminated>(bodyResult) ||
-				bodyResult == ExecutionResult(ExecutionOk{ControlFlowState::Leave})
-			)
+			BOOST_OUTCOME_TRY(ExecutionOk bodyResult, (*this)(_forLoop.body));
+			if (bodyResult == ExecutionOk{ControlFlowState::Leave})
 				return bodyResult;
 
-			if (bodyResult == ExecutionResult(ExecutionOk{ControlFlowState::Break}))
+			if (bodyResult == ExecutionOk{ControlFlowState::Break})
 				return ExecutionOk{ControlFlowState::Default};
 		}
 
 		{
-			ExecutionResult postResult = (*this)(_forLoop.post);
-			if (
-				std::holds_alternative<ExecutionTerminated>(postResult) ||
-				postResult == ExecutionResult(ExecutionOk{ControlFlowState::Leave})
-			)
+			BOOST_OUTCOME_TRY(ExecutionOk postResult, (*this)(_forLoop.post));
+			if (postResult == ExecutionOk{ControlFlowState::Leave})
 				return postResult;
 		}
 	}
@@ -227,8 +205,7 @@ ExecutionResult PureInterpreter::execute(std::vector<Statement> const& _statemen
 
 ExecutionResult PureInterpreter::visit(Statement const& _statement)
 {
-	if (auto terminated = incrementStatementStep())
-		return *terminated;
+	BOOST_OUTCOME_TRY(incrementStatementStep());
 	return std::visit(*this, _statement);
 }
 
@@ -253,11 +230,9 @@ EvaluationResult PureInterpreter::operator()(FunctionCall const& _functionCall)
 			!args.empty()
 		)
 			literalArguments = &args;
-	EvaluationResult argsRes = evaluateArgs(_functionCall.arguments, literalArguments);
-	if (auto* terminated = std::get_if<ExecutionTerminated>(&argsRes))
-		return *terminated;
+	BOOST_OUTCOME_TRY(EvaluationOk argsRes, evaluateArgs(_functionCall.arguments, literalArguments));
 
-	std::vector<u256> argsValues = std::move(std::get<EvaluationOk>(argsRes).values);
+	std::vector<u256> const& argsValues = argsRes.values;
 
 	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
 	{
@@ -280,37 +255,30 @@ EvaluationResult PureInterpreter::operator()(FunctionCall const& _functionCall)
 
 	std::unique_ptr<PureInterpreter> interpreter = makeInterpreterCopy(std::move(variables));
 
-	if (auto terminated = m_state.addTrace<FunctionCallTrace>(functionDefinition, argsValues))
-		return *terminated;
+	BOOST_OUTCOME_TRY(m_state.addTrace<FunctionCallTrace>(functionDefinition, argsValues));
 
-	ExecutionResult functionBodyResult = (*interpreter)(functionDefinition.body);
-	if (auto* terminated = std::get_if<ExecutionTerminated>(&functionBodyResult))
-		return *terminated;
+	BOOST_OUTCOME_TRY((*interpreter)(functionDefinition.body));
 
 	std::vector<u256> returnedValues;
 	returnedValues.reserve(functionDefinition.returnVariables.size());
 	for (auto const& retVar: functionDefinition.returnVariables)
 		returnedValues.emplace_back(interpreter->valueOfVariable(retVar.name));
 
-	if (auto terminated = m_state.addTrace<FunctionReturnTrace>(functionDefinition, returnedValues))
-		return *terminated;
+	BOOST_OUTCOME_TRY(m_state.addTrace<FunctionReturnTrace>(functionDefinition, returnedValues));
 
 	return EvaluationOk(std::move(returnedValues));
 }
 
 EvaluationResult PureInterpreter::visit(Expression const& _expression)
 {
-	if (auto terminated = incrementExpressionStep())
-		return *terminated;
+	BOOST_OUTCOME_TRY(incrementExpressionStep());
 	return std::visit(*this, _expression);
 }
 
 EvaluationResult PureInterpreter::evaluate(Expression const& _expression, size_t _numReturnVars)
 {
-	EvaluationResult result = visit(_expression);
-	if (auto* resOk = std::get_if<EvaluationOk>(&result))
-		yulAssert(resOk->values.size() == _numReturnVars);
-
+	BOOST_OUTCOME_TRY(EvaluationOk result, visit(_expression));
+	yulAssert(result.values.size() == _numReturnVars);
 	return result;
 }
 
@@ -328,10 +296,8 @@ EvaluationResult PureInterpreter::evaluateArgs(
 		bool isLiteral = _literalArguments && _literalArguments->at(i);
 		if (!isLiteral)
 		{
-			EvaluationResult exprRes = evaluate(currentArgument, 1);
-			if (auto* terminated = std::get_if<ExecutionTerminated>(&exprRes))
-				return *terminated;
-			std::vector<u256> const& exprValues = std::get<EvaluationOk>(exprRes).values;
+			BOOST_OUTCOME_TRY(EvaluationOk exprRes, evaluate(currentArgument, 1));
+			std::vector<u256> const& exprValues = exprRes.values;
 			values[i] = exprValues.at(0);
 		}
 		else
@@ -357,7 +323,7 @@ void PureInterpreter::leaveScope()
 	yulAssert(m_scope);
 }
 
-std::optional<ExecutionTerminated> PureInterpreter::incrementStatementStep()
+outcome::result<void, ExecutionTerminated> PureInterpreter::incrementStatementStep()
 {
 	m_state.numSteps++;
 	if (m_state.config.maxSteps > 0 && m_state.numSteps >= m_state.config.maxSteps)
@@ -370,13 +336,13 @@ std::optional<ExecutionTerminated> PureInterpreter::incrementStatementStep()
 
 	// Reset m_expressionNestingLevel, preparing for new expression.
 	m_expressionNestingLevel = 0;
-	return std::nullopt;
+	return outcome::success();
 }
 
-std::optional<ExecutionTerminated> PureInterpreter::incrementExpressionStep()
+outcome::result<void, ExecutionTerminated> PureInterpreter::incrementExpressionStep()
 {
 	m_expressionNestingLevel++;
 	if (m_state.config.maxExprNesting > 0 && m_expressionNestingLevel > m_state.config.maxExprNesting)
 		return ExpressionNestingLimitReached();
-	return std::nullopt;
+	return outcome::success();
 }

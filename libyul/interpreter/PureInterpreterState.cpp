@@ -25,7 +25,6 @@
 #include <liblangutil/Exceptions.h>
 
 #include <string_view>
-#include <variant>
 
 using namespace solidity::yul::interpreter;
 
