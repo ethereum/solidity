@@ -18,6 +18,9 @@
 
 #pragma once
 
+#include <libevmasm/Instruction.h>
+#include <libevmasm/SemanticInformation.h>
+
 namespace solidity::yul
 {
 
@@ -43,6 +46,27 @@ struct ControlFlowSideEffects
 	bool terminatesOrReverts() const
 	{
 		return (canTerminate || canRevert) && !canContinue;
+	}
+
+	static ControlFlowSideEffects fromInstruction(evmasm::Instruction _instruction)
+	{
+		ControlFlowSideEffects controlFlowSideEffects;
+		if (evmasm::SemanticInformation::terminatesControlFlow(_instruction))
+		{
+			controlFlowSideEffects.canContinue = false;
+			if (evmasm::SemanticInformation::reverts(_instruction))
+			{
+				controlFlowSideEffects.canTerminate = false;
+				controlFlowSideEffects.canRevert = true;
+			}
+			else
+			{
+				controlFlowSideEffects.canTerminate = true;
+				controlFlowSideEffects.canRevert = false;
+			}
+		}
+
+		return controlFlowSideEffects;
 	}
 };
 
