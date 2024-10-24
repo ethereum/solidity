@@ -118,10 +118,7 @@ protected:
 
 	/// Evaluates the given expression from right to left and
 	/// stores it in m_value.
-	EvaluationResult evaluateArgs(
-		std::vector<Expression> const& _arguments,
-		std::vector<std::optional<LiteralKind>> const* _literalArguments
-	);
+	EvaluationResult evaluateArgs(std::vector<Expression> const& _arguments);
 
 	void enterScope(Block const& _block);
 	void leaveScope();

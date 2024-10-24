@@ -7,7 +7,7 @@ object "obj" {
     }
 }
 // ----
-// Execution result: ImpureBuiltinEncountered
+// Execution result: UnlimitedLiteralEncountered
 // Outer most variable values:
 //   x = 1
 //

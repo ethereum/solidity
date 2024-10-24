@@ -223,14 +223,13 @@ EvaluationResult PureInterpreter::operator()(Identifier const& _identifier)
 
 EvaluationResult PureInterpreter::operator()(FunctionCall const& _functionCall)
 {
-	std::vector<std::optional<LiteralKind>> const* literalArguments = nullptr;
 	if (std::optional<BuiltinHandle> builtinHandle = m_dialect.findBuiltin(_functionCall.functionName.name.str()))
 		if (
 			auto const& args = m_dialect.builtin(*builtinHandle).literalArguments;
 			!args.empty()
 		)
-			literalArguments = &args;
-	BOOST_OUTCOME_TRY(EvaluationOk argsRes, evaluateArgs(_functionCall.arguments, literalArguments));
+			return UnlimitedLiteralEncountered();
+	BOOST_OUTCOME_TRY(EvaluationOk argsRes, evaluateArgs(_functionCall.arguments));
 
 	std::vector<u256> const& argsValues = argsRes.values;
 
@@ -282,8 +281,7 @@ EvaluationResult PureInterpreter::evaluate(Expression const& _expression, size_t
 }
 
 EvaluationResult PureInterpreter::evaluateArgs(
-	std::vector<Expression> const& _arguments,
-	std::vector<std::optional<LiteralKind>> const* _literalArguments
+	std::vector<Expression> const& _arguments
 )
 {
 	std::vector<u256> values(_arguments.size());
@@ -292,20 +290,8 @@ EvaluationResult PureInterpreter::evaluateArgs(
 	for (size_t i = _arguments.size(); i-- > 0; )
 	{
 		auto const& currentArgument = _arguments[i];
-		bool isLiteral = _literalArguments && _literalArguments->at(i);
-		if (!isLiteral)
-		{
-			BOOST_OUTCOME_TRY(EvaluationOk exprRes, evaluate(currentArgument, 1));
-			std::vector<u256> const& exprValues = exprRes.values;
-			values[i] = exprValues.at(0);
-		}
-		else
-		{
-			if (std::get<Literal>(currentArgument).value.unlimited())
-				return UnlimitedLiteralEncountered();
-			else
-				values[i] = std::get<Literal>(currentArgument).value.value();
-		}
+		BOOST_OUTCOME_TRY(EvaluationOk exprRes, evaluate(currentArgument, 1));
+		values[i] = exprRes.values.at(0);
 	}
 	return EvaluationOk(std::move(values));
 }
