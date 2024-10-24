@@ -378,7 +378,7 @@ Json formatSubAssemblyOffsets(std::vector<evmasm::LinkerObject::SubAssembly> con
 {
 	Json subs = Json::array();
 
-	for (auto const& subAssembly : _subAssemblyOffsets)
+	for (auto const& subAssembly: _subAssemblyOffsets)
 	{
 		Json subAssemblyInfo;
 		subAssemblyInfo["start"] = Json::number_unsigned_t(subAssembly.start);

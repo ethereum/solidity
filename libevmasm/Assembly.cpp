@@ -1556,11 +1556,11 @@ Assembly::OptimiserSettings Assembly::OptimiserSettings::translateSettings(front
 	return asmSettings;
 }
 
-void Assembly::updateSubAssemblyStartOffsets(std::vector<LinkerObject::SubAssembly>& subAssemblies, size_t const currentBytecodeSize) const
+void Assembly::updateSubAssemblyStartOffsets(std::vector<LinkerObject::SubAssembly>& _subAssemblies, size_t const _currentBytecodeSize) const
 {
-	for (auto& subAssembly : subAssemblies)
+	for (auto& subAssembly: _subAssemblies)
 	{
-		subAssembly.start = currentBytecodeSize - subAssembly.length;
-		updateSubAssemblyStartOffsets(subAssembly.subs, currentBytecodeSize);
+		subAssembly.start = _currentBytecodeSize - subAssembly.length;
+		updateSubAssemblyStartOffsets(subAssembly.subs, _currentBytecodeSize);
 	}
 }
