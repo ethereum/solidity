@@ -456,3 +456,30 @@ The more people examine a piece of code, the more issues are found.
 Asking people to review your code also helps as a cross-check to find out
 whether your code is easy to understand -
 a very important criterion for good smart contracts.
+
+Include a Security Contact in Smart Contracts
+=============================================
+
+Incorporating a security contact in your smart contract facilitates efficient vulnerability reporting and issue mitigation.
+This is achieved by using the NatSpec custom tag with the name "security-contact".
+
+.. code-block:: solidity
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.8.2 < 0.9.0;
+
+    /// @title Example contract
+    /// @custom:security-contact security@example.com
+    contract Example {
+      // Contract code here
+    }
+
+You can specify an email or ENS address where vulnerabilities can be reported.
+Having a designated security contact channel allows you to control how vulnerabilities are disclosed,
+thereby improving the reliability of communication and reducing the risk of delays in taking action.
+Moreover, if your smart contract relies on third-party libraries like OpenZeppelin
+and a vulnerability is discovered in one of those libraries, a designated security contact ensures that
+the library maintainers can quickly and directly reach out to you to coordinate efforts for mitigating the issue.
+
+This practice is highly recommended, especially for contracts that
+handle sensitive operations or large sums of value.
