@@ -102,9 +102,9 @@ public:
 	VariableValuesMap const& allVariables() const { return m_variables; }
 
 protected:
-	std::unique_ptr<PureInterpreter> makeInterpreterCopy(VariableValuesMap _variables = {}) const
+	PureInterpreter makeInterpreterCopy(VariableValuesMap _variables = {}) const
 	{
-		return std::make_unique<PureInterpreter>(
+		return PureInterpreter(
 			m_state,
 			m_dialect,
 			*m_scope,

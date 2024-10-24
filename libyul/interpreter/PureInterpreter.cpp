@@ -253,16 +253,16 @@ EvaluationResult PureInterpreter::operator()(FunctionCall const& _functionCall)
 	for (size_t i = 0; i < functionDefinition.returnVariables.size(); ++i)
 		variables[functionDefinition.returnVariables.at(i).name] = 0;
 
-	std::unique_ptr<PureInterpreter> interpreter = makeInterpreterCopy(std::move(variables));
+	PureInterpreter interpreter = makeInterpreterCopy(std::move(variables));
 
 	BOOST_OUTCOME_TRY(m_state.addTrace<FunctionCallTrace>(functionDefinition, argsValues));
 
-	BOOST_OUTCOME_TRY((*interpreter)(functionDefinition.body));
+	BOOST_OUTCOME_TRY(interpreter(functionDefinition.body));
 
 	std::vector<u256> returnedValues;
 	returnedValues.reserve(functionDefinition.returnVariables.size());
 	for (auto const& retVar: functionDefinition.returnVariables)
-		returnedValues.emplace_back(interpreter->valueOfVariable(retVar.name));
+		returnedValues.emplace_back(interpreter.valueOfVariable(retVar.name));
 
 	BOOST_OUTCOME_TRY(m_state.addTrace<FunctionReturnTrace>(functionDefinition, returnedValues));
 
