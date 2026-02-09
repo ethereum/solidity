@@ -1169,7 +1169,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			auto const errorConstructorCall = dynamic_cast<FunctionCall const*>(resolveOuterUnaryTuples(arguments[1].get()));
 			solAssert(errorConstructorCall);
 			appendCode() << m_utils.requireWithErrorFunction(*errorConstructorCall) << "(" <<IRVariable(*arguments[0]).name();
-			for (auto argument: errorConstructorCall->arguments())
+			for (auto argument: errorConstructorCall->sortedArguments())
 				if (argument->annotation().type->sizeOnStack() > 0)
 					appendCode() << ", " << IRVariable(*argument).commaSeparatedList();
 			appendCode() << ")\n";
