@@ -162,6 +162,9 @@ set(sources
 	interface/input/Input.h
 	interface/input/JSONSerialization.cpp
 	interface/input/JSONSerialization.h
+	interface/output/Output.h
+	interface/output/JSONDeserialization.cpp
+	interface/output/JSONDeserialization.h
 	interface/StorageLayout.cpp
 	interface/StorageLayout.h
 	interface/UniversalCallback.h
