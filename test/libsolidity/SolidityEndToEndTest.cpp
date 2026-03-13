@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(creation_code_optimizer)
 		}
 	)";
 
-	m_metadataHash = CompilerStack::MetadataHash::None;
+	m_metadataHash = MetadataHash::None;
 	ALSO_VIA_YUL({
 		bytes bytecodeC = compileContract(codeC);
 		reset();
