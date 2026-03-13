@@ -117,7 +117,7 @@ SemanticTest::SemanticTest(
 	if (m_enforceGasCost)
 	{
 		m_compiler.setMetadataFormat(CompilerStack::MetadataFormat::NoMetadata);
-		m_compiler.setMetadataHash(CompilerStack::MetadataHash::None);
+		m_compiler.setMetadataHash(MetadataHash::None);
 	}
 }
 

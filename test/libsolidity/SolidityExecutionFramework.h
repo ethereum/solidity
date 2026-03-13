@@ -85,7 +85,7 @@ protected:
 	bool m_experimental = false;
 	bool m_showMetadata = false;
 	bool m_appendCBORMetadata = true;
-	CompilerStack::MetadataHash m_metadataHash = CompilerStack::MetadataHash::IPFS;
+	MetadataHash m_metadataHash = MetadataHash::IPFS;
 	RevertStrings m_revertStrings = RevertStrings::Default;
 };
 

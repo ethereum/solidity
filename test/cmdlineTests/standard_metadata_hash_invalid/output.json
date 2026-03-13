@@ -1,0 +1,11 @@
+{
+    "errors": [
+        {
+            "component": "general",
+            "formattedMessage": "\"settings.metadata.bytecodeHash\" must be \"ipfs\", \"bzzr1\" or \"none\"",
+            "message": "\"settings.metadata.bytecodeHash\" must be \"ipfs\", \"bzzr1\" or \"none\"",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}
