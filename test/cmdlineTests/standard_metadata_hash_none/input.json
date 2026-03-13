@@ -1,0 +1,10 @@
+{
+	"language": "Solidity",
+	"sources": {"C": {"content": "// SPDX-License-Identifier: GPL-3.0\npragma solidity *;\n\ncontract C {}"}},
+	"settings": {
+		"metadata": {"bytecodeHash": "none"},
+		"outputSelection": {
+			"*": {"*": ["metadata"]}
+		}
+	}
+}

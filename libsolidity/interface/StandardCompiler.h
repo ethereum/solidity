@@ -84,7 +84,7 @@ private:
 		std::map<std::string, util::h160> libraries;
 		bool metadataLiteralSources = false;
 		CompilerStack::MetadataFormat metadataFormat = CompilerStack::defaultMetadataFormat();
-		CompilerStack::MetadataHash metadataHash = CompilerStack::MetadataHash::IPFS;
+		MetadataHash metadataHash = MetadataHash::IPFS;
 		Json outputSelection;
 		ModelCheckerSettings modelCheckerSettings = ModelCheckerSettings{};
 		bool viaIR = false;

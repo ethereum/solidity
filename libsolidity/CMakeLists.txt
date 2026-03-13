@@ -152,6 +152,7 @@ set(sources
 	interface/GasEstimator.h
 	interface/Natspec.cpp
 	interface/Natspec.h
+	interface/MetadataSettings.h
 	interface/OptimiserSettings.h
 	interface/ReadFile.h
 	interface/SMTSolverCommand.cpp

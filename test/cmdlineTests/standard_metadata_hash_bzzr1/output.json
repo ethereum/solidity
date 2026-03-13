@@ -1,0 +1,14 @@
+{
+    "contracts": {
+        "C": {
+            "C": {
+                "metadata": "{\"compiler\":{\"version\":\"<VERSION REMOVED>\"},\"language\":\"Solidity\",\"output\":{\"abi\":[],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"C\":\"C\"},\"evmVersion\":\"osaka\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"bzzr1\"},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"C\":{\"keccak256\":\"0xaf0120a78325c38e29904a55f72f039a04f6cf9553554206853813b329ed5fcc\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://e61b4bf7aacb1be4a6e2c8a9c1ac0c8c248ea321bb58368ba99ff123143c05d5\",\"dweb:/ipfs/QmePuMdzfBkrnMYFvBmNcJyHWfr4Tr7izxbaTNkQoy4h9d\"]}},\"version\":1}"
+            }
+        }
+    },
+    "sources": {
+        "C": {
+            "id": 0
+        }
+    }
+}

@@ -20,9 +20,9 @@
  * @date 2016
  * Standard JSON compiler interface.
  */
-
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/ImportRemapper.h>
+#include <libsolidity/interface/MetadataSettings.h>
 
 #include <libsolidity/ast/ASTJsonExporter.h>
 #include <libyul/YulStack.h>
@@ -40,6 +40,7 @@
 #include <libsolutil/JSON.h>
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/CommonData.h>
+#include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/string/predicate.hpp>
 
@@ -47,6 +48,8 @@
 #include <optional>
 
 #include <range/v3/algorithm/contains.hpp>
+#include <range/v3/view/map.hpp>
+#include <range/v3/view/transform.hpp>
 
 using namespace solidity;
 using namespace solidity::yul;
@@ -556,7 +559,7 @@ std::optional<Json> checkOptimizerDetailSteps(Json const& _details, std::string 
 	return {};
 }
 
-std::optional<Json> checkMetadataKeys(Json const& _input)
+std::optional<Json> checkMetadataKeys(Json const& _input, std::optional<MetadataHash>& _parsedHash)
 {
 	if (_input.is_object())
 	{
@@ -565,9 +568,23 @@ std::optional<Json> checkMetadataKeys(Json const& _input)
 		if (_input.contains("useLiteralContent") && !_input["useLiteralContent"].is_boolean())
 			return formatFatalError(Error::Type::JSONError, "\"settings.metadata.useLiteralContent\" must be Boolean");
 
-		static std::set<std::string> hashes{"ipfs", "bzzr1", "none"};
-		if (_input.contains("bytecodeHash") && !hashes.count(_input["bytecodeHash"].get<std::string>()))
-			return formatFatalError(Error::Type::JSONError, "\"settings.metadata.bytecodeHash\" must be \"ipfs\", \"bzzr1\" or \"none\"");
+		if (_input.contains("bytecodeHash"))
+		{
+			auto metadataHash = metadataHashFromString(_input["bytecodeHash"].get<std::string>());
+			if (!metadataHash)
+				return formatFatalError(
+					Error::Type::JSONError,
+					"\"settings.metadata.bytecodeHash\" must be " +
+					util::joinHumanReadable(
+						metadataHashes
+						| ranges::views::values
+						| ranges::views::transform([](std::string const& _name) { return "\"" + _name + "\""; }),
+						", ",
+						" or "
+					)
+				);
+			_parsedHash = *metadataHash;
+		}
 	}
 	static std::set<std::string> keys{"appendCBOR", "useLiteralContent", "bytecodeHash"};
 	return checkKeys(_input, keys, "settings.metadata");
@@ -1038,7 +1055,8 @@ std::variant<StandardCompiler::InputsAndSettings, Json> StandardCompiler::parseI
 
 	Json const& metadataSettings = settings.value("metadata", Json::object());
 
-	if (auto result = checkMetadataKeys(metadataSettings))
+	std::optional<MetadataHash> metadataHash;
+	if (auto result = checkMetadataKeys(metadataSettings, metadataHash))
 		return *result;
 
 	solAssert(CompilerStack::defaultMetadataFormat() != CompilerStack::MetadataFormat::NoMetadata, "");
@@ -1051,22 +1069,18 @@ std::variant<StandardCompiler::InputsAndSettings, Json> StandardCompiler::parseI
 		metadataSettings.contains("useLiteralContent") &&
 		metadataSettings["useLiteralContent"].is_boolean() &&
 		metadataSettings["useLiteralContent"].get<bool>();
-	if (metadataSettings.contains("bytecodeHash"))
+	if (metadataHash)
 	{
-		auto metadataHash = metadataSettings["bytecodeHash"].get<std::string>();
-		ret.metadataHash =
-			metadataHash == "ipfs" ?
-			CompilerStack::MetadataHash::IPFS :
-				metadataHash == "bzzr1" ?
-				CompilerStack::MetadataHash::Bzzr1 :
-				CompilerStack::MetadataHash::None;
-		if (ret.metadataFormat == CompilerStack::MetadataFormat::NoMetadata && ret.metadataHash != CompilerStack::MetadataHash::None)
+		ret.metadataHash = *metadataHash;
+		if (ret.metadataFormat == CompilerStack::MetadataFormat::NoMetadata && ret.metadataHash != MetadataHash::None)
 			return formatFatalError(
 				Error::Type::JSONError,
 				"When the parameter \"appendCBOR\" is set to false, the parameter \"bytecodeHash\" cannot be set to \"" +
-				metadataHash +
-				"\". The parameter \"bytecodeHash\" should either be skipped, or set to \"none\"."
-			);
+				metadataHashToString(*metadataHash) +
+			"\". The parameter \"bytecodeHash\" should either be skipped, or set to \"" +
+			metadataHashToString(MetadataHash::None) +
+			"\"."
+		);
 	}
 
 	Json const& outputSelection = settings.value("outputSelection", Json::object());
