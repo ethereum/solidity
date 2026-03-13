@@ -38,7 +38,7 @@ namespace solidity::frontend
 class TypeChecker;
 
 /**
- * Small drop-in replacement for TypeChecker to evaluate simple expressions of integer constants.
+ * Small drop-in replacement for TypeChecker to evaluate simple expressions of integer and string constants.
  *
  * Note: This always use "checked arithmetic" in the sense that any over- or underflow
  * results in "unknown" value.
@@ -46,11 +46,24 @@ class TypeChecker;
 class ConstantEvaluator: private ASTConstVisitor
 {
 public:
-	struct TypedValue
+	class TypedValue
 	{
+	public:
+		using Value = std::variant<std::monostate, rational, std::string>;
+
+		TypedValue(): m_type(nullptr), m_value(std::monostate()) {}
+		TypedValue(Type const* _type, Value _value);
+		bool empty() const { return std::holds_alternative<std::monostate>(m_value); }
+		bool isString() const { return std::holds_alternative<std::string>(m_value); }
+		bool isRational() const { return std::holds_alternative<rational>(m_value); }
+		Type const* type() const { return m_type; }
+		Value const& value() const { return m_value; }
+		std::string const& asString() const;
+		rational const& asRational() const;
+	private:
 		// Type may be RationalType or IntegerType for value rational
-		Type const* type;
-		std::variant<std::monostate, rational, std::string> value;
+		Type const* m_type;
+		Value m_value;
 	};
 
 	static TypedValue evaluate(

@@ -314,12 +314,12 @@ bool StaticAnalyzer::visit(BinaryOperation const& _operation)
 	if (
 		*_operation.rightExpression().annotation().isPure &&
 		(_operation.getOperator() == Token::Div || _operation.getOperator() == Token::Mod) &&
-		ConstantEvaluator::evaluate(m_errorReporter, _operation.leftExpression()).type
+		ConstantEvaluator::evaluate(m_errorReporter, _operation.leftExpression()).type()
 	)
 		if (
 			auto rhs = ConstantEvaluator::evaluate(m_errorReporter, _operation.rightExpression());
-			std::holds_alternative<rational>(rhs.value) &&
-			std::get<rational>(rhs.value) == 0
+			rhs.isRational() &&
+			rhs.asRational() == 0
 		)
 			m_errorReporter.typeError(
 				1211_error,
@@ -342,8 +342,8 @@ bool StaticAnalyzer::visit(FunctionCall const& _functionCall)
 			if (*_functionCall.arguments()[2]->annotation().isPure)
 				if (
 					auto lastArg = ConstantEvaluator::evaluate(m_errorReporter, *(_functionCall.arguments())[2]);
-					std::holds_alternative<rational>(lastArg.value) &&
-					std::get<rational>(lastArg.value) == 0
+					lastArg.isRational() &&
+					lastArg.asRational() == 0
 				)
 					m_errorReporter.typeError(
 						4195_error,
