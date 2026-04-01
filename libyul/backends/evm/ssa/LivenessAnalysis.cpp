@@ -18,6 +18,8 @@
 
 #include <libyul/backends/evm/ssa/LivenessAnalysis.h>
 
+#include <libyul/backends/evm/ssa/analysis/ReducibilityCheck.h>
+
 #include <libsolutil/Visitor.h>
 
 #include <boost/container/flat_map.hpp>
@@ -58,6 +60,7 @@ LivenessAnalysis::LivenessAnalysis(SSACFG const& _cfg):
 	m_liveIns(_cfg.numBlocks()),
 	m_liveOuts(_cfg.numBlocks())
 {
+	yulAssert(analysis::isReducibleCFG(m_dfsTree), "Liveness analysis only implemented for reducible CFGs");
 	runDagDfs();
 	for (auto const loopRootNode: m_loopNestingForest.loopRootNodes())
 		runLoopTreeDfs(loopRootNode);
