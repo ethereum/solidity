@@ -23,7 +23,8 @@ using namespace solidity::yul::ssa::analysis;
 DepthFirstSpanningTree::DepthFirstSpanningTree(SSACFG const& _cfg):
 	m_cfg(_cfg),
 	m_explored(m_cfg.numBlocks(), false), m_blockWisePreOrder(m_cfg.numBlocks(), 0),
-	m_blockWiseMaxSubtreePreOrder(m_cfg.numBlocks(), 0)
+	m_blockWiseMaxSubtreePreOrder(m_cfg.numBlocks(), 0),
+	m_parent(m_cfg.numBlocks())
 {
 	m_preOrder.reserve(m_cfg.numBlocks());
 	m_postOrder.reserve(m_cfg.numBlocks());
@@ -45,7 +46,10 @@ void DepthFirstSpanningTree::dfs(SSACFG::BlockId const _block)
 
 	m_cfg.block(_block).forEachExit([&](SSACFG::BlockId const& _exitBlock) {
 		if (!m_explored[_exitBlock.value])
+		{
+			m_parent[_exitBlock.value] = _block;
 			dfs(_exitBlock);
+		}
 	});
 
 	// the subtree has been visited completely and occupies the pre-order indices up to here
