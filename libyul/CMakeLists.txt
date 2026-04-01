@@ -113,6 +113,8 @@ add_library(yul
 	backends/evm/ssa/analysis/DepthFirstSpanningTree.h
 	backends/evm/ssa/analysis/DominatorTree.cpp
 	backends/evm/ssa/analysis/DominatorTree.h
+	backends/evm/ssa/analysis/ReducibilityCheck.cpp
+	backends/evm/ssa/analysis/ReducibilityCheck.h
 	backends/evm/ssa/io/DotExporterBase.cpp
 	backends/evm/ssa/io/DotExporterBase.h
 	backends/evm/ssa/io/Keywords.cpp
