@@ -636,9 +636,9 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 	CompilerContext::LocationSetter locationSetter(m_context, _functionCall);
 	if (functionCallKind == FunctionCallKind::TypeConversion)
 	{
-		solAssert(_functionCall.arguments().size() == 1, "");
+		solAssert(_functionCall.sortedArguments().size() == 1, "");
 		solAssert(_functionCall.names().empty(), "");
-		auto const& expression = *_functionCall.arguments().front();
+		auto const& expression = *_functionCall.sortedArguments().front();
 		auto const& targetType = *_functionCall.annotation().type;
 		if (auto const* typeType = dynamic_cast<TypeType const*>(expression.annotation().type))
 			if (auto const* addressType = dynamic_cast<AddressType const*>(&targetType))

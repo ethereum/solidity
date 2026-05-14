@@ -967,8 +967,8 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			_functionCall.expression().annotation().type->category() == Type::Category::TypeType,
 			"Expected category to be TypeType"
 		);
-		solAssert(_functionCall.arguments().size() == 1, "Expected one argument for type conversion");
-		define(_functionCall, *_functionCall.arguments().front());
+		solAssert(_functionCall.sortedArguments().size() == 1, "Expected one argument for type conversion");
+		define(_functionCall, *_functionCall.sortedArguments().front());
 		return;
 	}
 
