@@ -598,6 +598,62 @@ void ConstantEvaluator::endVisit(TupleExpression const& _tuple)
 
 void ConstantEvaluator::endVisit(FunctionCall const& _functionCall)
 {
+	auto const* elementaryTypeNameExpression = dynamic_cast<ElementaryTypeNameExpression const*>(&_functionCall.expression());
+	if (elementaryTypeNameExpression)
+	{
+		// Type checking might not have been performed yet.
+		// This replicates the code of TypeChecker::endVisit(ElementaryTypeNameExpression)
+		auto const* expressionTypeType = TypeProvider::typeType(TypeProvider::fromElementaryTypeName(
+			elementaryTypeNameExpression->type().typeName(),
+			elementaryTypeNameExpression->type().stateMutability()
+		));
+		solAssert(expressionTypeType);
+		solAssert(expressionTypeType->actualType());
+
+		// Only uint256 is supported for now
+		auto const* integerResultType = dynamic_cast<IntegerType const*>(expressionTypeType->actualType());
+		if (integerResultType != TypeProvider::uint256())
+			return;
+
+		if (_functionCall.arguments().size() != 1 || !_functionCall.names().empty())
+			return;
+
+		TypedValue valueToConvert = evaluate(*_functionCall.arguments().front());
+		if (!valueToConvert.type() || !valueToConvert.type()->isExplicitlyConvertibleTo(*integerResultType))
+			return;
+
+		u256 convertedValue = 0;
+		if (
+			valueToConvert.type()->category() == Type::Category::Integer ||
+			valueToConvert.type()->category() == Type::Category::RationalNumber
+		)
+		{
+			solAssert(valueToConvert.isRational());
+			auto const& rationalValue = valueToConvert.asRational();
+			solAssert(rationalValue.denominator() == 1);
+
+			convertedValue = rationalValue >= rational(0) ?
+				u256(rationalValue.numerator()) :
+				s2u(s256(rationalValue.numerator()));
+		}
+		else if (valueToConvert.type()->category() == Type::Category::FixedBytes)
+		{
+			solAssert(valueToConvert.isBytes());
+			auto const& bytesValue = valueToConvert.asBytes();
+			auto const& fixedBytesType = static_cast<FixedBytesType const&>(*valueToConvert.type());
+			solAssert(std::size_t(integerResultType->numBits()) == fixedBytesType.numBytes() * 8);
+
+			// FixedBytes is left-aligned
+			for (auto byte: bytesValue)
+				convertedValue = (convertedValue << 8) | u256(byte);
+		}
+		else // Type is explicitly convertible but not evaluated at comptime
+			return;
+
+		m_values[&_functionCall] = TypedValue{integerResultType, rational(convertedValue)};
+		return;
+	}
+
 	auto const* builtinFunction = dynamic_cast<MagicVariableDeclaration const*>(ASTNode::referencedDeclaration(_functionCall.expression()));
 	if (!builtinFunction)
 		return;
