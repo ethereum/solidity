@@ -11,6 +11,9 @@ Language Features:
 
 Compiler Features:
 * Commandline Interface: Remove support for the experimental Language Server Protocol (LSP) mode.
+* Constant Evaluator: Add support for constants of type `bytes32`.
+* Constant Evaluator: Add support for `keccak256` builtin.
+* Constant Evaluator: Add support for explicit `uint256` type conversion.
 * EVM: Deprecate support for "constantinople", "petersburg", "istanbul" and "berlin" EVM versions.
 * EVM-ASM Optimizer: Improve performance of block deduplicator.
 * General: Improve performance throughout the compiler using Boost's flat versions of unordered set and map.
