@@ -639,6 +639,20 @@ void ConstantEvaluator::endVisit(FunctionCall const& _functionCall)
 			m_values[&_functionCall] = TypedValue{functionType->returnParameterTypes()[0], rational{slot}};
 			break;
 		}
+		case FunctionType::Kind::KECCAK256:
+		{
+			if (_functionCall.arguments().size() != 1)
+				return;
+			auto argValue = evaluate(*_functionCall.arguments()[0]);
+			if (!argValue.isString())
+				return;
+
+			h256 hash = keccak256(argValue.asString());
+			solAssert(functionType->returnParameterTypes().size() == 1);
+			solAssert(functionType->returnParameterTypes()[0] == TypeProvider::fixedBytes(32));
+			m_values[&_functionCall] = TypedValue{functionType->returnParameterTypes()[0], hash.asBytes()};
+			break;
+		}
 		default:
 			break;
 	}
