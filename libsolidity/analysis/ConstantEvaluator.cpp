@@ -32,6 +32,7 @@
 
 #include <fmt/format.h>
 
+#include <functional>
 #include <limits>
 
 using namespace solidity;
@@ -71,6 +72,62 @@ bool fitsPrecisionBase2(bigint const& _mantissa, uint32_t _expBase2)
 	return fitsPrecisionBaseX(_mantissa, 1.0, _expBase2);
 }
 
+}
+
+std::optional<bytes> ConstantEvaluator::evaluateBinaryOperator(Token _operator, bytes const& _left, bytes const& _right)
+{
+	if (_left.size() != _right.size())
+		return std::nullopt;
+	// only bytes32 supported for now
+	if (_left.size() != 32)
+		return std::nullopt;
+
+	auto bitwiseOperation = [&](auto _operation) {
+		bytes result(_left.size());
+		for (std::size_t i = 0; i < _left.size(); ++i)
+			result[i] = _operation(_left[i], _right[i]);
+		return result;
+	};
+	switch (_operator)
+	{
+	case Token::BitAnd:
+		return bitwiseOperation(std::bit_and<uint8_t>{});
+	case Token::BitOr:
+		return bitwiseOperation(std::bit_or<uint8_t>{});
+	case Token::BitXor:
+		return bitwiseOperation(std::bit_xor<uint8_t>{});
+	default:
+		return std::nullopt;
+	}
+}
+
+std::optional<bytes> ConstantEvaluator::evaluateBinaryOperator(Token _operator, bytes const& _left, rational const&  _right)
+{
+	if (_operator != Token::SAR && _operator != Token::SHL)
+		return std::nullopt;
+	if (_left.size() != 32)
+		return std::nullopt;
+	if (_right.numerator() < 0 || _right.denominator() != 1)
+		return std::nullopt;
+
+	bytes result(_left.size());
+	unsigned bitWidth = static_cast<unsigned>(_left.size()) * 8;
+
+	if (_right.numerator() >= bitWidth)
+		return result;
+	unsigned shiftAmount = _right.numerator().convert_to<unsigned>();
+
+	bigint shiftedValue = fromBigEndian<bigint>(_left);
+	if (_operator == Token::SHL)
+	{
+		shiftedValue <<= shiftAmount;
+		shiftedValue &= (bigint(1) << bitWidth) - 1; // Mask bits out of width
+	}
+	else
+		shiftedValue >>= shiftAmount;
+
+	toBigEndian<bigint>(shiftedValue, result);
+	return result;
 }
 
 std::optional<rational> ConstantEvaluator::evaluateBinaryOperator(Token _operator, rational const& _left, rational const& _right)
@@ -234,6 +291,21 @@ std::optional<rational> ConstantEvaluator::evaluateUnaryOperator(Token _operator
 	}
 }
 
+std::optional<bytes> ConstantEvaluator::evaluateUnaryOperator(Token _operator, bytes const& _input)
+{
+	if (_operator != Token::BitNot)
+		return std::nullopt;
+	// Only fixed bytes of length 32 are supported for now
+	if (_input.size() != 32)
+		return std::nullopt;
+
+	bytes result(_input.size());
+	for (std::size_t i = 0; i < _input.size(); ++i)
+		result[i] = static_cast<std::uint8_t>(~_input[i]);
+
+	return result;
+}
+
 namespace
 {
 
@@ -248,21 +320,69 @@ TypedValue convertType(rational const& _value, Type const& _type)
 		else
 			return TypedValue{&_type, _value.numerator() / _value.denominator()};
 	}
-	else
-		return TypedValue{};
+	else if (auto const* fixedBytesType = dynamic_cast<FixedBytesType const*>(&_type))
+	{
+		// Only bytes32 is supported for now.
+		if (fixedBytesType->numBytes() != 32)
+			return TypedValue{};
+
+		if (
+			_value.denominator() != 1 ||
+			_value.numerator() < 0 ||
+			_value.numerator() > TypeProvider::integer(fixedBytesType->numBytes() * 8, IntegerType::Modifier::Unsigned)->max()
+		)
+			return TypedValue{};
+
+		u256 integerValue = u256(_value.numerator());
+		// toBigEndian always returns 32 bytes.
+		// If support for narrower bytesN is added, then unused high bytes need to be erased
+		bytes bytesRepresentation = toBigEndian(integerValue);
+		return TypedValue{&_type, bytesRepresentation};
+	}
+
+	return TypedValue{};
 }
 
 TypedValue convertType(std::string const& _value, Type const& _type)
 {
 	if (
-		_type.category() != Type::Category::StringLiteral &&
-		_type.category() != Type::Category::Array
+		_type.category() == Type::Category::StringLiteral ||
+		_type.category() == Type::Category::Array
+	)
+		return TypedValue{&_type, _value};
+	else if (_type.category() == Type::Category::FixedBytes)
+	{
+		auto const& fixedBytes = dynamic_cast<FixedBytesType const&>(_type);
+		// Only bytes32 is supported for now.
+		if (fixedBytes.numBytes() != 32)
+			return TypedValue{};
+
+		if (_value.size() > fixedBytes.numBytes())
+			return TypedValue{};
+
+		// Right pad with zeros to the full width
+		auto bytesValue = asBytes(_value);
+		bytesValue.resize(fixedBytes.numBytes(), 0);
+		return TypedValue{&_type, bytesValue};
+	}
+
+	return TypedValue{};
+}
+
+TypedValue convertType(bytes const& _value, Type const& _type)
+{
+	auto const* fixedBytes = dynamic_cast<FixedBytesType const*>(&_type);
+	if (
+		!fixedBytes ||
+		_value.size() != fixedBytes->numBytes() ||
+		fixedBytes->numBytes() != 32  // Supports only bytes32 for now
 	)
 		return TypedValue{};
+
 	return TypedValue{&_type, _value};
 }
 
-TypedValue convertType(TypedValue const& _value, Type const& _type)
+TypedValue convertType(TypedValue::Value const& _value, Type const& _type)
 {
 	return std::visit(util::GenericVisitor{
 		[&](std::string const& value) {
@@ -271,10 +391,18 @@ TypedValue convertType(TypedValue const& _value, Type const& _type)
 		[&](rational const& value) {
 			return convertType(value, _type);
 		},
+		[&](bytes const& value) {
+			return convertType(value, _type);
+		},
 		[&](std::monostate const&) {
 			return TypedValue{};
 		}
-	}, _value.value());
+	}, _value);
+}
+
+TypedValue convertType(TypedValue const& _typedValue, Type const& _type)
+{
+	return convertType(_typedValue.value(), _type);
 }
 
 TypedValue constantToTypedValue(Type const& _type)
@@ -355,20 +483,29 @@ void ConstantEvaluator::endVisit(UnaryOperation const& _operation)
 	if (!resultType)
 		return;
 	value = convertType(value, *resultType);
-	if (!value.isRational())
+
+	std::optional<TypedValue::Value> result = std::visit(util::GenericVisitor {
+		[&](rational const& _value) -> std::optional<TypedValue::Value> {
+			return evaluateUnaryOperator(_operation.getOperator(), _value);
+		},
+		[&](bytes const& _value) -> std::optional<TypedValue::Value> {
+			return evaluateUnaryOperator(_operation.getOperator(), _value);
+		},
+		[](std::string const&) -> std::optional<TypedValue::Value> { return std::nullopt; },
+		[](std::monostate const&) -> std::optional<TypedValue::Value> { return std::nullopt; }
+	}, value.value());
+
+	if (!result)
 		return;
 
-	if (std::optional<rational> result = evaluateUnaryOperator(_operation.getOperator(), value.asRational()))
-	{
-		TypedValue convertedValue = convertType(*result, *resultType);
-		if (!convertedValue.type())
-			m_errorReporter.fatalTypeError(
-				3667_error,
-				_operation.location(),
-				"Arithmetic error when computing constant value."
-			);
-		m_values[&_operation] = convertedValue;
-	}
+	TypedValue convertedResult = convertType(*result, *resultType);
+	if (!convertedResult.type())
+		m_errorReporter.fatalTypeError(
+			3667_error,
+			_operation.location(),
+			"Arithmetic error when computing constant value."
+		);
+	m_values[&_operation] = convertedResult;
 }
 
 void ConstantEvaluator::endVisit(BinaryOperation const& _operation)
@@ -399,29 +536,45 @@ void ConstantEvaluator::endVisit(BinaryOperation const& _operation)
 		return;
 	}
 
+	bool isFixedBytesShift = [&]() {
+		if (_operation.getOperator() != Token::SAR && _operation.getOperator() != Token::SHL)
+			return false;
+		return
+			left.type()->category() == Type::Category::FixedBytes &&
+			(right.type()->category() == Type::Category::Integer || right.type()->category() == Type::Category::RationalNumber);
+	}();
+
 	left = convertType(left, *resultType);
-	right = convertType(right, *resultType);
-	if (
-		!left.isRational() ||
-		!right.isRational()
-	)
+	if (!isFixedBytesShift)
+		right = convertType(right, *resultType);
+
+	std::optional<TypedValue::Value> result = std::visit(util::GenericVisitor {
+		[&](rational const& _left, rational const& _right) -> std::optional<TypedValue::Value> {
+			return evaluateBinaryOperator(_operation.getOperator(), _left, _right);
+		},
+		[&](bytes const& _left, bytes const& _right) -> std::optional<TypedValue::Value> {
+			return evaluateBinaryOperator(_operation.getOperator(), _left, _right);
+		},
+		[&](bytes const& _left, rational const& _right) -> std::optional<TypedValue::Value> {
+			return evaluateBinaryOperator(_operation.getOperator(), _left, _right);
+		},
+		[](std::string const&, std::string const&) -> std::optional<TypedValue::Value> { return std::nullopt; },
+		[](std::monostate const&, std::monostate const&) -> std::optional<TypedValue::Value> { return std::nullopt; },
+		[](auto const&, auto const&) -> std::optional<TypedValue::Value> { return std::nullopt; }
+	}, left.value(), right.value());
+
+	if (!result)
 		return;
 
-	if (std::optional<rational> value = evaluateBinaryOperator(
-		_operation.getOperator(),
-		left.asRational(),
-		right.asRational()
-	))
-	{
-		TypedValue convertedValue = convertType(*value, *resultType);
-		if (!convertedValue.type())
-			m_errorReporter.fatalTypeError(
-				2643_error,
-				_operation.location(),
-				"Arithmetic error when computing constant value."
-			);
-		m_values[&_operation] = convertedValue;
-	}
+	TypedValue convertedValue = convertType(*result, *resultType);
+	if (!convertedValue.type())
+		m_errorReporter.fatalTypeError(
+			2643_error,
+			_operation.location(),
+			"Arithmetic error when computing constant value."
+		);
+	m_values[&_operation] = convertedValue;
+
 }
 
 void ConstantEvaluator::endVisit(Literal const& _literal)
@@ -500,6 +653,10 @@ TypedValue::TypedValue(Type const* _type, TypedValue::Value _value)
 		[&](rational const&) {
 			solAssert(dynamic_cast<RationalNumberType const*>(_type) || dynamic_cast<IntegerType const*>(_type));
 		},
+		[&](bytes const& _bytes) {
+			solAssert(dynamic_cast<FixedBytesType const*>(_type));
+			solAssert(dynamic_cast<FixedBytesType const*>(_type)->numBytes() == _bytes.size());
+		},
 		[&](std::monostate const&) {
 			solAssert(!_type);
 		}
@@ -521,4 +678,11 @@ rational const& TypedValue::asRational() const
 	auto const* rationalValue = std::get_if<rational>(&m_value);
 	solAssert(rationalValue);
 	return *rationalValue;
+}
+
+bytes const& TypedValue::asBytes() const
+{
+	auto const* bytesValue = std::get_if<bytes>(&m_value);
+	solAssert(bytesValue);
+	return *bytesValue;
 }
