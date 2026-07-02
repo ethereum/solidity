@@ -92,7 +92,13 @@ void EVMObjectCompiler::run(Object const& _object, bool _optimize, bool _viaSSAC
 				_object.code()->root(),
 				false
 			);
+#ifdef SLOW_DEBUG
+			controlFlowGraphs->checkInvariants();
+#endif
 			ssa::transform::optimize(*controlFlowGraphs);
+#ifdef SLOW_DEBUG
+			controlFlowGraphs->checkInvariants();
+#endif
 			ssa::ControlFlowGraphsLiveness const liveness(*controlFlowGraphs);
 			ssa::CodeTransform::run(
 				m_assembly,

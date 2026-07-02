@@ -73,6 +73,8 @@ struct ControlFlowGraphs
 		return output.str();
 	}
 
+	void checkInvariants() const;
+
 	std::string print() const
 	{
 		std::ostringstream output;

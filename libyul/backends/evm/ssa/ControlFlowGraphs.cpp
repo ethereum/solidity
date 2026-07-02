@@ -18,8 +18,14 @@
 
 #include <libyul/backends/evm/ssa/ControlFlowGraphs.h>
 
+#include <range/v3/view/enumerate.hpp>
 #include <range/v3/view/transform.hpp>
 #include <range/v3/range/conversion.hpp>
+
+#include <fmt/format.h>
+
+#include <set>
+#include <iostream>
 
 using namespace solidity::yul::ssa;
 
@@ -32,3 +38,22 @@ std::string ControlFlowGraphsLiveness::toDot() const
 {
 	return controlFlowGraphs.get().toDot(this);
 }
+
+#ifdef SLOW_DEBUG
+// Checks: (1) there is at least one graph, (2) the graph at mainGraphID() is the main one,
+//         (3) all CFG names are unique, then (4) calls the invariant on the CFGs themselves
+void ControlFlowGraphs::checkInvariants() const
+{
+	yulAssert(!functionGraphs.empty(), "No control flow graphs.");
+	std::set<std::string> names;
+	for (auto const& [index, cfg]: functionGraphs | ranges::views::enumerate)
+	{
+		if (index == mainGraphID())
+			yulAssert(cfg->isMainGraph(), fmt::format("Graph in the main slot is named '{}'", cfg->name));
+		else
+			yulAssert(!cfg->isMainGraph(), fmt::format("Graph {} is unnamed, i.e. a second main graph", index));
+		yulAssert(names.insert(cfg->name).second, fmt::format("Duplicate CFG name '{}'", cfg->name));
+		cfg->checkInvariants();
+	}
+}
+#endif
