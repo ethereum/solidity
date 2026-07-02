@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SSA-CFG Pipeline: Build → Optimize → Code-Transform</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --panel: #f6f8fa;
+    --border: #d0d7de;
+    --text: #1f2328;
+    --muted: #656d76;
+    --accent: #0969da;
+  }
+  html[data-theme="dark"] {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  header { padding: 20px 28px 8px; border-bottom: 1px solid var(--border); }
+  header h1 { margin: 0 0 4px; font-size: 20px; font-weight: 600; }
+  header p { margin: 0; color: var(--muted); font-size: 13px; }
+  header code, footer code {
+    background: var(--panel);
+    padding: 1px 5px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .toolbar {
+    padding: 10px 28px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .toolbar button {
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .toolbar button:hover { border-color: var(--accent); }
+  .toolbar .spacer { flex: 1; }
+  .toolbar span.hint { color: var(--muted); font-size: 12px; }
+  .diagram-wrap { padding: 20px; overflow: auto; }
+  .mermaid { display: flex; justify-content: center; }
+
+  /* ---- Node text: bold sans title (centered), justified serif body ---- */
+  /* NOTE: selectors are intentionally NOT scoped under .mermaid, so they also
+     apply while mermaid.render() measures labels in its temporary element.
+     Otherwise boxes get sized for the default font and clip the enlarged text. */
+  .nodeLabel b {
+    display: block;
+    width: 260px;
+    margin: 0 auto;
+    text-align: center;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-weight: 650;
+    font-size: 15px;
+    letter-spacing: 0.1px;
+  }
+  .nodeLabel span.body {
+    display: block;
+    width: 260px;
+    margin: 1.5em auto 0;
+    text-align: justify;
+    text-justify: inter-word;
+    hyphens: none;
+    font-family: "Charter", "Georgia", "Iowan Old Style", "Times New Roman", serif;
+    font-weight: 400;
+    font-size: 13.5px;
+    line-height: 1.5;
+    opacity: 0.95;
+  }
+  .nodeLabel span.body i { color: inherit; opacity: 0.8; }
+
+  /* Narrow the five exit leaf nodes so the CODE-TRANSFORM subgraph stays compact */
+  .exit .nodeLabel b { width: 150px; font-size: 13px; }
+  .exit .nodeLabel span.body { width: 150px; font-size: 12px; margin-top: 0.7em; }
+
+  /* Big, bold subgraph titles (1. BUILD / 2. OPTIMIZE / 3. CODE-TRANSFORM) */
+  .cluster-label, .cluster-label .nodeLabel, .cluster-label p, .cluster-label span {
+    font-size: 23px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.3px;
+  }
+
+  footer { padding: 14px 28px 30px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+<header>
+  <h1>SSA-CFG Pipeline &mdash; Build &rarr; Optimize &rarr; Code-Transform</h1>
+  <p>
+    Driven from <code>EVMObjectCompiler</code>'s <code>if (_viaSSACFG)</code> branch:
+    <code>SSACFGBuilder::build</code> &rarr; <code>transform::optimize</code> &rarr;
+    <code>ControlFlowGraphsLiveness</code> &rarr; <code>CodeTransform::run</code>.
+  </p>
+</header>
+
+<div class="toolbar">
+  <button id="zoomIn">Zoom +</button>
+  <button id="zoomOut">Zoom &minus;</button>
+  <button id="zoomReset">Reset</button>
+  <button id="themeToggle">Dark mode</button>
+  <div class="spacer"></div>
+  <span class="hint">Nodes reference the actual C++ functions / files in <code>libyul/backends/evm/ssa/</code>.</span>
+</div>
+
+<div class="diagram-wrap">
+  <div class="mermaid" id="graph"></div>
+</div>
+
+<footer>
+  Source map &mdash;
+  <b>Build:</b> <code>SSACFGBuilder.cpp:73</code> &middot;
+  <b>Optimize:</b> <code>transform/OptimizationPipeline.cpp:30</code> &middot;
+  <b>Liveness:</b> <code>LivenessAnalysis.cpp:52</code>, <code>ControlFlowGraphs.cpp:26</code> &middot;
+  <b>Layout:</b> <code>StackLayoutGenerator.cpp:85</code> &middot;
+  <b>Code-transform:</b> <code>CodeTransform.cpp:45</code>
+</footer>
+
+<!-- Raw-text block: the browser does NOT decode entities or parse tags inside a
+     non-JS <script>, so textContent returns the diagram source verbatim. -->
+<script type="application/mermaid" id="src">
+flowchart TD
+
+%% ============================================================
+%% PHASE 1 — BUILD  (SSACFGBuilder::build)
+%% ============================================================
+subgraph BUILD["1 . BUILD &mdash; ssa::SSACFGBuilder::build()"]
+  direction TB
+  B1["<b>Analyze control-flow side effects</b><span class='body'>ControlFlowSideEffectsCollector walks the Yul and records, per function &amp; builtin, whether it <i>can continue</i> or always diverts (revert / return / stop / infinite loop).</span>"]
+  B2["<b>Set up graph containers</b><span class='body'>Allocate ControlFlowGraphs holding one SSACFG per function; the main code becomes functionGraphs[0]. Create and seal its entry block.</span>"]
+  B3{"<b>Walk block statements</b><span class='body'>operator()(Block): pre-register all FunctionDefinitions (mutual visibility), then std::visit each statement to dispatch by kind.</span>"}
+
+  B4["<b>Straight-line statements</b><span class='body'>VariableDeclaration / Assignment / ExpressionStatement: evaluate the RHS expression tree (right-to-left args) into value ids and bind results to variables.</span>"]
+  B5["<b>Structured control flow</b><span class='body'>If / Switch / ForLoop / Break / Continue / Leave: create fresh basic blocks, wire them with conditional &amp; unconditional jumps, and seal each once its predecessors are final.</span>"]
+  B6["<b>Recurse into functions</b><span class='body'>FunctionDefinition &rarr; buildFunctionGraph: each function (pre-registered so calls see each other) gets its own SSACFG subgraph with argument and return-variable bindings, built by the same walk.</span>"]
+  B7["<b>Lower calls</b><span class='body'>visitFunctionCall emits builtin (makeBuiltinCall) or user-function (makeCall) instructions. A call that can't continue closes its block as Terminated and opens a fresh unreachable successor.</span>"]
+
+  B8["<b>SSA values &amp; phis on the fly</b><span class='body'>Every read/write resolves through readVariable / writeVariable. Merge points get phi nodes, completed with upsilon operands when a block is <i>sealed</i> (Braun et al. algorithm).</span>"]
+  B9["<b>Close the graph</b><span class='body'>The final block's exit is set to MainExit; each function subgraph ends with an artificial Leave / FunctionReturn.</span>"]
+
+  B1 --> B2 --> B3
+  B3 -->|"decl / assign / expr"| B4
+  B3 -->|"if / switch / for"| B5
+  B3 -->|"function def"| B6
+  B3 -->|"function call"| B7
+  B4 --> B8
+  B5 --> B8
+  B6 --> B8
+  B7 --> B8
+  B8 --> B9
+  B6 -.->|"recursive build"| B3
+end
+
+%% ============================================================
+%% PHASE 2 — OPTIMIZE  (transform::optimize)
+%% ============================================================
+subgraph OPT["2 . OPTIMIZE &mdash; ssa::transform::optimize()"]
+  direction TB
+  O0(["for each cfg in functionGraphs"])
+  O1["<b>Drop unreachable blocks</b><span class='body'>UnreachableBlockCleaner prunes blocks no longer reachable from the entry (e.g. after non-continuing calls), freeing their block slots.</span>"]
+  O2["<b>Eliminate trivial phis</b><span class='body'>TrivialPhiEliminator collapses phi nodes whose operands all reduce to a single value, replacing uses and cascading the simplification to newly-trivial phis.</span>"]
+  O3["<b>Remove identities &amp; nops</b><span class='body'>IdentityAndNopRemover strips no-op instructions and identity projections so the CFG carries only real work into codegen.</span>"]
+  O4["<b>Outliner (disabled)</b><span class='body'><i>runOutliner &mdash; common-code outlining, currently commented out in the pipeline.</i></span>"]
+
+  O0 --> O1 --> O2 --> O3 --> O4
+  O4 -.->|"next cfg"| O0
+end
+
+%% ============================================================
+%% PHASE 3 — CODE TRANSFORM  (liveness + CodeTransform::run)
+%% ============================================================
+subgraph XFORM["3 . CODE-TRANSFORM &mdash; ControlFlowGraphsLiveness + CodeTransform::run()"]
+  direction TB
+  C1["<b>Liveness analysis (per CFG)</b><span class='body'>LivenessAnalysis: topological sort + loop-nesting forest, then DAG-DFS and loop-tree DFS compute live-in / live-out sets, plus per-operation liveOut needed for stack layout.</span>"]
+  C2["<b>Function labels &amp; call graph</b><span class='body'>registerFunctionLabels assigns an assembly label per function; CallGraph identifies recursion so recursive functions are excluded from spilling.</span>"]
+
+  C3(["Pass 1 &mdash; for each CFG"])
+  C4["<b>Gather call sites</b><span class='body'>gatherCallSites collects the call instructions; spillingAllowed = !isRecursive(graphID).</span>"]
+  C5["<b>Stack layout + spilling</b><span class='body'>StackLayoutGenerator::generate lays out the stack via a Kahn traversal + StackShuffler, spilling values to memory when the stack gets too deep.</span>"]
+  C5L{"spill set grew?"}
+  C6["<b>Collect results</b><span class='body'>Store this CFG's layout and spill set into layouts[] / spillSetsPerCFG[].</span>"]
+
+  C7["<b>Global memory addressing</b><span class='body'>spill::MemoryAddressing assigns concrete memory slots to every spilled value across all functions.</span>"]
+
+  C8(["Pass 2 &mdash; for each CFG"])
+  C9["<b>Emit assembly per block</b><span class='body'>Construct a CodeTransform and walk from entry: append block labels, materialize phis (spillStore), emit each operation, and StackShuffler-reorder the stack into the block's expected exit layout.</span>"]
+  C10{"<b>Block-exit dispatch</b><span class='body'>std::visit on block.exit selects the terminator.</span>"}
+  C11["<b>Out-of-SSA on edges (PhiInverse)</b><span class='body'>On Jump / ConditionalJump, PhiInverse rewrites the successor's phi operands into upsilon stack moves so each value lands in its phi slot; StackShuffler then arranges the target's expected stackIn.</span>"]
+  X0["<b>Emit block terminator</b><span class='body'>One std::visit arm per exit &mdash; <i>MainExit</i> &amp; <i>Terminated</i> emit nothing; <i>Jump</i> &rarr; JUMP; <i>ConditionalJump</i> &rarr; JUMPI on the stack-top condition; <i>FunctionReturn</i> jumps back to the caller's return label.</span>"]
+
+  C1 --> C2 --> C3 --> C4 --> C5 --> C5L
+  C5L -->|"yes: re-run"| C5
+  C5L -->|"no: fixed point"| C6
+  C6 -.->|"next cfg"| C3
+  C6 --> C7 --> C8 --> C9 --> C10
+  C10 -->|"Jump / ConditionalJump"| C11
+  C11 --> X0
+  C10 -->|"MainExit / FunctionReturn / Terminated"| X0
+  C9 -.->|"next block"| C9
+end
+
+%% ============================================================
+%% Cross-phase edges
+%% ============================================================
+BUILD -->|"unique_ptr&lt;ControlFlowGraphs&gt;"| OPT
+OPT -->|"optimized CFGs"| XFORM
+XFORM -->|"accumulated EVM assembly"| DONE["<b>EVM AbstractAssembly</b><span class='body'>the CodeTransform appends jumps, labels &amp; stack ops here while emitting each block &mdash; the result is the final bytecode / assembly items.</span>"]
+
+classDef build   fill:#dff5e6,stroke:#2ea043,color:#0b2e17;
+classDef opt     fill:#ece3fb,stroke:#8957e5,color:#2a1a4d;
+classDef xform   fill:#ddeeff,stroke:#1f6feb,color:#0b2540;
+classDef exit    fill:#eef2f6,stroke:#8b949e,color:#1b2733;
+classDef loop    fill:#eef1f4,stroke:#8b949e,color:#1b2733;
+classDef done    fill:#ffe9d1,stroke:#db6d28,color:#5a2c00;
+
+class B1,B2,B3,B4,B5,B6,B7,B8,B9 build;
+class O1,O2,O3,O4 opt;
+class C1,C2,C4,C5,C5L,C6,C7,C9,C10,C11,X0 xform;
+class O0,C3,C8 loop;
+class DONE done;
+</script>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+
+  // Verbatim source from the raw-text script block (no entity decoding, no tag parsing).
+  const source = document.getElementById("src").textContent;
+  const target = document.getElementById("graph");
+
+  const baseCfg = {
+    securityLevel: "loose",
+    flowchart: { curve: "basis", nodeSpacing: 28, rankSpacing: 60, htmlLabels: true, padding: 10 },
+    themeVariables: { fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif', fontSize: '16px' },
+  };
+
+  let renderCount = 0;
+  async function render(theme) {
+    mermaid.initialize({ ...baseCfg, theme });
+    // render(id, text) takes the source STRING directly — no DOM round-trip, so
+    // entities like &lt; and inline <b>/<span> tags reach mermaid intact.
+    const { svg } = await mermaid.render("g" + renderCount++, source);
+    target.innerHTML = svg;
+    apply();
+  }
+
+  // Theme toggle (page + mermaid base theme). Node fills stay constant (light islands).
+  let dark = false;
+  const themeBtn = document.getElementById("themeToggle");
+  themeBtn.onclick = async () => {
+    dark = !dark;
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+    themeBtn.textContent = dark ? "Light mode" : "Dark mode";
+    await render(dark ? "dark" : "default");
+  };
+
+  // Zoom controls
+  let scale = 1;
+  const apply = () => { target.style.transform = `scale(${scale})`; target.style.transformOrigin = "top center"; };
+  document.getElementById("zoomIn").onclick    = () => { scale = Math.min(scale + 0.15, 3); apply(); };
+  document.getElementById("zoomOut").onclick   = () => { scale = Math.max(scale - 0.15, 0.4); apply(); };
+  document.getElementById("zoomReset").onclick = () => { scale = 1; apply(); };
+
+  await render("default");
+</script>
+</body>
+</html>
