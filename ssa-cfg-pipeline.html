@@ -89,6 +89,19 @@
   }
   .nodeLabel span.body i { color: inherit; opacity: 0.8; }
 
+  /* Source-code identifiers: bold monospace so they stand out and are searchable.
+     Unscoped (like the rules above) so mermaid measures labels at this size. */
+  .nodeLabel code {
+    font-family: ui-monospace, "SF Mono", "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono", monospace;
+    font-weight: 700;
+    font-size: 0.9em;
+    letter-spacing: 0;
+    color: inherit;
+    background: rgba(27, 31, 36, 0.09);
+    border-radius: 4px;
+    padding: 0.5px 3px;
+  }
+
   /* Narrow the five exit leaf nodes so the CODE-TRANSFORM subgraph stays compact */
   .exit .nodeLabel b { width: 150px; font-size: 13px; }
   .exit .nodeLabel span.body { width: 150px; font-size: 12px; margin-top: 0.7em; }
@@ -145,17 +158,17 @@ flowchart TD
 %% ============================================================
 subgraph BUILD["1 . BUILD &mdash; ssa::SSACFGBuilder::build()"]
   direction TB
-  B1["<b>Analyze control-flow side effects</b><span class='body'>ControlFlowSideEffectsCollector walks the Yul and records, per function &amp; builtin, whether it <i>can continue</i> or always diverts (revert / return / stop / infinite loop).</span>"]
-  B2["<b>Set up graph containers</b><span class='body'>Allocate ControlFlowGraphs holding one SSACFG per function; the main code becomes functionGraphs[0]. Create and seal its entry block.</span>"]
-  B3{"<b>Walk block statements</b><span class='body'>operator()(Block): pre-register all FunctionDefinitions (mutual visibility), then std::visit each statement to dispatch by kind.</span>"}
+  B1["<b>Analyze control-flow side effects</b><span class='body'><code>ControlFlowSideEffectsCollector</code> walks the Yul and records, per function &amp; builtin, whether it <i>can continue</i> or always diverts (revert / return / stop / infinite loop).</span>"]
+  B2["<b>Set up graph containers</b><span class='body'>Allocate <code>ControlFlowGraphs</code> holding one <code>SSACFG</code> per function; the main code becomes <code>functionGraphs[0]</code>. Create and seal its entry block.</span>"]
+  B3{"<b>Walk block statements</b><span class='body'><code>operator()(Block)</code>: pre-register all <code>FunctionDefinition</code>s (mutual visibility), then <code>std::visit</code> each statement to dispatch by kind.</span>"}
 
-  B4["<b>Straight-line statements</b><span class='body'>VariableDeclaration / Assignment / ExpressionStatement: evaluate the RHS expression tree (right-to-left args) into value ids and bind results to variables.</span>"]
-  B5["<b>Structured control flow</b><span class='body'>If / Switch / ForLoop / Break / Continue / Leave: create fresh basic blocks, wire them with conditional &amp; unconditional jumps, and seal each once its predecessors are final.</span>"]
-  B6["<b>Recurse into functions</b><span class='body'>FunctionDefinition &rarr; buildFunctionGraph: each function (pre-registered so calls see each other) gets its own SSACFG subgraph with argument and return-variable bindings, built by the same walk.</span>"]
-  B7["<b>Lower calls</b><span class='body'>visitFunctionCall emits builtin (makeBuiltinCall) or user-function (makeCall) instructions. A call that can't continue closes its block as Terminated and opens a fresh unreachable successor.</span>"]
+  B4["<b>Straight-line statements</b><span class='body'><code>VariableDeclaration</code> / <code>Assignment</code> / <code>ExpressionStatement</code>: evaluate the RHS expression tree (right-to-left args) into value ids and bind results to variables.</span>"]
+  B5["<b>Structured control flow</b><span class='body'><code>If</code> / <code>Switch</code> / <code>ForLoop</code> / <code>Break</code> / <code>Continue</code> / <code>Leave</code>: create fresh basic blocks, wire them with conditional &amp; unconditional jumps, and seal each once its predecessors are final.</span>"]
+  B6["<b>Recurse into functions</b><span class='body'><code>FunctionDefinition</code> &rarr; <code>buildFunctionGraph</code>: each function (pre-registered so calls see each other) gets its own <code>SSACFG</code> subgraph with argument and return-variable bindings, built by the same walk.</span>"]
+  B7["<b>Lower calls</b><span class='body'><code>visitFunctionCall</code> emits builtin (<code>makeBuiltinCall</code>) or user-function (<code>makeCall</code>) instructions. A call that can't continue closes its block as <code>Terminated</code> and opens a fresh unreachable successor.</span>"]
 
-  B8["<b>SSA values &amp; phis on the fly</b><span class='body'>Every read/write resolves through readVariable / writeVariable. Merge points get phi nodes, completed with upsilon operands when a block is <i>sealed</i> (Braun et al. algorithm).</span>"]
-  B9["<b>Close the graph</b><span class='body'>The final block's exit is set to MainExit; each function subgraph ends with an artificial Leave / FunctionReturn.</span>"]
+  B8["<b>SSA values &amp; phis on the fly</b><span class='body'>Every read/write resolves through <code>readVariable</code> / <code>writeVariable</code>. Merge points get phi nodes, completed with upsilon operands when a block is <i>sealed</i> (Braun et al. algorithm).</span>"]
+  B9["<b>Close the graph</b><span class='body'>The final block's exit is set to <code>MainExit</code>; each function subgraph ends with an artificial <code>Leave</code> / <code>FunctionReturn</code>.</span>"]
 
   B1 --> B2 --> B3
   B3 -->|"decl / assign / expr"| B4
@@ -176,10 +189,10 @@ end
 subgraph OPT["2 . OPTIMIZE &mdash; ssa::transform::optimize()"]
   direction TB
   O0(["for each cfg in functionGraphs"])
-  O1["<b>Drop unreachable blocks</b><span class='body'>UnreachableBlockCleaner prunes blocks no longer reachable from the entry (e.g. after non-continuing calls), freeing their block slots.</span>"]
-  O2["<b>Eliminate trivial phis</b><span class='body'>TrivialPhiEliminator collapses phi nodes whose operands all reduce to a single value, replacing uses and cascading the simplification to newly-trivial phis.</span>"]
-  O3["<b>Remove identities &amp; nops</b><span class='body'>IdentityAndNopRemover strips no-op instructions and identity projections so the CFG carries only real work into codegen.</span>"]
-  O4["<b>Outliner (disabled)</b><span class='body'><i>runOutliner &mdash; common-code outlining, currently commented out in the pipeline.</i></span>"]
+  O1["<b>Drop unreachable blocks</b><span class='body'><code>UnreachableBlockCleaner</code> prunes blocks no longer reachable from the entry (e.g. after non-continuing calls), freeing their block slots.</span>"]
+  O2["<b>Eliminate trivial phis</b><span class='body'><code>TrivialPhiEliminator</code> collapses phi nodes whose operands all reduce to a single value, replacing uses and cascading the simplification to newly-trivial phis.</span>"]
+  O3["<b>Remove identities &amp; nops</b><span class='body'><code>IdentityAndNopRemover</code> strips no-op instructions and identity projections so the CFG carries only real work into codegen.</span>"]
+  O4["<b>Outliner (disabled)</b><span class='body'><i><code>runOutliner</code> &mdash; common-code outlining, currently commented out in the pipeline.</i></span>"]
 
   O0 --> O1 --> O2 --> O3 --> O4
   O4 -.->|"next cfg"| O0
@@ -190,22 +203,22 @@ end
 %% ============================================================
 subgraph XFORM["3 . CODE-TRANSFORM &mdash; ControlFlowGraphsLiveness + CodeTransform::run()"]
   direction TB
-  C1["<b>Liveness analysis (per CFG)</b><span class='body'>LivenessAnalysis: topological sort + loop-nesting forest, then DAG-DFS and loop-tree DFS compute live-in / live-out sets, plus per-operation liveOut needed for stack layout.</span>"]
-  C2["<b>Function labels &amp; call graph</b><span class='body'>registerFunctionLabels assigns an assembly label per function; CallGraph identifies recursion so recursive functions are excluded from spilling.</span>"]
+  C1["<b>Liveness analysis (per CFG)</b><span class='body'><code>LivenessAnalysis</code>: topological sort + loop-nesting forest, then DAG-DFS and loop-tree DFS compute live-in / live-out sets, plus per-operation <code>liveOut</code> needed for stack layout.</span>"]
+  C2["<b>Function labels &amp; call graph</b><span class='body'><code>registerFunctionLabels</code> assigns an assembly label per function; <code>CallGraph</code> identifies recursion so recursive functions are excluded from spilling.</span>"]
 
   C3(["Pass 1 &mdash; for each CFG"])
-  C4["<b>Gather call sites</b><span class='body'>gatherCallSites collects the call instructions; spillingAllowed = !isRecursive(graphID).</span>"]
-  C5["<b>Stack layout + spilling</b><span class='body'>StackLayoutGenerator::generate lays out the stack via a Kahn traversal + StackShuffler, spilling values to memory when the stack gets too deep.</span>"]
+  C4["<b>Gather call sites</b><span class='body'><code>gatherCallSites</code> collects the call instructions; <code>spillingAllowed = !isRecursive(graphID)</code>.</span>"]
+  C5["<b>Stack layout + spilling</b><span class='body'><code>StackLayoutGenerator::generate</code> lays out the stack via a Kahn traversal + <code>StackShuffler</code>, spilling values to memory when the stack gets too deep.</span>"]
   C5L{"spill set grew?"}
-  C6["<b>Collect results</b><span class='body'>Store this CFG's layout and spill set into layouts[] / spillSetsPerCFG[].</span>"]
+  C6["<b>Collect results</b><span class='body'>Store this CFG's layout and spill set into <code>layouts[]</code> / <code>spillSetsPerCFG[]</code>.</span>"]
 
-  C7["<b>Global memory addressing</b><span class='body'>spill::MemoryAddressing assigns concrete memory slots to every spilled value across all functions.</span>"]
+  C7["<b>Global memory addressing</b><span class='body'><code>spill::MemoryAddressing</code> assigns concrete memory slots to every spilled value across all functions.</span>"]
 
   C8(["Pass 2 &mdash; for each CFG"])
-  C9["<b>Emit assembly per block</b><span class='body'>Construct a CodeTransform and walk from entry: append block labels, materialize phis (spillStore), emit each operation, and StackShuffler-reorder the stack into the block's expected exit layout.</span>"]
-  C10{"<b>Block-exit dispatch</b><span class='body'>std::visit on block.exit selects the terminator.</span>"}
-  C11["<b>Out-of-SSA on edges (PhiInverse)</b><span class='body'>On Jump / ConditionalJump, PhiInverse rewrites the successor's phi operands into upsilon stack moves so each value lands in its phi slot; StackShuffler then arranges the target's expected stackIn.</span>"]
-  X0["<b>Emit block terminator</b><span class='body'>One std::visit arm per exit &mdash; <i>MainExit</i> &amp; <i>Terminated</i> emit nothing; <i>Jump</i> &rarr; JUMP; <i>ConditionalJump</i> &rarr; JUMPI on the stack-top condition; <i>FunctionReturn</i> jumps back to the caller's return label.</span>"]
+  C9["<b>Emit assembly per block</b><span class='body'>Construct a <code>CodeTransform</code> and walk from entry: append block labels, materialize phis (<code>spillStore</code>), emit each operation, and <code>StackShuffler</code>-reorder the stack into the block's expected exit layout.</span>"]
+  C10{"<b>Block-exit dispatch</b><span class='body'><code>std::visit</code> on <code>block.exit</code> selects the terminator.</span>"}
+  C11["<b>Out-of-SSA on edges (PhiInverse)</b><span class='body'>On <code>Jump</code> / <code>ConditionalJump</code>, <code>PhiInverse</code> rewrites the successor's phi operands into upsilon stack moves so each value lands in its phi slot; <code>StackShuffler</code> then arranges the target's expected <code>stackIn</code>.</span>"]
+  X0["<b>Emit block terminator</b><span class='body'>One <code>std::visit</code> arm per exit &mdash; <code>MainExit</code> &amp; <code>Terminated</code> emit nothing; <code>Jump</code> &rarr; <code>JUMP</code>; <code>ConditionalJump</code> &rarr; <code>JUMPI</code> on the stack-top condition; <code>FunctionReturn</code> jumps back to the caller's return label.</span>"]
 
   C1 --> C2 --> C3 --> C4 --> C5 --> C5L
   C5L -->|"yes: re-run"| C5
@@ -223,7 +236,7 @@ end
 %% ============================================================
 BUILD -->|"unique_ptr&lt;ControlFlowGraphs&gt;"| OPT
 OPT -->|"optimized CFGs"| XFORM
-XFORM -->|"accumulated EVM assembly"| DONE["<b>EVM AbstractAssembly</b><span class='body'>the CodeTransform appends jumps, labels &amp; stack ops here while emitting each block &mdash; the result is the final bytecode / assembly items.</span>"]
+XFORM -->|"accumulated EVM assembly"| DONE["<b>EVM AbstractAssembly</b><span class='body'>the <code>CodeTransform</code> appends jumps, labels &amp; stack ops here while emitting each block &mdash; the result is the final bytecode / assembly items.</span>"]
 
 classDef build   fill:#dff5e6,stroke:#2ea043,color:#0b2e17;
 classDef opt     fill:#ece3fb,stroke:#8957e5,color:#2a1a4d;
