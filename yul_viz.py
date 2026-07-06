@@ -13,8 +13,12 @@ Accepts a .yul or a .sol file:
 For the chosen Yul unit it:
   1. runs `solc --strict-assembly --ast-compact-json` and turns the AST JSON into DOT,
   2. runs the SSA-CFG pipeline via isoltest (which emits DOT for the SSA CFG),
-  3. renders both to PNG with `dot`,
+  3. renders both to PNG and PDF with `dot`,
   4. displays them inline via the kitty graphics protocol (`wezterm imgcat`).
+
+All source artifacts are also written into yul_viz_pics/ for examination:
+  <name>_ast.dot, <name>_ast.json  (the AST DOT and the raw AST JSON), and
+  <name>_cfg.dot                   (the SSA CFG DOT; no JSON form exists).
 
 Usage:
     ./yul_viz.py stuff.yul
@@ -320,7 +324,8 @@ def ast_json_to_dot(root: dict) -> str:
     return "\n".join(lines)
 
 
-def get_ast_dot(yul_text: str) -> str:
+def get_ast_dot(yul_text: str) -> tuple:
+    """Return (ast_dot, ast_json_pretty) for the given Yul text."""
     if not SOLC.exists():
         die(f"solc not found at {SOLC} (set $SOLC)")
     with tempfile.NamedTemporaryFile("w", suffix=".yul", delete=False) as tf:
@@ -342,7 +347,7 @@ def get_ast_dot(yul_text: str) -> str:
         root, _ = json.JSONDecoder().raw_decode(proc.stdout[brace:])
     except json.JSONDecodeError as e:
         die(f"could not parse AST JSON: {e}")
-    return ast_json_to_dot(root)
+    return ast_json_to_dot(root), json.dumps(root, indent=2)
 
 
 # ----------------------------------------------------------------------------
@@ -438,7 +443,7 @@ def main() -> None:
 
     yul_text = load_yul(input_path, ns.optimize)
 
-    ast_dot = get_ast_dot(yul_text)
+    ast_dot, ast_json = get_ast_dot(yul_text)
     cfg_dot: Optional[str] = None
     if _has_subobjects(yul_text):
         print("  note: unit still has sub-objects/data; skipping the SSA-CFG stage "
@@ -450,19 +455,33 @@ def main() -> None:
     outdir.mkdir(exist_ok=True)
     stem = input_path.stem
 
+    written = []  # source artifacts (dot/json) written for examination
+
+    # Dump the DOT/JSON sources next to the renders so they can be examined.
+    ast_dot_path = outdir / f"{stem}_ast.dot"
+    ast_dot_path.write_text(ast_dot + "\n")
+    written.append(ast_dot_path)
+    ast_json_path = outdir / f"{stem}_ast.json"
+    ast_json_path.write_text(ast_json + "\n")
+    written.append(ast_json_path)
+
     ast_png = render(ast_dot, outdir / f"{stem}_ast")
     display(ast_png, f"Yul AST — {input_path.name}")
-    written = [ast_png]
+    written += [ast_png, ast_png.with_suffix(".pdf")]
 
     if cfg_dot is not None:
+        cfg_dot_path = outdir / f"{stem}_cfg.dot"
+        cfg_dot_path.write_text(cfg_dot + "\n")
+        written.append(cfg_dot_path)
+        # The SSA CFG has no JSON form (isoltest emits DOT only), so none is written.
+
         cfg_png = render(cfg_dot, outdir / f"{stem}_cfg")
         display(cfg_png, f"SSA CFG — {input_path.name}")
-        written.append(cfg_png)
+        written += [cfg_png, cfg_png.with_suffix(".pdf")]
 
     print("\nWrote:")
-    for png in written:
-        print(f"  {png.resolve()}")
-        print(f"  {png.with_suffix('.pdf').resolve()}")
+    for path in written:
+        print(f"  {path.resolve()}")
 
 
 if __name__ == "__main__":
