@@ -349,7 +349,7 @@ void SSACFG::checkExitShapes() const
 		else if (auto const* ret = std::get_if<BasicBlock::FunctionReturn>(&bb.exit))
 		{
 			yulAssert(!isMainGraph(), fmt::format("FunctionReturn block {} in the main graph", blockId));
-			yulAssert(ret->returnValues.size() == numReturns,
+			yulAssert(et->returnValues.size() == numReturns,
 				fmt::format("FunctionReturn block {} yields {} values but graph declares {}", blockId, ret->returnValues.size(), numReturns)
 			);
 		}

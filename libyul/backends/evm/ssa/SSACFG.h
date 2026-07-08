@@ -21,9 +21,6 @@
 
 #pragma once
 
-// Configure with -DSLOW_DEBUG=ON to enable expensive structural invariant checks on the SSA CFG.
-// See SSACFG::checkInvariants at the bottom of the class. O(n^2)-ish, debug-only.
-
 #include <libyul/backends/evm/ssa/InstructionStore.h>
 #include <libyul/backends/evm/ssa/SSACFGDebugInfo.h>
 #include <libyul/backends/evm/ssa/SSACFGTypes.h>
