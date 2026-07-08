@@ -12,6 +12,10 @@
     --text: #1f2328;
     --muted: #656d76;
     --accent: #0969da;
+    /* Single source of truth for label widths. Everything derives from these:
+       the box Mermaid measures, the title, and the body all use one number. */
+    --node-w: 260px;
+    --exit-w: 160px;
   }
   html[data-theme="dark"] {
     --bg: #0d1117;
@@ -63,11 +67,22 @@
   /* ---- Node text: bold sans title (centered), justified serif body ---- */
   /* NOTE: selectors are intentionally NOT scoped under .mermaid, so they also
      apply while mermaid.render() measures labels in its temporary element.
-     Otherwise boxes get sized for the default font and clip the enlarged text. */
+     Otherwise boxes get sized for the default font and clip the enlarged text.
+
+     KEY: the fixed width lives on the ONE element mermaid measures (.nodeLabel),
+     not on the children. That makes the node box width == the content width by
+     construction, so nothing clips (box too narrow) or drifts off-center (box
+     too wide). white-space:normal stops mermaid from measuring the body as a
+     single unwrapped line. :has(b) restricts this to real node labels — the
+     subgraph titles (1.BUILD / 2.OPTIMIZE / 3.CODE-TRANSFORM) are ALSO rendered
+     inside a .nodeLabel but have no <b>, so they keep sizing to their own text. */
+  .nodeLabel:has(b) {
+    width: var(--node-w);
+    box-sizing: border-box;
+    white-space: normal;
+  }
   .nodeLabel b {
     display: block;
-    width: 260px;
-    margin: 0 auto;
     text-align: center;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     font-weight: 650;
@@ -76,8 +91,7 @@
   }
   .nodeLabel span.body {
     display: block;
-    width: 260px;
-    margin: 1.5em auto 0;
+    margin-top: 1.5em;
     text-align: justify;
     text-justify: inter-word;
     hyphens: none;
@@ -102,9 +116,11 @@
     padding: 0.5px 3px;
   }
 
-  /* Narrow the five exit leaf nodes so the CODE-TRANSFORM subgraph stays compact */
-  .exit .nodeLabel b { width: 150px; font-size: 13px; }
-  .exit .nodeLabel span.body { width: 150px; font-size: 12px; margin-top: 0.7em; }
+  /* Narrow the exit leaf nodes so the CODE-TRANSFORM subgraph stays compact.
+     Only the container width changes; the children still just fill it. */
+  .exit .nodeLabel:has(b) { width: var(--exit-w); }
+  .exit .nodeLabel b { font-size: 13px; }
+  .exit .nodeLabel span.body { font-size: 12px; margin-top: 0.7em; }
 
   /* Big, bold subgraph titles (1. BUILD / 2. OPTIMIZE / 3. CODE-TRANSFORM) */
   .cluster-label, .cluster-label .nodeLabel, .cluster-label p, .cluster-label span {
@@ -261,7 +277,9 @@ class DONE done;
 
   const baseCfg = {
     securityLevel: "loose",
-    flowchart: { curve: "basis", nodeSpacing: 28, rankSpacing: 60, htmlLabels: true, padding: 10 },
+    // wrappingWidth must be >= --node-w (260) or mermaid's own label max-width
+    // clips the fixed-width content. It's the label cap, not a per-node guess.
+    flowchart: { curve: "basis", nodeSpacing: 28, rankSpacing: 60, htmlLabels: true, padding: 10, wrappingWidth: 320 },
     themeVariables: { fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif', fontSize: '16px' },
   };
 
