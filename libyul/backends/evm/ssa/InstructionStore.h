@@ -168,7 +168,7 @@ public:
 
 #ifdef SLOW_DEBUG
 	void checkInvariants() const;
-	void assertValidOperand(InstId _id, std::string const& _ctx) const;
+	void checkValidOperand(InstId _id, std::string const& _ctx) const;
 #endif
 
 	/// Allocates a new Phi Inst defined in `_definingBlock`. Returns the new InstId.
