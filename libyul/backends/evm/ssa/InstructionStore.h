@@ -167,10 +167,7 @@ public:
 	}
 
 #ifdef SLOW_DEBUG
-	/// Verifies table-local invariants (no block topology); those live in `SSACFG::checkInvariants`.
 	void checkInvariants() const;
-
-	/// Asserts `_id` refers to an in-bounds, non-tombstone slot. `_ctx` names the referrer.
 	void assertValidOperand(InstId _id, std::string const& _ctx) const;
 #endif
 
