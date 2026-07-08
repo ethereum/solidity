@@ -214,17 +214,17 @@ std::vector<std::uint32_t> SSACFG::checkScheduling() const
 		BasicBlock const& bb = block(blockId);
 		for (InstId const instId: bb.instructions)
 		{
-			m_instructions.assertValidOperand(instId, fmt::format("instructions of block {}", blockId));
+			m_instructions.checkValidOperand(instId, fmt::format("instructions of block {}", blockId));
 			yulAssert(inst(instId).block == blockId,
 				fmt::format("{} scheduled in block {} but inst.block is {}", instId, blockId, inst(instId).block)
 			);
 			++scheduleCount[instId.value];
 		}
 		if (auto const* cj = std::get_if<BasicBlock::ConditionalJump>(&bb.exit))
-			m_instructions.assertValidOperand(cj->condition, fmt::format("condition of block {}", blockId));
+			m_instructions.checkValidOperand(cj->condition, fmt::format("condition of block {}", blockId));
 		else if (auto const* ret = std::get_if<BasicBlock::FunctionReturn>(&bb.exit))
 			for (InstId const rv: ret->returnValues)
-				m_instructions.assertValidOperand(rv, fmt::format("return value of block {}", blockId));
+				m_instructions.checkValidOperand(rv, fmt::format("return value of block {}", blockId));
 	}
 	return scheduleCount;
 }
@@ -298,7 +298,7 @@ void SSACFG::checkEntryExitAndArguments() const
 		fmt::format("{} FunctionArg insts but {} arguments", functionArgCount, arguments.size()));
 	for (InstId const arg: arguments)
 	{
-		m_instructions.assertValidOperand(arg, "cfg.arguments");
+		m_instructions.checkValidOperand(arg, "cfg.arguments");
 		yulAssert(isFunctionArg(arg), fmt::format("arguments entry {} is not a FunctionArg", arg));
 	}
 }

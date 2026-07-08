@@ -31,7 +31,7 @@
 
 using namespace solidity::yul::ssa;
 
-void InstructionStore::assertValidOperand(InstId const _id, std::string const& _ctx) const
+void InstructionStore::checkValidOperand(InstId const _id, std::string const& _ctx) const
 {
 	yulAssert(_id.hasValue(), fmt::format("Empty InstId referenced by {}", _ctx));
 	yulAssert(_id.value < numInsts(), fmt::format("InstId {} out of bounds (numInsts={}) in {}", _id, numInsts(), _ctx));
@@ -62,7 +62,7 @@ void InstructionStore::checkOpcodeShape(InstId const _id) const
 	Inst const& i = inst(_id);
 
 	for (InstId const in: i.inputs)
-		assertValidOperand(in, fmt::format("inputs of {}", _id));
+		checkValidOperand(in, fmt::format("inputs of {}", _id));
 
 	switch (i.opcode)
 	{
@@ -80,7 +80,7 @@ void InstructionStore::checkOpcodeShape(InstId const _id) const
 		yulAssert(i.payload && std::holds_alternative<UpsilonPayload>(*i.payload), fmt::format("Upsilon {} lacks an upsilon payload", _id));
 		InstId const phi = upsilonPhi(_id);
 		yulAssert(inst(phi).isPhi(), fmt::format("Upsilon {} targets non-phi {}", _id, phi));
-		assertValidOperand(phi, fmt::format("target phi of upsilon {}", _id));
+		checkValidOperand(phi, fmt::format("target phi of upsilon {}", _id));
 		break;
 	}
 	case InstOpcode::BuiltinCall:
@@ -102,7 +102,7 @@ void InstructionStore::checkOpcodeShape(InstId const _id) const
 		yulAssert(i.inputs.size() == 1, fmt::format("Projection {} needs exactly one input", _id));
 		yulAssert(!i.payload, fmt::format("Projection {} has a payload", _id));
 		InstId const producer = i.inputs.front();
-		assertValidOperand(producer, fmt::format("producer of projection {}", _id));
+		checkValidOperand(producer, fmt::format("producer of projection {}", _id));
 		yulAssert(producer.value < _id.value, fmt::format("Projection {} precedes its producer {}", _id, producer));
 		yulAssert(inst(producer).isOperation(), fmt::format("Producer {} of projection {} is not an operation", producer, _id));
 		NumReturnsSizeType const trailing = numTrailingProjections(producer);
@@ -134,7 +134,7 @@ void InstructionStore::checkLiteralDedup() const
 	// Every map entry must be valid
 	for (auto const& [value, id]: m_literalDedup)
 	{
-		assertValidOperand(id, "literal dedup table");
+		checkValidOperand(id, "literal dedup table");
 		yulAssert(inst(id).isLiteral(), fmt::format("Dedup entry {} is not a Const", id));
 		yulAssert(literalPayload(id) == value, fmt::format("Dedup entry {} carries a value differing from its key", id));
 	}
