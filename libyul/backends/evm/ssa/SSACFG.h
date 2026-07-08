@@ -21,6 +21,9 @@
 
 #pragma once
 
+// Configure with -DSLOW_DEBUG=ON to enable expensive structural invariant checks on the SSA CFG.
+// See SSACFG::checkInvariants at the bottom of the class. O(n^2)-ish, debug-only.
+
 #include <libyul/backends/evm/ssa/InstructionStore.h>
 #include <libyul/backends/evm/ssa/SSACFGDebugInfo.h>
 #include <libyul/backends/evm/ssa/SSACFGTypes.h>
@@ -548,6 +551,20 @@ private:
 				_fn(id, inst);
 		}
 	}
+
+#ifdef SLOW_DEBUG
+public:
+	/// Verifies structural invariants of this graph, firing a yulAssert on the first violation.
+	/// Meant to run right after the CFG is built (before optimisation). Up to O(n^2).
+	void checkInvariants() const;
+private:
+	std::vector<std::uint32_t> checkScheduling() const;
+	void checkEachInstScheduledOnce(std::vector<std::uint32_t> const& _scheduleCount) const;
+	void checkBlockConstraints() const;
+	void checkEdgeConsistency() const;
+	void checkEntryExitAndArguments() const;
+	void checkBlockRef(BlockId _id, std::string const& _ctx) const;
+#endif
 };
 
 }

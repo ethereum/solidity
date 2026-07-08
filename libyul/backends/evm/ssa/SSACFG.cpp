@@ -31,6 +31,12 @@
 #include <range/v3/view/transform.hpp>
 #include <range/v3/view/zip.hpp>
 
+#ifdef SLOW_DEBUG
+#include <map>
+#include <utility>
+#include <vector>
+#endif
+
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::yul;
@@ -180,3 +186,138 @@ std::string SSACFG::toDot(
 	else
 		return exporter.exportBlocks(entry, _includeDiGraphDefinition);
 }
+
+#ifdef SLOW_DEBUG
+void SSACFG::checkInvariants() const
+{
+	m_instructions.checkInvariants();
+	auto const scheduleCount = checkScheduling();
+	checkEachInstScheduledOnce(scheduleCount);
+	checkBlockConstraints();
+	checkEdgeConsistency();
+	checkEntryExitAndArguments();
+}
+
+void SSACFG::checkBlockRef(BlockId const _id, std::string const& _ctx) const
+{
+	yulAssert(hasBlock(_id), fmt::format("BlockId {} referenced by {} is not a live block", _id, _ctx));
+}
+
+std::vector<std::uint32_t> SSACFG::checkScheduling() const
+{
+	std::vector<std::uint32_t> scheduleCount(numInsts(), 0);
+	for (BlockId const blockId: liveBlocks())
+	{
+		BasicBlock const& bb = block(blockId);
+		for (InstId const instId: bb.instructions)
+		{
+			m_instructions.assertValidOperand(instId, fmt::format("instructions of block {}", blockId));
+			yulAssert(inst(instId).block == blockId,
+				fmt::format("{} scheduled in block {} but inst.block is {}", instId, blockId, inst(instId).block)
+			);
+			++scheduleCount[instId.value];
+		}
+		if (auto const* cj = std::get_if<BasicBlock::ConditionalJump>(&bb.exit))
+			m_instructions.assertValidOperand(cj->condition, fmt::format("condition of block {}", blockId));
+		else if (auto const* ret = std::get_if<BasicBlock::FunctionReturn>(&bb.exit))
+			for (InstId const rv: ret->returnValues)
+				m_instructions.assertValidOperand(rv, fmt::format("return value of block {}", blockId));
+	}
+	return scheduleCount;
+}
+
+void SSACFG::checkEachInstScheduledOnce(std::vector<std::uint32_t> const& _scheduleCount) const
+{
+	for (InstId const instId: instructionIds())
+	{
+		auto const count = _scheduleCount[instId.value];
+		if (isTombstone(instId))
+			yulAssert(count == 0, fmt::format("Tombstone {} appears in a block", instId));
+		else if (isUnreachable(instId))
+			yulAssert(count == 0, fmt::format("Unreachable {} should not be scheduled", instId));
+		else
+			yulAssert(count == 1, fmt::format("{} scheduled {} times (expected once)", instId, count));
+	}
+}
+
+void SSACFG::checkBlockConstraints() const
+{
+	for (InstId const instId: instructionIds())
+	{
+		if (isTombstone(instId))
+			continue;
+		Inst const& i = inst(instId);
+
+		if (i.opcode == InstOpcode::Const)
+			yulAssert(i.block == entry, fmt::format("Const {} not pinned to entry", instId));
+		else if (i.opcode == InstOpcode::Upsilon)
+		{
+			InstId const phi = upsilonPhi(instId);
+			checkBlockRef(i.block, fmt::format("block of upsilon {}", instId));
+			bool predFound = false;
+			for (BlockId const pred: block(inst(phi).block).entries)
+				if (pred == i.block)
+				{
+					predFound = true;
+					break;
+				}
+			yulAssert(predFound, fmt::format("Upsilon {} in block {} feeds phi {} from a non-predecessor", instId, i.block, phi));
+		}
+
+		if (i.isOperation())
+		{
+			std::size_t const n = numReturnsOf(instId);
+			if (n >= 2)
+				yulAssert(numTrailingProjections(instId) == n, fmt::format("Operation {} has a broken projection cluster", instId));
+		}
+	}
+}
+
+void SSACFG::checkEdgeConsistency() const
+{
+	std::map<std::pair<BlockId::ValueType, BlockId::ValueType>, int> succSide, predSide;
+	for (BlockId const blockId: liveBlocks())
+	{
+		BasicBlock const& bb = block(blockId);
+		bb.forEachExit([&](BlockId const succ) {
+			checkBlockRef(succ, fmt::format("successor of block {}", blockId));
+			++succSide[{blockId.value, succ.value}];
+		});
+		for (BlockId const pred: bb.entries)
+		{
+			checkBlockRef(pred, fmt::format("predecessor of block {}", blockId));
+			++predSide[{pred.value, blockId.value}];
+		}
+	}
+	yulAssert(succSide == predSide, "CFG predecessor/successor edges are inconsistent");
+}
+
+void SSACFG::checkEntryExitAndArguments() const
+{
+	yulAssert(hasBlock(entry), "Entry block is not live");
+	yulAssert(block(entry).entries.empty(), fmt::format("Entry block {} has predecessors", entry));
+	for (BlockId const exitBlock: exits)
+	{
+		checkBlockRef(exitBlock, "cfg.exits");
+		BasicBlock const& eb = block(exitBlock);
+		yulAssert(eb.isMainExitBlock() || eb.isTerminationBlock() || eb.isFunctionReturnBlock(),
+			fmt::format("Exit block {} is not terminal", exitBlock)
+		);
+	}
+
+	std::size_t functionArgCount = 0;
+	for (InstId const instId: instructionIds())
+		if (!isTombstone(instId) && isFunctionArg(instId))
+		{
+			++functionArgCount;
+			yulAssert(inst(instId).block == entry, fmt::format("FunctionArg {} not in entry block", instId));
+		}
+	yulAssert(functionArgCount == arguments.size(),
+		fmt::format("{} FunctionArg insts but {} arguments", functionArgCount, arguments.size()));
+	for (InstId const arg: arguments)
+	{
+		m_instructions.assertValidOperand(arg, "cfg.arguments");
+		yulAssert(isFunctionArg(arg), fmt::format("arguments entry {} is not a FunctionArg", arg));
+	}
+}
+#endif

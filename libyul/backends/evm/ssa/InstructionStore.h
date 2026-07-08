@@ -41,6 +41,7 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <string>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -164,6 +165,14 @@ public:
 		}
 		return static_cast<NumReturnsSizeType>(count);
 	}
+
+#ifdef SLOW_DEBUG
+	/// Verifies table-local invariants (no block topology); those live in `SSACFG::checkInvariants`.
+	void checkInvariants() const;
+
+	/// Asserts `_id` refers to an in-bounds, non-tombstone slot. `_ctx` names the referrer.
+	void assertValidOperand(InstId _id, std::string const& _ctx) const;
+#endif
 
 	/// Allocates a new Phi Inst defined in `_definingBlock`. Returns the new InstId.
 	InstId appendPhi(BlockId const _definingBlock)
@@ -457,6 +466,13 @@ private:
 			return _i.opcode == InstOpcode::Tombstone;
 		}
 	};
+
+#ifdef SLOW_DEBUG
+	void checkOpcodeShapes() const;
+	void checkOpcodeShape(InstId _id) const;
+	void checkLiteralDedup() const;
+	void checkValueDependencyAcyclic() const;
+#endif
 
 	util::TLSFFreeList<Inst, InstTombstone> m_insts;
 	std::map<u256, InstId> m_literalDedup;

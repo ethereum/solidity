@@ -39,6 +39,7 @@ option(SOLC_STATIC_STDLIBS "Link solc against static versions of libgcc and libs
 option(STRICT_Z3_VERSION "Require the exact version of Z3 solver expected by our test suite." ON)
 option(PEDANTIC "Enable extra warnings and pedantic build flags. Treat all warnings as errors." ON)
 option(PROFILE_OPTIMIZER_STEPS "Output performance metrics for the optimiser steps." OFF)
+option(SLOW_DEBUG "Enable expensive internal consistency checks (e.g. SSA CFG invariant checks)." ON)
 option(
 	IGNORE_VENDORED_DEPENDENCIES
 	"Ignore libraries provided as submodules of the repository and allow CMake to look for \
@@ -51,6 +52,7 @@ option(
 	OFF
 )
 mark_as_advanced(PROFILE_OPTIMIZER_STEPS)
+mark_as_advanced(SLOW_DEBUG)
 mark_as_advanced(IGNORE_VENDORED_DEPENDENCIES)
 mark_as_advanced(ONLY_BUILD_SOLIDITY_LIBRARIES)
 
@@ -78,6 +80,10 @@ endif()
 
 if (PROFILE_OPTIMIZER_STEPS)
     add_definitions(-DPROFILE_OPTIMIZER_STEPS)
+endif()
+
+if (SLOW_DEBUG)
+    add_definitions(-DSLOW_DEBUG)
 endif()
 
 # Figure out what compiler and system are we using
