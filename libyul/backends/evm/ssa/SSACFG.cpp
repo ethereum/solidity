@@ -32,6 +32,7 @@
 #include <range/v3/view/zip.hpp>
 
 #ifdef SLOW_DEBUG
+#include <algorithm>
 #include <map>
 #include <utility>
 #include <vector>
@@ -195,6 +196,8 @@ void SSACFG::checkInvariants() const
 	checkEachInstScheduledOnce(scheduleCount);
 	checkBlockConstraints();
 	checkEdgeConsistency();
+	checkPhiOperands();
+	checkExitShapes();
 	checkEntryExitAndArguments();
 }
 
@@ -250,19 +253,6 @@ void SSACFG::checkBlockConstraints() const
 
 		if (i.opcode == InstOpcode::Const)
 			yulAssert(i.block == entry, fmt::format("Const {} not pinned to entry", instId));
-		else if (i.opcode == InstOpcode::Upsilon)
-		{
-			InstId const phi = upsilonPhi(instId);
-			checkBlockRef(i.block, fmt::format("block of upsilon {}", instId));
-			bool predFound = false;
-			for (BlockId const pred: block(inst(phi).block).entries)
-				if (pred == i.block)
-				{
-					predFound = true;
-					break;
-				}
-			yulAssert(predFound, fmt::format("Upsilon {} in block {} feeds phi {} from a non-predecessor", instId, i.block, phi));
-		}
 
 		if (i.isOperation())
 		{
@@ -296,14 +286,6 @@ void SSACFG::checkEntryExitAndArguments() const
 {
 	yulAssert(hasBlock(entry), "Entry block is not live");
 	yulAssert(block(entry).entries.empty(), fmt::format("Entry block {} has predecessors", entry));
-	for (BlockId const exitBlock: exits)
-	{
-		checkBlockRef(exitBlock, "cfg.exits");
-		BasicBlock const& eb = block(exitBlock);
-		yulAssert(eb.isMainExitBlock() || eb.isTerminationBlock() || eb.isFunctionReturnBlock(),
-			fmt::format("Exit block {} is not terminal", exitBlock)
-		);
-	}
 
 	std::size_t functionArgCount = 0;
 	for (InstId const instId: instructionIds())
@@ -319,5 +301,61 @@ void SSACFG::checkEntryExitAndArguments() const
 		m_instructions.assertValidOperand(arg, "cfg.arguments");
 		yulAssert(isFunctionArg(arg), fmt::format("arguments entry {} is not a FunctionArg", arg));
 	}
+}
+
+void SSACFG::checkPhiOperands() const
+{
+	// Collect, per phi, the source blocks of the Upsilons feeding it.
+	std::map<InstId::ValueType, std::vector<BlockId::ValueType>> upsilonSources;
+	for (InstId const instId: instructionIds())
+	{
+		if (isTombstone(instId) || !isUpsilon(instId))
+			continue;
+		InstId const phi = upsilonPhi(instId);
+		checkBlockRef(inst(instId).block, fmt::format("block of upsilon {}", instId));
+		upsilonSources[phi.value].push_back(inst(instId).block.value);
+	}
+
+	// A phi must be fed by exactly one Upsilon per predecessor edge of its block, i.e. the
+	// multiset of Upsilon source blocks equals the multiset of the block's predecessors.
+	for (InstId const instId: instructionIds())
+	{
+		if (isTombstone(instId) || !isPhi(instId))
+			continue;
+		std::vector<BlockId::ValueType> predecessors;
+		for (BlockId const pred: block(inst(instId).block).entries)
+			predecessors.push_back(pred.value);
+		std::vector<BlockId::ValueType>& sources = upsilonSources[instId.value];
+		std::sort(predecessors.begin(), predecessors.end());
+		std::sort(sources.begin(), sources.end());
+		yulAssert(
+			sources == predecessors,
+			fmt::format("Phi {} in block {} is not fed by exactly one Upsilon per predecessor", instId, inst(instId).block)
+		);
+	}
+}
+
+void SSACFG::checkExitShapes() const
+{
+	std::size_t mainExitCount = 0;
+	for (BlockId const blockId: liveBlocks())
+	{
+		BasicBlock const& bb = block(blockId);
+		if (bb.isMainExitBlock())
+		{
+			yulAssert(isMainGraph(), fmt::format("MainExit block {} in a function graph", blockId));
+			++mainExitCount;
+		}
+		else if (auto const* ret = std::get_if<BasicBlock::FunctionReturn>(&bb.exit))
+		{
+			yulAssert(!isMainGraph(), fmt::format("FunctionReturn block {} in the main graph", blockId));
+			yulAssert ret->returnValues.size() == numReturns,
+				fmt::format("FunctionReturn block {} yields {} values but graph declares {}", blockId, ret->returnValues.size(), numReturns)
+			);
+		}
+	}
+	yulAssert(mainExitCount == (isMainGraph() ? 1u : 0u),
+		fmt::format("Graph has {} MainExit block(s), expected {}", mainExitCount, isMainGraph() ? 1u : 0u)
+	);
 }
 #endif

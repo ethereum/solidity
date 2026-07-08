@@ -562,6 +562,8 @@ private:
 	void checkEachInstScheduledOnce(std::vector<std::uint32_t> const& _scheduleCount) const;
 	void checkBlockConstraints() const;
 	void checkEdgeConsistency() const;
+	void checkPhiOperands() const;
+	void checkExitShapes() const;
 	void checkEntryExitAndArguments() const;
 	void checkBlockRef(BlockId _id, std::string const& _ctx) const;
 #endif
