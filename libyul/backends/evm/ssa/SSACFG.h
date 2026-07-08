@@ -551,8 +551,6 @@ private:
 
 #ifdef SLOW_DEBUG
 public:
-	/// Verifies structural invariants of this graph, firing a yulAssert on the first violation.
-	/// Meant to run right after the CFG is built (before optimisation). Up to O(n^2).
 	void checkInvariants() const;
 private:
 	std::vector<std::uint32_t> checkScheduling() const;
