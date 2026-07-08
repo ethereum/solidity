@@ -79,6 +79,10 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 		eth_add_cxx_compiler_flag_if_supported(-Wduplicate-enum)
 		eth_add_cxx_compiler_flag_if_supported(-Wlogical-op)
 		eth_add_cxx_compiler_flag_if_supported(-Wno-unknown-attributes)
+		# Recent clang classifies __COUNTER__ as a "C2y extension" and, under -pedantic
+		# -Werror, this turns Boost.Test's BOOST_AUTO_TEST_* macros (which use __COUNTER__)
+		# into hard errors. GCC and older clang don't have this flag, so it's a no-op there.
+		eth_add_cxx_compiler_flag_if_supported(-Wno-c2y-extensions)
 	endif()
 
 	# Configuration-specific compiler settings.
