@@ -117,6 +117,7 @@ private:
 	std::vector<TestFunctionCall> m_tests;
 	std::map<std::string, Builtin> const m_builtins;
 	std::vector<SideEffectHook> const m_sideEffectHooks;
+	std::string m_targetContract;
 	bool m_testCaseWantsYulRun = true;
 	bool m_testCaseWantsLegacyRun = true;
 	bool m_testCaseWantsSSACFGRun = false;

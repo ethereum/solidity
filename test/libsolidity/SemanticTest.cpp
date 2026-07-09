@@ -76,6 +76,7 @@ SemanticTest::SemanticTest(
 	static std::set<std::string> const yulRunTriggers{"also", "true"};
 	static std::set<std::string> const legacyRunTriggers{"also", "false", "default"};
 
+	m_targetContract = m_reader.stringSetting("targetContract", "");
 	m_requiresYulOptimizer = m_reader.enumSetting<RequiresYulOptimizer>(
 		"requiresYulOptimizer",
 		{
@@ -405,9 +406,9 @@ TestCase::TestResult SemanticTest::runTest(
 		else
 		{
 			if (test.call().kind == FunctionCall::Kind::Constructor)
-				deploy("", test.call().value.value, test.call().arguments.rawBytes(), libraries);
+				deploy(m_targetContract, test.call().value.value, test.call().arguments.rawBytes(), libraries);
 			else
-				soltestAssert(deploy("", 0, bytes(), libraries), "Failed to deploy contract.");
+				soltestAssert(deploy(m_targetContract, 0, bytes(), libraries), "Failed to deploy contract.");
 			constructed = true;
 		}
 
