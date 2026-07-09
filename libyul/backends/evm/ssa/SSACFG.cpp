@@ -310,6 +310,7 @@ void SSACFG::checkArguments() const
 		}
 	yulAssert(functionArgCount == arguments.size(),
 		fmt::format("{} FunctionArg insts but {} arguments", functionArgCount, arguments.size()));
+
 	for (InstId const arg: arguments)
 	{
 		m_instructions.checkValidOperand(arg, "cfg.arguments");
