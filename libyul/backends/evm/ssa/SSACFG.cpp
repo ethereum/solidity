@@ -246,6 +246,20 @@ void SSACFG::checkEachInstScheduledOnce(std::vector<std::uint32_t> const& _sched
 
 void SSACFG::checkBlockConstraints() const
 {
+	// Phis live at the top of the block instructions
+	for (const auto & blockId: liveBlocks())
+	{
+		bool seenNonPhi = false;
+		for(const auto& instId: block(blockId).instructions) {
+			if (isTombstone(instId))
+					continue;
+			if (isPhi(instId))
+				yulAssert(!seenNonPhi, fmt::format("Phi {} is after a non-Phi in block {}", instId, blockId));
+			else
+				seenNonPhi = true;
+		}
+	}
+
 	for (InstId const instId: instructionIds())
 	{
 		if (isTombstone(instId))
