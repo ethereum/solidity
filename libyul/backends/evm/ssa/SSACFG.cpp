@@ -229,7 +229,8 @@ std::vector<std::uint32_t> SSACFG::checkScheduling() const
 	}
 	return scheduleCount;
 }
-
+// Single definition: every InstId appears as the result of exactly one instruction
+// i.e. no InstId appears >= 2 times
 void SSACFG::checkEachInstScheduledOnce(std::vector<std::uint32_t> const& _scheduleCount) const
 {
 	for (InstId const instId: instructionIds())
