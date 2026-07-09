@@ -198,7 +198,8 @@ void SSACFG::checkInvariants() const
 	checkEdgeConsistency();
 	checkPhiOperands();
 	checkExitShapes();
-	checkEntryAndArguments();
+	checkEntry();
+	checkArguments();
 }
 
 void SSACFG::checkBlockRef(BlockId const _id, std::string const& _ctx) const
@@ -282,16 +283,20 @@ void SSACFG::checkEdgeConsistency() const
 	yulAssert(succSide == predSide, "CFG predecessor/successor edges are inconsistent");
 }
 
-void SSACFG::checkEntryAndArguments() const
+void SSACFG::checkEntry() const
 {
 	yulAssert(hasBlock(entry), "Entry block is not live");
 	yulAssert(block(entry).entries.empty(), fmt::format("Entry block {} has predecessors", entry));
+}
 
+void SSACFG::checkArguments() const
+{
 	std::size_t functionArgCount = 0;
 	for (InstId const instId: instructionIds())
 		if (!isTombstone(instId) && isFunctionArg(instId))
 		{
 			++functionArgCount;
+			// Arguments must live in the entry block as per SSA dominance rule
 			yulAssert(inst(instId).block == entry, fmt::format("FunctionArg {} not in entry block", instId));
 		}
 	yulAssert(functionArgCount == arguments.size(),

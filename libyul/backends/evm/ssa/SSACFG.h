@@ -559,7 +559,8 @@ private:
 	void checkEdgeConsistency() const;
 	void checkPhiOperands() const;
 	void checkExitShapes() const;
-	void checkEntryAndArguments() const;
+	void checkEntry() const;
+	void checkArguments() const;
 	void checkBlockRef(BlockId _id, std::string const& _ctx) const;
 #endif
 };
