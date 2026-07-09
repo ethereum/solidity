@@ -198,7 +198,7 @@ void SSACFG::checkInvariants() const
 	checkEdgeConsistency();
 	checkPhiOperands();
 	checkExitShapes();
-	checkEntryExitAndArguments();
+	checkEntryAndArguments();
 }
 
 void SSACFG::checkBlockRef(BlockId const _id, std::string const& _ctx) const
@@ -282,7 +282,7 @@ void SSACFG::checkEdgeConsistency() const
 	yulAssert(succSide == predSide, "CFG predecessor/successor edges are inconsistent");
 }
 
-void SSACFG::checkEntryExitAndArguments() const
+void SSACFG::checkEntryAndArguments() const
 {
 	yulAssert(hasBlock(entry), "Entry block is not live");
 	yulAssert(block(entry).entries.empty(), fmt::format("Entry block {} has predecessors", entry));
