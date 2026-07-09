@@ -19,6 +19,8 @@ contract C {
         return L.run(this.double, _value);
     }
 }
+// ====
+// targetContract: C
 // ----
 // library: L
 // g(uint256): 4 -> 16

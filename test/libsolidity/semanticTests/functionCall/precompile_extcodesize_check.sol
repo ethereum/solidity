@@ -27,6 +27,7 @@ contract C {
 }
 // ====
 // EVMVersion: >=constantinople
+// targetContract: C
 // ----
 // testHighLevel() -> true
 // testLowLevel() -> 0xc76596d400000000000000000000000000000000000000000000000000000000

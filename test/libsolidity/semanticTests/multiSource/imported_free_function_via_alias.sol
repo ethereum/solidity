@@ -13,5 +13,7 @@ contract D is M.C {
     return super.g() + f() * 10000;
   }
 }
+// ====
+// targetContract: D
 // ----
 // g() -> 61337

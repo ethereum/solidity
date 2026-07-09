@@ -40,6 +40,8 @@ contract C {
         return b.getSum();
     }
 }
+// ====
+// targetContract: C
 // ----
 // library: L1
 // library: L2

@@ -10,6 +10,8 @@ contract C is A {
     constructor() A(m) {
     }
 }
+// ====
+// targetContract: C
 // ----
 // m(uint256): 1 -> 0
 // m(uint256): 5 -> 20

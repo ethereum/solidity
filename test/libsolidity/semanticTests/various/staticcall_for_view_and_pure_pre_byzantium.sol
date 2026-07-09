@@ -33,6 +33,7 @@ contract D {
 }
 // ====
 // EVMVersion: <byzantium
+// targetContract: D
 // ----
 // f() -> 0x1
 // fview() -> 1

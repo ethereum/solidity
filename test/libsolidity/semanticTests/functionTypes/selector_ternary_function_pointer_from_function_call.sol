@@ -14,6 +14,8 @@ contract C {
         return (b ? getContract().f : getContract().g).selector;
     }
 }
+// ====
+// targetContract: C
 // ----
 // test(bool): true -> 0x26121ff000000000000000000000000000000000000000000000000000000000
 // test(bool): false -> 0xe2179b8e00000000000000000000000000000000000000000000000000000000

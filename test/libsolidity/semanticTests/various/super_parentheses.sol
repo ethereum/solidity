@@ -24,5 +24,7 @@ contract D is B, C {
         return ((super).f)() | 8;
     }
 }
+// ====
+// targetContract: D
 // ----
 // f() -> 15

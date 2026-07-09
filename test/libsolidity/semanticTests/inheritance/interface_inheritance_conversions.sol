@@ -27,6 +27,8 @@ contract C is SubA, SubB {
         return (this.parentFun(), this.subBFun());
     }
 }
+// ====
+// targetContract: C
 // ----
 // convertParent() -> 1
 // gas irOptimized: 21787

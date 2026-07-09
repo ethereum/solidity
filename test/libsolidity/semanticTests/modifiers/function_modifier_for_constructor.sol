@@ -22,5 +22,7 @@ contract C is A {
         _;
     }
 }
+// ====
+// targetContract: C
 // ----
 // getData() -> 6

@@ -9,6 +9,8 @@ contract D {
         return new C().i();
     }
 }
+// ====
+// targetContract: D
 // ----
 // f() -> 2
 // gas legacy: 76585

@@ -18,6 +18,8 @@ contract Derived is Base {
         return m_derived;
     }
 }
+// ====
+// targetContract: Derived
 // ----
 // getBMember() -> 5
 // getDMember() -> 6

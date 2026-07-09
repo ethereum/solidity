@@ -8,6 +8,8 @@ contract C {
         return (b ? L.f : C.g)();
     }
 }
+// ====
+// targetContract: C
 // ----
 // test(bool): true -> 1
 // test(bool): false -> 2

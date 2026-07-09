@@ -23,5 +23,7 @@ contract B is A(A.x += 8) {
 contract C is B {
     constructor() B(x += 4) {}
 }
+// ====
+// targetContract: C
 // ----
 // get() -> 0xff

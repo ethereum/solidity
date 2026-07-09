@@ -70,6 +70,8 @@ contract C {
         return s.x;
     }
 }
+// ====
+// targetContract: C
 // ----
 // encodePackedStructNeighbor() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 // encodePackedDynArrayNeighbor() -> 300

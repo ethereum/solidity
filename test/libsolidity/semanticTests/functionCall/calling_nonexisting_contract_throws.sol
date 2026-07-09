@@ -22,6 +22,7 @@ contract C {
     }
 }
 // ====
+// targetContract: C
 // ----
 // f() -> FAILURE
 // g() -> FAILURE

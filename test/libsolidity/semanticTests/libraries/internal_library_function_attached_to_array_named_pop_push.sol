@@ -13,5 +13,7 @@ contract C {
         input.pop();
     }
 }
+// ====
+// targetContract: C
 // ----
 // test() ->

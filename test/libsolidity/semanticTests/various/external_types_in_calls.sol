@@ -22,6 +22,8 @@ contract C {
         return C1(address(9));
     }
 }
+// ====
+// targetContract: C
 // ----
 // test() -> 9, 7
 // gas legacy: 80314

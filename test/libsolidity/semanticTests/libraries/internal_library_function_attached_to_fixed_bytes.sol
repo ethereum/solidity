@@ -11,5 +11,7 @@ contract C {
         return a.add(b);
     }
 }
+// ====
+// targetContract: C
 // ----
 // sum(bytes2,bytes2): left(0x1100), left(0x0022) -> left(0x1122)

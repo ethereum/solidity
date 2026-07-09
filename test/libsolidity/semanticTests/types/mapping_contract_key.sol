@@ -8,6 +8,8 @@ contract test {
         table[k] = v;
     }
 }
+// ====
+// targetContract: test
 // ----
 // get(address): 0 -> 0
 // get(address): 0x01 -> 0

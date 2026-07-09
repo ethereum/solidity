@@ -14,5 +14,7 @@ contract C is B {
         return f(1);
     }
 }
+// ====
+// targetContract: C
 // ----
 // g() -> 2

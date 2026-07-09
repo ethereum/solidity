@@ -18,6 +18,7 @@ contract A {
 }
 // ====
 // EVMVersion: >=constantinople
+// targetContract: A
 // ----
 // different_salt() -> true
 // same_salt() -> true

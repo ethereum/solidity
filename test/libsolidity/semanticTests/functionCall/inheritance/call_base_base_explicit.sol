@@ -25,6 +25,8 @@ contract Child is Base {
 		return BaseBase.s(n);
 	}
 }
+// ====
+// targetContract: Child
 // ----
 // g(uint256): 4 -> 8
 // k(uint256): 4 -> 16

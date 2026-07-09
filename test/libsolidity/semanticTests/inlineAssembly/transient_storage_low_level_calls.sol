@@ -63,6 +63,7 @@ contract C {
 }
 // ====
 // EVMVersion: >=cancun
+// targetContract: C
 // ----
 // testDelegateCall() -> true
 // testCall() -> true

@@ -12,6 +12,8 @@ contract B {
 		(new A()).f();
 	}
 }
+// ====
+// targetContract: B
 // ----
 // f() -> FAILURE, hex"92bbf6e8"
 // gas irOptimized: 221912

@@ -20,6 +20,8 @@ contract B {
         return i.f(new uint256[](2));
     }
 }
+// ====
+// targetContract: B
 // ----
 // g() -> 42
 // gas irOptimized: 54530

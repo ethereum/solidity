@@ -72,6 +72,8 @@ contract FixedFeeRegistrar is Registrar {
 	}
 	uint constant c_fee = 69 ether;
 }
+// ====
+// targetContract: FixedFeeRegistrar
 // ----
 // constructor()
 // gas irOptimized: 78042

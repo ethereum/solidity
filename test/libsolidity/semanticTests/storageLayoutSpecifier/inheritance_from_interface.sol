@@ -10,6 +10,8 @@ contract C is I layout at 42 {
         return y;
     }
 }
+// ====
+// targetContract: C
 // ----
 // f(uint256): 8 -> 6
 // y() -> 6

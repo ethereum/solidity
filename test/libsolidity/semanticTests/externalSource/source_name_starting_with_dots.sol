@@ -6,5 +6,7 @@
 import {A, B} from "_sourceNameStartingWithDots/dir/contract.sol";
 contract Contract {
 }
+// ====
+// targetContract: Contract
 // ----
 // constructor()

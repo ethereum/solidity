@@ -14,6 +14,7 @@ contract B {
     }
 }
 // ====
+// targetContract: B
 // ----
 // testIt() ->
 // test() -> 2

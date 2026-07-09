@@ -8,6 +8,8 @@ contract D {
     }
 }
 
+// ====
+// targetContract: D
 // ----
 // test() ->
 // ~ emit E()

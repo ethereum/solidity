@@ -12,6 +12,8 @@ contract F {
         return (c.a(), c.b(), c.c());
     }
 }
+// ====
+// targetContract: F
 // ----
 // withSpecifier() -> 1, 2, 3
 // gas irOptimized: 55300

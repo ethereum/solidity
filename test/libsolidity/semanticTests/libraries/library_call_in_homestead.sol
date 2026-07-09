@@ -7,6 +7,7 @@ contract Test {
 }
 // ====
 // EVMVersion: >=homestead
+// targetContract: Test
 // ----
 // library: Lib
 // f() ->

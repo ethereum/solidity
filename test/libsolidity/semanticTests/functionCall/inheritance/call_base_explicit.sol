@@ -9,5 +9,7 @@ contract Child is Base {
 		return Base.f(n);
 	}
 }
+// ====
+// targetContract: Child
 // ----
 // g(uint256): 4 -> 8

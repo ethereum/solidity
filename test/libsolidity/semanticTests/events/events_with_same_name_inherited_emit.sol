@@ -21,6 +21,8 @@ contract ClientReceipt is A, B {
         return 1;
     }
 }
+// ====
+// targetContract: ClientReceipt
 // ----
 // deposit() -> 1
 // ~ emit Deposit()

@@ -12,6 +12,8 @@ contract C {
         return success;
     }
 }
+// ====
+// targetContract: C
 // ----
 // library: L
 // g(uint256,uint256): 1, 1 -> true

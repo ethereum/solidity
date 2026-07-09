@@ -40,6 +40,8 @@ contract TestFixedMath {
         return FixedMath.toUFixed256x18(a);
     }
 }
+// ====
+// targetContract: TestFixedMath
 // ----
 // add(uint256,uint256): 0, 0 -> 0
 // add(uint256,uint256): 25, 45 -> 0x46

@@ -6,6 +6,8 @@ contract C {
         return L.f(v);
     }
 }
+// ====
+// targetContract: C
 // ----
 // library: L
 // g(uint256): 1 -> 1

@@ -9,5 +9,7 @@ contract B {
         return creationCode.length > 0 && runtimeCode.length > 0;
     }
 }
+// ====
+// targetContract: B
 // ----
 // nonEmptyCode() -> true

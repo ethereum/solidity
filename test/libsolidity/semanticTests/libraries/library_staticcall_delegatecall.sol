@@ -13,6 +13,8 @@ contract Test {
         return Lib.x();
     }
 }
+// ====
+// targetContract: Test
 // ----
 // library: Lib
 // f() -> 1

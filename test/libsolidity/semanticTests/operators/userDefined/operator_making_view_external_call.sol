@@ -58,6 +58,7 @@ contract C {
 }
 // ====
 // EVMVersion: >=constantinople
+// targetContract: C
 // ----
 // testMul(int32,int32): 42, 10 -> 420
 // gas irOptimized: 54778

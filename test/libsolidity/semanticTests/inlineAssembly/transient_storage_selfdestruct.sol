@@ -38,6 +38,7 @@ contract D {
 }
 // ====
 // EVMVersion: >=cancun
+// targetContract: D
 // ----
 // constructor() ->
 // gas irOptimized: 127548

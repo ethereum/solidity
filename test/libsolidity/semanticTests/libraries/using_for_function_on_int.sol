@@ -7,6 +7,8 @@ contract C {
 		return a.double();
 	}
 }
+// ====
+// targetContract: C
 // ----
 // library: D
 // f(uint256): 9 -> 18

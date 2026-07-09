@@ -42,6 +42,7 @@ contract Test {
 
 // ====
 // EVMVersion: >=cancun
+// targetContract: Test
 // ----
 // testDelegate() -> 7, 0
 // testCall() -> 0, 8

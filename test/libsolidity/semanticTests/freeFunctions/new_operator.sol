@@ -11,6 +11,8 @@ contract D {
     return test();
   }
 }
+// ====
+// targetContract: D
 // ----
 // f() -> 2
 // gas legacy: 76611

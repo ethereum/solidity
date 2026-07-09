@@ -16,5 +16,7 @@ contract C {
         return map.at(a);
     }
 }
+// ====
+// targetContract: C
 // ----
 // mapValue(uint256): 42 -> 0x24

@@ -40,6 +40,7 @@ contract C {
 }
 // ====
 // EVMVersion: >=byzantium
+// targetContract: C
 // ----
 // library: "a.sol":L
 // addr() -> false

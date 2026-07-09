@@ -21,6 +21,7 @@ contract test {
 // EVMVersion: >=byzantium
 // ABIEncoderV1Only: true
 // compileViaYul: false
+// targetContract: test
 // ----
 // library: L
 // get(uint8): 0 -> 0

@@ -33,5 +33,6 @@ contract Test {
 }
 // ====
 // EVMVersion: >homestead
+// targetContract: Test
 // ----
 // test() -> true

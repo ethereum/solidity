@@ -11,6 +11,8 @@ contract C {
         return a.equals(b);
     }
 }
+// ====
+// targetContract: C
 // ----
 // foo(address,address): 0x111122223333444455556666777788889999aAaa, 0x111122223333444455556666777788889999aAaa -> true
 // foo(address,address): 0x111122223333444455556666777788889999aAaa, 0x0000000000000000000000000000000000000000 -> false

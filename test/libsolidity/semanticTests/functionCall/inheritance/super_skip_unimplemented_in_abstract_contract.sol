@@ -15,5 +15,7 @@ contract B is A, I {
         return super.f();
     }
 }
+// ====
+// targetContract: B
 // ----
 // f() -> 42

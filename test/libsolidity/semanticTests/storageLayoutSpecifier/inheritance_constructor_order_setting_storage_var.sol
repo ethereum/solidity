@@ -10,6 +10,8 @@ contract F {
         return new C2().x();
     }
 }
+// ====
+// targetContract: F
 // ----
 // withSpecifier() -> 15
 // gas legacy: 77592

@@ -20,6 +20,8 @@ contract Test {
         return Lib.get(m, key);
     }
 }
+// ====
+// targetContract: Test
 // ----
 // library: Lib
 // set(uint256,uint256): 1, 42 -> 0

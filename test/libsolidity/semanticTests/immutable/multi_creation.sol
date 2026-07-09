@@ -27,6 +27,7 @@ contract C {
 }
 // ====
 // EVMVersion: >=constantinople
+// targetContract: C
 // ----
 // f() -> 3, 7, 5
 // gas irOptimized: 86883

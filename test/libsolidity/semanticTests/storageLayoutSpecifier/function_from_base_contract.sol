@@ -21,6 +21,8 @@ contract C is B layout at 42 {
         return z;
     }
 }
+// ====
+// targetContract: C
 // ----
 // f() -> 1
 // g() -> 2

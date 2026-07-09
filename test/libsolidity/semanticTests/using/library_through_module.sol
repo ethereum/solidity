@@ -24,6 +24,8 @@ contract C {
 
 import "A" as M;
 
+// ====
+// targetContract: C
 // ----
 // library: "A":L
 // f(uint256): 5 -> 5

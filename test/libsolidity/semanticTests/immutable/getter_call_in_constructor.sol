@@ -13,5 +13,6 @@ contract C {
 }
 // ====
 // EVMVersion: >=tangerineWhistle
+// targetContract: C
 // ----
 // f() -> true

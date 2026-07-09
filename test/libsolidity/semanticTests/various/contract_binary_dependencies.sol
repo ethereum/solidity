@@ -15,6 +15,8 @@ contract C {
         new B();
     }
 }
+// ====
+// targetContract: C
 // ----
 // constructor() ->
 // gas irOptimized: 56579

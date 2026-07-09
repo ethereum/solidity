@@ -2,5 +2,7 @@
 import {External} from "a";
 contract C {
 }
+// ====
+// targetContract: C
 // ----
 // constructor()

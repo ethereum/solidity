@@ -17,6 +17,7 @@ contract C {
 }
 // ====
 // EVMVersion: >=constantinople
+// targetContract: C
 // ----
 // f(), 2000 ether -> true
 // gas irOptimized: 117685

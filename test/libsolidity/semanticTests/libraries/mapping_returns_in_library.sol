@@ -24,6 +24,8 @@ contract Test {
         return b[key];
     }
 }
+// ====
+// targetContract: Test
 // ----
 // library: Lib
 // set(bool,uint256,uint256): true, 1, 42 -> 0
