@@ -287,6 +287,15 @@ void SSACFG::checkEntry() const
 {
 	yulAssert(hasBlock(entry), "Entry block is not live");
 	yulAssert(block(entry).entries.empty(), fmt::format("Entry block {} has predecessors", entry));
+
+	// A Phi merges one value per predecessor edge; the entry block has no predecessors, so it
+	// cannot contain any Phi
+	for (InstId const instId: block(entry).instructions)
+	{
+		if (isTombstone(instId))
+			continue;
+		yulAssert(!isPhi(instId), fmt::format("Phi {} in entry block {} which has no predecessors", instId, entry));
+	}
 }
 
 void SSACFG::checkArguments() const
