@@ -584,8 +584,7 @@ private:
 		}
 
 	private:
-		/// Blocks reachable from the entry once _avoid is deleted from the CFG.
-		/// Pass an invalid BlockId to delete nothing.
+		/// Blocks reachable from the entry if _avoid is deleted from the CFG.
 		static std::set<BlockId> reachableAvoiding(SSACFG const& _cfg, BlockId const _avoid)
 		{
 			std::set<BlockId> reachable;
@@ -607,8 +606,7 @@ private:
 			return reachable;
 		}
 
-		/// Maps each live block to the set of blocks that dominate it.
-		std::map<BlockId, std::set<BlockId>> m_dominators;
+		std::map<BlockId, std::set<BlockId>> m_dominators; // map: block->its dominators
 		std::set<BlockId> m_reachableFromEntry;
 	};
 	std::vector<std::uint32_t> checkScheduling() const;

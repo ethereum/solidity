@@ -289,6 +289,7 @@ void SSACFG::checkDominance() const
 					);
 			}
 			else
+				// Not defined here, so the block it's defined in must dominate this block
 				yulAssert(
 					dominance.dominates(defBlock, curBlock),
 					fmt::format("{} uses {}: its defining block {} does not dominate {}", _ctx, _use, defBlock, curBlock)
