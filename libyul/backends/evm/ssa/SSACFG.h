@@ -40,7 +40,9 @@
 
 #include <concepts>
 #include <functional>
+#include <map>
 #include <optional>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -562,6 +564,8 @@ private:
 	void checkEntry() const;
 	void checkArguments() const;
 	void checkBlockRef(BlockId _id, std::string const& _ctx) const;
+	void checkDominance() const;
+	std::map<BlockId, std::set<BlockId>> dominators() const;
 #endif
 };
 

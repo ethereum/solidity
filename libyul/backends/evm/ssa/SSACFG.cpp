@@ -27,13 +27,18 @@
 
 #include <fmt/ranges.h>
 
+#include <range/v3/view/enumerate.hpp>
 #include <range/v3/view/iota.hpp>
 #include <range/v3/view/transform.hpp>
 #include <range/v3/view/zip.hpp>
 
 #ifdef SLOW_DEBUG
 #include <algorithm>
+#include <iterator>
 #include <map>
+#include <optional>
+#include <set>
+#include <string>
 #include <utility>
 #include <vector>
 #endif
@@ -200,6 +205,7 @@ void SSACFG::checkInvariants() const
 	checkExitShapes();
 	checkEntry();
 	checkArguments();
+	checkDominance();
 }
 
 void SSACFG::checkBlockRef(BlockId const _id, std::string const& _ctx) const
@@ -242,6 +248,117 @@ void SSACFG::checkEachInstScheduledOnce(std::vector<std::uint32_t> const& _sched
 			yulAssert(count == 0, fmt::format("Unreachable {} should not be scheduled", instId));
 		else
 			yulAssert(count == 1, fmt::format("{} scheduled {} times (expected once)", instId, count));
+	}
+}
+
+/// Dominator sets by fixpoint: dom(entry) = {entry}, dom(b) = {b} u intersection over dom(preds).
+/// Blocks unreachable from the entry have no predecessors to shrink their set, so they keep every
+/// block as a dominator and any check against them passes vacuously.
+std::map<BlockId, std::set<BlockId>> SSACFG::dominators() const
+{
+	std::set<BlockId> allBlocks;
+	for (BlockId const blockId: liveBlocks())
+		allBlocks.insert(blockId);
+
+	std::map<BlockId, std::set<BlockId>> dom;
+	for (BlockId const blockId: allBlocks)
+		dom[blockId] = allBlocks;
+	dom[entry] = {entry};
+
+	for (bool changed = true; changed; )
+	{
+		changed = false;
+		for (BlockId const blockId: allBlocks)
+		{
+			if (blockId == entry)
+				continue;
+
+			std::optional<std::set<BlockId>> meet;
+			for (BlockId const pred: block(blockId).entries)
+			{
+				if (!meet)
+					meet = dom.at(pred);
+				else
+				{
+					std::set<BlockId> intersection;
+					std::set_intersection(
+						meet->begin(), meet->end(),
+						dom.at(pred).begin(), dom.at(pred).end(),
+						std::inserter(intersection, intersection.end())
+					);
+					meet = std::move(intersection);
+				}
+			}
+
+			std::set<BlockId> next = meet.value_or(allBlocks);
+			next.insert(blockId);
+			if (next != dom.at(blockId))
+			{
+				dom[blockId] = std::move(next);
+				changed = true;
+			}
+		}
+	}
+	return dom;
+}
+
+// SSA dominance: every use is dominated by its definition
+void SSACFG::checkDominance() const
+{
+	std::map<BlockId, std::set<BlockId>> const dom = dominators();
+	for (BlockId const curBlock: liveBlocks())
+	{
+		BasicBlock const& bb = block(curBlock);
+
+		std::map<InstId, std::size_t> positionInBlock;
+		for (auto const& [index, instId]: bb.instructions | ranges::views::enumerate)
+			positionInBlock[instId] = index;
+
+		// _usePos is the index of the using instruction within this block, or nullopt for uses in the
+		// block's exit, which happen after every instruction scheduled in the block.
+		auto checkUse = [&](InstId const _use, std::optional<std::size_t> const _usePos, std::string const& _ctx)
+		{
+			yulAssert(!isTombstone(_use), fmt::format("{} uses tombstoned {}", _ctx, _use));
+			// Unreachable is a pseudo-value that is deliberately not scheduled in any block
+			if (isUnreachable(_use))
+				return;
+
+			BlockId const defBlock = inst(_use).block;
+			checkBlockRef(defBlock, fmt::format("{}, defining {}", _ctx, _use));
+
+			if (defBlock == curBlock)
+			{
+				// Defined & used in the same block
+				auto const it = positionInBlock.find(_use);
+				yulAssert(it != positionInBlock.end(), fmt::format("{} uses {}, not scheduled in its own block", _ctx, _use));
+				if (_usePos)
+					yulAssert(
+						it->second < *_usePos,
+						fmt::format("{} uses {}, which is defined later in the same block", _ctx, _use)
+					);
+			}
+			else
+				// Defined earlier, used in this block
+				yulAssert(
+					dom.at(curBlock).count(defBlock) > 0,
+					fmt::format("{} uses {}: its defining block {} does not dominate {}", _ctx, _use, defBlock, curBlock)
+				);
+		};
+
+		for (auto const& [idx, instId]: bb.instructions | ranges::views::enumerate)
+		{
+			if (isTombstone(instId))
+				continue;
+			for (InstId const input: inst(instId).inputs)
+				checkUse(input, idx, fmt::format("{} in block {}", instId, curBlock));
+		}
+
+		std::string const exitCtx = fmt::format("Exit of block {}", curBlock);
+		if (auto const* condJump = std::get_if<BasicBlock::ConditionalJump>(&bb.exit))
+			checkUse(condJump->condition, std::nullopt, exitCtx);
+		else if (auto const* ret = std::get_if<BasicBlock::FunctionReturn>(&bb.exit))
+			for (InstId const returnValue: ret->returnValues)
+				checkUse(returnValue, std::nullopt, exitCtx);
 	}
 }
 
