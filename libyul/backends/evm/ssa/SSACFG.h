@@ -609,8 +609,8 @@ private:
 		std::map<BlockId, std::set<BlockId>> m_dominators; // map: block->its dominators
 		std::set<BlockId> m_reachableFromEntry;
 	};
-	std::vector<std::uint32_t> checkScheduling() const;
 
+	std::vector<std::uint32_t> checkScheduling() const;
 	void checkEachInstScheduledOnce(std::vector<std::uint32_t> const& _scheduleCount) const;
 	void checkBlockConstraints() const;
 	void checkEdgeConsistency() const;
