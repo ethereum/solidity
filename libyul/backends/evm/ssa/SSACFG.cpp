@@ -256,8 +256,11 @@ void SSACFG::checkDominance() const
 	Dominance const dominance(*this);
 	for (BlockId const curBlock: liveBlocks())
 	{
-		BasicBlock const& bb = block(curBlock);
+		yulAssert(dominance.isReachableFromEntry(curBlock),
+			fmt::format("Block {} is live but unreachable from the entry block", curBlock)
+		);
 
+		BasicBlock const& bb = block(curBlock);
 		std::map<InstId, std::size_t> positionInBlock;
 		for (auto const& [index, instId]: bb.instructions | ranges::views::enumerate)
 			positionInBlock[instId] = index;
@@ -286,7 +289,6 @@ void SSACFG::checkDominance() const
 					);
 			}
 			else
-				// Defined earlier, used in this block
 				yulAssert(
 					dominance.dominates(defBlock, curBlock),
 					fmt::format("{} uses {}: its defining block {} does not dominate {}", _ctx, _use, defBlock, curBlock)
