@@ -67,3 +67,9 @@ Thumbs.db
 
 # AI tooling
 /.claude/
+/yul_viz_pics
+
+*.diff
+*.sol
+*.yul
+*.json
