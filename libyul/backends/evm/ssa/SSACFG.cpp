@@ -34,7 +34,6 @@
 
 #ifdef SLOW_DEBUG
 #include <algorithm>
-#include <iterator>
 #include <map>
 #include <optional>
 #include <set>
@@ -251,61 +250,10 @@ void SSACFG::checkEachInstScheduledOnce(std::vector<std::uint32_t> const& _sched
 	}
 }
 
-/// Dominator sets by fixpoint: dom(entry) = {entry}, dom(b) = {b} u intersection over dom(preds).
-/// Blocks unreachable from the entry have no predecessors to shrink their set, so they keep every
-/// block as a dominator and any check against them passes vacuously.
-std::map<BlockId, std::set<BlockId>> SSACFG::dominators() const
-{
-	std::set<BlockId> allBlocks;
-	for (BlockId const blockId: liveBlocks())
-		allBlocks.insert(blockId);
-
-	std::map<BlockId, std::set<BlockId>> dom;
-	for (BlockId const blockId: allBlocks)
-		dom[blockId] = allBlocks;
-	dom[entry] = {entry};
-
-	for (bool changed = true; changed; )
-	{
-		changed = false;
-		for (BlockId const blockId: allBlocks)
-		{
-			if (blockId == entry)
-				continue;
-
-			std::optional<std::set<BlockId>> meet;
-			for (BlockId const pred: block(blockId).entries)
-			{
-				if (!meet)
-					meet = dom.at(pred);
-				else
-				{
-					std::set<BlockId> intersection;
-					std::set_intersection(
-						meet->begin(), meet->end(),
-						dom.at(pred).begin(), dom.at(pred).end(),
-						std::inserter(intersection, intersection.end())
-					);
-					meet = std::move(intersection);
-				}
-			}
-
-			std::set<BlockId> next = meet.value_or(allBlocks);
-			next.insert(blockId);
-			if (next != dom.at(blockId))
-			{
-				dom[blockId] = std::move(next);
-				changed = true;
-			}
-		}
-	}
-	return dom;
-}
-
 // SSA dominance: every use is dominated by its definition
 void SSACFG::checkDominance() const
 {
-	std::map<BlockId, std::set<BlockId>> const dom = dominators();
+	Dominance const dominance(*this);
 	for (BlockId const curBlock: liveBlocks())
 	{
 		BasicBlock const& bb = block(curBlock);
@@ -340,7 +288,7 @@ void SSACFG::checkDominance() const
 			else
 				// Defined earlier, used in this block
 				yulAssert(
-					dom.at(curBlock).count(defBlock) > 0,
+					dominance.dominates(defBlock, curBlock),
 					fmt::format("{} uses {}: its defining block {} does not dominate {}", _ctx, _use, defBlock, curBlock)
 				);
 		};

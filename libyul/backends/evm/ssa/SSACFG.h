@@ -40,9 +40,7 @@
 
 #include <concepts>
 #include <functional>
-#include <map>
 #include <optional>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -555,7 +553,51 @@ private:
 public:
 	void checkInvariants() const;
 private:
+	class Dominance
+	{
+	public:
+		explicit Dominance(SSACFG const& _cfg)
+		{
+			for (BlockId const candidate: _cfg.liveBlocks())
+			{
+				// Everything reachable from the entry without ever passing through `candidate`.
+				std::set<BlockId> reachable;
+				std::vector<BlockId> worklist;
+				if (_cfg.entry != candidate)
+				{
+					reachable.insert(_cfg.entry);
+					worklist.push_back(_cfg.entry);
+				}
+				while (!worklist.empty())
+				{
+					BlockId const blockId = worklist.back();
+					worklist.pop_back();
+					_cfg.block(blockId).forEachExit([&](BlockId const successor) {
+						if (successor != candidate && reachable.insert(successor).second)
+							worklist.push_back(successor);
+					});
+				}
+
+				// Whatever the entry cannot reach while avoiding `candidate` is dominated by it
+				for (BlockId const blockId: _cfg.liveBlocks())
+					if (!reachable.count(blockId))
+						m_dominators[blockId].insert(candidate);
+			}
+		}
+
+		/// True iff every path from the entry block to _block passes through _dominator.
+		bool dominates(BlockId const _dominator, BlockId const _block) const
+		{
+			auto const it = m_dominators.find(_block);
+			return it != m_dominators.end() && it->second.count(_dominator) > 0;
+		}
+
+	private:
+		/// Maps each live block to the set of blocks that dominate it.
+		std::map<BlockId, std::set<BlockId>> m_dominators;
+	};
 	std::vector<std::uint32_t> checkScheduling() const;
+
 	void checkEachInstScheduledOnce(std::vector<std::uint32_t> const& _scheduleCount) const;
 	void checkBlockConstraints() const;
 	void checkEdgeConsistency() const;
@@ -565,7 +607,6 @@ private:
 	void checkArguments() const;
 	void checkBlockRef(BlockId _id, std::string const& _ctx) const;
 	void checkDominance() const;
-	std::map<BlockId, std::set<BlockId>> dominators() const;
 #endif
 };
 
