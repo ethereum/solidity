@@ -16,6 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
+#include "libyul/Exceptions.h"
 #include <libyul/backends/evm/ssa/SSACFG.h>
 
 #include <libyul/backends/evm/ssa/ControlFlowGraphs.h>
@@ -23,6 +24,7 @@
 #include <libyul/backends/evm/ssa/LivenessAnalysis.h>
 #include <libyul/backends/evm/ssa/io/DotExporterBase.h>
 
+#include <libsolutil/CommonData.h>
 #include <libsolutil/StringUtils.h>
 
 #include <fmt/ranges.h>
@@ -206,6 +208,17 @@ void SSACFG::checkInvariants() const
 	checkArguments();
 	checkDominance();
 	checkProjectionsFollowProducerInBlock();
+	checkBlockSuccPredSymmetry();
+}
+
+void SSACFG::checkBlockSuccPredSymmetry() const {
+	for (BlockId const parentBlockId: liveBlocks())
+	{
+		const auto& parentBlock = block(parentBlockId);
+		parentBlock.forEachExit([&](const BlockId succBlockId){
+			yulAssert(contains(block(succBlockId).entries, parentBlockId));
+		});
+	}
 }
 
 // Check if a projection is a direct successor of a producer, i.e.
@@ -354,6 +367,10 @@ void SSACFG::checkDominance() const
 	}
 }
 
+// Checks:
+// * Phi is at the top of the block
+// * Const is pinned to entry
+// * Num returns of an operation is matches trailing pojections
 void SSACFG::checkBlockConstraints() const
 {
 	// Phis live at the top of the block instructions
@@ -374,8 +391,8 @@ void SSACFG::checkBlockConstraints() const
 	{
 		if (isTombstone(instId))
 			continue;
-		Inst const& i = inst(instId);
 
+		Inst const& i = inst(instId);
 		if (i.opcode == InstOpcode::Const)
 			yulAssert(i.block == entry, fmt::format("Const {} not pinned to entry", instId));
 
