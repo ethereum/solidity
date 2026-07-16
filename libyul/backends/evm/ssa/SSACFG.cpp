@@ -205,6 +205,47 @@ void SSACFG::checkInvariants() const
 	checkEntry();
 	checkArguments();
 	checkDominance();
+	checkProjectionsFollowProducerInBlock();
+}
+
+// Check if a projection is a direct successor of a producer, i.e.
+// there are no other instructions in between. Does not check order.
+void SSACFG::checkProjectionsFollowProducerInBlock() const {
+	for (BlockId const blockId: liveBlocks())
+	{
+		BasicBlock const& bb = block(blockId);
+		for (size_t i = 0; i < bb.instructions.size(); i++) {
+			auto const& projId = bb.instructions[i];
+			auto const& proj = m_instructions.inst(projId);
+			if (!proj.isProjection())
+				continue;
+
+			// Find producer
+			InstId producerId = InstId{};
+			yulAssert(i > 0);
+			ssize_t i2;
+			for(i2 = (ssize_t)i-1; i2 >= 0; i2--) {
+				auto const& instId = bb.instructions[(size_t)i2];
+				auto const& inst = m_instructions.inst(instId);
+				if (!inst.isProjection()) {
+					producerId = instId;
+					break;
+				}
+			}
+			yulAssert(producerId.hasValue());
+
+			// Check producer is an operation
+			auto const& producer = m_instructions.inst(producerId);
+			yulAssert(producer.isOperation());
+
+			// Check producer-projection relationship
+			auto const trailingProjs = numTrailingProjections(producerId);
+			ssize_t diff = (ssize_t)i - i2;
+			yulAssert(diff <= trailingProjs);
+			yulAssert(proj.inputs.size() == 1);
+			yulAssert(proj.inputs[0] == producerId);
+		}
+	}
 }
 
 void SSACFG::checkBlockRef(BlockId const _id, std::string const& _ctx) const

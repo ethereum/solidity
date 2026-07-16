@@ -619,6 +619,7 @@ private:
 	void checkArguments() const;
 	void checkBlockRef(BlockId _id, std::string const& _ctx) const;
 	void checkDominance() const;
+	void checkProjectionsFollowProducerInBlock() const;
 #endif
 };
 
