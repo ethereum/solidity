@@ -25,6 +25,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 
 using namespace solidity;
@@ -102,15 +103,14 @@ TestCase::TestResult TestCase::checkResult(std::ostream& _stream, const std::str
 	return TestResult::Success;
 }
 
-void EVMVersionRestrictedTestCase::processEVMVersionSetting()
+namespace
 {
-	std::string versionString = m_reader.stringSetting("EVMVersion", "any");
-	if (versionString == "any")
-		return;
 
+bool satisfiesEVMVersionConstraint(std::string const& _constraint, langutil::EVMVersion _evmVersion)
+{
 	std::string comparator;
 	size_t versionBegin = 0;
-	for (auto character: versionString)
+	for (auto character: _constraint)
 		if (!isalpha(character, std::locale::classic()) && character != '@')
 		{
 			comparator += character;
@@ -119,7 +119,7 @@ void EVMVersionRestrictedTestCase::processEVMVersionSetting()
 		else
 			break;
 
-	versionString = versionString.substr(versionBegin);
+	std::string versionString = _constraint.substr(versionBegin);
 	std::optional<langutil::EVMVersion> version;
 	if (versionString == "current")
 		version = std::make_optional<langutil::EVMVersion>();
@@ -128,25 +128,44 @@ void EVMVersionRestrictedTestCase::processEVMVersionSetting()
 	if (!version)
 		BOOST_THROW_EXCEPTION(std::runtime_error{"Invalid EVM version: \"" + versionString + "\""});
 
-	langutil::EVMVersion evmVersion = solidity::test::CommonOptions::get().evmVersion();
-	bool comparisonResult;
 	if (comparator == ">")
-		comparisonResult = evmVersion > version;
+		return _evmVersion > version;
 	else if (comparator == ">=")
-		comparisonResult = evmVersion >= version;
+		return _evmVersion >= version;
 	else if (comparator == "<")
-		comparisonResult = evmVersion < version;
+		return _evmVersion < version;
 	else if (comparator == "<=")
-		comparisonResult = evmVersion <= version;
+		return _evmVersion <= version;
 	else if (comparator == "=")
-		comparisonResult = evmVersion == version;
+		return _evmVersion == version;
 	else if (comparator == "!")
-		comparisonResult = !(evmVersion == version);
+		return !(_evmVersion == version);
 	else
 		BOOST_THROW_EXCEPTION(std::runtime_error{"Invalid EVM comparator: \"" + comparator + "\""});
+}
 
-	if (!comparisonResult)
-		m_shouldRun = false;
+}
+
+void EVMVersionRestrictedTestCase::processEVMVersionSetting()
+{
+	std::string versionSetting = m_reader.stringSetting("EVMVersion", "any");
+	if (versionSetting == "any")
+		return;
+
+	// Multiple space-separated constraints are allowed and all of them have to be satisfied.
+	std::istringstream versionConstraints(versionSetting);
+	std::string constraint;
+	langutil::EVMVersion evmVersion = solidity::test::CommonOptions::get().evmVersion();
+	bool parsedAnyConstraint = false;
+	while (versionConstraints >> constraint)
+	{
+		parsedAnyConstraint = true;
+		if (!satisfiesEVMVersionConstraint(constraint, evmVersion))
+			m_shouldRun = false;
+	}
+
+	if (!parsedAnyConstraint)
+		BOOST_THROW_EXCEPTION(std::runtime_error{"Empty EVMVersion setting"});
 }
 
 EVMVersionRestrictedTestCase::EVMVersionRestrictedTestCase(std::string const& _filename):
