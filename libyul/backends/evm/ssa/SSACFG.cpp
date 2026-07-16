@@ -236,7 +236,7 @@ void SSACFG::checkProjectionsFollowProducerInBlock() const {
 
 			// Check producer is an operation
 			auto const& producer = m_instructions.inst(producerId);
-			yulAssert(producer.isOperation());
+			yulAssert(producer.canHaveProjections());
 
 			// Check producer-projection relationship
 			auto const trailingProjs = numTrailingProjections(producerId);

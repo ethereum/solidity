@@ -104,7 +104,7 @@ void InstructionStore::checkOpcodeShape(InstId const _id) const
 		InstId const producer = i.inputs.front();
 		checkValidOperand(producer, fmt::format("producer of projection {}", _id));
 		yulAssert(producer.value < _id.value, fmt::format("Projection {} precedes its producer {}", _id, producer));
-		yulAssert(inst(producer).isOperation(), fmt::format("Producer {} of projection {} is not an operation", producer, _id));
+		yulAssert(inst(producer).canHaveProjections(), fmt::format("Producer {} of projection {} is not an operation", producer, _id));
 		NumReturnsSizeType const trailing = numTrailingProjections(producer);
 		yulAssert(trailing >= 2, fmt::format("Projection {} on single-return producer {}", _id, producer));
 		yulAssert(projectionIndex(_id) < trailing, fmt::format("Projection index of {} out of range", _id));

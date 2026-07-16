@@ -101,6 +101,10 @@ public:
 				opcode == InstOpcode::BuiltinCall ||
 				opcode == InstOpcode::MemoryGuard;
 		}
+		constexpr bool canHaveProjections() const noexcept
+		{
+		    return opcode == InstOpcode::Call || opcode == InstOpcode::BuiltinCall;
+		}
 	};
 
 	explicit InstructionStore(std::size_t const _instructionCountHint = 0): m_insts(_instructionCountHint) {}
