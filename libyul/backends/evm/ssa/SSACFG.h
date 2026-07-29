@@ -622,6 +622,7 @@ private:
 	void checkProjectionsFollowProducerInBlock() const;
 	void checkBlockSuccPredSymmetry() const;
 	void checkPhiAtTopOfBlocks() const;
+	void checkExitConsistency() const;
 #endif
 };
 

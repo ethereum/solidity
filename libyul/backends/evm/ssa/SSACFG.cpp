@@ -209,6 +209,7 @@ void SSACFG::checkInvariants() const
 	checkDominance();
 	checkProjectionsFollowProducerInBlock();
 	checkBlockSuccPredSymmetry();
+	checkExitConsistency();
 }
 
 void SSACFG::checkBlockSuccPredSymmetry() const {
@@ -364,6 +365,45 @@ void SSACFG::checkDominance() const
 		else if (auto const* ret = std::get_if<BasicBlock::FunctionReturn>(&bb.exit))
 			for (InstId const returnValue: ret->returnValues)
 				checkUse(returnValue, std::nullopt, exitCtx);
+	}
+}
+
+// Exit consistency:
+// * Main exit only on main graph
+// * Terminated iff the block itself reverts
+void SSACFG::checkExitConsistency() const {
+	Dominance const dominance(*this);
+	for (const auto & blockId: liveBlocks())
+	{
+		if (dominance.isReachableFromEntry(blockId))
+			continue;
+
+		const auto& b = block(blockId);
+		yulAssert(!b.isMainExitBlock(), fmt::format("MainExitBlock {} not reachable from main entry", blockId));
+	}
+
+	for (const auto & blockId: liveBlocks())
+	{
+		const auto& b = block(blockId);
+
+		// Let's see if any instructions reverts
+		bool reverts = false;
+		for(const auto& instId: b.instructions) {
+			const auto& i = inst(instId);
+			if (i.canHaveProjections()) {
+				const auto& payload = builtinPayload(instId);
+				auto const& builtin = evmDialect.builtin(payload.builtin);
+				if (builtin.instruction == evmasm::Instruction::REVERT) {
+					reverts = true;
+					break;
+				}
+			}
+		}
+		if (!reverts)
+			continue;
+
+		/// This block reverts, must be termination block
+		yulAssert(b.isTerminationBlock());
 	}
 }
 
