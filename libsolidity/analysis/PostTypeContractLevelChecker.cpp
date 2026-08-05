@@ -26,6 +26,7 @@
 #include <libsolidity/analysis/ConstantEvaluator.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTUtils.h>
+#include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolutil/FunctionSelector.h>
 #include <liblangutil/ErrorReporter.h>
@@ -38,6 +39,27 @@ using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::util;
+
+namespace
+{
+
+class SuperMemberAccessCollector: public ASTConstVisitor
+{
+public:
+	std::vector<MemberAccess const*> superAccesses;
+
+	bool visit(MemberAccess const& _memberAccess) override
+	{
+		if (
+			_memberAccess.annotation().requiredLookup.set() &&
+			*_memberAccess.annotation().requiredLookup == VirtualLookup::Super
+		)
+			superAccesses.push_back(&_memberAccess);
+		return true;
+	}
+};
+
+}
 
 bool PostTypeContractLevelChecker::check(SourceUnit const& _sourceUnit)
 {
@@ -76,12 +98,74 @@ bool PostTypeContractLevelChecker::check(ContractDefinition const& _contract)
 			errorHashes[hash][signature] = error->location();
 	}
 
+	checkSuperCallsResolvingToExternalFunctions(_contract);
+
 	if (_contract.storageLayoutSpecifier())
 		checkStorageLayoutSpecifier(_contract);
 
 	warnStorageLayoutBaseNearStorageEnd(_contract);
 
 	return !Error::containsErrors(m_errorReporter.errors());
+}
+
+void PostTypeContractLevelChecker::checkSuperCallsResolvingToExternalFunctions(ContractDefinition const& _contract)
+{
+	// Code is only generated for the most derived contract, and only there does the linearization
+	// contain the bases that a `super` call in one of them can be diverted to.
+	if (_contract.abstract() || _contract.isInterface() || _contract.isLibrary())
+		return;
+
+	SuperMemberAccessCollector collector;
+	// Note: linearizedBaseContracts is this contract's *own* C3 linearization, with it at its head
+	for (ContractDefinition const* base: _contract.annotation().linearizedBaseContracts)
+		base->accept(collector);
+
+	// collector.superAccesses is a flat vector<MemberAccess const*> holding every super.<member>
+	// expression written anywhere in the bodies of _contract and all its bases -- ordered
+	// by linearization position of the owning contract, then source order within it
+	for (MemberAccess const* memberAccess: collector.superAccesses)
+	{
+		auto const* function = dynamic_cast<FunctionDefinition const*>(memberAccess->annotation().referencedDeclaration);
+		auto const* typeType = dynamic_cast<TypeType const*>(memberAccess->expression().annotation().type);
+		if (!function || !typeType)
+			continue;
+		auto const* contractType = dynamic_cast<ContractType const*>(typeType->actualType());
+		if (!contractType)
+			continue;
+		solAssert(contractType->isSuper());
+
+		// contractDefinition() is where `super` was written; the target also depends on the root
+		ContractDefinition const* searchStart = contractType->contractDefinition().superContract(_contract);
+		solAssert(searchStart, "C3 keeps a contract's own bases after it, "
+				"so a contract containing a `super` is never last.");
+
+		// the function the super call binds to, using the lookup that resolveVirtual performs
+		std::optional<FunctionDefinition const*> const targetOrNone = function->superLookupTarget(_contract, *searchStart);
+		solAssert(targetOrNone, "Super lookup for function " + function->name() + " found no target.");
+		FunctionDefinition const& target = **targetOrNone;
+		if (target.isVisibleInDerivedContracts())
+			continue;
+		solAssert(target.visibility() == Visibility::External);
+
+		m_errorReporter.typeError(
+			8476_error,
+			memberAccess->location(),
+			SecondarySourceLocation{}
+				.append("The external function is declared here:", target.location())
+				.append("The linearization of this contract determines the target:", _contract.nameLocation()),
+			fmt::format(
+				"In contract \"{}\", this \"super\" call resolves to external function \"{}.{}\", "
+				"which cannot be called internally. Make \"{}.{}\" public, or change the order of "
+				"base contracts in \"{}\".",
+				_contract.name(),
+				target.annotation().contract->name(),
+				target.name(),
+				target.annotation().contract->name(),
+				target.name(),
+				_contract.name()
+			)
+		);
+	}
 }
 
 void PostTypeContractLevelChecker::checkStorageLayoutSpecifier(ContractDefinition const& _contract)

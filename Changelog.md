@@ -32,6 +32,7 @@ Bugfixes:
 * Type Checker: Report an unimplemented feature error instead of ICE when a variable of a fixed point type is accessed in inline assembly.
 * Yul IR Code Generation: Encode custom error named parameters in declaration order instead of call-site order when used from a `require` function.
 * Yul Optimizer: Fix incorrect removal of `returndatacopy()` operations referencing a stale result of `returndatasize()`.
+* Type Checker: Disallow `super` calls that would resolve to an implemented `external` function in the linearization of the most derived contract. Such calls previously caused an ICE via IR and jumped into the external function's body with the legacy pipeline.
 
 Build System:
 * Update minimum version requirement of Boost to 1.83.0 for Windows build. This matches the minimum version for other systems.

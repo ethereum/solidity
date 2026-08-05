@@ -1093,6 +1093,15 @@ public:
 		ContractDefinition const* _searchStart = nullptr
 	) const override;
 
+	/// @returns the first implemented function, in linearization order, with the same name and
+	/// parameter types as this one, in the linearization of @a _mostDerivedContract starting at
+	/// @a _searchStart, or nullopt if there is none. This is the function a `super` lookup picks;
+	/// PostTypeContractLevelChecker rejects the call if it is not visible in derived contracts.
+	std::optional<FunctionDefinition const*> superLookupTarget(
+		ContractDefinition const& _mostDerivedContract,
+		ContractDefinition const& _searchStart
+	) const;
+
 private:
 	StateMutability m_stateMutability;
 	bool m_free;

@@ -237,6 +237,11 @@ not known in the context of the class where it is used,
 although its type is known. This is similar for ordinary
 virtual method lookup.
 
+.. note::
+    ``super.f()`` does not necessarily call the direct parent. It calls whichever ``f``
+    comes next in the linearization of the *most derived* contract, which may live in a
+    contract that is not a base of the one containing the call.
+
 .. index:: ! overriding;function
 
 .. _function-overriding:
