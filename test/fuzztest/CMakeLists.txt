@@ -30,6 +30,7 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/deps/fuzztest ${CMAKE_BINARY_DIR}/deps/fu
 fuzztest_setup_fuzzing_flags()
 
 set(yul_fuzztest_sources
+	libyul/StackLimitEvaderPropertyTest.cpp
 	libyul/TarjanSCCPropertyTest.cpp
 )
 detect_stray_source_files("${yul_fuzztest_sources}" "libyul/")
