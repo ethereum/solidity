@@ -1,5 +1,8 @@
 ### 0.8.37 (unreleased)
 
+Important Bugfixes:
+* Yul Optimizer: Fix too few memory slots being reserved when moving local variables to memory to work around stack-too-deep errors in code containing mutually recursive functions. Variables of two functions that can be active at the same time could be assigned the same slot, silently overwriting one of them while it was still in use.
+
 Language Features:
 * Custom Storage Layout: Allow signed positive expressions.
 * EVM: Support `block.slotnum` to access the beacon chain slot number of the current block, available since the Amsterdam EVM version ([EIP-7843](https://eips.ethereum.org/EIPS/eip-7843)).

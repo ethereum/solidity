@@ -83,7 +83,7 @@ contract C {
     }
 }
 // ====
-// compileViaYul: true
 // compileViaSSACFG: false
+// compileViaYul: true
 // ----
-// test(uint256): 0 -> 1000, 2006, 2003
+// test(uint256): 0 -> 1000, 2006, 3

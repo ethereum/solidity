@@ -94,7 +94,7 @@
 // step: stackLimitEvader
 //
 // {
-//     mstore(0x40, memoryguard(0xc0))
+//     mstore(0x40, memoryguard(0xe0))
 //     sstore(0, f())
 //     sstore(1, p())
 //     function f() -> v
@@ -103,7 +103,7 @@
 //     { v_1 := f() }
 //     function h() -> v_2
 //     {
-//         mstore(0xa0, calldataload(mul(1, 4)))
+//         mstore(0xc0, calldataload(mul(1, 4)))
 //         let a2 := calldataload(mul(2, 4))
 //         let a3 := calldataload(mul(3, 4))
 //         let a4 := calldataload(mul(4, 4))
@@ -112,7 +112,7 @@
 //         let a7 := calldataload(mul(7, 4))
 //         let a8 := calldataload(mul(8, 4))
 //         let a9 := calldataload(mul(9, 4))
-//         mstore(0xa0, calldataload(mul(0, 4)))
+//         mstore(0xc0, calldataload(mul(0, 4)))
 //         let a10 := calldataload(mul(10, 4))
 //         let a11 := calldataload(mul(11, 4))
 //         let a12 := calldataload(mul(12, 4))
@@ -121,7 +121,7 @@
 //         let a15 := calldataload(mul(15, 4))
 //         let a16 := calldataload(mul(16, 4))
 //         let a17 := calldataload(mul(17, 4))
-//         sstore(0, mload(0xa0))
+//         sstore(0, mload(0xc0))
 //         sstore(mul(17, 4), a17)
 //         sstore(mul(16, 4), a16)
 //         sstore(mul(15, 4), a15)
@@ -138,7 +138,7 @@
 //         sstore(mul(4, 4), a4)
 //         sstore(mul(3, 4), a3)
 //         sstore(mul(2, 4), a2)
-//         sstore(mul(1, 4), mload(0xa0))
+//         sstore(mul(1, 4), mload(0xc0))
 //     }
 //     function p() -> v_3
 //     {

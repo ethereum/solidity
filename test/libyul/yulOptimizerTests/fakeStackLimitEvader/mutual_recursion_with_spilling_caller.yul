@@ -27,7 +27,7 @@
 // step: fakeStackLimitEvader
 //
 // {
-//     mstore(0x40, memoryguard(0xa0))
+//     mstore(0x40, memoryguard(0xc0))
 //     f()
 //     p()
 //     function f()
@@ -39,8 +39,8 @@
 //     { f() }
 //     function h()
 //     {
-//         mstore(0x80, 1)
-//         sstore(0, mload(0x80))
+//         mstore(0xa0, 1)
+//         sstore(0, mload(0xa0))
 //     }
 //     function p()
 //     {
