@@ -100,13 +100,18 @@ CallGraphCycles CallGraph::analyzeCallCycles() const
 	}
 
 	std::vector<std::vector<FunctionHandle>> components;
+	std::map<FunctionHandle, std::size_t> componentOfFunction;
 	std::set<FunctionHandle> recursiveFunctionHandleSet;
 	for (std::vector<std::size_t> const& scc: util::computeStronglyConnectedComponents<std::size_t>(indexBasedAdjacencyList))
 	{
 		yulAssert(!scc.empty());
+		std::size_t const componentIndex = components.size();
 		std::vector<FunctionHandle>& component = components.emplace_back();
 		for (std::size_t const node: scc)
+		{
 			component.emplace_back(functionIndexBimap.indexToFunction(node));
+			componentOfFunction[component.back()] = componentIndex;
+		}
 		if (component.size() > 1)
 			// more than one element in the SCC: everything in it is mutually recursive
 			recursiveFunctionHandleSet.insert(component.begin(), component.end());
@@ -121,6 +126,7 @@ CallGraphCycles CallGraph::analyzeCallCycles() const
 
 	return {
 		.stronglyConnectedComponents = std::move(components),
+		.componentOfFunction = std::move(componentOfFunction),
 		.recursiveFunctions = std::move(recursiveFunctionHandleSet)
 	};
 }
