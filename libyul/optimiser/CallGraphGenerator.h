@@ -43,7 +43,7 @@ struct CallGraphCycles
 	/// @returns true if @a _function is part of a (mutual) recursion. Always false for builtins.
 	bool isRecursive(FunctionHandle const& _function) const { return recursiveFunctions.contains(_function); }
 	/// @returns the index of the strongly-connected component that contains @a _function.
-	std::size_t componentOf(FunctionHandle const& _function) const { return componentOfFunction.at(_function); }
+	std::size_t componentIndexOf(FunctionHandle const& _function) const { return componentOfFunction.at(_function); }
 	/// @returns the members of the strongly-connected component with index @a _component.
 	std::vector<FunctionHandle> const& component(std::size_t const _component) const { return stronglyConnectedComponents.at(_component); }
 

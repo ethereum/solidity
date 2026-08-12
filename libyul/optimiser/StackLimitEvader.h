@@ -47,7 +47,9 @@ class Object;
  *
  * Finally, the StackToMemoryMover is called to actually move the variables to their offsets in memory.
  *
- * Prerequisite: Disambiguator
+ * Prerequisite: Disambiguator. Memory offsets are assigned to variables by name only, without regard
+ * to which function they belong to. If a variable name were shared between functions that can be live
+ * at the same time, both would silently be moved to the same memory slot, corrupting each other.
  */
 class StackLimitEvader
 {

@@ -49,42 +49,42 @@ namespace
  * - Mutually recursive functions cannot be given individual slot counts, because each of them
  *   reaches all the others. They are therefore handled as a unit: the traversal walks the strongly-
  *   connected components of the call graph rather than its individual functions, and every member of
- *   a component is considered to require as many slots as the component as a whole.
+ *   a component is considered to depend on as many slots as the component as a whole.
  *
- * - ``slotsRequiredForComponent`` maps a component to the number of slots it requires (which is also
+ * - `slotsRequiredForComponent` maps a component to the number of slots it requires (which is also
  *   the next available slot that can be used by another function that calls into the component).
  *
  * - For each component starting from the one containing the root of the call graph:
  *   - Visit all components called by any of its members that are not already visited. Calls within the
  *     component are ignored as they cannot contribute a requirement, see below.
- *   - Determine the maximum value ``n`` of the values of ``slotsRequiredForComponent`` among them.
- *   - Assign each variable of each member its slot starting from ``n`` (incrementing it).
- *   - Assign ``n`` to ``slotsRequiredForComponent`` of the component.
+ *   - Determine the maximum value `n` of the values of `slotsRequiredForComponent` among them.
+ *   - Assign each variable of each member its slot starting from `n` (incrementing it).
+ *   - Assign `n` to `slotsRequiredForComponent` of the component.
  *
  * Since the components form an acyclic graph, a component is never reached again while it is still
- * being processed, and every value read from ``slotsRequiredForComponent`` is final.
+ * being processed, and every value read from `slotsRequiredForComponent` is final.
  * Note that members of a component of more than one function never get a slot assigned at all:
- * ``StackLimitEvader::run`` bails out before reaching this point if any recursive function has
+ * `StackLimitEvader::run` bails out before reaching this point if any recursive function has
  * variables that need to be moved to memory.
  */
 struct MemoryOffsetAllocator
 {
 	std::uint64_t run(FunctionHandle const& _function = YulName{})
 	{
-		std::size_t const component = componentOfFunction.at(_function);
-		if (std::uint64_t const* slotsRequired = util::valueOrNullptr(slotsRequiredForComponent, component))
+		std::size_t const componentIndex = callCycles.componentIndexOf(_function);
+		if (std::uint64_t const* slotsRequired = util::valueOrNullptr(slotsRequiredForComponent, componentIndex))
 			return *slotsRequired;
 
 		// gather required slots from component-adjacent nodes in the call graph
 		std::uint64_t requiredSlots = 0;
-		for (FunctionHandle const& member: components.at(component))
+		for (FunctionHandle const& member: callCycles.component(componentIndex))
 			if (auto const* children = util::valueOrNullptr(callGraph, member))
 				for (FunctionHandle const& child: *children)
-					if (componentOfFunction.at(child) != component)
+					if (callCycles.componentIndexOf(child) != componentIndex)
 						// recurse and max if we leave SCC
 						requiredSlots = std::max(run(child), requiredSlots);
 
-		for (FunctionHandle const& member: components.at(component))
+		for (FunctionHandle const& member: callCycles.component(componentIndex))
 		{
 			if (!std::holds_alternative<YulName>(member))
 				continue;
@@ -92,7 +92,7 @@ struct MemoryOffsetAllocator
 			if (auto const* unreachables = util::valueOrNullptr(unreachableVariables, std::get<YulName>(member)))
 			{
 				yulAssert(
-					!recursiveFunctions.contains(member),
+					!callCycles.isRecursive(member),
 					"Cannot move variables of a recursive function to fixed memory offsets."
 				);
 
@@ -117,7 +117,7 @@ struct MemoryOffsetAllocator
 			}
 		}
 
-		return slotsRequiredForComponent[component] = requiredSlots;
+		return slotsRequiredForComponent[componentIndex] = requiredSlots;
 	}
 
 	/// Maps function names to the set of unreachable variables in that function.
@@ -125,12 +125,8 @@ struct MemoryOffsetAllocator
 	std::map<YulName, std::vector<YulName>> const& unreachableVariables;
 	/// The graph of immediate function calls of all functions.
 	std::map<FunctionHandle, std::vector<FunctionHandle>> const& callGraph;
-	/// The strongly-connected components of the call graph.
-	std::vector<std::vector<FunctionHandle>> const& components;
-	/// Maps each function to the index of the component in @a components that contains it.
-	std::map<FunctionHandle, std::size_t> const& componentOfFunction;
-	/// The functions that are part of a (mutual) recursion.
-	std::set<FunctionHandle> const& recursiveFunctions;
+	/// The cycle structure of the call graph
+	CallGraphCycles const& callCycles;
 	/// Maps the name of each user-defined function to its definition.
 	std::map<YulName, FunctionDefinition const*> const& functionDefinitions;
 	/// Max stack slots reachable via DUP/SWAP for the current backend configuration.
@@ -138,7 +134,7 @@ struct MemoryOffsetAllocator
 
 	/// Maps variable names to the memory slot the respective variable is assigned.
 	std::map<YulName, uint64_t> slotAllocations{};
-	/// Maps components to the number of memory slots the respective component requires.
+	/// Maps strongly connected components to the number of memory slots the respective component requires.
 	std::map<std::size_t, std::uint64_t> slotsRequiredForComponent{};
 };
 
@@ -245,21 +241,14 @@ void StackLimitEvader::run(
 			return;
 	}
 
-	// Functions that call each other have to share their slot requirements, so the allocator below
-	// traverses the strongly-connected components of the call graph
-	std::map<FunctionHandle, std::size_t> componentOfFunction;
-	for (size_t index = 0; index < callCycles.stronglyConnectedComponents.size(); ++index)
-		for (FunctionHandle const& function: callCycles.stronglyConnectedComponents[index])
-			componentOfFunction[function] = index;
-
 	std::map<YulName, FunctionDefinition const*> functionDefinitions = allFunctionDefinitions(_astRoot);
 
+	// Functions that call each other have to share their slot requirements, so the allocator below
+	// traverses the strongly-connected components of the call graph
 	MemoryOffsetAllocator memoryOffsetAllocator{
 		.unreachableVariables = _unreachableVariables,
 		.callGraph = callGraph.functionCalls,
-		.components = callCycles.stronglyConnectedComponents,
-		.componentOfFunction = componentOfFunction,
-		.recursiveFunctions = callCycles.recursiveFunctions,
+		.callCycles = callCycles,
 		.functionDefinitions = functionDefinitions,
 		.reachableStackDepth = evmDialect->reachableStackDepth()
 	};
