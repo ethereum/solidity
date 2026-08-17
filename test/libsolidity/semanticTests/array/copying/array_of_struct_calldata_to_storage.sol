@@ -17,5 +17,5 @@ contract C {
 // compileViaYul: true
 // ----
 // f((uint128,uint64,uint128)[]): 0x20, 3, 0, 0, 12, 0, 11, 0, 10, 0, 0 -> 10, 11, 12
-// gas irOptimized: 120751
-// gas ssaCFGOptimized: 120639
+// gas irOptimized: 120748
+// gas ssaCFGOptimized: 120636

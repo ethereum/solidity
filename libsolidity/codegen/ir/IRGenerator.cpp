@@ -998,7 +998,7 @@ std::string IRGenerator::callValueCheck()
 std::string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 {
 	Whiskers t(R"X(
-		<?+cases>if iszero(lt(calldatasize(), 4))
+		<?+cases>if gt(calldatasize(), 3)
 		{
 			let selector := <shr224>(calldataload(0))
 			switch selector

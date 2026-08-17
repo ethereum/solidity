@@ -22,7 +22,7 @@ contract B {
 }
 // ----
 // g() -> 42
-// gas irOptimized: 54536
-// gas irOptimized code: 24800
+// gas irOptimized: 54530
+// gas irOptimized code: 24600
 // gas legacy: 55868
 // gas legacy code: 66600

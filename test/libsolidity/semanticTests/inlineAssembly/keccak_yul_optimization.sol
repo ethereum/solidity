@@ -24,10 +24,10 @@ contract C {
 }
 // ----
 // f() -> 0xcdb56c384a9682c600315e3470157a4cf7638d0d33e9dae5c40ffd2644fc5a80
-// gas irOptimized: 22212
+// gas irOptimized: 22209
 // gas legacy: 23378
 // gas legacyOptimized: 23089
 // g() -> 0xcdb56c384a9682c600315e3470157a4cf7638d0d33e9dae5c40ffd2644fc5a80
-// gas irOptimized: 21251
+// gas irOptimized: 21248
 // gas legacy: 21456
 // gas legacyOptimized: 21254

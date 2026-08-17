@@ -14,12 +14,12 @@ contract F {
 }
 // ----
 // withSpecifier() -> 1, 2, 3
-// gas irOptimized: 55312
-// gas irOptimized code: 45400
+// gas irOptimized: 55300
+// gas irOptimized code: 45200
 // gas legacy: 56473
 // gas legacy code: 62800
 // withoutSpecifier() -> 1, 2, 3
-// gas irOptimized: 55286
-// gas irOptimized code: 45400
+// gas irOptimized: 55274
+// gas irOptimized code: 45200
 // gas legacy: 56451
 // gas legacy code: 62800

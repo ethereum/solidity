@@ -105,7 +105,7 @@ stop
 sub_0: assembly {
         /* "input.sol":669:772  contract D {... */
       0x80
-      jumpi(tag_1, iszero(lt(calldatasize, 0x04)))
+      jumpi(tag_1, gt(calldatasize, 0x03))
       0x00
       dup1
       revert
