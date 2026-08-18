@@ -70,14 +70,12 @@ contract C {
         return s.x;
     }
 }
-// ====
-// compileViaYul: false
 // ----
-// encodePackedStructNeighbor() -> 0xff
-// encodePackedDynArrayNeighbor() -> 0x2c
-// encodePackedPayload() -> 0x20, 6, left(0x010000000000)
-// encodeWithSelectorDynArrayNeighbor() -> 0x2c
-// encodeWithSignatureDynArrayNeighbor() -> 0x2c
-// encodeCallDynArrayNeighbor() -> 0x2c
-// encodeDynArrayNeighbor() -> 0x2c
-// encodeFarFromEnd() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+// encodePackedStructNeighbor() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+// encodePackedDynArrayNeighbor() -> 300
+// encodePackedPayload() -> 0x20, 6, left(0x010003040506)
+// encodeWithSelectorDynArrayNeighbor() -> 300
+// encodeWithSignatureDynArrayNeighbor() -> 300
+// encodeCallDynArrayNeighbor() -> 300
+// encodeDynArrayNeighbor() -> 300
+// encodeFarFromEnd() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff

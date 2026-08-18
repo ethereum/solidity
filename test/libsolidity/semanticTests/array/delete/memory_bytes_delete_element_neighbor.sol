@@ -56,11 +56,9 @@ contract C {
         return s.x;
     }
 }
-// ====
-// compileViaYul: false
 // ----
-// structNeighborLastElement() -> 0xff
-// structNeighborOneShort() -> 0xffff
+// structNeighborLastElement() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+// structNeighborOneShort() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 // dynArrayNeighborSurvivesSmallCount() -> 5
-// dynArrayNeighborTruncatesLargeCount() -> 0
-// paddingImmunity() -> -1
+// dynArrayNeighborTruncatesLargeCount() -> 256
+// paddingImmunity() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff

@@ -66,14 +66,12 @@ contract C {
         return s;
     }
 }
-// ====
-// compileViaYul: false
 // ----
-// concatSingleByte() -> 0xff
-// concatFarFromEnd() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+// concatSingleByte() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+// concatFarFromEnd() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 // concatDynArrayNeighborSurvives() -> 300
-// concatDynArrayNeighborTruncates() -> 0x2c
-// concatPayload() -> 0x20, 6, left(0x010000000000)
-// stringConcatSingleChar() -> 0xff
-// stringConcatDynArrayNeighborTruncates() -> 0x2c
-// stringConcatPayload() -> 0x20, 6, "a"
+// concatDynArrayNeighborTruncates() -> 300
+// concatPayload() -> 0x20, 6, left(0x010003040506)
+// stringConcatSingleChar() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+// stringConcatDynArrayNeighborTruncates() -> 300
+// stringConcatPayload() -> 0x20, 6, "a\x00cdef"
