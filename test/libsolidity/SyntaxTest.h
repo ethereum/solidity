@@ -22,6 +22,7 @@
 #include <test/TestCase.h>
 #include <test/CommonSyntaxTest.h>
 #include <test/TestCaseReader.h>
+#include <liblangutil/EVMVersion.h>
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/AnsiColorized.h>
 
@@ -33,6 +34,7 @@
 namespace solidity::frontend::test
 {
 
+using solidity::test::CompilerInput;
 using solidity::test::SyntaxTestError;
 
 /**

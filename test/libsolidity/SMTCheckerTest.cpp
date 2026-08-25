@@ -38,67 +38,67 @@ SMTCheckerTest::SMTCheckerTest(std::string const& _filename):
 		return !_name.empty() && _name.find_first_of(" \t\n\r:,") == std::string::npos;
 	};
 	if (maybeContracts)
-		m_modelCheckerSettings.contracts = *maybeContracts;
+		m_compilerInput.modelCheckerSettings.contracts = *maybeContracts;
 	else if (isValidContractName(contract))
-		m_modelCheckerSettings.contracts.contracts[""] = {contract};
+		m_compilerInput.modelCheckerSettings.contracts.contracts[""] = {contract};
 	else
 		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid contract specified in SMTContract setting."));
 
 	auto extCallsMode = ModelCheckerExtCalls::fromString(m_reader.stringSetting("SMTExtCalls", "untrusted"));
 	if (extCallsMode)
-		m_modelCheckerSettings.externalCalls = *extCallsMode;
+		m_compilerInput.modelCheckerSettings.externalCalls = *extCallsMode;
 	else
 		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SMT external calls mode."));
 
 	auto const& showProvedSafe = m_reader.stringSetting("SMTShowProvedSafe", "no");
 	if (showProvedSafe == "no")
-		m_modelCheckerSettings.showProvedSafe = false;
+		m_compilerInput.modelCheckerSettings.showProvedSafe = false;
 	else if (showProvedSafe == "yes")
-		m_modelCheckerSettings.showProvedSafe = true;
+		m_compilerInput.modelCheckerSettings.showProvedSafe = true;
 	else
 		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SMT \"show proved safe\" choice."));
 
 	auto const& showUnproved = m_reader.stringSetting("SMTShowUnproved", "yes");
 	if (showUnproved == "no")
-		m_modelCheckerSettings.showUnproved = false;
+		m_compilerInput.modelCheckerSettings.showUnproved = false;
 	else if (showUnproved == "yes")
-		m_modelCheckerSettings.showUnproved = true;
+		m_compilerInput.modelCheckerSettings.showUnproved = true;
 	else
 		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SMT \"show unproved\" choice."));
 
 	auto const& showUnsupported = m_reader.stringSetting("SMTShowUnsupported", "yes");
 	if (showUnsupported == "no")
-		m_modelCheckerSettings.showUnsupported = false;
+		m_compilerInput.modelCheckerSettings.showUnsupported = false;
 	else if (showUnsupported == "yes")
-		m_modelCheckerSettings.showUnsupported = true;
+		m_compilerInput.modelCheckerSettings.showUnsupported = true;
 	else
 		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SMT \"show unsupported\" choice."));
 
-	m_modelCheckerSettings.solvers = smtutil::SMTSolverChoice::None();
+	m_compilerInput.modelCheckerSettings.solvers = smtutil::SMTSolverChoice::None();
 	auto const& choice = m_reader.stringSetting("SMTSolvers", "z3");
 	if (choice == "none")
-		m_modelCheckerSettings.solvers = smtutil::SMTSolverChoice::None();
-	else if (!m_modelCheckerSettings.solvers.setSolver(choice))
+		m_compilerInput.modelCheckerSettings.solvers = smtutil::SMTSolverChoice::None();
+	else if (!m_compilerInput.modelCheckerSettings.solvers.setSolver(choice))
 		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SMT solver choice."));
 
-	m_modelCheckerSettings.solvers &= ModelChecker::availableSolvers();
+	m_compilerInput.modelCheckerSettings.solvers &= ModelChecker::availableSolvers();
 
 	/// Underflow and Overflow are not enabled by default for Solidity >=0.8.7,
 	/// so we explicitly enable all targets for the tests,
 	/// if the targets were not explicitly set by the test.
 	auto targets = ModelCheckerTargets::fromString(m_reader.stringSetting("SMTTargets", "all"));
 	if (targets)
-		m_modelCheckerSettings.targets = *targets;
+		m_compilerInput.modelCheckerSettings.targets = *targets;
 	else
 		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SMT targets."));
 
 	auto engine = ModelCheckerEngine::fromString(m_reader.stringSetting("SMTEngine", "all"));
 	if (engine)
-		m_modelCheckerSettings.engine = *engine;
+		m_compilerInput.modelCheckerSettings.engine = *engine;
 	else
 		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SMT engine choice."));
 
-	if (m_modelCheckerSettings.solvers.none() || m_modelCheckerSettings.engine.none())
+	if (m_compilerInput.modelCheckerSettings.solvers.none() || m_compilerInput.modelCheckerSettings.engine.none())
 		m_shouldRun = false;
 
 	auto const& ignoreCex = m_reader.stringSetting("SMTIgnoreCex", "yes");
@@ -119,13 +119,13 @@ SMTCheckerTest::SMTCheckerTest(std::string const& _filename):
 
 	auto const& ignoreInv = m_reader.stringSetting("SMTIgnoreInv", "yes");
 	if (ignoreInv == "no")
-		m_modelCheckerSettings.invariants = ModelCheckerInvariants::All();
+		m_compilerInput.modelCheckerSettings.invariants = ModelCheckerInvariants::All();
 	else if (ignoreInv == "yes")
-		m_modelCheckerSettings.invariants = ModelCheckerInvariants::None();
+		m_compilerInput.modelCheckerSettings.invariants = ModelCheckerInvariants::None();
 	else
 		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SMT invariant choice."));
 
-	if (m_modelCheckerSettings.invariants.invariants.empty())
+	if (m_compilerInput.modelCheckerSettings.invariants.invariants.empty())
 		m_expectations = removeInv(std::move(m_expectations));
 
 	auto const& ignoreOSSetting = m_reader.stringSetting("SMTIgnoreOS", "none");
@@ -148,14 +148,14 @@ SMTCheckerTest::SMTCheckerTest(std::string const& _filename):
 	}
 
 	auto const& bmcLoopIterations = m_reader.sizetSetting("BMCLoopIterations", 1);
-	m_modelCheckerSettings.bmcLoopIterations = std::optional<unsigned>{bmcLoopIterations};
+	m_compilerInput.modelCheckerSettings.bmcLoopIterations = std::optional<unsigned>{bmcLoopIterations};
 }
 
 void SMTCheckerTest::setupCompiler(CompilerStack& _compiler)
 {
 	SyntaxTest::setupCompiler(_compiler);
 
-	_compiler.setModelCheckerSettings(m_modelCheckerSettings);
+	_compiler.setModelCheckerSettings(m_compilerInput.modelCheckerSettings);
 }
 
 void SMTCheckerTest::filterObtainedErrors()

@@ -16,6 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
+#include "libsolidity/interface/CompilerStack.h"
 #include <test/libsolidity/SyntaxTest.h>
 
 #include <test/libsolidity/util/Common.h>
@@ -69,21 +70,25 @@ void SyntaxTest::setupCompiler(CompilerStack& _compiler)
 {
 	AnalysisFramework::setupCompiler(_compiler);
 
-	_compiler.setEVMVersion(m_evmVersion);
-	_compiler.setOptimiserSettings(
-		m_settings.optimizeYul ?
-		OptimiserSettings::full() :
-		OptimiserSettings::minimal()
-	);
-	_compiler.setViaIR(m_settings.compileViaYul == "true");
-	_compiler.setExperimental(m_settings.experimental);
-	_compiler.setMetadataFormat(CompilerStack::MetadataFormat::NoMetadata);
-	_compiler.setMetadataHash(CompilerStack::MetadataHash::None);
+	_compiler.setEVMVersion(m_compilerInput.evmVersion);
+	_compiler.setOptimiserSettings(m_compilerInput.optimiserSettings);
+	_compiler.setViaIR(m_compilerInput.viaIR);
+	_compiler.setExperimental(m_compilerInput.experimental);
+	_compiler.setMetadataFormat(m_compilerInput.metadataFormat);
+	_compiler.setMetadataHash(m_compilerInput.metadataHash);
 }
 
 void SyntaxTest::parseAndAnalyze()
 {
-	runFramework(withPreamble(m_sources), m_settings.stopAfter);
+	m_compilerInput.viaIR = m_settings.compileViaYul == "true";
+	m_compilerInput.experimental = m_settings.experimental;
+	m_compilerInput.optimiserSettings = m_settings.optimizeYul ?
+		OptimiserSettings::full() :
+		OptimiserSettings::minimal();
+	m_compilerInput.metadataFormat = CompilerStack::MetadataFormat::NoMetadata;
+	m_compilerInput.metadataHash = CompilerStack::MetadataHash::None;
+
+	runFramework(withPreamble(m_compilerInput.sources), m_settings.stopAfter);
 	if (!pipelineSuccessful() && stageSuccessful(PipelineStage::Analysis))
 	{
 		ErrorList const& errors = compiler().errors();
@@ -126,11 +131,11 @@ void SyntaxTest::filterObtainedErrors()
 			locationEnd = location->end;
 			solAssert(location->sourceName, "");
 			sourceName = *location->sourceName;
-			if(m_sources.count(sourceName) == 1)
+			if(m_compilerInput.sources.count(sourceName) == 1)
 			{
 				int preambleSize =
 						static_cast<int>(compiler().charStream(sourceName).size()) -
-						static_cast<int>(m_sources[sourceName].size());
+						static_cast<int>(m_compilerInput.sources[sourceName].size());
 				solAssert(preambleSize >= 0, "");
 
 				// ignore the version & license pragma inserted by the testing tool when calculating locations.
