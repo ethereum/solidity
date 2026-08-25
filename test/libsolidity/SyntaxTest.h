@@ -21,6 +21,7 @@
 #include <test/libsolidity/AnalysisFramework.h>
 #include <test/TestCase.h>
 #include <test/CommonSyntaxTest.h>
+#include <test/TestCaseReader.h>
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/AnsiColorized.h>
 
@@ -34,29 +35,46 @@ namespace solidity::frontend::test
 
 using solidity::test::SyntaxTestError;
 
+/**
+ * Settings that reflect what is configured in each test file.
+ */
+struct SyntaxTestSettings
+{
+	/// Reads and validates each setting from the given test case reader.
+	static SyntaxTestSettings fromReader(TestCaseReader& _reader);
+
+	PipelineStage stopAfter = PipelineStage::Compilation;
+	bool experimental = false;
+
+	std::string compileViaYul = "false";
+	bool optimizeYul = false;
+};
+
 class SyntaxTest: public AnalysisFramework, public solidity::test::CommonSyntaxTest
 {
 public:
-	static std::unique_ptr<TestCase> create(Config const& _config)
-	{
-		return std::make_unique<SyntaxTest>(_config.filename, _config.evmVersion);
-	}
 	SyntaxTest(
 		std::string const& _filename,
 		langutil::EVMVersion _evmVersion,
 		langutil::Error::Severity _minSeverity = langutil::Error::Severity::Info
-	);
+	):
+		CommonSyntaxTest(_filename, _evmVersion),
+		m_minSeverity(_minSeverity),
+		m_settings(SyntaxTestSettings::fromReader(m_reader))
+	{}
+
+	static std::unique_ptr<TestCase> create(Config const& _config)
+	{
+		return std::make_unique<SyntaxTest>(_config.filename, _config.evmVersion);
+	}
 
 protected:
 	void setupCompiler(CompilerStack& _compiler) override;
 	void parseAndAnalyze() override;
 	virtual void filterObtainedErrors();
 
-	bool m_optimiseYul{};
-	bool m_experimental{};
-	std::string m_compileViaYul{};
 	langutil::Error::Severity m_minSeverity{};
-	PipelineStage m_stopAfter;
+	SyntaxTestSettings m_settings;
 };
 
 }

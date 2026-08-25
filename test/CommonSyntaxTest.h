@@ -18,9 +18,7 @@
 
 #pragma once
 
-#include <test/libsolidity/AnalysisFramework.h>
 #include <test/TestCase.h>
-#include <test/TestCaseReader.h>
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/AnsiColorized.h>
 
@@ -50,7 +48,6 @@ struct SyntaxTestError
 			locationEnd == _rhs.locationEnd;
 	}
 };
-
 
 class CommonSyntaxTest: public frontend::test::EVMVersionRestrictedTestCase
 {
