@@ -170,7 +170,4 @@ struct StackDepth
 constexpr auto operator<=>(StackDepth const lhs, size_t const rhs) noexcept { return lhs.value <=> rhs; }
 constexpr auto operator<=>(size_t const lhs, StackDepth const rhs) noexcept { return lhs <=> rhs.value; }
 
-/// Maximum stack depth reachable by the EVM
-std::size_t constexpr reachableStackDepth = 16;
-
 }

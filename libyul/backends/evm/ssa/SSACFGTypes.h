@@ -33,6 +33,9 @@
 namespace solidity::yul::ssa
 {
 
+/// Maximum stack depth reachable by the EVM
+std::size_t constexpr reachableStackDepth = 16;
+
 template<typename R, typename T>
 concept InputRangeOf = ranges::input_range<R> && std::same_as<ranges::range_value_t<R>, T>;
 
