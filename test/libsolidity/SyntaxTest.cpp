@@ -16,6 +16,8 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
+#include "TestCase.h"
+#include "libsolidity/AnalysisFramework.h"
 #include "libsolidity/interface/CompilerStack.h"
 #include <test/libsolidity/SyntaxTest.h>
 
@@ -45,14 +47,17 @@ SyntaxTestSettings SyntaxTestSettings::fromReader(TestCaseReader& _reader)
 {
 	SyntaxTestSettings settings;
 
-	static std::set<std::string> const compileViaYulAllowedValues{"true", "false"};
-	settings.compileViaYul = _reader.stringSetting("compileViaYul", "false");
-	if (!compileViaYulAllowedValues.contains(settings.compileViaYul))
-		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid compileViaYul value: " + settings.compileViaYul + "."));
-
+	settings.compileViaYul = _reader.enumSetting<CompileViaYul>(
+		"compileViaYul",
+		{
+			{"true", CompileViaYul::True},
+			{"false", CompileViaYul::False},
+			{"also", CompileViaYul::Also}
+		},
+		"false"
+	);
 	settings.optimizeYul = _reader.boolSetting("optimize-yul", true);
 	settings.experimental = _reader.boolSetting("experimental", false);
-
 	settings.stopAfter = _reader.enumSetting<PipelineStage>(
 		"stopAfter",
 		{
@@ -78,9 +83,11 @@ void SyntaxTest::setupCompiler(CompilerStack& _compiler)
 	_compiler.setMetadataHash(m_compilerInput.metadataHash);
 }
 
+
 void SyntaxTest::parseAndAnalyze()
 {
-	m_compilerInput.viaIR = m_settings.compileViaYul == "true";
+	m_errorList.clear();
+
 	m_compilerInput.experimental = m_settings.experimental;
 	m_compilerInput.optimiserSettings = m_settings.optimizeYul ?
 		OptimiserSettings::full() :
@@ -89,30 +96,41 @@ void SyntaxTest::parseAndAnalyze()
 	m_compilerInput.metadataHash = CompilerStack::MetadataHash::None;
 
 	runFramework(withPreamble(m_compilerInput.sources), m_settings.stopAfter);
-	if (!pipelineSuccessful() && stageSuccessful(PipelineStage::Analysis))
+	if (stageSuccessful(PipelineStage::Analysis) && !pipelineSuccessful())
+		reportUnexpectedErrors();
+	filterObtainedErrors();
+}
+
+TestCase::TestResult SyntaxTest::run(
+	std::ostream& _stream,
+	std::string const& _linePrefix,
+	bool _formatted
+)
+{
+	bool compileLegacy =
+		m_settings.compileViaYul == CompileViaYul::False ||
+		m_settings.compileViaYul == CompileViaYul::Also;
+	bool compileViaYul =
+		m_settings.compileViaYul == CompileViaYul::True ||
+		m_settings.compileViaYul == CompileViaYul::Also;
+
+	parseCustomExpectations(m_reader.stream());
+
+	auto result = TestResult::Success;
+	if (compileLegacy)
 	{
-		ErrorList const& errors = compiler().errors();
-		static auto isInternalError = [](std::shared_ptr<Error const> const& _error) {
-			return
-				Error::isError(_error->type()) &&
-				_error->type() != Error::Type::CodeGenerationError &&
-				_error->type() != Error::Type::UnimplementedFeatureError
-			;
-		};
-		// Most errors are detected during analysis, and should not happen during code generation.
-		// There are some exceptions, e.g. unimplemented features or stack too deep, but anything else at this stage
-		// is an internal error that signals a bug in the compiler (rather than in user's code).
-		if (
-			auto error = ranges::find_if(errors, isInternalError);
-			error != ranges::end(errors)
-		)
-			BOOST_THROW_EXCEPTION(std::runtime_error(
-				"Unexpected " + Error::formatErrorType((*error)->type()) + " at compilation stage."
-				" This error should NOT be encoded as expectation and should be fixed instead."
-			));
+		m_compilerInput.viaIR = false;
+		parseAndAnalyze();
+		result = conclude(_stream, _linePrefix, _formatted);
+	}
+	if (compileViaYul && result == TestResult::Success)
+	{
+		m_compilerInput.viaIR = true;
+		parseAndAnalyze();
+		result = conclude(_stream, _linePrefix, _formatted);
 	}
 
-	filterObtainedErrors();
+	return result;
 }
 
 void SyntaxTest::filterObtainedErrors()
@@ -161,3 +179,27 @@ void SyntaxTest::filterObtainedErrors()
 		});
 	}
 }
+
+void SyntaxTest::reportUnexpectedErrors()
+{
+	ErrorList const& errors = compiler().errors();
+	static auto isInternalError = [](std::shared_ptr<Error const> const& _error) {
+		return
+			Error::isError(_error->type()) &&
+			_error->type() != Error::Type::CodeGenerationError &&
+			_error->type() != Error::Type::UnimplementedFeatureError
+		;
+	};
+	// Most errors are detected during analysis, and should not happen during code generation.
+	// There are some exceptions, e.g. unimplemented features or stack too deep, but anything else at this stage
+	// is an internal error that signals a bug in the compiler (rather than in user's code).
+	if (
+		auto error = ranges::find_if(errors, isInternalError);
+		error != ranges::end(errors)
+	)
+		BOOST_THROW_EXCEPTION(std::runtime_error(
+			"Unexpected " + Error::formatErrorType((*error)->type()) + " at compilation stage."
+			" This error should NOT be encoded as expectation and should be fixed instead."
+		));
+}
+
