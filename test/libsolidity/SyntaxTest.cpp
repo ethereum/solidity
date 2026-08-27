@@ -54,7 +54,7 @@ SyntaxTestSettings SyntaxTestSettings::fromReader(TestCaseReader& _reader)
 			{"false", CompileViaYul::False},
 			{"also", CompileViaYul::Also}
 		},
-		"false"
+		"also"
 	);
 	settings.optimizeYul = _reader.boolSetting("optimize-yul", true);
 	settings.experimental = _reader.boolSetting("experimental", false);
@@ -82,7 +82,6 @@ void SyntaxTest::setupCompiler(CompilerStack& _compiler)
 	_compiler.setMetadataFormat(m_compilerInput.metadataFormat);
 	_compiler.setMetadataHash(m_compilerInput.metadataHash);
 }
-
 
 void SyntaxTest::parseAndAnalyze()
 {
