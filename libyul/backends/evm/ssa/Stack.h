@@ -31,6 +31,7 @@ namespace solidity::yul::ssa
 
 /// A view over a `StackData` mimicking EVM stack semantics. When constructed with a trace, every stack
 /// manipulation is recorded as a `ShuffleOp`; an untraced view mutates the data silently.
+/// `_reachableStackDepth` is the deepest slot a swap may address
 class Stack
 {
 public:
@@ -39,9 +40,14 @@ public:
 	using Depth = StackDepth;
 	using Offset = StackOffset;
 
-	explicit Stack(Data& _data, ShuffleTrace* _trace = nullptr):
+	explicit Stack(
+		Data& _data,
+		ShuffleTrace* _trace = nullptr,
+		std::size_t const _reachableStackDepth = reachableStackDepth
+	):
 		m_data(&_data),
-		m_trace(_trace)
+		m_trace(_trace),
+		m_reachableStackDepth(_reachableStackDepth)
 	{}
 
 	Slot const& top() const
@@ -91,11 +97,11 @@ public:
 	}
 
 	bool dupReachable(Offset const& _offset) const noexcept { return dupReachable(offsetToDepth(_offset)); }
-	bool dupReachable(Depth const& _depth) const noexcept { return _depth < size() && _depth.value + 1 <= reachableStackDepth; }
+	bool dupReachable(Depth const& _depth) const noexcept { return _depth < size() && _depth.value + 1 <= m_reachableStackDepth; }
 	bool isValidSwapTarget(Offset const& _offset) const noexcept { return isValidSwapTarget(offsetToDepth(_offset)); }
-	bool isValidSwapTarget(Depth const& _depth) const noexcept { return _depth < size() && 1 <= _depth.value && _depth.value <= reachableStackDepth; }
+	bool isValidSwapTarget(Depth const& _depth) const noexcept { return _depth < size() && 1 <= _depth.value && _depth.value <= m_reachableStackDepth; }
 	bool isBeyondSwapRange(Offset const& _offset) const noexcept { return isBeyondSwapRange(offsetToDepth(_offset)); }
-	bool isBeyondSwapRange(Depth const& _depth) const noexcept { return _depth > reachableStackDepth; }
+	bool isBeyondSwapRange(Depth const& _depth) const noexcept { return _depth > m_reachableStackDepth; }
 
 	void declareJunk(Offset const& _offset) { (*m_data)[_offset.value] = Slot::makeJunk(); }
 	void declareJunk(Depth const& _depth) { declareJunk(depthToOffset(_depth)); }
@@ -141,6 +147,7 @@ public:
 private:
 	Data* m_data;
 	ShuffleTrace* m_trace;
+	std::size_t m_reachableStackDepth;
 };
 
 }
