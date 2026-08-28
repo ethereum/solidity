@@ -83,7 +83,7 @@ void SyntaxTest::setupCompiler(CompilerStack& _compiler)
 
 void SyntaxTest::parseAndAnalyze()
 {
-	runFramework(withPreamble(m_sources.sources), m_settings.stopAfter);
+	runFramework(withPreamble(m_sources), m_settings.stopAfter);
 	if (!pipelineSuccessful() && stageSuccessful(PipelineStage::Analysis))
 	{
 		ErrorList const& errors = compiler().errors();
@@ -126,11 +126,11 @@ void SyntaxTest::filterObtainedErrors()
 			locationEnd = location->end;
 			solAssert(location->sourceName, "");
 			sourceName = *location->sourceName;
-			if(m_sources.sources.count(sourceName) == 1)
+			if(m_sources.count(sourceName) == 1)
 			{
 				int preambleSize =
 						static_cast<int>(compiler().charStream(sourceName).size()) -
-						static_cast<int>(m_sources.sources[sourceName].size());
+						static_cast<int>(m_sources[sourceName].size());
 				solAssert(preambleSize >= 0, "");
 
 				// ignore the version & license pragma inserted by the testing tool when calculating locations.

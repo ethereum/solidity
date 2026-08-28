@@ -65,7 +65,7 @@ int parseUnsignedInteger(std::string::iterator& _it, std::string::iterator _end)
 
 CommonSyntaxTest::CommonSyntaxTest(std::string const& _filename, langutil::EVMVersion _evmVersion):
 	EVMVersionRestrictedTestCase(_filename),
-	m_sources(m_reader.sources()),
+	m_sources(m_reader.sources().sources),
 	m_expectations(parseExpectations(m_reader.stream())),
 	m_evmVersion(_evmVersion)
 {
@@ -99,13 +99,12 @@ void CommonSyntaxTest::printExpectationAndError(std::ostream& _stream, std::stri
 
 void CommonSyntaxTest::printSource(std::ostream& _stream, std::string const& _linePrefix, bool _formatted) const
 {
-	if (m_sources.sources.empty())
+	if (m_sources.empty())
 		return;
 
-	assert(m_sources.externalSources.empty());
-	bool outputSourceNames = (m_sources.sources.size() != 1 || !m_sources.sources.begin()->first.empty());
+	bool outputSourceNames = (m_sources.size() != 1 || !m_sources.begin()->first.empty());
 
-	for (auto const& [name, source]: m_sources.sources)
+	for (auto const& [name, source]: m_sources)
 		if (_formatted)
 		{
 			if (source.empty())

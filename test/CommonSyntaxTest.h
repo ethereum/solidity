@@ -92,7 +92,7 @@ protected:
 
 	static std::vector<SyntaxTestError> parseExpectations(std::istream& _stream);
 
-	frontend::test::SourceMap m_sources;
+	std::map<std::string, std::string> m_sources;
 	std::vector<SyntaxTestError> m_expectations;
 	std::vector<SyntaxTestError> m_errorList;
 	langutil::EVMVersion const m_evmVersion;
