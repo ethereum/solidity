@@ -104,8 +104,6 @@ struct AbiType
 	enum class Kind
 	{
 		Uint, Int, Address, Bool, FixedBytes, Bytes, String,
-		/// Value types that are distinct in Solidity but reuse an elementary type's encoding: `enum` (uint8, but
-		/// only members are valid values), a contract type (address) and a user-defined value type (its underlying).
 		Enum, Contract, UserDefined,
 		FixedArray, DynArray, Struct
 	};
@@ -118,13 +116,94 @@ struct AbiType
 	std::vector<TypePointer> components;
 };
 
+/// The kinds that occupy a single word and take no components. Kept separate from `isValueType` so that the
+/// invariant check below cannot recurse back into the functions it is guarding.
+bool isElementaryValueKind(AbiType::Kind const _kind)
+{
+	switch (_kind)
+	{
+	case AbiType::Kind::Uint:
+	case AbiType::Kind::Int:
+	case AbiType::Kind::Address:
+	case AbiType::Kind::Bool:
+	case AbiType::Kind::FixedBytes:
+		return true;
+	default:
+		return false;
+	}
+}
+
+/// What `width` and `components` are allowed to hold for each kind. Checked when a node is built and again whenever
+/// one is inspected: a type built wrongly otherwise surfaces much later as an encoding mismatch that looks like a
+/// compiler bug, which is the one diagnosis this test must never get wrong.
+void assertValidNode(AbiType const& _type)
+{
+	std::size_t const componentCount = _type.components.size();
+	switch (_type.kind)
+	{
+	case AbiType::Kind::Uint:
+	case AbiType::Kind::Int:
+		solAssert(_type.width >= 8 && _type.width <= 256, "uintN/intN width out of range");
+		solAssert(_type.width % 8 == 0, "uintN/intN width must be a multiple of 8");
+		solAssert(componentCount == 0, "an integer type has no components");
+		break;
+	case AbiType::Kind::FixedBytes:
+		solAssert(_type.width >= 1 && _type.width <= 32, "bytesN width out of range");
+		solAssert(componentCount == 0, "bytesN has no components");
+		break;
+	case AbiType::Kind::Address:
+	case AbiType::Kind::Bool:
+	case AbiType::Kind::Bytes:
+	case AbiType::Kind::String:
+	case AbiType::Kind::Contract:
+		solAssert(_type.width == 0, "this kind does not use width");
+		solAssert(componentCount == 0, "this kind has no components");
+		break;
+	case AbiType::Kind::Enum:
+		solAssert(_type.width >= 1 && _type.width <= 256, "an enum has between 1 and 256 members");
+		solAssert(componentCount == 0, "an enum has no components");
+		break;
+	case AbiType::Kind::UserDefined:
+		solAssert(_type.width == 0, "a user-defined value type does not use width");
+		solAssert(componentCount == 1, "a user-defined value type wraps exactly one type");
+		solAssert(
+			isElementaryValueKind(_type.components.front()->kind),
+			"Solidity only accepts an elementary value type as the underlying type"
+		);
+		break;
+	case AbiType::Kind::FixedArray:
+		solAssert(_type.width >= 1, "Solidity has no zero-length arrays");
+		solAssert(componentCount == 1, "an array has exactly one element type");
+		break;
+	case AbiType::Kind::DynArray:
+		solAssert(_type.width == 0, "a dynamic array has no length in its type");
+		solAssert(componentCount == 1, "an array has exactly one element type");
+		break;
+	case AbiType::Kind::Struct:
+		solAssert(_type.width == 0, "a struct does not use width");
+		solAssert(componentCount >= 1, "Solidity requires a struct to have at least one member");
+		break;
+	}
+}
+
 TypePointer makeType(AbiType::Kind _kind, std::uint32_t _width = 0, std::vector<TypePointer> _components = {})
 {
-	return std::make_shared<AbiType const>(AbiType{_kind, _width, std::move(_components)});
+	AbiType type{_kind, _width, std::move(_components)};
+	assertValidNode(type);
+	return std::make_shared<AbiType const>(std::move(type));
+}
+
+/// Whole-tree version of `assertValidNode`, for the one place that has a complete type in hand.
+void assertValidType(AbiType const& _type)
+{
+	assertValidNode(_type);
+	for (TypePointer const& component: _type.components)
+		assertValidType(*component);
 }
 
 bool isValueType(AbiType const& _type)
 {
+	assertValidNode(_type);
 	switch (_type.kind)
 	{
 	case AbiType::Kind::Uint:
@@ -143,6 +222,7 @@ bool isValueType(AbiType const& _type)
 
 bool isDynamic(AbiType const& _type)
 {
+	assertValidNode(_type);
 	switch (_type.kind)
 	{
 	case AbiType::Kind::Bytes:
@@ -161,6 +241,7 @@ bool isDynamic(AbiType const& _type)
 /// Size of the type's entry in the head part of the enclosing tuple, in bytes.
 std::size_t headSize(AbiType const& _type)
 {
+	assertValidNode(_type);
 	if (isDynamic(_type))
 		return 32;
 	switch (_type.kind)
@@ -184,6 +265,7 @@ std::size_t headSize(AbiType const& _type)
 /// implemented here").
 bool supportedByCoderV1(AbiType const& _type)
 {
+	assertValidNode(_type);
 	switch (_type.kind)
 	{
 	case AbiType::Kind::FixedArray:
@@ -199,6 +281,7 @@ bool supportedByCoderV1(AbiType const& _type)
 /// Type in ABI signature notation, i.e. with structs spelled out as tuples.
 std::string signatureOf(AbiType const& _type)
 {
+	assertValidNode(_type);
 	switch (_type.kind)
 	{
 	case AbiType::Kind::Uint: return "uint" + std::to_string(_type.width);
@@ -240,6 +323,7 @@ bytes zeroPadRight(bytes _data)
 {
 	if (_data.size() % 32 != 0)
 		_data.resize(_data.size() + 32 - _data.size() % 32, 0);
+	solAssert(_data.size() % 32 == 0);
 	return _data;
 }
 
@@ -255,14 +339,26 @@ bytes composeTuple(std::vector<TypePointer> const& _types, std::vector<bytes> co
 	bytes head;
 	bytes tail;
 	for (std::size_t i = 0; i < _types.size(); ++i)
+	{
+		// Guards the reference encoder against itself. A component encoding that is not a whole number of words, or
+		// a static one that does not fill exactly its head slot, would silently shift everything laid out after it.
+		solAssert(_encodings[i].size() % 32 == 0, "every ABI encoding is a whole number of words");
 		if (isDynamic(*_types[i]))
 		{
 			head += toBigEndian(u256(headLength + tail.size()));
 			tail += _encodings[i];
 		}
 		else
+		{
+			solAssert(
+				_encodings[i].size() == headSize(*_types[i]),
+				"a static type's encoding is exactly its entry in the head"
+			);
 			head += _encodings[i];
+		}
+	}
 
+	solAssert(head.size() == headLength, "the head is the sum of the components' head sizes");
 	return head + tail;
 }
 
@@ -419,11 +515,17 @@ fuzztest::Domain<bytes> encodingDomain(TypePointer const& _type)
 	case AbiType::Kind::UserDefined:
 		return encodingDomain(_type->components.front());
 	case AbiType::Kind::Enum:
+	{
 		// Only declared members are valid values; anything else makes the decoder revert.
+		std::uint32_t const memberCount = _type->width;
 		return fuzztest::Map(
-			[](std::uint32_t const _member) { return toBigEndian(u256(_member)); },
-			fuzztest::InRange<std::uint32_t>(0, _type->width - 1)
+			[memberCount](std::uint32_t const _member) {
+				solAssert(_member < memberCount, "an enum value outside the declared members would revert");
+				return toBigEndian(u256(_member));
+			},
+			fuzztest::InRange<std::uint32_t>(0, memberCount - 1)
 		);
+	}
 	case AbiType::Kind::Bool:
 		return fuzztest::Map(
 			[](bool const _value) { return toBigEndian(u256(_value ? 1 : 0)); },
@@ -871,6 +973,11 @@ ExecutionResult deployAndCallRoundTrip(bytes const& _creationCode, bytes const& 
 void checkRoundTrip(StringMap const& _sources, CompilationSettings const _settings, TypedValue const& _typedValue)
 {
 	// What the contract receives is the encoding of the whole tuple, which is what the round trip has to produce again.
+	solAssert(!_typedValue.types.empty(), "the top-level tuple has at least one component");
+	solAssert(_typedValue.types.size() == _typedValue.encodings.size());
+	for (TypePointer const& type: _typedValue.types)
+		assertValidType(*type);
+
 	bytes const argument = composeTuple(_typedValue.types, _typedValue.encodings);
 	std::vector<std::string> signatures;
 	for (TypePointer const& type: _typedValue.types)
@@ -910,6 +1017,53 @@ void MemoryRoundTripIsIdentity(
 		_coder = Coder::V2;
 
 	checkRoundTrip(memoryRoundTripSources(_typedValue.types, _coder), {_viaIR, _optimize}, _typedValue);
+}
+
+
+/// Guards the guards: an invariant check that has quietly stopped checking is worse than none at all, because the
+/// whole point of them is to tell a bug in this file apart from a bug in the compiler.
+TEST(ABICoderTypeInvariants, MalformedTypesAreRejected)
+{
+	using Kind = AbiType::Kind;
+	// Bypasses `makeType`, which validates on construction.
+	auto raw = [](Kind _kind, std::uint32_t _width, std::vector<TypePointer> _components) {
+		return AbiType{_kind, _width, std::move(_components)};
+	};
+	auto valid = [](Kind _kind, std::uint32_t _width = 0, std::vector<TypePointer> _components = {}) {
+		return makeType(_kind, _width, std::move(_components));
+	};
+
+	EXPECT_ANY_THROW(assertValidNode(raw(Kind::Uint, 7, {})));
+	EXPECT_ANY_THROW(assertValidNode(raw(Kind::Uint, 264, {})));
+	EXPECT_ANY_THROW(assertValidNode(raw(Kind::Uint, 0, {})));
+	EXPECT_ANY_THROW(assertValidNode(raw(Kind::Uint, 8, {valid(Kind::Bool)})));
+	EXPECT_ANY_THROW(assertValidNode(raw(Kind::FixedBytes, 0, {})));
+	EXPECT_ANY_THROW(assertValidNode(raw(Kind::FixedBytes, 33, {})));
+	EXPECT_ANY_THROW(assertValidNode(raw(Kind::Bool, 1, {})));
+	EXPECT_ANY_THROW(assertValidNode(raw(Kind::Bytes, 0, {valid(Kind::Bool)})));
+	EXPECT_ANY_THROW(assertValidNode(raw(Kind::Enum, 0, {})));
+	EXPECT_ANY_THROW(assertValidNode(raw(Kind::Enum, 257, {})));
+	EXPECT_ANY_THROW(assertValidNode(raw(Kind::UserDefined, 0, {})));
+	// `bytes` is not a value type, so it cannot be an underlying type.
+	EXPECT_ANY_THROW(assertValidNode(raw(Kind::UserDefined, 0, {valid(Kind::Bytes)})));
+	EXPECT_ANY_THROW(assertValidNode(raw(Kind::FixedArray, 0, {valid(Kind::Bool)})));
+	EXPECT_ANY_THROW(assertValidNode(raw(Kind::FixedArray, 2, {})));
+	EXPECT_ANY_THROW(assertValidNode(raw(Kind::DynArray, 3, {valid(Kind::Bool)})));
+	EXPECT_ANY_THROW(assertValidNode(raw(Kind::Struct, 0, {})));
+	EXPECT_ANY_THROW(makeType(Kind::Struct, 0, {}));
+
+	// Only the recursive walk sees a violation below the root.
+	AbiType const nested = raw(Kind::Struct, 0, {std::make_shared<AbiType const>(raw(Kind::Uint, 7, {}))});
+	EXPECT_NO_THROW(assertValidNode(nested));
+	EXPECT_ANY_THROW(assertValidType(nested));
+
+	EXPECT_ANY_THROW(composeTuple({valid(Kind::Bool)}, {bytes(31, 0)}));
+	EXPECT_ANY_THROW(composeTuple({valid(Kind::Bool)}, {bytes(64, 0)}));
+	EXPECT_ANY_THROW(composeTuple({valid(Kind::Bool), valid(Kind::Bool)}, {bytes(32, 0)}));
+
+	EXPECT_NO_THROW(assertValidType(*valid(Kind::Struct, 0, {valid(Kind::Uint, 256), valid(Kind::Bytes)})));
+	EXPECT_NO_THROW(assertValidType(*valid(Kind::UserDefined, 0, {valid(Kind::FixedBytes, 32)})));
+	EXPECT_NO_THROW(composeTuple({valid(Kind::Bool)}, {bytes(32, 0)}));
 }
 
 FUZZ_TEST(ABICoderRoundTripProperty, MemoryRoundTripIsIdentity)
