@@ -51,6 +51,7 @@
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Numeric.h>
 
+#include <range/v3/algorithm/all_of.hpp>
 #include <range/v3/algorithm/any_of.hpp>
 
 #include <fuzztest/fuzztest.h>
@@ -65,7 +66,15 @@
 #include <optional>
 #include <string>
 #include <utility>
+#include <functional>
 #include <vector>
+#include <iostream>
+#include <set>
+
+namespace { std::map<std::string, unsigned long>& stats() { static std::map<std::string, unsigned long> m; return m; }
+struct StatsReporter { ~StatsReporter() { std::cerr << "\n### COVERAGE ###\n"; for (auto const& [k,v]: stats()) std::cerr << k << " = " << v << "\n"; } };
+StatsReporter const g_statsReporter;
+}
 
 using namespace solidity;
 
@@ -78,7 +87,9 @@ namespace
 constexpr std::uint32_t maxTypeDepth = 3;
 constexpr std::uint32_t maxArrayLength = 3;
 constexpr std::uint32_t maxStructFields = 3;
+constexpr std::uint32_t maxTupleComponents = 3;
 constexpr std::uint32_t maxByteStringLength = 70;
+constexpr std::uint32_t maxEnumMembers = 4;
 
 #ifdef _WIN32
 constexpr auto evmoneFilename = "evmone.dll";
@@ -97,12 +108,20 @@ using TypePointer = std::shared_ptr<AbiType const>;
 
 struct AbiType
 {
-	enum class Kind { Uint, Int, Address, Bool, FixedBytes, Bytes, String, FixedArray, DynArray, Struct };
+	enum class Kind
+	{
+		Uint, Int, Address, Bool, FixedBytes, Bytes, String,
+		/// Value types that are distinct in Solidity but reuse an elementary type's encoding: `enum` (uint8, but
+		/// only members are valid values), a contract type (address) and a user-defined value type (its underlying).
+		Enum, Contract, UserDefined,
+		FixedArray, DynArray, Struct
+	};
 
 	Kind kind{};
-	/// Bit width for Uint/Int, byte width for FixedBytes, element count for FixedArray. Unused otherwise.
+	/// Bit width for Uint/Int, byte width for FixedBytes, element count for FixedArray, member count for Enum.
+	/// Unused otherwise.
 	std::uint32_t width = 0;
-	/// Element type for arrays (exactly one entry), field types for structs.
+	/// Element type for arrays and underlying type for UserDefined (exactly one entry), field types for structs.
 	std::vector<TypePointer> components;
 };
 
@@ -120,6 +139,9 @@ bool isValueType(AbiType const& _type)
 	case AbiType::Kind::Address:
 	case AbiType::Kind::Bool:
 	case AbiType::Kind::FixedBytes:
+	case AbiType::Kind::Enum:
+	case AbiType::Kind::Contract:
+	case AbiType::Kind::UserDefined:
 		return true;
 	default:
 		return false;
@@ -193,6 +215,9 @@ std::string signatureOf(AbiType const& _type)
 	case AbiType::Kind::FixedBytes: return "bytes" + std::to_string(_type.width);
 	case AbiType::Kind::Bytes: return "bytes";
 	case AbiType::Kind::String: return "string";
+	case AbiType::Kind::Enum: return "uint8";
+	case AbiType::Kind::Contract: return "address";
+	case AbiType::Kind::UserDefined: return signatureOf(*_type.components.front());
 	case AbiType::Kind::FixedArray: return signatureOf(*_type.components.front()) + "[" + std::to_string(_type.width) + "]";
 	case AbiType::Kind::DynArray: return signatureOf(*_type.components.front()) + "[]";
 	case AbiType::Kind::Struct:
@@ -257,23 +282,35 @@ bytes composeArray(TypePointer const& _elementType, std::vector<bytes> const& _e
 // Domains
 // ---------------------------------------------------------------------------------------------------------------
 
-fuzztest::Domain<TypePointer> elementaryTypeDomain()
+/// Every elementary value type: all 32 widths of `uintN`/`intN`/`bytesN` plus `address` and `bool`. The widths that
+/// do not fill a word are where cleanup happens, so none of them are sampled away.
+std::vector<TypePointer> elementaryValueTypes()
 {
 	std::vector<TypePointer> types{
 		makeType(AbiType::Kind::Address),
 		makeType(AbiType::Kind::Bool),
-		makeType(AbiType::Kind::Bytes),
-		makeType(AbiType::Kind::String),
 	};
-	// A representative selection rather than all widths: the ones that are not a multiple of the word size exercise
-	// cleanup, the extremes the boundaries.
-	for (std::uint32_t const bits: std::array<std::uint32_t, 8>{8, 16, 24, 32, 64, 128, 200, 256})
+	for (std::uint32_t bytesWide = 1; bytesWide <= 32; ++bytesWide)
 	{
-		types.push_back(makeType(AbiType::Kind::Uint, bits));
-		types.push_back(makeType(AbiType::Kind::Int, bits));
+		types.push_back(makeType(AbiType::Kind::Uint, 8 * bytesWide));
+		types.push_back(makeType(AbiType::Kind::Int, 8 * bytesWide));
+		types.push_back(makeType(AbiType::Kind::FixedBytes, bytesWide));
 	}
-	for (std::uint32_t const width: std::array<std::uint32_t, 5>{1, 4, 20, 31, 32})
-		types.push_back(makeType(AbiType::Kind::FixedBytes, width));
+	return types;
+}
+
+fuzztest::Domain<TypePointer> elementaryTypeDomain()
+{
+	std::vector<TypePointer> types = elementaryValueTypes();
+	types.push_back(makeType(AbiType::Kind::Bytes));
+	types.push_back(makeType(AbiType::Kind::String));
+	types.push_back(makeType(AbiType::Kind::Contract));
+	for (std::uint32_t members = 1; members <= maxEnumMembers; ++members)
+		types.push_back(makeType(AbiType::Kind::Enum, members));
+	// A user-defined value type wraps an elementary value type; those are the only ones Solidity accepts as the
+	// underlying type.
+	for (TypePointer const& underlying: elementaryValueTypes())
+		types.push_back(makeType(AbiType::Kind::UserDefined, 0, {underlying}));
 	return fuzztest::ElementOf(std::move(types));
 }
 
@@ -330,8 +367,8 @@ fuzztest::Domain<bytes> wordDomain(std::uint32_t const _bits, bool const _signed
 /// head/tail layout of an enclosing tuple).
 fuzztest::Domain<bytes> encodingDomain(TypePointer const& _type);
 
-/// Folds the per-field domains into a domain of encoding sequences, independently of how many fields there are.
-fuzztest::Domain<std::vector<bytes>> fieldEncodingsDomain(std::vector<TypePointer> const& _fields)
+/// Folds the per-component domains into a domain of encoding sequences, independently of how many there are.
+fuzztest::Domain<std::vector<bytes>> componentEncodingsDomain(std::vector<TypePointer> const& _fields)
 {
 	fuzztest::Domain<std::vector<bytes>> result = fuzztest::Just(std::vector<bytes>{});
 	for (TypePointer const& field: _fields)
@@ -355,7 +392,16 @@ fuzztest::Domain<bytes> encodingDomain(TypePointer const& _type)
 	case AbiType::Kind::Int:
 		return wordDomain(_type->width, true);
 	case AbiType::Kind::Address:
+	case AbiType::Kind::Contract:
 		return wordDomain(160, false);
+	case AbiType::Kind::UserDefined:
+		return encodingDomain(_type->components.front());
+	case AbiType::Kind::Enum:
+		// Only declared members are valid values; anything else makes the decoder revert.
+		return fuzztest::Map(
+			[](std::uint32_t const _member) { return toBigEndian(u256(_member)); },
+			fuzztest::InRange<std::uint32_t>(0, _type->width - 1)
+		);
 	case AbiType::Kind::Bool:
 		return fuzztest::Map(
 			[](bool const _value) { return toBigEndian(u256(_value ? 1 : 0)); },
@@ -370,7 +416,7 @@ fuzztest::Domain<bytes> encodingDomain(TypePointer const& _type)
 	case AbiType::Kind::Bytes:
 	case AbiType::Kind::String:
 		return fuzztest::Map(
-			[](bytes const& _value) { return toBigEndian(u256(_value.size())) + zeroPadRight(_value); },
+			[](bytes const& _value) { ::stats()["bytes_len_mod32=" + std::to_string(_value.size() % 32)]++; ::stats()["bytes_len=" + std::to_string(_value.size())]++; return toBigEndian(u256(_value.size())) + zeroPadRight(_value); },
 			fuzztest::VectorOf(fuzztest::Arbitrary<uint8_t>()).WithMaxSize(maxByteStringLength)
 		);
 	case AbiType::Kind::FixedArray:
@@ -396,27 +442,29 @@ fuzztest::Domain<bytes> encodingDomain(TypePointer const& _type)
 		std::vector<TypePointer> const fields = _type->components;
 		return fuzztest::Map(
 			[fields](std::vector<bytes> const& _encodings) { return composeTuple(fields, _encodings); },
-			fieldEncodingsDomain(fields)
+			componentEncodingsDomain(fields)
 		);
 	}
 	}
 	solAssert(false);
 }
 
+/// The components of the top-level tuple that gets encoded, decoded and encoded again, with the canonical standalone
+/// encoding of a value for each of them. The tuple is what the ABI actually specifies an encoding for; a single
+/// component is just its most common shape.
 struct TypedValue
 {
-	TypePointer type;
-	/// Canonical standalone encoding of a value of `type`.
-	bytes encoding;
+	std::vector<TypePointer> types;
+	std::vector<bytes> encodings;
 };
 
 fuzztest::Domain<TypedValue> typedValueDomain()
 {
 	return fuzztest::FlatMap(
-		[](TypePointer const& _type) {
-			return fuzztest::StructOf<TypedValue>(fuzztest::Just(_type), encodingDomain(_type));
+		[](std::vector<TypePointer> const& _types) {
+			return fuzztest::StructOf<TypedValue>(fuzztest::Just(_types), componentEncodingsDomain(_types));
 		},
-		typeDomain(maxTypeDepth)
+		fuzztest::VectorOf(typeDomain(maxTypeDepth)).WithMinSize(1).WithMaxSize(maxTupleComponents)
 	);
 }
 
@@ -424,7 +472,9 @@ fuzztest::Domain<TypedValue> typedValueDomain()
 // Solidity source generation
 // ---------------------------------------------------------------------------------------------------------------
 
-/// Renders Solidity type names, collecting the struct definitions the rendered names refer to along the way.
+/// Renders Solidity type names, collecting the declarations the rendered names refer to along the way. Structs,
+/// enums and user-defined value types each need one, and they all go into a single source unit that every generated
+/// contract imports.
 class TypeNamer
 {
 public:
@@ -434,38 +484,86 @@ public:
 		{
 		case AbiType::Kind::FixedArray: return name(*_type.components.front()) + "[" + std::to_string(_type.width) + "]";
 		case AbiType::Kind::DynArray: return name(*_type.components.front()) + "[]";
-		case AbiType::Kind::Struct: return structName(_type);
+		case AbiType::Kind::Struct: return declaredName(_type);
+		case AbiType::Kind::Enum: return declaredName(_type);
+		case AbiType::Kind::UserDefined: return declaredName(_type);
+		case AbiType::Kind::Contract: return declaredName(_type);
 		default: return signatureOf(_type);
 		}
 	}
 
-	std::string definitions() const
+	std::string declarations() const
 	{
 		std::string result;
-		for (std::string const& definition: m_definitions)
-			result += definition;
+		for (std::string const& declaration: m_declarations)
+			result += declaration;
 		return result;
 	}
 
 private:
-	std::string structName(AbiType const& _type)
+	/// @returns the name of the type's declaration, emitting the declaration on first use.
+	std::string declaredName(AbiType const& _type)
 	{
-		if (auto const it = m_structNames.find(&_type); it != m_structNames.end())
+		if (auto const it = m_names.find(&_type); it != m_names.end())
 			return it->second;
 
-		// The field types are named first so that nested struct definitions precede the ones referring to them.
-		std::string fields;
-		for (std::size_t i = 0; i < _type.components.size(); ++i)
-			fields += "\t" + name(*_type.components[i]) + " f" + std::to_string(i) + ";\n";
+		// Everything the declaration refers to is named first, so that nested declarations precede the ones using
+		// them. Solidity does not require that, but it keeps the generated source readable when a case fails.
+		std::vector<std::string> componentNames;
+		for (TypePointer const& component: _type.components)
+			componentNames.push_back(name(*component));
 
-		std::string const identifier = "S" + std::to_string(m_definitions.size());
-		m_definitions.push_back("struct " + identifier + " {\n" + fields + "}\n");
-		m_structNames[&_type] = identifier;
+		std::string const identifier = namePrefix(_type.kind) + std::to_string(m_declarations.size());
+		m_names[&_type] = identifier;
+		m_declarations.push_back(declaration(_type, identifier, componentNames));
 		return identifier;
 	}
 
-	std::map<AbiType const*, std::string> m_structNames;
-	std::vector<std::string> m_definitions;
+	static std::string namePrefix(AbiType::Kind const _kind)
+	{
+		switch (_kind)
+		{
+		case AbiType::Kind::Struct: return "S";
+		case AbiType::Kind::Enum: return "E";
+		case AbiType::Kind::UserDefined: return "U";
+		case AbiType::Kind::Contract: return "C";
+		default: solAssert(false);
+		}
+	}
+
+	static std::string declaration(
+		AbiType const& _type,
+		std::string const& _identifier,
+		std::vector<std::string> const& _componentNames
+	)
+	{
+		switch (_type.kind)
+		{
+		case AbiType::Kind::Struct:
+		{
+			std::string fields;
+			for (std::size_t i = 0; i < _componentNames.size(); ++i)
+				fields += "\t" + _componentNames[i] + " f" + std::to_string(i) + ";\n";
+			return "struct " + _identifier + " {\n" + fields + "}\n";
+		}
+		case AbiType::Kind::Enum:
+		{
+			std::string members;
+			for (std::uint32_t i = 0; i < _type.width; ++i)
+				members += (i == 0 ? "" : ", ") + ("M" + std::to_string(i));
+			return "enum " + _identifier + " { " + members + " }\n";
+		}
+		case AbiType::Kind::UserDefined:
+			return "type " + _identifier + " is " + _componentNames.front() + ";\n";
+		case AbiType::Kind::Contract:
+			return "contract " + _identifier + " {}\n";
+		default:
+			solAssert(false);
+		}
+	}
+
+	std::map<AbiType const*, std::string> m_names;
+	std::vector<std::string> m_declarations;
 };
 
 enum class Coder { V1, V2 };
@@ -475,51 +573,111 @@ std::string coderPragma(Coder const _coder)
 	return _coder == Coder::V1 ? "pragma abicoder v1;\n" : "pragma abicoder v2;\n";
 }
 
-/// Data location suffix for a parameter of the given type. Value types must not carry one.
+std::string commaSeparated(std::vector<std::string> const& _parts)
+{
+	std::string result;
+	for (std::string const& part: _parts)
+		result += (result.empty() ? "" : ", ") + part;
+	return result;
+}
+
+/// Data location suffix for a variable of the given type. Value types must not carry one.
 std::string location(AbiType const& _type, std::string const& _location)
 {
 	return isValueType(_type) ? "" : " " + _location;
 }
 
+/// e.g. "S0, uint8[]" -- the type list `abi.decode` takes.
+std::string typeList(TypeNamer& _namer, std::vector<TypePointer> const& _types)
+{
+	std::vector<std::string> parts;
+	for (TypePointer const& type: _types)
+		parts.push_back(_namer.name(*type));
+	return commaSeparated(parts);
+}
+
+/// e.g. "S0 memory, uint8" -- the return type list of the callee.
+std::string returnTypeList(TypeNamer& _namer, std::vector<TypePointer> const& _types)
+{
+	std::vector<std::string> parts;
+	for (TypePointer const& type: _types)
+		parts.push_back(_namer.name(*type) + location(*type, "memory"));
+	return commaSeparated(parts);
+}
+
+/// e.g. "S0 calldata x0, uint8 x1" -- a parameter or local variable list.
+std::string variableDeclarations(
+	TypeNamer& _namer,
+	std::vector<TypePointer> const& _types,
+	std::string const& _location,
+	std::string const& _prefix
+)
+{
+	std::vector<std::string> parts;
+	for (std::size_t i = 0; i < _types.size(); ++i)
+		parts.push_back(_namer.name(*_types[i]) + location(*_types[i], _location) + " " + _prefix + std::to_string(i));
+	return commaSeparated(parts);
+}
+
+/// e.g. "x0, x1" -- the variables declared by `variableDeclarations` with the same prefix.
+std::string variableList(std::size_t const _count, std::string const& _prefix)
+{
+	std::vector<std::string> parts;
+	for (std::size_t i = 0; i < _count; ++i)
+		parts.push_back(_prefix + std::to_string(i));
+	return commaSeparated(parts);
+}
+
 std::string const licenseHeader = "// SPDX-License-Identifier: GPL-3.0\n";
 
-StringMap memoryRoundTripSources(AbiType const& _type, Coder const _coder)
+StringMap memoryRoundTripSources(std::vector<TypePointer> const& _types, Coder const _coder)
 {
 	TypeNamer namer;
-	std::string const typeName = namer.name(_type);
+	std::string const decoded = variableDeclarations(namer, _types, "memory", "v");
+	std::string const types = typeList(namer, _types);
+	std::string const values = variableList(_types.size(), "v");
 
 	return {
-		{"types.sol", licenseHeader + namer.definitions()},
+		{"types.sol", licenseHeader + namer.declarations()},
 		{"C.sol",
 			licenseHeader +
 			coderPragma(_coder) +
 			"import \"types.sol\";\n"
 			"contract C {\n"
 			"\tfunction roundtrip(bytes memory input) public pure returns (bytes memory) {\n"
-			"\t\treturn abi.encode(abi.decode(input, (" + typeName + ")));\n"
+			"\t\t(" + decoded + ") = abi.decode(input, (" + types + "));\n"
+			"\t\treturn abi.encode(" + values + ");\n"
 			"\t}\n"
 			"}\n"
 		},
 	};
 }
 
-StringMap crossCoderCallSources(AbiType const& _type, Coder const _callerCoder, Coder const _calleeCoder)
+StringMap crossCoderCallSources(
+	std::vector<TypePointer> const& _types,
+	Coder const _callerCoder,
+	Coder const _calleeCoder
+)
 {
 	TypeNamer namer;
-	std::string const typeName = namer.name(_type);
+	std::string const parameters = variableDeclarations(namer, _types, "calldata", "x");
+	std::string const returnTypes = returnTypeList(namer, _types);
+	std::string const decoded = variableDeclarations(namer, _types, "memory", "v");
+	std::string const results = variableDeclarations(namer, _types, "memory", "r");
+	std::string const types = typeList(namer, _types);
 
 	return {
-		// The struct definitions get their own source unit so that both sides of the call refer to the same types.
-		{"types.sol", licenseHeader + namer.definitions()},
+		// The declarations get their own source unit so that both sides of the call refer to the same types.
+		{"types.sol", licenseHeader + namer.declarations()},
 		{"callee.sol",
 			licenseHeader +
 			coderPragma(_calleeCoder) +
 			"import \"types.sol\";\n"
 			"contract Callee {\n"
-			"\tfunction identity(" + typeName + location(_type, "calldata") + " x)\n"
-			"\t\texternal pure returns (" + typeName + location(_type, "memory") + ")\n"
+			"\tfunction identity(" + parameters + ")\n"
+			"\t\texternal pure returns (" + returnTypes + ")\n"
 			"\t{\n"
-			"\t\treturn x;\n"
+			"\t\treturn (" + variableList(_types.size(), "x") + ");\n"
 			"\t}\n"
 			"}\n"
 		},
@@ -532,7 +690,9 @@ StringMap crossCoderCallSources(AbiType const& _type, Coder const _callerCoder, 
 			"\tCallee private callee;\n"
 			"\tconstructor() { callee = new Callee(); }\n"
 			"\tfunction roundtrip(bytes memory input) public view returns (bytes memory) {\n"
-			"\t\treturn abi.encode(callee.identity(abi.decode(input, (" + typeName + "))));\n"
+			"\t\t(" + decoded + ") = abi.decode(input, (" + types + "));\n"
+			"\t\t(" + results + ") = callee.identity(" + variableList(_types.size(), "v") + ");\n"
+			"\t\treturn abi.encode(" + variableList(_types.size(), "r") + ");\n"
 			"\t}\n"
 			"}\n"
 		},
@@ -676,17 +836,40 @@ ExecutionResult deployAndCallRoundTrip(bytes const& _creationCode, bytes const& 
 
 void checkRoundTrip(StringMap const& _sources, CompilationSettings const _settings, TypedValue const& _typedValue)
 {
-	// What the contract receives is the encoding of the one-element tuple `(T)`, which is what `abi.encode(v)` and
-	// hence the round trip is expected to produce again.
-	bytes const argument = composeTuple({_typedValue.type}, {_typedValue.encoding});
+	// What the contract receives is the encoding of the whole tuple, which is what the round trip has to produce again.
+	bytes const argument = composeTuple(_typedValue.types, _typedValue.encodings);
+	std::vector<std::string> signatures;
+	for (TypePointer const& type: _typedValue.types)
+		signatures.push_back(signatureOf(*type));
 	std::string const context =
-		"type: " + signatureOf(*_typedValue.type) + "\n" +
+		"tuple: (" + commaSeparated(signatures) + ")\n" +
 		"argument: " + util::toHex(argument) + "\n" +
 		sourcesToString(_sources);
 
+	{
+		std::function<void(AbiType const&)> walk = [&](AbiType const& _t) {
+			static char const* names[] = {"Uint","Int","Address","Bool","FixedBytes","Bytes","String","Enum","Contract","UserDefined","FixedArray","DynArray","Struct"};
+			::stats()[std::string("kind:") + names[static_cast<int>(_t.kind)]]++;
+			for (auto const& c: _t.components) walk(*c);
+		};
+		for (auto const& t: _typedValue.types) walk(*t);
+		::stats()["tupleSize=" + std::to_string(_typedValue.types.size())]++;
+		::stats()["TOTAL"]++;
+		if (_sources.count("caller.sol"))
+			::stats()["prop:crossCall"]++;
+		else
+			::stats()["prop:memory"]++;
+		for (auto const& [n, c]: _sources)
+			if (c.find("abicoder v1") != std::string::npos) ::stats()["coderV1_unit:" + n]++;
+		::stats()[std::string("viaIR=") + (_settings.viaIR ? "1" : "0")]++;
+		::stats()[std::string("optimize=") + (_settings.optimize ? "1" : "0")]++;
+	}
 	CompilationResult const& compilation = compileContractCached(_sources, _settings);
 	if (compilation.unsupported)
+	{
+		::stats()["SKIPPED_unsupported"]++;
 		return;
+	}
 	ASSERT_TRUE(compilation.errors.empty()) << "Compilation failed.\n" << compilation.errors << context;
 
 	ExecutionResult const execution = deployAndCallRoundTrip(compilation.creationCode, argument);
@@ -697,6 +880,11 @@ void checkRoundTrip(StringMap const& _sources, CompilationSettings const _settin
 
 }
 
+bool supportedByCoderV1(std::vector<TypePointer> const& _types)
+{
+	return ranges::all_of(_types, [](TypePointer const& _type) { return supportedByCoderV1(*_type); });
+}
+
 void MemoryRoundTripIsIdentity(
 	TypedValue const& _typedValue,
 	Coder _coder,
@@ -705,10 +893,10 @@ void MemoryRoundTripIsIdentity(
 )
 {
 	// The IR pipeline only supports coder v2, and so does any type v1 cannot express.
-	if (_viaIR || !supportedByCoderV1(*_typedValue.type))
+	if (_viaIR || !supportedByCoderV1(_typedValue.types))
 		_coder = Coder::V2;
 
-	checkRoundTrip(memoryRoundTripSources(*_typedValue.type, _coder), {_viaIR, _optimize}, _typedValue);
+	checkRoundTrip(memoryRoundTripSources(_typedValue.types, _coder), {_viaIR, _optimize}, _typedValue);
 }
 
 FUZZ_TEST(ABICoderRoundTripProperty, MemoryRoundTripIsIdentity)
@@ -727,11 +915,11 @@ void CrossCoderCallRoundTripIsIdentity(
 )
 {
 	// A v1 source unit cannot even name a type that needs v2, no matter which side of the call it is on.
-	if (!supportedByCoderV1(*_typedValue.type))
+	if (!supportedByCoderV1(_typedValue.types))
 		_callerCoder = _calleeCoder = Coder::V2;
 
 	checkRoundTrip(
-		crossCoderCallSources(*_typedValue.type, _callerCoder, _calleeCoder),
+		crossCoderCallSources(_typedValue.types, _callerCoder, _calleeCoder),
 		{false, _optimize},
 		_typedValue
 	);
