@@ -390,9 +390,14 @@ Input Description
           //     - `<end>` is the index of the first byte after that location.
           // - `snippet`: A single-line code snippet from the location indicated by `@src`.
           //     The snippet is quoted and follows the corresponding `@src` annotation.
+          //     Depends on `location`; selecting `snippet` without it is an error.
           // - `ast-id`: Annotations of the form `@ast-id <id>` over elements that can be mapped back to a definition in the original Solidity file.
           //   `<id>` is a node ID in the Solidity AST ('ast' output).
-          // - `ethdebug`: Ethdebug annotations (experimental). Automatically enabled when any ethdebug output is requested.
+          // - `ethdebug`: Ethdebug annotations (experimental). Depends on `ast-id`; selecting
+          //   `ethdebug` without `ast-id` is an error. Requesting an ethdebug output does not
+          //   change this selection; without `ethdebug` in it the `evm.bytecode.ethdebug` and
+          //   `evm.deployedBytecode.ethdebug` outputs carry none of the semantic debug info
+          //   this component adds.
           // - `*`: Wildcard value that can be used to request all non-experimental components.
           "debugInfo": ["location", "snippet", "ast-id", "ethdebug"]
         },
@@ -452,8 +457,8 @@ Input Description
         //   transientStorageLayout - Slots, offsets and types of the contract's state variables in transient storage
         //   evm.assembly - New assembly format
         //   evm.legacyAssembly - Old-style assembly format in JSON
-        //   evm.bytecode.ethdebug - Debug information in ethdebug format (ethdebug/format/program schema for creation bytecode). Can only be requested when compiling via IR. (experimental)
-        //   evm.deployedBytecode.ethdebug - Debug information in ethdebug format (ethdebug/format/program schema for deployed bytecode). Can only be requested when compiling via IR. (experimental)
+        //   evm.bytecode.ethdebug - Debug information in ethdebug format (ethdebug/format/program schema for creation bytecode). Can only be requested when compiling via IR. Carries semantic debug info only when the `ethdebug` component is present in `settings.debug.debugInfo`. (experimental)
+        //   evm.deployedBytecode.ethdebug - Debug information in ethdebug format (ethdebug/format/program schema for deployed bytecode). Can only be requested when compiling via IR. Carries semantic debug info only when the `ethdebug` component is present in `settings.debug.debugInfo`. (experimental)
         //   evm.bytecode.functionDebugData - Debugging information at function level
         //   evm.bytecode.object - Bytecode object
         //   evm.bytecode.opcodes - Opcodes list

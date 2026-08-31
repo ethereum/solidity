@@ -9,6 +9,7 @@
     }
   },
   "settings": {
+    "experimental": true,
     "outputSelection": {
       "*": {
         "*": [

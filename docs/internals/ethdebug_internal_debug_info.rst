@@ -78,7 +78,7 @@ Semantic debug-info transfer depends on ``@ast-id`` comments.
 Accordingly, ``ethdebug`` depends on the ``ast-id`` ``--debug-info`` component.
 CLI and Standard JSON input reject a debug-info selection containing ``ethdebug`` without ``ast-id``.
 Selecting an ethdebug output does not modify the debug-info selection, just as ``--ir-optimized`` does not imply ``--optimize``.
-Requesting an ethdebug output without ``ethdebug`` in the debug-info selection is an error.
+Without ``ethdebug`` in the selection the program outputs are still produced from the assembly, but carry none of the semantic debug info the component adds; the resources and compilation outputs do not depend on it.
 
 Core Structures
 ===============

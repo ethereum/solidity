@@ -1194,6 +1194,8 @@ void CommandLineParser::processArgs()
 
 		if (m_options.output.debugInfoSelection->snippet && !m_options.output.debugInfoSelection->location)
 			solThrow(CommandLineValidationError, "To use 'snippet' with --" + g_strDebugInfo + " you must select also 'location'.");
+		if (m_options.output.debugInfoSelection->ethdebug && !m_options.output.debugInfoSelection->astID)
+			solThrow(CommandLineValidationError, "To use 'ethdebug' with --" + g_strDebugInfo + " you must select also 'ast-id'.");
 	}
 
 	parseCombinedJsonOption();
@@ -1355,21 +1357,19 @@ void CommandLineParser::processArgs()
 
 		m_options.output.viaSSACFG = m_args.contains(g_strViaSSACFG);
 
-		if (m_options.compiler.outputs.ethdebugProgram || m_options.compiler.outputs.ethdebugProgramRuntime)
-		{
-			if (m_options.output.viaSSACFG)
-				solUnimplemented("ethdebug is not yet supported with --" + g_strViaSSACFG + ".");
-			if (m_options.optimiserSettings().runYulOptimiser)
-				solUnimplemented(
-					"Optimization (using --" + g_strOptimize + ") is not yet supported with ethdebug."
-				);
-
-			if (!m_options.output.debugInfoSelection.has_value())
-			{
-				m_options.output.debugInfoSelection = DebugInfoSelection::Default();
-				m_options.output.debugInfoSelection->enable("ethdebug");
-			}
-		}
+		// Selecting an ethdebug output does not modify the debug info selection,
+		// just as --ir-optimized does not imply --optimize: the selection must
+		// contain ethdebug explicitly.
+		bool const ethdebugSelected =
+			m_options.output.debugInfoSelection.has_value() && m_options.output.debugInfoSelection->ethdebug;
+		bool const ethdebugProgramRequested =
+			m_options.compiler.outputs.ethdebugProgram || m_options.compiler.outputs.ethdebugProgramRuntime;
+		if ((ethdebugSelected || ethdebugProgramRequested) && m_options.output.viaSSACFG)
+			solUnimplemented("ethdebug is not yet supported with --" + g_strViaSSACFG + ".");
+		if (ethdebugSelected && m_options.optimiserSettings().runYulOptimiser)
+			solUnimplemented(
+				"Optimization (using --" + g_strOptimize + ") is not yet supported with ethdebug."
+			);
 		return;
 	}
 	else if (countEnabledOptions({g_strYulDialect, g_strMachine}) >= 1)
@@ -1517,28 +1517,11 @@ void CommandLineParser::processArgs()
 		CompilerOutputs::componentName(&CompilerOutputs::ethdebugProgramRuntime)
 	);
 
-	if (ethdebugProgramRequested)
-	{
-		if (!m_options.output.viaIR)
-			solThrow(
-				CommandLineValidationError,
-				enableEthdebugProgramMessage + " output can only be selected, if --via-ir was specified."
-			);
-
-		if (!m_options.output.debugInfoSelection.has_value())
-		{
-			m_options.output.debugInfoSelection = DebugInfoSelection::Default();
-			m_options.output.debugInfoSelection->enable("ethdebug");
-		}
-		else
-		{
-			if (!m_options.output.debugInfoSelection->ethdebug)
-				solThrow(
-					CommandLineValidationError,
-					"--debug-info must contain ethdebug, when compiling with " + enableEthdebugProgramMessage + "."
-				);
-		}
-	}
+	if (ethdebugProgramRequested && !m_options.output.viaIR)
+		solThrow(
+			CommandLineValidationError,
+			enableEthdebugProgramMessage + " output can only be selected, if --via-ir was specified."
+		);
 
 	if (
 		m_options.output.debugInfoSelection.has_value() && m_options.output.debugInfoSelection->ethdebug &&
@@ -1549,15 +1532,16 @@ void CommandLineParser::processArgs()
 			"Invalid input mode for --debug-info ethdebug."
 		);
 
-	if (m_options.output.debugInfoSelection.has_value() && m_options.output.debugInfoSelection->ethdebug)
-	{
-		if (m_options.output.viaSSACFG)
-			solUnimplemented("ethdebug is not yet supported with --" + g_strViaSSACFG + ".");
-		if (m_options.optimizer.optimizeYul || m_options.optimizer.optimizeEvmasm)
-			solUnimplemented(
-				"Optimization (using --" + g_strOptimize + ") is not yet supported with ethdebug."
-			);
-	}
+	bool const ethdebugSelected =
+		m_options.output.debugInfoSelection.has_value() && m_options.output.debugInfoSelection->ethdebug;
+	// The SSA CFG code generator attaches no source locations, which the
+	// program output consists of, so the output is gated as well.
+	if ((ethdebugSelected || ethdebugProgramRequested) && m_options.output.viaSSACFG)
+		solUnimplemented("ethdebug is not yet supported with --" + g_strViaSSACFG + ".");
+	if (ethdebugSelected && (m_options.optimizer.optimizeYul || m_options.optimizer.optimizeEvmasm))
+		solUnimplemented(
+			"Optimization (using --" + g_strOptimize + ") is not yet supported with ethdebug."
+		);
 }
 
 void CommandLineParser::parseCombinedJsonOption()

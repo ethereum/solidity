@@ -1,1 +1,1 @@
---experimental --debug-info ethdebug --via-ssa-cfg
+--experimental --debug-info ast-id,ethdebug --via-ssa-cfg

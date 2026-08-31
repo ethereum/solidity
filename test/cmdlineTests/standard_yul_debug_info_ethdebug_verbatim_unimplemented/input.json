@@ -9,7 +9,7 @@
 	},
 	"settings": {
 		"experimental": true,
-		"debug": {"debugInfo": ["ethdebug"]},
+		"debug": {"debugInfo": ["ast-id", "ethdebug"]},
 		"outputSelection": {
 			"*": {"*": ["evm.bytecode.ethdebug"]}
 		}
