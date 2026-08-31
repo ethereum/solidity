@@ -367,8 +367,7 @@ bytes composeArray(TypePointer const& _elementType, std::vector<bytes> const& _e
 // Domains
 // ---------------------------------------------------------------------------------------------------------------
 
-/// Every elementary value type: all 32 widths of `uintN`/`intN`/`bytesN` plus `address` and `bool`. The widths that
-/// do not fill a word are where cleanup happens, so none of them are sampled away.
+/// Every elementary value type: all 32 widths of `uintN`/`intN`/`bytesN` plus `address` and `bool`
 std::vector<TypePointer> elementaryValueTypes()
 {
 	std::vector<TypePointer> types{
@@ -402,9 +401,7 @@ std::vector<TypePointer> userDefinedValueTypes()
 	return types;
 }
 
-/// Each group gets a quarter of the draws rather than a share proportional to how many types it contains. A flat
-/// `ElementOf` over all of them buries `bytes` and `string` -- two entries among a hundred -- even though they are
-/// the only elementary types whose encoding needs padding, and so by far the most worth generating.
+/// Each group gets a quarter of the draws
 fuzztest::Domain<TypePointer> elementaryTypeDomain()
 {
 	return fuzztest::OneOf(
@@ -453,7 +450,7 @@ u256 wordFromParts(std::array<uint64_t, 4> const& _parts)
 }
 
 /// Payload lengths for `bytes` and `string`. The values around a word boundary are the ones where padding and the
-/// tail offsets that follow have to be got right, so they are drawn explicitly instead of being left to chance.
+/// tail offsets that follow have to be got right, so they are drawn explicitly
 fuzztest::Domain<std::uint32_t> byteStringLengthDomain()
 {
 	return fuzztest::OneOf(
