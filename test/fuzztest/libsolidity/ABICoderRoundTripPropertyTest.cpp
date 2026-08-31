@@ -19,8 +19,7 @@
  * Property test for the ABI coders: decoding an encoded value and encoding it again must be the identity.
  *
  * A random ABI type is drawn together with the canonical encoding of a random value of that type. The encoding is
- * built here from the ABI specification and shares no code with the compiler, so it is an independent reference
- * rather than a second opinion from the implementation under test. It is then run through contracts generated for
+ * built here from the ABI specification and shares no code with the compiler. It is then run through contracts generated for
  * the type, which must hand it back byte for byte:
  *   - `MemoryRoundTripIsIdentity` evaluates `abi.encode(abi.decode(input, (T)))` in a single source unit, i.e. the
  *     memory decoder followed by the memory encoder, across coder v1/v2, legacy/IR codegen and optimiser settings;
@@ -133,9 +132,7 @@ bool isElementaryValueKind(AbiType::Kind const _kind)
 	}
 }
 
-/// What `width` and `components` are allowed to hold for each kind. Checked when a node is built and again whenever
-/// one is inspected: a type built wrongly otherwise surfaces much later as an encoding mismatch that looks like a
-/// compiler bug, which is the one diagnosis this test must never get wrong.
+// Invariants for the datatypes in the test itself
 void assertValidNode(AbiType const& _type)
 {
 	std::size_t const componentCount = _type.components.size();
@@ -186,19 +183,19 @@ void assertValidNode(AbiType const& _type)
 	}
 }
 
-TypePointer makeType(AbiType::Kind _kind, std::uint32_t _width = 0, std::vector<TypePointer> _components = {})
-{
-	AbiType type{_kind, _width, std::move(_components)};
-	assertValidNode(type);
-	return std::make_shared<AbiType const>(std::move(type));
-}
-
-/// Whole-tree version of `assertValidNode`, for the one place that has a complete type in hand.
+/// Invariants for the datatypes in the test itself
 void assertValidType(AbiType const& _type)
 {
 	assertValidNode(_type);
 	for (TypePointer const& component: _type.components)
 		assertValidType(*component);
+}
+
+TypePointer makeType(AbiType::Kind _kind, std::uint32_t _width = 0, std::vector<TypePointer> _components = {})
+{
+	AbiType type{_kind, _width, std::move(_components)};
+	assertValidNode(type);
+	return std::make_shared<AbiType const>(std::move(type));
 }
 
 bool isValueType(AbiType const& _type)
@@ -215,8 +212,7 @@ bool isValueType(AbiType const& _type)
 	case AbiType::Kind::Contract:
 	case AbiType::Kind::UserDefined:
 		return true;
-	default:
-		return false;
+	default: return false;
 	}
 }
 
@@ -307,8 +303,8 @@ std::string signatureOf(AbiType const& _type)
 	solAssert(false);
 }
 
-/// FuzzTest picks a printer per type. Without this one it would descend into `AbiType`'s members, and since those
-/// are `AbiType` pointers again, the printer would instantiate itself indefinitely.
+/// FuzzTest picks a printer per type. Without this it would descend into `AbiType`'s members, and since those
+/// are `AbiType` pointers again, the printer would instantiate itself indefinitely
 template <typename Sink>
 void AbslStringify(Sink& _sink, AbiType const& _type)
 {
