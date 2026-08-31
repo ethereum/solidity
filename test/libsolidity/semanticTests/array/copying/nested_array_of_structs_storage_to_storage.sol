@@ -64,8 +64,8 @@ contract C {
 // ----
 // test1()
 // gas irOptimized: 123195
-// gas ssaCFGOptimized: 123265
+// gas ssaCFGOptimized: 123259
 // test2()
 // gas irOptimized: 123018
-// gas ssaCFGOptimized: 123078
+// gas ssaCFGOptimized: 123069
 // test3()

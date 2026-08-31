@@ -39,13 +39,13 @@ contract c {
 // ----
 // test1(uint256[][]): 0x20, 2, 0x40, 0x40, 2, 23, 42 -> 2, 65
 // gas irOptimized: 180918
-// gas ssaCFGOptimized: 180904
+// gas ssaCFGOptimized: 180897
 // test2(uint256[][2]): 0x20, 0x40, 0x40, 2, 23, 42 -> 2, 65
 // gas irOptimized: 157604
-// gas ssaCFGOptimized: 157577
+// gas ssaCFGOptimized: 157572
 // test3(uint256[2][]): 0x20, 2, 23, 42, 23, 42 -> 2, 65
 // gas irOptimized: 134685
-// gas ssaCFGOptimized: 134703
+// gas ssaCFGOptimized: 134702
 // test4(uint256[2][2]): 23, 42, 23, 42 -> 65
 // gas irOptimized: 111177
 // gas ssaCFGOptimized: 111196

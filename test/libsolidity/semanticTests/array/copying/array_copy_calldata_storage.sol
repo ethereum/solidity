@@ -23,5 +23,5 @@ contract c {
 // gas irOptimized: 647730
 // gas legacy: 659420
 // gas legacyOptimized: 648899
-// gas ssaCFGOptimized: 647762
+// gas ssaCFGOptimized: 647760
 // retrieve() -> 9, 28, 9, 28, 4, 3, 32

@@ -59,7 +59,7 @@ contract test {
 // gas irOptimized: 1406025
 // gas legacy: 1554038
 // gas legacyOptimized: 1132031
-// gas ssaCFGOptimized: 1388025
+// gas ssaCFGOptimized: 1386025
 // encode_no_asm_large()
 // gas irOptimized: 3512081
 // gas legacy: 4600082

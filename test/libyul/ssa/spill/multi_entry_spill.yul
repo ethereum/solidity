@@ -69,7 +69,7 @@
 // ----
 // object "object"
 // ===== SSA CFG =====
-// memoryguard = 0x0120
+// memoryguard = 0xe0
 //
 // #0:
 //     v0 = memoryguard
@@ -238,12 +238,8 @@
 //   spilled:
 //     v34 (value) -> mem 0x80
 //     v55 (value) -> mem 0xa0
-//     v57 (value) -> mem 0xc0
-//     v74 (value) -> mem 0xe0
-//     v75 (value) -> mem 0x0100
+//     v74 (value) -> mem 0xc0
 //   mstore schedule:
 //     mstore addr(v34) <- v34 (B#0)
 //     mstore addr(v55) <- v55 (B#2)
-//     mstore addr(v57) <- v57 (B#2)
 //     mstore addr(v74) <- v74 (B#3)
-//     mstore addr(v75) <- v75 (B#3)

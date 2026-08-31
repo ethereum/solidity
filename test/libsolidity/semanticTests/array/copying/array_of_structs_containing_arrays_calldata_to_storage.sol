@@ -24,4 +24,4 @@ contract C {
 // ----
 // f((uint256[])[]): 0x20, 3, 0x60, 0x60, 0x60, 0x20, 3, 1, 2, 3 -> 3, 1
 // gas irOptimized: 327461
-// gas ssaCFGOptimized: 328092
+// gas ssaCFGOptimized: 327891

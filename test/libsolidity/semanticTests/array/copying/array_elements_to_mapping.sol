@@ -55,7 +55,7 @@ contract C {
 // gas irOptimized: 149856
 // gas legacy: 156721
 // gas legacyOptimized: 149000
-// gas ssaCFGOptimized: 149714
+// gas ssaCFGOptimized: 149704
 // from_storage_ptr() -> 0x20, 2, 0x40, 0xa0, 2, 10, 11, 3, 12, 13, 14
 // from_memory() -> 0x20, 2, 0x40, 0xa0, 2, 10, 11, 3, 12, 13, 14
 // from_calldata(uint8[][]): 0x20, 2, 0x40, 0xa0, 2, 10, 11, 3, 12, 13, 14 -> 0x20, 2, 0x40, 0xa0, 2, 10, 11, 3, 12, 13, 14

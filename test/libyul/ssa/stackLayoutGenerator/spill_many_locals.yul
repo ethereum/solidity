@@ -39,7 +39,7 @@
 // node[shape=box,fontname="DejaVu Sans"];
 //
 // Entry [label="Entry
-// spilled: {v33, v35, v37, v39}"];
+// spilled: {v33, v35, v39}"];
 // Entry -> Block0_0;
 // Block0_0 [label="\
 // IN: []\l\
@@ -124,9 +124,9 @@
 // calldataload\l\
 // [v1, v3, v5, v7, v9, v11, v13, v15, v17, v19, v21, v23, v25, v27, v29, v31, v33, v35, v37, v39]\l\
 // \l\
-// [v31, v3, v5, v7, v9, v11, v13, v15, v17, v19, v21, v23, v25, v27, v29, v39, v1]\l\
+// [v37, v3, v5, v7, v9, v11, v13, v15, v17, v19, v21, v23, v25, v27, v29, v31, v39, v1]\l\
 // sstore\l\
-// [v31, v3, v5, v7, v9, v11, v13, v15, v17, v19, v21, v23, v25, v27, v29]\l\
+// [v37, v3, v5, v7, v9, v11, v13, v15, v17, v19, v21, v23, v25, v27, v29, v31]\l\
 // \l\
 // [v31, v29, v5, v7, v9, v11, v13, v15, v17, v19, v21, v23, v25, v27, v37, v3]\l\
 // sstore\l\

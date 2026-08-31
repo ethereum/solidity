@@ -15,7 +15,7 @@ contract Creator {
 // gas legacy code: 59000
 // gas legacyOptimized: 104908
 // gas legacyOptimized code: 23800
-// gas ssaCFGOptimized: 103953
+// gas ssaCFGOptimized: 103935
 // gas ssaCFGOptimized code: 20800
 // r() -> 4
 // ch() -> 3

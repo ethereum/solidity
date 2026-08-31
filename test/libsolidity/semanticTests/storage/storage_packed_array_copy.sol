@@ -31,6 +31,6 @@ contract C {
 // gas irOptimized: 190810
 // gas legacy: 195580
 // gas legacyOptimized: 190906
-// gas ssaCFGOptimized: 190920
+// gas ssaCFGOptimized: 191096
 // getXAsUint() -> 0, 1, 2, 3, 4, 5, 6, 7, 8
 // getYAsUint() -> 0, 1, 2, 3, 4, 5, 6, 7, 8, 0

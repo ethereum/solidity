@@ -54,7 +54,7 @@
 // Block0_0 -> Block0_0Exit;
 // FunctionEntry_f_0 [label="function f:
 //  f()
-// spilled: {v33, v35}"];
+// spilled: {v35}"];
 // FunctionEntry_f_0 -> Block1_0;
 // Block1_0 [label="\
 // IN: [ReturnLabel[1]]\l\
@@ -131,9 +131,9 @@
 // calldataload\l\
 // [ReturnLabel[1], v1, v3, v5, v7, v9, v11, v13, v15, v17, v19, v21, v23, v25, v27, v29, v31, v33, v35]\l\
 // \l\
-// [ReturnLabel[1], v31, v3, v5, v7, v9, v11, v13, v15, v17, v19, v21, v23, v25, v27, v29, v35, v1]\l\
+// [ReturnLabel[1], v33, v3, v5, v7, v9, v11, v13, v15, v17, v19, v21, v23, v25, v27, v29, v31, v35, v1]\l\
 // sstore\l\
-// [ReturnLabel[1], v31, v3, v5, v7, v9, v11, v13, v15, v17, v19, v21, v23, v25, v27, v29]\l\
+// [ReturnLabel[1], v33, v3, v5, v7, v9, v11, v13, v15, v17, v19, v21, v23, v25, v27, v29, v31]\l\
 // \l\
 // [ReturnLabel[1], v31, v29, v5, v7, v9, v11, v13, v15, v17, v19, v21, v23, v25, v27, v33, v3]\l\
 // sstore\l\
