@@ -80,7 +80,8 @@ constexpr std::uint32_t maxTypeDepth = 3;
 constexpr std::uint32_t maxArrayLength = 3;
 constexpr std::uint32_t maxStructFields = 3;
 constexpr std::uint32_t maxTupleComponents = 3;
-constexpr std::uint32_t maxByteStringLength = 70;
+/// Long enough for a payload to span several words, so that a mis-sized tail shifts everything after it.
+constexpr std::uint32_t maxByteStringLength = 97;
 constexpr std::uint32_t maxEnumMembers = 4;
 
 #ifdef _WIN32
@@ -291,19 +292,38 @@ std::vector<TypePointer> elementaryValueTypes()
 	return types;
 }
 
-fuzztest::Domain<TypePointer> elementaryTypeDomain()
+/// Contract and enum types, which Solidity spells differently but encodes as `address` and `uint8`.
+std::vector<TypePointer> enumAndContractTypes()
 {
-	std::vector<TypePointer> types = elementaryValueTypes();
-	types.push_back(makeType(AbiType::Kind::Bytes));
-	types.push_back(makeType(AbiType::Kind::String));
-	types.push_back(makeType(AbiType::Kind::Contract));
+	std::vector<TypePointer> types{makeType(AbiType::Kind::Contract)};
 	for (std::uint32_t members = 1; members <= maxEnumMembers; ++members)
 		types.push_back(makeType(AbiType::Kind::Enum, members));
-	// A user-defined value type wraps an elementary value type; those are the only ones Solidity accepts as the
-	// underlying type.
+	return types;
+}
+
+/// A user-defined value type wraps an elementary value type; those are the only underlying types Solidity accepts.
+std::vector<TypePointer> userDefinedValueTypes()
+{
+	std::vector<TypePointer> types;
 	for (TypePointer const& underlying: elementaryValueTypes())
 		types.push_back(makeType(AbiType::Kind::UserDefined, 0, {underlying}));
-	return fuzztest::ElementOf(std::move(types));
+	return types;
+}
+
+/// Each group gets a quarter of the draws rather than a share proportional to how many types it contains. A flat
+/// `ElementOf` over all of them buries `bytes` and `string` -- two entries among a hundred -- even though they are
+/// the only elementary types whose encoding needs padding, and so by far the most worth generating.
+fuzztest::Domain<TypePointer> elementaryTypeDomain()
+{
+	return fuzztest::OneOf(
+		fuzztest::ElementOf(elementaryValueTypes()),
+		fuzztest::ElementOf(std::vector<TypePointer>{
+			makeType(AbiType::Kind::Bytes),
+			makeType(AbiType::Kind::String),
+		}),
+		fuzztest::ElementOf(enumAndContractTypes()),
+		fuzztest::ElementOf(userDefinedValueTypes())
+	);
 }
 
 fuzztest::Domain<TypePointer> typeDomain(std::uint32_t const _depth)
@@ -338,6 +358,16 @@ u256 wordFromParts(std::array<uint64_t, 4> const& _parts)
 	for (uint64_t const part: _parts)
 		result = (result << 64) | part;
 	return result;
+}
+
+/// Payload lengths for `bytes` and `string`. The values around a word boundary are the ones where padding and the
+/// tail offsets that follow have to be got right, so they are drawn explicitly instead of being left to chance.
+fuzztest::Domain<std::uint32_t> byteStringLengthDomain()
+{
+	return fuzztest::OneOf(
+		fuzztest::ElementOf(std::vector<std::uint32_t>{0, 1, 31, 32, 33, 63, 64, 65, 95, 96, 97}),
+		fuzztest::InRange<std::uint32_t>(0, maxByteStringLength)
+	);
 }
 
 /// Domain of the single-word encoding of an integer of the given width, sign-extended to the full word for `intN`.
@@ -407,9 +437,14 @@ fuzztest::Domain<bytes> encodingDomain(TypePointer const& _type)
 		);
 	case AbiType::Kind::Bytes:
 	case AbiType::Kind::String:
-		return fuzztest::Map(
-			[](bytes const& _value) { return toBigEndian(u256(_value.size())) + zeroPadRight(_value); },
-			fuzztest::VectorOf(fuzztest::Arbitrary<uint8_t>()).WithMaxSize(maxByteStringLength)
+		return fuzztest::FlatMap(
+			[](std::uint32_t const _length) {
+				return fuzztest::Map(
+					[](bytes const& _value) { return toBigEndian(u256(_value.size())) + zeroPadRight(_value); },
+					fuzztest::VectorOf(fuzztest::Arbitrary<uint8_t>()).WithSize(_length)
+				);
+			},
+			byteStringLengthDomain()
 		);
 	case AbiType::Kind::FixedArray:
 	{
@@ -422,11 +457,18 @@ fuzztest::Domain<bytes> encodingDomain(TypePointer const& _type)
 	case AbiType::Kind::DynArray:
 	{
 		TypePointer const elementType = _type->components.front();
-		return fuzztest::Map(
-			[elementType](std::vector<bytes> const& _elements) {
-				return toBigEndian(u256(_elements.size())) + composeArray(elementType, _elements);
+		// The length is drawn up front for the same reason as for `bytes`: left to grow a container on its own,
+		// the fuzzer keeps the array at zero or one element and never lays out a second tail.
+		return fuzztest::FlatMap(
+			[elementType](std::uint32_t const _length) {
+				return fuzztest::Map(
+					[elementType](std::vector<bytes> const& _elements) {
+						return toBigEndian(u256(_elements.size())) + composeArray(elementType, _elements);
+					},
+					fuzztest::VectorOf(encodingDomain(elementType)).WithSize(_length)
+				);
 			},
-			fuzztest::VectorOf(encodingDomain(elementType)).WithMaxSize(maxArrayLength)
+			fuzztest::InRange<std::uint32_t>(0, maxArrayLength)
 		);
 	}
 	case AbiType::Kind::Struct:
