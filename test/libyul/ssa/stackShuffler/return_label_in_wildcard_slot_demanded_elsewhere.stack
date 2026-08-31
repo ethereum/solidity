@@ -1,0 +1,16 @@
+// The function return label sits at an offset that is a junk wildcard in the target, while the
+// target demands the label at a different offset. The plan must move (swap) the label there; it
+// can neither be duped nor regenerated.
+initial: [ReturnLabel[0], v0]
+targetStackTop: [JUNK, ReturnLabel[0]]
+allowSpilling: true
+// ----
+//             |              0              1
+//             +------------------------------
+//    (initial)| ReturnLabel[0]             v0
+//        SWAP1|             v0 ReturnLabel[0]
+//             +------------------------------
+//     (target)|              * ReturnLabel[0]
+// Plan: 1 0
+// Status: Admissible
+// Spilled: {}
