@@ -1019,9 +1019,25 @@ void MemoryRoundTripIsIdentity(
 	checkRoundTrip(memoryRoundTripSources(_typedValue.types, _coder), {_viaIR, _optimize}, _typedValue);
 }
 
+void CrossCoderCallRoundTripIsIdentity(
+	TypedValue const& _typedValue,
+	Coder _callerCoder,
+	Coder _calleeCoder,
+	bool const _optimize
+)
+{
+	// A v1 source unit cannot even name a type that needs v2, no matter which side of the call it is on.
+	if (!supportedByCoderV1(_typedValue.types))
+		_callerCoder = _calleeCoder = Coder::V2;
 
-/// Guards the guards: an invariant check that has quietly stopped checking is worse than none at all, because the
-/// whole point of them is to tell a bug in this file apart from a bug in the compiler.
+	checkRoundTrip(
+		crossCoderCallSources(_typedValue.types, _callerCoder, _calleeCoder),
+		{false, _optimize},
+		_typedValue
+	);
+}
+
+/// A test for the property test itself
 TEST(ABICoderTypeInvariants, MalformedTypesAreRejected)
 {
 	using Kind = AbiType::Kind;
@@ -1066,6 +1082,7 @@ TEST(ABICoderTypeInvariants, MalformedTypesAreRejected)
 	EXPECT_NO_THROW(composeTuple({valid(Kind::Bool)}, {bytes(32, 0)}));
 }
 
+// Memory round trip identity
 FUZZ_TEST(ABICoderRoundTripProperty, MemoryRoundTripIsIdentity)
 	.WithDomains(
 		typedValueDomain(),
@@ -1074,24 +1091,7 @@ FUZZ_TEST(ABICoderRoundTripProperty, MemoryRoundTripIsIdentity)
 		fuzztest::Arbitrary<bool>()
 	);
 
-void CrossCoderCallRoundTripIsIdentity(
-	TypedValue const& _typedValue,
-	Coder _callerCoder,
-	Coder _calleeCoder,
-	bool const _optimize
-)
-{
-	// A v1 source unit cannot even name a type that needs v2, no matter which side of the call it is on.
-	if (!supportedByCoderV1(_typedValue.types))
-		_callerCoder = _calleeCoder = Coder::V2;
-
-	checkRoundTrip(
-		crossCoderCallSources(_typedValue.types, _callerCoder, _calleeCoder),
-		{false, _optimize},
-		_typedValue
-	);
-}
-
+// Call roundtrip identity
 FUZZ_TEST(ABICoderRoundTripProperty, CrossCoderCallRoundTripIsIdentity)
 	.WithDomains(
 		typedValueDomain(),
