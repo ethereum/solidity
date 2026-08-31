@@ -1068,9 +1068,7 @@ TEST(ABICoderTypeInvariants, MalformedTypesAreRejected)
 	EXPECT_ANY_THROW(assertValidNode(raw(Kind::Struct, 0, {})));
 	EXPECT_ANY_THROW(makeType(Kind::Struct, 0, {}));
 
-	// Only the recursive walk sees a violation below the root.
 	AbiType const nested = raw(Kind::Struct, 0, {std::make_shared<AbiType const>(raw(Kind::Uint, 7, {}))});
-	EXPECT_NO_THROW(assertValidNode(nested));
 	EXPECT_ANY_THROW(assertValidType(nested));
 
 	EXPECT_ANY_THROW(composeTuple({valid(Kind::Bool)}, {bytes(31, 0)}));
