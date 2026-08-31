@@ -1,14 +1,11 @@
-// Same setup as spill_arg_in_liveout but without allowSpilling: confirms the default behaviour is
-// preserved and the shuffler reports StackTooDeep without retrying.
+// Same input as spill_arg_in_liveout without allowSpilling: the plan needs a spill and reports StackTooDeep.
 initial: [JUNK, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v1]
-targetStackTop: [v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v1]
-targetStackTailSet: {v1}
-targetStackSize: 18
+targetStackTop: [v1, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v1]
 allowSpilling: false
 // ----
-//             |      0 |      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16     17
-//             +------- +-----------------------------------------------------------------------------------------------------------------------
-//    (initial)|      * |     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15    v16    v17    v18     v1
-//             +------- +-----------------------------------------------------------------------------------------------------------------------
-//     (target)|   {v1} |     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15    v16    v17    v18     v1
-// Status: StackTooDeep (culprit: v1)
+//             |      0      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16     17
+//             +------------------------------------------------------------------------------------------------------------------------------
+//    (initial)|      *     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15    v16    v17    v18     v1
+//             +------------------------------------------------------------------------------------------------------------------------------
+//     (target)|     v1     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15    v16    v17    v18     v1
+// Status: StackTooDeep (would spill: v1)

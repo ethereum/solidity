@@ -2,26 +2,23 @@
 // positions
 initial: [v0, JUNK, v1, lit2, JUNK]
 targetStackTop: [JUNK, phi3, v6, v6, phi3, JUNK, phi3]
-targetStackSize: 7
 allowSpilling: true
 initialSpilledSet: {phi3, phi4, v6}
 // ----
 //             |      0      1      2      3      4      5      6
 //             +-------------------------------------------------
 //    (initial)|     v0      *     v1   lit2      *
-//    PUSH phi3|     v0      *     v1   lit2      *   phi3
-//        SWAP4|     v0   phi3     v1   lit2      *      *
-//      PUSH v6|     v0   phi3     v1   lit2      *      *     v6
-//        SWAP4|     v0   phi3     v6   lit2      *      *     v1
-//          POP|     v0   phi3     v6   lit2      *      *
-//         DUP4|     v0   phi3     v6   lit2      *      *     v6
-//        SWAP3|     v0   phi3     v6     v6      *      *   lit2
-//          POP|     v0   phi3     v6     v6      *      *
-//         DUP5|     v0   phi3     v6     v6      *      *   phi3
-//        SWAP2|     v0   phi3     v6     v6   phi3      *      *
-//          POP|     v0   phi3     v6     v6   phi3      *
+//          POP|     v0      *     v1   lit2
+//          POP|     v0      *     v1
+//          POP|     v0      *
+//      PUSH v6|     v0      *     v6
+//         DUP1|     v0      *     v6     v6
+//    PUSH phi3|     v0      *     v6     v6   phi3
+//         DUP1|     v0      *     v6     v6   phi3   phi3
+//        SWAP4|     v0   phi3     v6     v6   phi3      *
 //         DUP2|     v0   phi3     v6     v6   phi3      *   phi3
 //             +-------------------------------------------------
 //     (target)|      *   phi3     v6     v6   phi3      *   phi3
+// Plan: 0 gen gen gen gen 4 gen
 // Status: Admissible
 // Spilled: {phi3, phi4, v6}

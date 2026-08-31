@@ -2,7 +2,6 @@
 // from the stack) and a pushable literal
 initial: [phi0, JUNK, lit1, phi2, lit3, JUNK]
 targetStackTop: [lit5, phi0, JUNK, phi4, phi4]
-targetStackSize: 5
 allowSpilling: true
 initialSpilledSet: {phi4}
 // ----
@@ -11,16 +10,16 @@ initialSpilledSet: {phi4}
 //    (initial)|   phi0      *   lit1   phi2   lit3 |      *
 //          POP|   phi0      *   lit1   phi2   lit3
 //          POP|   phi0      *   lit1   phi2
-//        SWAP3|   phi2      *   lit1   phi0
-//        SWAP2|   phi2   phi0   lit1      *
-//    PUSH lit5|   phi2   phi0   lit1      *   lit5
-//        SWAP4|   lit5   phi0   lit1      *   phi2
-//          POP|   lit5   phi0   lit1      *
-//    PUSH phi4|   lit5   phi0   lit1      *   phi4
-//        SWAP1|   lit5   phi0   lit1   phi4      *
-//          POP|   lit5   phi0   lit1   phi4
+//          POP|   phi0      *   lit1
+//        SWAP1|   phi0   lit1      *
+//          POP|   phi0   lit1
+//        SWAP1|   lit1   phi0
+//    PUSH lit5|   lit1   phi0   lit5
+//        SWAP2|   lit5   phi0   lit1
+//    PUSH phi4|   lit5   phi0   lit1   phi4
 //         DUP1|   lit5   phi0   lit1   phi4   phi4
 //             +----------------------------------- +-------
 //     (target)|   lit5   phi0      *   phi4   phi4 |
+// Plan: gen 0 2 gen gen
 // Status: Admissible
 // Spilled: {phi4}

@@ -18,12 +18,14 @@
 
 #include <test/libyul/ssa/StackShufflerTest.h>
 
+#include <libyul/backends/evm/ssa/spill/SpillSet.h>
+#include <libyul/backends/evm/ssa/stack/Shuffler.h>
+
 #include <libyul/backends/evm/ssa/InstructionStore.h>
 #include <libyul/backends/evm/ssa/SSACFG.h>
 #include <libyul/backends/evm/ssa/ShuffleTrace.h>
 #include <libyul/backends/evm/ssa/Stack.h>
-#include <libyul/backends/evm/ssa/StackShuffler.h>
-#include <libyul/backends/evm/ssa/StackSlotLiveness.h>
+#include <libyul/backends/evm/ssa/StackUtils.h>
 
 #include <range/v3/view/split.hpp>
 
@@ -51,10 +53,9 @@ namespace
 {
 std::string_view constexpr parserKeyInitialStack {"initial"};
 std::string_view constexpr parserKeyStackTop {"targetStackTop"};
-std::string_view constexpr parserKeyTailSet {"targetStackTailSet"};
-std::string_view constexpr parserKeyStackSize {"targetStackSize"};
 std::string_view constexpr parserKeyAllowSpilling {"allowSpilling"};
 std::string_view constexpr parserKeyInitialSpilled {"initialSpilledSet"};
+std::string_view constexpr parserKeyReachableDepth {"reachableStackDepth"};
 
 using Slot = StackSlot;
 
@@ -109,12 +110,21 @@ Slot parseSlot(ParsedIdentifierTable& _table, std::string_view _token)
 		return Slot::makeJunk();
 
 	static constexpr std::string_view returnLabelPrefix = "ReturnLabel[";
-	if (_token.starts_with(returnLabelPrefix) && _token.ends_with("]"))
+	if (_token.starts_with(returnLabelPrefix) && _token.ends_with(']'))
 	{
 		auto const inner = _token.substr(returnLabelPrefix.size(), _token.size() - returnLabelPrefix.size() - 1);
 		if (auto const num = solidity::util::parseArithmetic<ControlFlowGraphs::FunctionGraphID>(inner))
 			return Slot::makeFunctionReturnLabel(*num);
 		throw std::runtime_error(fmt::format("Couldn't parse ReturnLabel token: {}", _token));
+	}
+
+	static constexpr std::string_view callReturnLabelPrefix = "FunctionCallReturnLabel[";
+	if (_token.starts_with(callReturnLabelPrefix) && _token.ends_with(']'))
+	{
+		auto const inner = _token.substr(callReturnLabelPrefix.size(), _token.size() - callReturnLabelPrefix.size() - 1);
+		if (auto const num = solidity::util::parseArithmetic<CallSites::CallSiteID>(inner))
+			return Slot::makeFunctionCallReturnLabel(*num);
+		throw std::runtime_error(fmt::format("Couldn't parse FunctionCallReturnLabel token: {}", _token));
 	}
 
 	auto const allocateInst = [&]() -> InstId
@@ -131,7 +141,7 @@ Slot parseSlot(ParsedIdentifierTable& _table, std::string_view _token)
 				return _table.store.appendLiteral({0}, u256(*num)).first;
 			throw std::runtime_error(fmt::format("Couldn't parse literal token: {}", _token));
 		}
-		if (_token.starts_with("v"))
+		if (_token.starts_with('v'))
 		{
 			if (!solidity::util::parseArithmetic<InstId::ValueType>(_token.substr(1)))
 				throw std::runtime_error(fmt::format("Couldn't parse variable token: {}", _token));
@@ -180,44 +190,18 @@ StackData parseSlots(ParsedIdentifierTable& _table, std::string_view _input, cha
 	return result;
 }
 
-/// Parse liveness like "{phi109, phi150, v172}"
-/// Returns a StackSlotLiveness with reference count 1 for each value, plus the parsed slots
-/// (handy for printing).
-std::pair<StackSlotLiveness, StackData> parseLiveness(ParsedIdentifierTable& _table, std::string_view _input)
-{
-	auto const slots = parseSlots(_table, _input, '{', '}');
-	StackSlotLiveness::Entries entries;
-	entries.reserve(slots.size());
-	for (auto const& slot: slots)
-	{
-		yulAssert(slot.isValue(), "Only value IDs are permitted in liveness definition.");
-		entries.emplace_back(slot, 1u);
-	}
-	return {StackSlotLiveness{std::move(entries)}, slots};
-}
-
 struct ShuffleTestInput
 {
 	std::optional<StackData> initial;
 	std::optional<StackData> targetStackTop;
-	StackSlotLiveness targetStackTailSet{};
-	StackData targetStackTailSetSlots{};
-	std::optional<size_t> targetStackSize;
 	bool allowSpilling = false;
+	std::size_t reachableDepth = reachableStackDepth;
 	spill::SpillSet initialSpilledSet{};
 	StackData initialSpilledSetSlots{};
 
 	bool valid() const
 	{
-		bool const fullySpecified =
-			initial.has_value() &&
-			targetStackTop.has_value() &&
-			targetStackSize.has_value();
-		bool const exactMode =
-			initial.has_value() &&
-			targetStackTop.has_value() &&
-			!targetStackSize.has_value();
-		return fullySpecified || exactMode;
+		return initial.has_value() && targetStackTop.has_value();
 	}
 
 	static ShuffleTestInput parse(ParsedIdentifierTable& _table, std::string_view _source)
@@ -255,19 +239,6 @@ struct ShuffleTestInput
 				result.initial = parseSlots(_table, value, '[', ']');
 			else if (key == parserKeyStackTop)
 				result.targetStackTop = parseSlots(_table, value, '[', ']');
-			else if (key == parserKeyTailSet)
-			{
-				auto [liveness, slots] = parseLiveness(_table, value);
-				result.targetStackTailSet = std::move(liveness);
-				result.targetStackTailSetSlots = std::move(slots);
-			}
-			else if (key == parserKeyStackSize)
-			{
-				if (auto num = solidity::util::parseArithmetic<std::size_t>(value))
-					result.targetStackSize = *num;
-				else
-					throw std::runtime_error(fmt::format("Couldn't parse targetStackSize: {}", value));
-			}
 			else if (key == parserKeyAllowSpilling)
 			{
 				if (value == "true")
@@ -277,23 +248,22 @@ struct ShuffleTestInput
 				else
 					throw std::runtime_error(fmt::format("Couldn't parse allowSpilling: {}", value));
 			}
+			else if (key == parserKeyReachableDepth)
+			{
+				auto const depth = solidity::util::parseArithmetic<std::size_t>(value);
+				if (!depth || *depth < 2 || *depth > reachableStackDepth)
+					throw std::runtime_error(fmt::format("Couldn't parse reachableStackDepth: {}", value));
+				result.reachableDepth = *depth;
+			}
 			else if (key == parserKeyInitialSpilled)
 			{
-				auto [liveness, slots] = parseLiveness(_table, value);
-				for (auto const& [slot, _]: liveness)
+				result.initialSpilledSetSlots = parseSlots(_table, value, '{', '}');
+				for (auto const& slot: result.initialSpilledSetSlots)
+				{
+					yulAssert(slot.isValue(), "Only value IDs can be spilled.");
 					result.initialSpilledSet.add(slot.value());
-				result.initialSpilledSetSlots = std::move(slots);
+				}
 			}
-
-		}
-
-		if (result.valid() && !result.targetStackSize)
-		{
-			yulAssert(
-				result.targetStackTailSet.empty(),
-				"Can only infer target stack size if targetStackTailSet is empty / unset."
-			);
-			result.targetStackSize = result.targetStackTop->size();
 		}
 		return result;
 	}
@@ -307,60 +277,15 @@ class TraceRecorder
 	static char constexpr junkSymbol = '*';
 
 public:
-	TraceRecorder(
-		std::ostream& _out,
-		ParsedIdentifierTable const& _table,
-		StackData const& _targetArgs,
-		StackData const& _targetTailSlots,
-		size_t _targetStackSize,
-		spill::SpillSet const& _spillSet
-	):
+	TraceRecorder(std::ostream& _out, ParsedIdentifierTable const& _table, StackData const& _target):
 		m_out(_out),
 		m_table(_table),
-		m_targetArgs(_targetArgs),
-		m_targetTail(_targetTailSlots),
-		m_spillSet(_spillSet),
-		m_targetStackSize(_targetStackSize),
-		m_targetTailSize(
-			[&] {
-				yulAssert(_targetStackSize >= m_targetArgs.size());
-				return _targetStackSize - m_targetArgs.size();
-			}()
-		),
-		m_tailSetStr(
-			fmt::format(
-				"{{{}}}",
-				fmt::join(
-					m_targetTail | ranges::views::transform(
-						[this](StackSlot const& _slot) {
-							std::string const suffix = m_spillSet.isSpilled(_slot.value()) ? "*" : "";
-							return m_table.render(_slot) + suffix;
-						}
-					),
-					", "
-				)
-			)
-		),
-		// Width of the phantom "tail annotation" column, shown only when the set is non-empty
-		// but the tail region has zero real columns (all tail-set members spilled or coinciding
-		// with args)
-		m_tailAnnotationWidth(
-			m_targetTailSize == 0 && !m_targetTail.empty() ? m_tailSetStr.size() + 2 : 0
-		)
+		m_target(_target)
 	{}
 
 	void record(std::string const& _operation, StackData const& _stack)
 	{
 		m_entries.push_back(TraceEntry{_operation, _stack});
-	}
-
-	void truncate(size_t const _maxEntries)
-	{
-		if (m_entries.size() > _maxEntries)
-		{
-			m_entries.resize(_maxEntries);
-			m_truncated = true;
-		}
 	}
 
 	~TraceRecorder()
@@ -375,28 +300,21 @@ public:
 		if (maxStackDepth == 0)
 			return;
 
-		std::size_t const numColumns = std::max(maxStackDepth, m_targetStackSize);
+		std::size_t const numColumns = std::max(maxStackDepth, m_target.size());
 		std::vector columnWidths(numColumns, slotColumnWidth);
 		for (const auto& [operation, stackAfter]: m_entries)
 			for (std::size_t i = 0; i < stackAfter.size(); ++i)
-			{
-				std::string const slotStr = stackAfter[i].isJunk() ? std::string(1, junkSymbol) : m_table.render(stackAfter[i]);
-				columnWidths[i] = std::max(columnWidths[i], slotStr.size() + 1);
-			}
-		for (std::size_t i = 0; i < m_targetArgs.size() && m_targetTailSize + i < numColumns; ++i)
-		{
-			std::string const slotStr = m_targetArgs[i].isJunk() ? std::string(1, junkSymbol) : m_table.render(m_targetArgs[i]);
-			columnWidths[m_targetTailSize + i] = std::max(columnWidths[m_targetTailSize + i], slotStr.size() + 1);
-		}
+				columnWidths[i] = std::max(columnWidths[i], render(stackAfter[i]).size() + 1);
+		for (std::size_t i = 0; i < m_target.size(); ++i)
+			columnWidths[i] = std::max(columnWidths[i], render(m_target[i]).size() + 1);
 
-		bool const hasExcess = maxStackDepth > m_targetStackSize;
+		// a separator marks the end of the target when the stack grew beyond it
+		bool const hasExcess = maxStackDepth > m_target.size();
 
 		emitHeader(hasExcess, columnWidths);
 		emitSeparatorLine(hasExcess, columnWidths);
 		for (auto const& entry: m_entries)
 			emitDataRow(entry, hasExcess, columnWidths);
-		if (m_truncated)
-			m_out << fmt::format("{:>{}}", "...", operationColumnWidth) << "|\n";
 		emitSeparatorLine(hasExcess, columnWidths);
 		emitTargetRow(hasExcess, columnWidths);
 	}
@@ -409,39 +327,23 @@ private:
 
 	std::ostream& m_out;
 	ParsedIdentifierTable const& m_table;
+	StackData const& m_target;
 	std::vector<TraceEntry> m_entries;
-	bool m_truncated = false;
-	StackData const& m_targetArgs;
-	StackData const& m_targetTail;
-	spill::SpillSet const& m_spillSet;
-	size_t const m_targetStackSize;
-	size_t const m_targetTailSize;
-	std::string const m_tailSetStr;
-	size_t const m_tailAnnotationWidth;
 
-	void emitTailAnnotationColumn(std::string_view _content, char const _filler, char const _junction) const
+	std::string render(StackSlot const& _slot) const
 	{
-		if (m_tailAnnotationWidth == 0)
-			return;
-		if (_content.empty())
-			m_out << std::string(m_tailAnnotationWidth, _filler);
-		else
-			m_out << fmt::format("{:>{}}", _content, m_tailAnnotationWidth);
-		m_out << ' ' << _junction;
+		return _slot.isJunk() ? std::string(1, junkSymbol) : m_table.render(_slot);
 	}
 
 	void emitSeparator(size_t const _index, bool const _hasExcess, char const _junction) const
 	{
-		bool const endOfTargetTail = _index == m_targetTailSize && !m_targetArgs.empty() && m_targetTailSize > 0;
-		bool const endOfTargetStackWithExcess = _hasExcess && _index == m_targetTailSize + m_targetArgs.size();
-		if (endOfTargetTail || endOfTargetStackWithExcess)
+		if (_hasExcess && _index == m_target.size())
 			m_out << ' ' << _junction;
 	}
 
 	void emitHeader(bool const _hasExcess, std::vector<std::size_t> const& _columnWidths) const
 	{
 		m_out << fmt::format("{:>{}}", "", operationColumnWidth) << "|";
-		emitTailAnnotationColumn({}, ' ', '|');
 		for (std::size_t i = 0; i < _columnWidths.size(); ++i)
 		{
 			emitSeparator(i, _hasExcess, '|');
@@ -453,7 +355,6 @@ private:
 	void emitSeparatorLine(bool const _hasExcess, std::vector<std::size_t> const& _columnWidths) const
 	{
 		m_out << fmt::format("{:>{}}", "", operationColumnWidth) << '+';
-		emitTailAnnotationColumn({}, '-', '+');
 		for (std::size_t i = 0; i < _columnWidths.size(); ++i)
 		{
 			emitSeparator(i, _hasExcess, '+');
@@ -465,13 +366,10 @@ private:
 	void emitDataRow(TraceEntry const& _entry, bool const _hasExcess, std::vector<std::size_t> const& _columnWidths) const
 	{
 		m_out << fmt::format("{:>{}}", _entry.operation, operationColumnWidth) << "|";
-		emitTailAnnotationColumn({}, ' ', '|');
 		for (size_t i = 0; i < _entry.stackAfter.size(); ++i)
 		{
 			emitSeparator(i, _hasExcess, '|');
-			auto const& slot = _entry.stackAfter[i];
-			std::string slotStr = slot.isJunk() ? std::string(1, junkSymbol) : m_table.render(slot);
-			m_out << fmt::format("{:>{}}", slotStr, _columnWidths[i]);
+			m_out << fmt::format("{:>{}}", render(_entry.stackAfter[i]), _columnWidths[i]);
 		}
 		m_out << '\n';
 	}
@@ -479,34 +377,10 @@ private:
 	void emitTargetRow(bool const _hasExcess, std::vector<size_t> const& _columnWidths) const
 	{
 		m_out << fmt::format("{:>{}}", "(target)", operationColumnWidth) << "|";
-
-		// Print tail region with set notation
-		if (m_targetTailSize > 0 && !(m_targetTail.empty() && m_targetArgs.empty()))
-		{
-			std::size_t tailWidth = 0;
-			for (std::size_t i = 0; i < m_targetTailSize; ++i)
-				tailWidth += _columnWidths[i];
-			m_out << fmt::format("{:>{}}", m_tailSetStr, tailWidth);
-
-			// Args separator
-			if (!m_targetArgs.empty())
-				m_out << " |";
-		}
-		else if (m_targetTailSize == 0)
-			emitTailAnnotationColumn(m_tailSetStr, ' ', '|');
-
-		// Print args region
-		for (std::size_t i = 0; i < m_targetArgs.size(); ++i)
-		{
-			auto const& slot = m_targetArgs[i];
-			std::string slotStr = slot.isJunk() ? std::string(1, junkSymbol) : m_table.render(slot);
-			m_out << fmt::format("{:>{}}", slotStr, _columnWidths[m_targetTailSize + i]);
-		}
-
-		// Excess separator
+		for (std::size_t i = 0; i < m_target.size(); ++i)
+			m_out << fmt::format("{:>{}}", render(m_target[i]), _columnWidths[i]);
 		if (_hasExcess)
 			m_out << " |";
-
 		m_out << '\n';
 	}
 };
@@ -533,19 +407,18 @@ ShufflingTest::TestResult ShufflingTest::run(std::ostream& _stream, std::string 
 	{
 		  static constexpr std::string_view formatHelp = R"(initial: [<slot>, ...]
 targetStackTop: [<slot>, ...]
-targetStackTailSet: {<slot>, ...}
-targetStackSize: <non-negative integer>
+allowSpilling: true|false
+reachableStackDepth: <N>  (optional, default 16)
+initialSpilledSet: {<slot>, ...}
 
 Where <slot> is one of:
   v<N>    - variable
   phi<N>  - phi node
   lit<N>  - literal
-  JUNK    - junk slot
+  JUNK    - junk slot (a wildcard in the target)
+  ReturnLabel[<N>], FunctionCallReturnLabel[<N>]
 
-Lines starting with // are comments. Comments at the end of lines are supported, too.
-The targetStackTailSet defaults to empty.
-The targetStackSize defaults to the size of targetStackTop if targetStackTailSet is empty, otherwise it must be
-explicitly provided.)";
+Lines starting with // are comments. Comments at the end of lines are supported, too.)";
 		util::AnsiColorized out(_stream, _formatted, {util::formatting::BOLD, util::formatting::RED});
 		out	<< _linePrefix << fmt::format("Error parsing source. Expected format:") << '\n';
 
@@ -561,42 +434,34 @@ explicitly provided.)";
 		return TestResult::FatalError;
 	}
 
+	StackData const& target = *testConfig.targetStackTop;
+	spill::SpillSet spillSet = testConfig.initialSpilledSet;
 	auto stackData = *testConfig.initial;
 	std::ostringstream oss;
-	StackShufflerResult shuffleResult;
-	spill::SpillSet spillSet = testConfig.initialSpilledSet;
 	// Tracks the kind of each spilled value
 	std::vector<StackSlot> spilledSlotList = testConfig.initialSpilledSetSlots;
 
-	// First, when spilling is allowed, run the shuffler with spill discovery (without recording) to
-	// determine the final spill set, then render the values discovered on top of the initial set.
-	if (testConfig.allowSpilling)
+	// The planner plans its spills itself; without allowSpilling a plan that needs one is reported as too deep.
+	spill::SpillSet const spillSetBefore = spillSet;
+	stack::ShuffleResult shuffleResult = stack::shuffle(stackData, target, spillSet, true, testConfig.reachableDepth);
+	std::vector<StackSlot> newlySpilled;
+	for (InstId const value: spillSet.spilledValues())
+		if (!spillSetBefore.isSpilled(value))
+			newlySpilled.push_back(Slot::makeValue(table.store, value));
+	bool const tooDeep =
+		shuffleResult.status != stack::ShuffleResult::Status::Admissible ||
+		(!testConfig.allowSpilling && !newlySpilled.empty());
+	if (tooDeep)
 	{
-		auto scratch = *testConfig.initial;
-		shuffleResult = StackShuffler::shuffleWithSpillDiscovery(
-			scratch,
-			*testConfig.targetStackTop,
-			testConfig.targetStackTailSet,
-			*testConfig.targetStackSize,
-			spillSet
-		);
-		for (InstId const value: spillSet.spilledValues())
-			if (!testConfig.initialSpilledSet.isSpilled(value))
-				spilledSlotList.push_back(Slot::makeValue(table.store, value));
+		shuffleResult.trace.clear();
+		stackData = *testConfig.initial;
 	}
-
-	// Final shuffle with the (possibly pre-populated) spill set; the result carries the recorded trace.
-	shuffleResult = StackShuffler::shuffle(
-		stackData,
-		*testConfig.targetStackTop,
-		testConfig.targetStackTailSet,
-		*testConfig.targetStackSize,
-		&spillSet
-	);
+	else
+		spilledSlotList += newlySpilled;
 
 	// Reconstruct the intermediate stack states by replaying the trace on top of the initial stack.
 	{
-		TraceRecorder trace(oss, table, *testConfig.targetStackTop, testConfig.targetStackTailSetSlots, *testConfig.targetStackSize, spillSet);
+		TraceRecorder trace(oss, table, target);
 		trace.record("(initial)", *testConfig.initial);
 		StackData replayData = *testConfig.initial;
 		for (ShuffleOp const& op: shuffleResult.trace)
@@ -605,23 +470,23 @@ explicitly provided.)";
 			trace.record(render(table, op), replayData);
 		}
 		yulAssert(replayData == stackData, "replayed trace must reproduce the shuffled stack");
-		if (shuffleResult.status == StackShufflerResult::Status::MaxIterationsReached)
-			trace.truncate(30);
 	}
 
-	switch (shuffleResult.status)
+	if (tooDeep)
+		oss << fmt::format(
+			"Status: StackTooDeep{}\n",
+			newlySpilled.empty() ? "" : fmt::format(" (would spill: {})", table.render(newlySpilled.front()))
+		);
+	else
 	{
-	case StackShufflerResult::Status::Admissible:
-		oss << "Status: Admissible\n";
-		break;
-	case StackShufflerResult::Status::StackTooDeep:
-		oss << fmt::format("Status: StackTooDeep (culprit: {})\n", table.render(shuffleResult.spillingCandidate));
-		break;
-	case StackShufflerResult::Status::MaxIterationsReached:
-		oss << "Status: MaxIterationsReached\n";
-		break;
-	case StackShufflerResult::Status::Continue:
-		yulAssert(false, "Unexpected Continue status from shuffle()");
+		// the plan: which source offset serves each target position, `gen` for generated slots
+		oss << "Plan:";
+		for (auto const& source: shuffleResult.sourceOf)
+			if (source)
+				oss << ' ' << *source;
+			else
+				oss << " gen";
+		oss << "\nStatus: Admissible\n";
 	}
 	if (testConfig.allowSpilling)
 		oss << fmt::format(
@@ -632,28 +497,8 @@ explicitly provided.)";
 			)
 		);
 	// check stack data
-	if (shuffleResult.status == StackShufflerResult::Status::Admissible)
-	{
-		yulAssert(*testConfig.targetStackSize >= testConfig.targetStackTop->size());
-		auto const tailSize = *testConfig.targetStackSize - testConfig.targetStackTop->size();
-		yulAssert(stackData.size() == *testConfig.targetStackSize);
-		for (auto const& slot: testConfig.targetStackTailSet | ranges::views::keys)
-		{
-			if (spillSet.isSpilled(slot.value()))
-				continue;
-			auto const findIt = ranges::find(
-				stackData.begin(),
-				stackData.begin() + static_cast<std::ptrdiff_t>(tailSize),
-				slot
-			);
-			yulAssert(findIt != ranges::end(stackData));
-		}
-		for (std::size_t offset = tailSize; offset < *testConfig.targetStackSize; ++offset)
-		{
-			auto const& targetSlot = testConfig.targetStackTop->at(offset - tailSize);
-			yulAssert(targetSlot.isJunk() || stackData[offset] == targetSlot);
-		}
-	}
+	if (!tooDeep)
+		yulAssert(checkLayoutCompatibility(stackData, target).ok());
 	m_obtainedResult = oss.str();
 
 

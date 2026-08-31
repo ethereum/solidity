@@ -12,4 +12,5 @@ targetStackTop: [JUNK, JUNK, v56, v57, lit0, v56, lit11]
 //   PUSH lit11|      *      *    v56    v57   lit0    v56  lit11
 //             +-------------------------------------------------
 //     (target)|      *      *    v56    v57   lit0    v56  lit11
+// Plan: 0 1 2 3 gen gen gen
 // Status: Admissible

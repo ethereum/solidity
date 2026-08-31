@@ -2,7 +2,6 @@
 // to shrink by one
 initial: [lit0, JUNK, lit1, JUNK, JUNK, JUNK]
 targetStackTop: [phi2, JUNK, lit3, JUNK, JUNK]
-targetStackSize: 5
 allowSpilling: true
 initialSpilledSet: {phi2}
 // ----
@@ -10,13 +9,16 @@ initialSpilledSet: {phi2}
 //             +----------------------------------- +-------
 //    (initial)|   lit0      *   lit1      *      * |      *
 //          POP|   lit0      *   lit1      *      *
-//          POP|   lit0      *   lit1      *
-//    PUSH phi2|   lit0      *   lit1      *   phi2
-//        SWAP4|   phi2      *   lit1      *   lit0
-//          POP|   phi2      *   lit1      *
-//    PUSH lit3|   phi2      *   lit1      *   lit3
-//        SWAP2|   phi2      *   lit3      *   lit1
+//        SWAP4|      *      *   lit1      *   lit0
+//          POP|      *      *   lit1      *
+//        SWAP1|      *      *      *   lit1
+//          POP|      *      *      *
+//    PUSH phi2|      *      *      *   phi2
+//        SWAP3|   phi2      *      *      *
+//    PUSH lit3|   phi2      *      *      *   lit3
+//        SWAP2|   phi2      *   lit3      *      *
 //             +----------------------------------- +-------
 //     (target)|   phi2      *   lit3      *      * |
+// Plan: gen 1 gen 3 4
 // Status: Admissible
 // Spilled: {phi2}

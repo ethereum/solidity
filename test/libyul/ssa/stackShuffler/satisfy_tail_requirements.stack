@@ -1,29 +1,22 @@
-// here, we have to create one more instance of v10 to be able to satisfy the tail requirements
+// v10 is demanded at the bottom and on top and has to be duplicated; the rest is duplicated in reverse order.
 initial: [v2, v3, v4, v5, v6, v7, v8, v9, v10]
-targetStackTop: [lit3, v9, v8, v7, v6, v5, v4, v3, v2, v10]
-targetStackTailSet: {v10}
-targetStackSize: 17
+targetStackTop: [v10, JUNK, JUNK, JUNK, JUNK, JUNK, JUNK, lit3, v9, v8, v7, v6, v5, v4, v3, v2, v10]
 // ----
-//             |      0      1      2      3      4      5      6 |      7      8      9     10     11     12     13     14     15     16
-//             +------------------------------------------------- +----------------------------------------------------------------------
-//    (initial)|     v2     v3     v4     v5     v6     v7     v8 |     v9    v10
-//        SWAP8|    v10     v3     v4     v5     v6     v7     v8 |     v9     v2
-//        SWAP1|    v10     v3     v4     v5     v6     v7     v8 |     v2     v9
-//    PUSH lit3|    v10     v3     v4     v5     v6     v7     v8 |     v2     v9   lit3
-//        SWAP2|    v10     v3     v4     v5     v6     v7     v8 |   lit3     v9     v2
-//         DUP4|    v10     v3     v4     v5     v6     v7     v8 |   lit3     v9     v2     v8
-//        SWAP1|    v10     v3     v4     v5     v6     v7     v8 |   lit3     v9     v8     v2
-//         DUP6|    v10     v3     v4     v5     v6     v7     v8 |   lit3     v9     v8     v2     v7
-//        SWAP1|    v10     v3     v4     v5     v6     v7     v8 |   lit3     v9     v8     v7     v2
-//         DUP8|    v10     v3     v4     v5     v6     v7     v8 |   lit3     v9     v8     v7     v2     v6
-//        SWAP1|    v10     v3     v4     v5     v6     v7     v8 |   lit3     v9     v8     v7     v6     v2
-//        DUP10|    v10     v3     v4     v5     v6     v7     v8 |   lit3     v9     v8     v7     v6     v2     v5
-//        SWAP1|    v10     v3     v4     v5     v6     v7     v8 |   lit3     v9     v8     v7     v6     v5     v2
-//        DUP12|    v10     v3     v4     v5     v6     v7     v8 |   lit3     v9     v8     v7     v6     v5     v2     v4
-//        SWAP1|    v10     v3     v4     v5     v6     v7     v8 |   lit3     v9     v8     v7     v6     v5     v4     v2
-//        DUP14|    v10     v3     v4     v5     v6     v7     v8 |   lit3     v9     v8     v7     v6     v5     v4     v2     v3
-//        SWAP1|    v10     v3     v4     v5     v6     v7     v8 |   lit3     v9     v8     v7     v6     v5     v4     v3     v2
-//        DUP16|    v10     v3     v4     v5     v6     v7     v8 |   lit3     v9     v8     v7     v6     v5     v4     v3     v2    v10
-//             +------------------------------------------------- +----------------------------------------------------------------------
-//     (target)|                                            {v10} |   lit3     v9     v8     v7     v6     v5     v4     v3     v2    v10
+//             |      0      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16
+//             +-----------------------------------------------------------------------------------------------------------------------
+//    (initial)|     v2     v3     v4     v5     v6     v7     v8     v9    v10
+//        SWAP8|    v10     v3     v4     v5     v6     v7     v8     v9     v2
+//        SWAP1|    v10     v3     v4     v5     v6     v7     v8     v2     v9
+//         DUP3|    v10     v3     v4     v5     v6     v7     v8     v2     v9     v8
+//         DUP5|    v10     v3     v4     v5     v6     v7     v8     v2     v9     v8     v7
+//         DUP7|    v10     v3     v4     v5     v6     v7     v8     v2     v9     v8     v7     v6
+//         DUP9|    v10     v3     v4     v5     v6     v7     v8     v2     v9     v8     v7     v6     v5
+//        DUP11|    v10     v3     v4     v5     v6     v7     v8     v2     v9     v8     v7     v6     v5     v4
+//        DUP13|    v10     v3     v4     v5     v6     v7     v8     v2     v9     v8     v7     v6     v5     v4     v3
+//    PUSH lit3|    v10     v3     v4     v5     v6     v7     v8     v2     v9     v8     v7     v6     v5     v4     v3   lit3
+//        SWAP8|    v10     v3     v4     v5     v6     v7     v8   lit3     v9     v8     v7     v6     v5     v4     v3     v2
+//        DUP16|    v10     v3     v4     v5     v6     v7     v8   lit3     v9     v8     v7     v6     v5     v4     v3     v2    v10
+//             +-----------------------------------------------------------------------------------------------------------------------
+//     (target)|    v10      *      *      *      *      *      *   lit3     v9     v8     v7     v6     v5     v4     v3     v2    v10
+// Plan: 8 1 2 3 4 5 6 gen 7 gen gen gen gen gen gen 0 gen
 // Status: Admissible

@@ -5,27 +5,26 @@ targetStackTop: [ReturnLabel[1], JUNK, JUNK, v2, JUNK, JUNK, JUNK, JUNK, JUNK, J
 //             |              0      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16     17     18     19     20     21 |     22
 //             +------------------------------------------------------------------------------------------------------------------------------------------------------------------ +-------
 //    (initial)| ReturnLabel[1]      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *     v1     v2 |     v3
-//        SWAP1| ReturnLabel[1]      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *     v1     v3 |     v2
-//        SWAP6| ReturnLabel[1]      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *     v2      *      *      *     v1     v3 |      *
-//          POP| ReturnLabel[1]      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *     v2      *      *      *     v1     v3
-//        SWAP2| ReturnLabel[1]      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *     v2      *      *     v3     v1      *
-//          POP| ReturnLabel[1]      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *     v2      *      *     v3     v1
-//        SWAP2| ReturnLabel[1]      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *     v2      *     v1     v3      *
-//          POP| ReturnLabel[1]      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *     v2      *     v1     v3
-//        SWAP2| ReturnLabel[1]      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *     v2     v3     v1      *
-//          POP| ReturnLabel[1]      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *     v2     v3     v1
-//        SWAP3| ReturnLabel[1]      *      *      *      *      *      *      *      *      *      *      *      *      *      *     v1     v2     v3      *
-//          POP| ReturnLabel[1]      *      *      *      *      *      *      *      *      *      *      *      *      *      *     v1     v2     v3
-//       SWAP14| ReturnLabel[1]      *      *     v3      *      *      *      *      *      *      *      *      *      *      *     v1     v2      *
-//          POP| ReturnLabel[1]      *      *     v3      *      *      *      *      *      *      *      *      *      *      *     v1     v2
-//    PUSH lit2| ReturnLabel[1]      *      *     v3      *      *      *      *      *      *      *      *      *      *      *     v1     v2   lit2
-//         DUP2| ReturnLabel[1]      *      *     v3      *      *      *      *      *      *      *      *      *      *      *     v1     v2   lit2     v2
-//         DUP1| ReturnLabel[1]      *      *     v3      *      *      *      *      *      *      *      *      *      *      *     v1     v2   lit2     v2     v2
-//       SWAP16| ReturnLabel[1]      *      *     v2      *      *      *      *      *      *      *      *      *      *      *     v1     v2   lit2     v2     v3
-//    PUSH lit1| ReturnLabel[1]      *      *     v2      *      *      *      *      *      *      *      *      *      *      *     v1     v2   lit2     v2     v3   lit1
-//        SWAP5| ReturnLabel[1]      *      *     v2      *      *      *      *      *      *      *      *      *      *      *   lit1     v2   lit2     v2     v3     v1
-//         DUP6| ReturnLabel[1]      *      *     v2      *      *      *      *      *      *      *      *      *      *      *   lit1     v2   lit2     v2     v3     v1   lit1
-//        SWAP2| ReturnLabel[1]      *      *     v2      *      *      *      *      *      *      *      *      *      *      *   lit1     v2   lit2     v2   lit1     v1     v3
+//        SWAP7| ReturnLabel[1]      *      *      *      *      *      *      *      *      *      *      *      *      *      *     v3      *      *      *      *     v1     v2 |      *
+//          POP| ReturnLabel[1]      *      *      *      *      *      *      *      *      *      *      *      *      *      *     v3      *      *      *      *     v1     v2
+//        SWAP5| ReturnLabel[1]      *      *      *      *      *      *      *      *      *      *      *      *      *      *     v3     v2      *      *      *     v1      *
+//          POP| ReturnLabel[1]      *      *      *      *      *      *      *      *      *      *      *      *      *      *     v3     v2      *      *      *     v1
+//        SWAP3| ReturnLabel[1]      *      *      *      *      *      *      *      *      *      *      *      *      *      *     v3     v2     v1      *      *      *
+//          POP| ReturnLabel[1]      *      *      *      *      *      *      *      *      *      *      *      *      *      *     v3     v2     v1      *      *
+//          POP| ReturnLabel[1]      *      *      *      *      *      *      *      *      *      *      *      *      *      *     v3     v2     v1      *
+//          POP| ReturnLabel[1]      *      *      *      *      *      *      *      *      *      *      *      *      *      *     v3     v2     v1
+//       SWAP14| ReturnLabel[1]      *      *     v1      *      *      *      *      *      *      *      *      *      *      *     v3     v2      *
+//          POP| ReturnLabel[1]      *      *     v1      *      *      *      *      *      *      *      *      *      *      *     v3     v2
+//       SWAP13| ReturnLabel[1]      *      *     v2      *      *      *      *      *      *      *      *      *      *      *     v3     v1
+//    PUSH lit2| ReturnLabel[1]      *      *     v2      *      *      *      *      *      *      *      *      *      *      *     v3     v1   lit2
+//        DUP15| ReturnLabel[1]      *      *     v2      *      *      *      *      *      *      *      *      *      *      *     v3     v1   lit2     v2
+//    PUSH lit1| ReturnLabel[1]      *      *     v2      *      *      *      *      *      *      *      *      *      *      *     v3     v1   lit2     v2   lit1
+//         DUP1| ReturnLabel[1]      *      *     v2      *      *      *      *      *      *      *      *      *      *      *     v3     v1   lit2     v2   lit1   lit1
+//        SWAP5| ReturnLabel[1]      *      *     v2      *      *      *      *      *      *      *      *      *      *      *   lit1     v1   lit2     v2   lit1     v3
+//         DUP3| ReturnLabel[1]      *      *     v2      *      *      *      *      *      *      *      *      *      *      *   lit1     v1   lit2     v2   lit1     v3     v2
+//        SWAP5| ReturnLabel[1]      *      *     v2      *      *      *      *      *      *      *      *      *      *      *   lit1     v2   lit2     v2   lit1     v3     v1
+//        SWAP1| ReturnLabel[1]      *      *     v2      *      *      *      *      *      *      *      *      *      *      *   lit1     v2   lit2     v2   lit1     v1     v3
 //             +------------------------------------------------------------------------------------------------------------------------------------------------------------------ +-------
 //     (target)| ReturnLabel[1]      *      *     v2      *      *      *      *      *      *      *      *      *      *      *   lit1     v2   lit2     v2   lit1     v1     v3 |
+// Plan: 0 1 2 21 4 5 6 7 8 9 10 11 12 13 14 gen gen gen gen gen 20 22
 // Status: Admissible

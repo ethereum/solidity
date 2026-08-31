@@ -1,12 +1,11 @@
 initial: [JUNK, JUNK, v0, v0, lit0, v0, lit0, v0, v0, v0, lit0, v0, v0, v0, lit0, v0, lit0, lit0, v0]
-targetStackTop: [JUNK, lit0, v0, lit0, v0, JUNK, v0, lit0, JUNK, v0, v0, lit0, v0, JUNK, lit0, v0, JUNK]
-targetStackTailSet: {v0}
-targetStackSize: 20
+targetStackTop: [JUNK, JUNK, v0, JUNK, lit0, v0, lit0, v0, JUNK, v0, lit0, JUNK, v0, v0, lit0, v0, JUNK, lit0, v0, JUNK]
 // ----
-//             |      0      1      2 |      3      4      5      6      7      8      9     10     11     12     13     14     15     16     17     18     19
-//             +--------------------- +-----------------------------------------------------------------------------------------------------------------------
-//    (initial)|      *      *     v0 |     v0   lit0     v0   lit0     v0     v0     v0   lit0     v0     v0     v0   lit0     v0   lit0   lit0     v0
-//    PUSH JUNK|      *      *     v0 |     v0   lit0     v0   lit0     v0     v0     v0   lit0     v0     v0     v0   lit0     v0   lit0   lit0     v0      *
-//             +--------------------- +-----------------------------------------------------------------------------------------------------------------------
-//     (target)|                 {v0} |      *   lit0     v0   lit0     v0      *     v0   lit0      *     v0     v0   lit0     v0      *   lit0     v0      *
+//             |      0      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16     17     18     19
+//             +--------------------------------------------------------------------------------------------------------------------------------------------
+//    (initial)|      *      *     v0     v0   lit0     v0   lit0     v0     v0     v0   lit0     v0     v0     v0   lit0     v0   lit0   lit0     v0
+//    PUSH JUNK|      *      *     v0     v0   lit0     v0   lit0     v0     v0     v0   lit0     v0     v0     v0   lit0     v0   lit0   lit0     v0      *
+//             +--------------------------------------------------------------------------------------------------------------------------------------------
+//     (target)|      *      *     v0      *   lit0     v0   lit0     v0      *     v0   lit0      *     v0     v0   lit0     v0      *   lit0     v0      *
+// Plan: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 gen
 // Status: Admissible

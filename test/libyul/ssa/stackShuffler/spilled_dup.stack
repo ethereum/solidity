@@ -1,18 +1,18 @@
 // phi0 is on stack once and spilled, and is demanded at two arg positions. Spilled values have minCount 0, so any
 // copy on the stack reads as surplus and gets popped by shrinking before the second arg position can be filled.
 initial: [JUNK, JUNK, phi0]
-targetStackTop: [phi0, phi0]
-targetStackSize: 3
+targetStackTop: [JUNK, phi0, phi0]
 allowSpilling: true
 initialSpilledSet: {phi0}
 // ----
-//             |      0 |      1      2
-//             +------- +--------------
-//    (initial)|      * |      *   phi0
-//        SWAP1|      * |   phi0      *
-//          POP|      * |   phi0
-//         DUP1|      * |   phi0   phi0
-//             +------- +--------------
-//     (target)|     {} |   phi0   phi0
+//             |      0      1      2
+//             +---------------------
+//    (initial)|      *      *   phi0
+//        SWAP1|      *   phi0      *
+//          POP|      *   phi0
+//         DUP1|      *   phi0   phi0
+//             +---------------------
+//     (target)|      *   phi0   phi0
+// Plan: 0 gen 2
 // Status: Admissible
 // Spilled: {phi0}

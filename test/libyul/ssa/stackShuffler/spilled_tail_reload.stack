@@ -1,19 +1,17 @@
-// the tail set demands a spilled value (phi3) that is absent from the stack, on top of doubly-demanded spilled args
+// A spilled value absent from the stack is demanded twice, with other spilled values around that are not needed.
 initial: [phi0, JUNK, v1, phi2]
-targetStackTop: [phi4, phi4]
-targetStackTailSet: {phi3}
-targetStackSize: 5
+targetStackTop: [JUNK, JUNK, JUNK, phi4, phi4]
 allowSpilling: true
 initialSpilledSet: {phi3, phi4, phi5}
 // ----
-//             |      0      1      2 |      3      4
-//             +--------------------- +--------------
-//    (initial)|   phi0      *     v1 |   phi2
-//    PUSH phi4|   phi0      *     v1 |   phi2   phi4
-//        SWAP1|   phi0      *     v1 |   phi4   phi2
-//          POP|   phi0      *     v1 |   phi4
-//         DUP1|   phi0      *     v1 |   phi4   phi4
-//             +--------------------- +--------------
-//     (target)|              {phi3*} |   phi4   phi4
+//             |      0      1      2      3      4
+//             +-----------------------------------
+//    (initial)|   phi0      *     v1   phi2
+//          POP|   phi0      *     v1
+//    PUSH phi4|   phi0      *     v1   phi4
+//         DUP1|   phi0      *     v1   phi4   phi4
+//             +-----------------------------------
+//     (target)|      *      *      *   phi4   phi4
+// Plan: 0 1 2 gen gen
 // Status: Admissible
 // Spilled: {phi3, phi4, phi5}

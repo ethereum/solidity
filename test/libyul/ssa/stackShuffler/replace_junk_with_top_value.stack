@@ -10,4 +10,5 @@ targetStackTop: [v0, v2, v1, v0]
 //         DUP3|     v0     v2     v1     v0
 //             +----------------------------
 //     (target)|     v0     v2     v1     v0
+// Plan: gen 1 2 3
 // Status: Admissible

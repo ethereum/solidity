@@ -8,4 +8,5 @@ targetStackTop: [JUNK, JUNK, JUNK, JUNK, v15]
 //         DUP1|      *      *      *    v15    v15
 //             +-----------------------------------
 //     (target)|      *      *      *      *    v15
+// Plan: 0 1 2 3 gen
 // Status: Admissible

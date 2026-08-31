@@ -1,17 +1,22 @@
-// Every target arg is also in the tail set, but the tail region has zero room (tail size = 0).
-// Each fix-tail iteration reports the deepest still-needed value as StackTooDeep; with allowSpilling
-// the driver spills it and retries. After every value has been spilled, the stack is admissible
-// because the spilled values can be regenerated freely.
+// Every value has to be duplicated on top of itself. Each dup pushes the deeper sources out of reach, so the
+// plan drops slots until the dups are possible: with spilling allowed the deepest values get spilled and reloaded.
 allowSpilling: true
 initial: [v1, v2, v3, v4, v5, v6, v7, v8]
-targetStackTop: [v1, v2, v3, v4, v5, v6, v7, v8]
-targetStackTailSet: {v1, v2, v3, v4, v5, v6, v7, v8}
-targetStackSize: 8
+targetStackTop: [v1, v2, v3, v4, v5, v6, v7, v8, v1, v2, v3, v4, v5, v6, v7, v8]
 // ----
-//             |                                           |      0      1      2      3      4      5      6      7
-//             +------------------------------------------ +--------------------------------------------------------
-//    (initial)|                                           |     v1     v2     v3     v4     v5     v6     v7     v8
-//             +------------------------------------------ +--------------------------------------------------------
-//     (target)|  {v1*, v2*, v3*, v4*, v5*, v6*, v7*, v8*} |     v1     v2     v3     v4     v5     v6     v7     v8
+//             |      0      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15
+//             +----------------------------------------------------------------------------------------------------------------
+//    (initial)|     v1     v2     v3     v4     v5     v6     v7     v8
+//         DUP8|     v1     v2     v3     v4     v5     v6     v7     v8     v1
+//         DUP8|     v1     v2     v3     v4     v5     v6     v7     v8     v1     v2
+//         DUP8|     v1     v2     v3     v4     v5     v6     v7     v8     v1     v2     v3
+//         DUP8|     v1     v2     v3     v4     v5     v6     v7     v8     v1     v2     v3     v4
+//         DUP8|     v1     v2     v3     v4     v5     v6     v7     v8     v1     v2     v3     v4     v5
+//         DUP8|     v1     v2     v3     v4     v5     v6     v7     v8     v1     v2     v3     v4     v5     v6
+//         DUP8|     v1     v2     v3     v4     v5     v6     v7     v8     v1     v2     v3     v4     v5     v6     v7
+//         DUP8|     v1     v2     v3     v4     v5     v6     v7     v8     v1     v2     v3     v4     v5     v6     v7     v8
+//             +----------------------------------------------------------------------------------------------------------------
+//     (target)|     v1     v2     v3     v4     v5     v6     v7     v8     v1     v2     v3     v4     v5     v6     v7     v8
+// Plan: 0 1 2 3 4 5 6 7 gen gen gen gen gen gen gen gen
 // Status: Admissible
-// Spilled: {v1, v2, v3, v4, v5, v6, v7, v8}
+// Spilled: {}
