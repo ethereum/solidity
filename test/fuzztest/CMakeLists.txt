@@ -49,7 +49,17 @@ add_executable(evmasm_fuzztest ${evmasm_fuzztest_sources})
 target_link_libraries(evmasm_fuzztest PRIVATE evmasm)
 link_fuzztest(evmasm_fuzztest)
 
+set(solidity_fuzztest_sources
+	libsolidity/ABICoderRoundTripPropertyTest.cpp
+)
+detect_stray_source_files("${solidity_fuzztest_sources}" "libsolidity/")
+
+# EVMHost.cpp is compiled in directly rather than linked: it is part of the soltest executable, not of a library.
+add_executable(solidity_fuzztest ${solidity_fuzztest_sources} ../EVMHost.cpp)
+target_link_libraries(solidity_fuzztest PRIVATE solidity evmc Boost::filesystem)
+link_fuzztest(solidity_fuzztest)
+
 # Convenience target to build all per-library property-test executables at once (e.g. in CI).
 # New <lib>_fuzztest targets should add themselves here.
 add_custom_target(property_tests)
-add_dependencies(property_tests yul_fuzztest evmasm_fuzztest)
+add_dependencies(property_tests yul_fuzztest evmasm_fuzztest solidity_fuzztest)
