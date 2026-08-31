@@ -66,15 +66,7 @@
 #include <optional>
 #include <string>
 #include <utility>
-#include <functional>
 #include <vector>
-#include <iostream>
-#include <set>
-
-namespace { std::map<std::string, unsigned long>& stats() { static std::map<std::string, unsigned long> m; return m; }
-struct StatsReporter { ~StatsReporter() { std::cerr << "\n### COVERAGE ###\n"; for (auto const& [k,v]: stats()) std::cerr << k << " = " << v << "\n"; } };
-StatsReporter const g_statsReporter;
-}
 
 using namespace solidity;
 
@@ -416,7 +408,7 @@ fuzztest::Domain<bytes> encodingDomain(TypePointer const& _type)
 	case AbiType::Kind::Bytes:
 	case AbiType::Kind::String:
 		return fuzztest::Map(
-			[](bytes const& _value) { ::stats()["bytes_len_mod32=" + std::to_string(_value.size() % 32)]++; ::stats()["bytes_len=" + std::to_string(_value.size())]++; return toBigEndian(u256(_value.size())) + zeroPadRight(_value); },
+			[](bytes const& _value) { return toBigEndian(u256(_value.size())) + zeroPadRight(_value); },
 			fuzztest::VectorOf(fuzztest::Arbitrary<uint8_t>()).WithMaxSize(maxByteStringLength)
 		);
 	case AbiType::Kind::FixedArray:
@@ -846,30 +838,9 @@ void checkRoundTrip(StringMap const& _sources, CompilationSettings const _settin
 		"argument: " + util::toHex(argument) + "\n" +
 		sourcesToString(_sources);
 
-	{
-		std::function<void(AbiType const&)> walk = [&](AbiType const& _t) {
-			static char const* names[] = {"Uint","Int","Address","Bool","FixedBytes","Bytes","String","Enum","Contract","UserDefined","FixedArray","DynArray","Struct"};
-			::stats()[std::string("kind:") + names[static_cast<int>(_t.kind)]]++;
-			for (auto const& c: _t.components) walk(*c);
-		};
-		for (auto const& t: _typedValue.types) walk(*t);
-		::stats()["tupleSize=" + std::to_string(_typedValue.types.size())]++;
-		::stats()["TOTAL"]++;
-		if (_sources.count("caller.sol"))
-			::stats()["prop:crossCall"]++;
-		else
-			::stats()["prop:memory"]++;
-		for (auto const& [n, c]: _sources)
-			if (c.find("abicoder v1") != std::string::npos) ::stats()["coderV1_unit:" + n]++;
-		::stats()[std::string("viaIR=") + (_settings.viaIR ? "1" : "0")]++;
-		::stats()[std::string("optimize=") + (_settings.optimize ? "1" : "0")]++;
-	}
 	CompilationResult const& compilation = compileContractCached(_sources, _settings);
 	if (compilation.unsupported)
-	{
-		::stats()["SKIPPED_unsupported"]++;
 		return;
-	}
 	ASSERT_TRUE(compilation.errors.empty()) << "Compilation failed.\n" << compilation.errors << context;
 
 	ExecutionResult const execution = deployAndCallRoundTrip(compilation.creationCode, argument);
