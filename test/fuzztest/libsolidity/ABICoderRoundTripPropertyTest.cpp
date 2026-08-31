@@ -75,10 +75,10 @@ namespace solidity::frontend::test
 namespace
 {
 
-constexpr unsigned maxTypeDepth = 3;
-constexpr unsigned maxArrayLength = 3;
-constexpr unsigned maxStructFields = 3;
-constexpr unsigned maxByteStringLength = 70;
+constexpr std::uint32_t maxTypeDepth = 3;
+constexpr std::uint32_t maxArrayLength = 3;
+constexpr std::uint32_t maxStructFields = 3;
+constexpr std::uint32_t maxByteStringLength = 70;
 
 #ifdef _WIN32
 constexpr auto evmoneFilename = "evmone.dll";
@@ -101,12 +101,12 @@ struct AbiType
 
 	Kind kind{};
 	/// Bit width for Uint/Int, byte width for FixedBytes, element count for FixedArray. Unused otherwise.
-	unsigned width = 0;
+	std::uint32_t width = 0;
 	/// Element type for arrays (exactly one entry), field types for structs.
 	std::vector<TypePointer> components;
 };
 
-TypePointer makeType(AbiType::Kind _kind, unsigned _width = 0, std::vector<TypePointer> _components = {})
+TypePointer makeType(AbiType::Kind _kind, std::uint32_t _width = 0, std::vector<TypePointer> _components = {})
 {
 	return std::make_shared<AbiType const>(AbiType{_kind, _width, std::move(_components)});
 }
@@ -267,17 +267,17 @@ fuzztest::Domain<TypePointer> elementaryTypeDomain()
 	};
 	// A representative selection rather than all widths: the ones that are not a multiple of the word size exercise
 	// cleanup, the extremes the boundaries.
-	for (unsigned const bits: {8u, 16u, 24u, 32u, 64u, 128u, 200u, 256u})
+	for (std::uint32_t const bits: std::array<std::uint32_t, 8>{8, 16, 24, 32, 64, 128, 200, 256})
 	{
 		types.push_back(makeType(AbiType::Kind::Uint, bits));
 		types.push_back(makeType(AbiType::Kind::Int, bits));
 	}
-	for (unsigned const width: {1u, 4u, 20u, 31u, 32u})
+	for (std::uint32_t const width: std::array<std::uint32_t, 5>{1, 4, 20, 31, 32})
 		types.push_back(makeType(AbiType::Kind::FixedBytes, width));
 	return fuzztest::ElementOf(std::move(types));
 }
 
-fuzztest::Domain<TypePointer> typeDomain(unsigned const _depth)
+fuzztest::Domain<TypePointer> typeDomain(std::uint32_t const _depth)
 {
 	if (_depth == 0)
 		return elementaryTypeDomain();
@@ -286,11 +286,11 @@ fuzztest::Domain<TypePointer> typeDomain(unsigned const _depth)
 	return fuzztest::OneOf(
 		elementaryTypeDomain(),
 		fuzztest::Map(
-			[](TypePointer const& _element, unsigned const _length) {
+			[](TypePointer const& _element, std::uint32_t const _length) {
 				return makeType(AbiType::Kind::FixedArray, _length, {_element});
 			},
 			elementDomain,
-			fuzztest::InRange(1u, maxArrayLength)
+			fuzztest::InRange<std::uint32_t>(1, maxArrayLength)
 		),
 		fuzztest::Map(
 			[](TypePointer const& _element) { return makeType(AbiType::Kind::DynArray, 0, {_element}); },
@@ -312,7 +312,7 @@ u256 wordFromParts(std::array<uint64_t, 4> const& _parts)
 }
 
 /// Domain of the single-word encoding of an integer of the given width, sign-extended to the full word for `intN`.
-fuzztest::Domain<bytes> wordDomain(unsigned const _bits, bool const _signed)
+fuzztest::Domain<bytes> wordDomain(std::uint32_t const _bits, bool const _signed)
 {
 	return fuzztest::Map(
 		[_bits, _signed](std::array<uint64_t, 4> const& _parts) {
