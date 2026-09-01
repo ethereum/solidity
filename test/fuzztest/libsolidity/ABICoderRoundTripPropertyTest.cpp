@@ -747,7 +747,6 @@ StringMap callRoundTripSources(std::vector<TypePointer> const& _types)
 	std::string const types = typeList(namer, _types);
 
 	return {
-		// The declarations get their own source unit so that both sides of the call refer to the same types.
 		{"types.sol", sourceHeader + namer.declarations()},
 		{"callee.sol",
 			sourceHeader +
