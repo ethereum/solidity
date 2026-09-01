@@ -814,7 +814,8 @@ std::string roundTripEqualsFunction(
 /// and returns its result uninterpreted -- no selector, no offset, no length prefix, no padding -- so the harness
 /// side of this test needs to know nothing about how values are encoded. The leading byte selecting the mode is
 /// this test's own convention, not part of any ABI.
-std::string const rawDispatcher = R"(	fallback(bytes calldata input) external returns (bytes memory) {
+std::string const rawDispatcher = R"(
+	fallback(bytes calldata input) external returns (bytes memory) {
 		bytes memory payload = input[1:];
 		if (uint8(input[0]) == 0) return encodeValue(payload);
 		if (uint8(input[0]) == 1) return renormalize(payload);
