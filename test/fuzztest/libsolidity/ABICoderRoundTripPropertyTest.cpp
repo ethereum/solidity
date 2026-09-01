@@ -21,8 +21,7 @@
  * A random tuple of types is drawn together with the canonical encoding of a random value for it, built from
  * the ABI specification without sharing any code with the compiler. Contracts generated for that tuple must hand
  * the encoding back byte for byte:
- *   - `MemoryRoundTripIsIdentity` runs the decoder and encoder in one source unit, across legacy/IR codegen and
- *     optimiser settings;
+ *   - `MemoryRoundTripIsIdentity` runs the decoder and encoder in one source unit, with and without the optimiser;
  *   - `CallRoundTripIsIdentity` routes the value through an external call to a second source unit, which reaches
  *     the calldata decoder and the return-value encoder.
  *
@@ -52,10 +51,6 @@
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/OptimiserSettings.h>
 
-#include <libyul/Exceptions.h>
-
-#include <libevmasm/Exceptions.h>
-
 #include <liblangutil/EVMVersion.h>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceReferenceFormatter.h>
@@ -65,7 +60,6 @@
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Numeric.h>
 
-#include <range/v3/algorithm/all_of.hpp>
 #include <range/v3/algorithm/any_of.hpp>
 
 #include <fuzztest/fuzztest.h>
@@ -823,56 +817,38 @@ std::string sourcesToString(StringMap const& _sources)
 // Compilation and execution
 // ---------------------------------------------------------------------------------------------------------------
 
-struct CompilationSettings
-{
-	bool viaIR = false;
-	bool optimize = false;
-
-	auto operator<=>(CompilationSettings const&) const = default;
-};
-
 struct CompilationResult
 {
 	bytes creationCode;
 	std::string errors;
-	/// Set when the contract hits a codegen limitation that is unrelated to the ABI coders, i.e. running out of
-	/// stack slots or an unimplemented legacy codegen path. Such a case says nothing about the round trip.
-	bool unsupported = false;
 };
 
-CompilationResult compileContract(StringMap const& _sources, CompilationSettings const _settings)
+CompilationResult compileContract(StringMap const& _sources, bool const _optimize)
 {
 	CompilerStack compiler;
 	compiler.setSources(_sources);
-	compiler.setViaIR(_settings.viaIR);
-	compiler.setOptimiserSettings(_settings.optimize);
+	compiler.setViaIR(true);
+	compiler.setOptimiserSettings(_optimize);
 
-	try
-	{
-		if (!compiler.compile())
-			return {{}, langutil::SourceReferenceFormatter::formatErrorInformation(compiler.errors(), compiler), false};
-	}
-	catch (langutil::StackTooDeepError const&) { return {{}, {}, true}; }
-	catch (yul::StackTooDeepError const&) { return {{}, {}, true}; }
-	catch (evmasm::StackTooDeepException const&) { return {{}, {}, true}; }
-	catch (langutil::UnimplementedFeatureError const&) { return {{}, {}, true}; }
+	if (!compiler.compile())
+		return {{}, langutil::SourceReferenceFormatter::formatErrorInformation(compiler.errors(), compiler)};
 
-	return {compiler.object("C").bytecode, {}, false};
+	return {compiler.object("C").bytecode, {}};
 }
 
 /// Compilation dominates the runtime of this test and the fuzzer keeps the sources fixed while it mutates the
 /// encoding, so results are memoised.
-CompilationResult const& compileContractCached(StringMap const& _sources, CompilationSettings const _settings)
+CompilationResult const& compileContractCached(StringMap const& _sources, bool const _optimize)
 {
-	static std::map<std::pair<StringMap, CompilationSettings>, CompilationResult> cache;
+	static std::map<std::pair<StringMap, bool>, CompilationResult> cache;
 	static constexpr std::size_t maxCacheSize = 512;
 
-	auto key = std::make_pair(_sources, _settings);
+	auto key = std::make_pair(_sources, _optimize);
 	if (auto const it = cache.find(key); it != cache.end())
 		return it->second;
 	if (cache.size() >= maxCacheSize)
 		cache.clear();
-	return cache.emplace(std::move(key), compileContract(_sources, _settings)).first->second;
+	return cache.emplace(std::move(key), compileContract(_sources, _optimize)).first->second;
 }
 
 evmc_message baseMessage(bytes const& _input)
@@ -946,7 +922,7 @@ ExecutionResult deployAndCallRoundTrip(bytes const& _creationCode, bytes const& 
 // The property
 // ---------------------------------------------------------------------------------------------------------------
 
-void checkRoundTrip(StringMap const& _sources, CompilationSettings const _settings, TypedValue const& _typedValue)
+void checkRoundTrip(StringMap const& _sources, bool const _optimize, TypedValue const& _typedValue)
 {
 	// What the contract receives is the encoding of the whole tuple, which is what the round trip has to produce again.
 	solAssert(!_typedValue.types.empty(), "the top-level tuple has at least one component");
@@ -963,9 +939,7 @@ void checkRoundTrip(StringMap const& _sources, CompilationSettings const _settin
 		"argument: " + util::toHex(argument) + "\n" +
 		sourcesToString(_sources);
 
-	CompilationResult const& compilation = compileContractCached(_sources, _settings);
-	if (compilation.unsupported)
-		return;
+	CompilationResult const& compilation = compileContractCached(_sources, _optimize);
 	ASSERT_TRUE(compilation.errors.empty()) << "Compilation failed.\n" << compilation.errors << context;
 
 	ExecutionResult const execution = deployAndCallRoundTrip(compilation.creationCode, argument);
@@ -976,14 +950,14 @@ void checkRoundTrip(StringMap const& _sources, CompilationSettings const _settin
 
 }
 
-void MemoryRoundTripIsIdentity(TypedValue const& _typedValue, bool const _viaIR, bool const _optimize)
+void MemoryRoundTripIsIdentity(TypedValue const& _typedValue, bool const _optimize)
 {
-	checkRoundTrip(memoryRoundTripSources(_typedValue.types), {_viaIR, _optimize}, _typedValue);
+	checkRoundTrip(memoryRoundTripSources(_typedValue.types), _optimize, _typedValue);
 }
 
 void CallRoundTripIsIdentity(TypedValue const& _typedValue, bool const _optimize)
 {
-	checkRoundTrip(callRoundTripSources(_typedValue.types), {false, _optimize}, _typedValue);
+	checkRoundTrip(callRoundTripSources(_typedValue.types), _optimize, _typedValue);
 }
 
 /// A test for the property test itself
@@ -1031,17 +1005,10 @@ TEST(ABICoderTypeInvariants, MalformedTypesAreRejected)
 
 // Memory round trip identity
 FUZZ_TEST(ABICoderRoundTripProperty, MemoryRoundTripIsIdentity)
-	.WithDomains(
-		typedValueDomain(),
-		fuzztest::Arbitrary<bool>(),
-		fuzztest::Arbitrary<bool>()
-	);
+	.WithDomains(typedValueDomain(), fuzztest::Arbitrary<bool>());
 
 // Call roundtrip identity
 FUZZ_TEST(ABICoderRoundTripProperty, CallRoundTripIsIdentity)
-	.WithDomains(
-		typedValueDomain(),
-		fuzztest::Arbitrary<bool>()
-	);
+	.WithDomains(typedValueDomain(), fuzztest::Arbitrary<bool>());
 
 }
