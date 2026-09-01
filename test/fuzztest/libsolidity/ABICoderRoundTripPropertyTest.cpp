@@ -53,9 +53,7 @@
  *     616263..    S0: "abc", padded out to a whole word
  *
  * Only the tuple's types reach the contract as source; the value travels as calldata, so one compilation serves
- * every value drawn for a type. Values are always canonically encoded, which puts one known bug out of scope: ABI
- * coder v1 does not clean dirty higher-order bits of array elements
- * (https://github.com/argotorg/solidity/issues/14985), and that needs non-canonical input to trigger.
+ * every value drawn for a type. Values are always canonically encoded
  */
 
 #include <test/EVMHost.h>
