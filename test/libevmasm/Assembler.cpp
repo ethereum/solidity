@@ -535,6 +535,30 @@ BOOST_AUTO_TEST_CASE(can_be_functional)
 	BOOST_CHECK(!AssemblyItem(UndefinedItem).canBeFunctional());
 }
 
+BOOST_AUTO_TEST_CASE(to_sub_assembly_tag_preserves_tag_id)
+{
+	SubAssemblyID const subID{3};
+	auto packed = [&](u256 const& _tagID) { return ((u256(subID.value) + 1) << 64) | _tagID; };
+
+	BOOST_CHECK_EQUAL(AssemblyItem(Tag, 7).toSubAssemblyTag(subID).data(), packed(7));
+
+	// A tag ID that does not fit in 32 bits must either survive the conversion intact or be
+	// rejected. Truncating it to the lower 32 bits would silently produce a reference to a
+	// different tag on platforms where size_t is narrower than 64 bits, e.g. WebAssembly.
+	u256 const largeTagID = (u256(1) << 32) + 7;
+	AssemblyItem const largeTag(Tag, largeTagID);
+	if constexpr (sizeof(size_t) < sizeof(uint64_t))
+		BOOST_CHECK_THROW(largeTag.toSubAssemblyTag(subID), util::Exception);
+	else
+	{
+		AssemblyItem const pushTag = largeTag.toSubAssemblyTag(subID);
+		BOOST_CHECK_EQUAL(pushTag.type(), PushTag);
+		BOOST_CHECK_EQUAL(pushTag.data(), packed(largeTagID));
+		BOOST_CHECK(pushTag.splitForeignPushTag().first == subID);
+		BOOST_CHECK_EQUAL(pushTag.splitForeignPushTag().second, static_cast<size_t>(largeTagID));
+	}
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // end namespaces
