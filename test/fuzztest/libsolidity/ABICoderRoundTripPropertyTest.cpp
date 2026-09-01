@@ -18,18 +18,37 @@
 /**
  * Property test for the ABI coders: decoding an encoded value and encoding it again must be the identity.
  *
- * A random ABI type is drawn together with the canonical encoding of a random value of that type. The encoding is
- * built here from the ABI specification and shares no code with the compiler. It is then run through contracts generated for
- * the type, which must hand it back byte for byte:
- *   - `MemoryRoundTripIsIdentity` evaluates `abi.encode(abi.decode(input, (T)))` in a single source unit, i.e. the
- *     memory decoder followed by the memory encoder, across coder v1/v2, legacy/IR codegen and optimiser settings;
- *   - `CrossCoderCallRoundTripIsIdentity` additionally sends the decoded value through an external call to a second
- *     source unit, which may use the other coder version. That covers the calldata decoder and pairs a v1 encoder
- *     with a v2 decoder and the other way round.
+ * A random tuple of types is drawn together with the canonical encoding of a random value for it, built here from
+ * the ABI specification without sharing any code with the compiler. Contracts generated for that tuple must hand
+ * the encoding back byte for byte:
+ *   - `MemoryRoundTripIsIdentity` runs the decoder and encoder in one source unit, across coder v1/v2, legacy/IR
+ *     codegen and optimiser settings;
+ *   - `CrossCoderCallRoundTripIsIdentity` routes the value through an external call to a second source unit, which
+ *     may use the other coder version. That reaches the calldata decoder and pairs a v1 encoder with a v2 decoder
+ *     and the other way round.
  *
- * Only canonical encodings are generated. ABI coder v1 is known not to clean dirty higher-order bits of array
- * elements (https://github.com/argotorg/solidity/issues/14985); that needs non-canonical input to trigger and is
- * therefore out of scope here.
+ * For the tuple `(uint8, bytes)` the generated source unit is
+ *
+ *     pragma abicoder v2;
+ *     import "types.sol";                        // struct, enum and user-defined declarations; none needed here
+ *     contract C {
+ *         function roundtrip(bytes memory input) public pure returns (bytes memory) {
+ *             (uint8 v0, bytes memory v1) = abi.decode(input, (uint8, bytes));
+ *             return abi.encode(v0, v1);
+ *         }
+ *     }
+ *
+ * and for the value `(42, "abc")` the encoding handed to it, which it has to return unchanged, is
+ *
+ *     00..002a    head: 42
+ *     00..0040    head: where the tail starts, which is just past the head
+ *     00..0003    tail: length of "abc"
+ *     616263..    tail: "abc", padded out to a whole word
+ *
+ * Only the tuple's types reach the contract as source; the value travels as calldata, so one compilation serves
+ * every value drawn for a type. Values are always canonically encoded, which puts one known bug out of scope: ABI
+ * coder v1 does not clean dirty higher-order bits of array elements
+ * (https://github.com/argotorg/solidity/issues/14985), and that needs non-canonical input to trigger.
  */
 
 #include <test/EVMHost.h>
