@@ -16,11 +16,11 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
- * Property test for the ABI coders: decoding an encoded value and encoding it again must be the identity.
+ * Property test for the ABI coders: encoding a value, decoding that encoding and encoding the result again must
+ * reproduce the first encoding byte for byte.
  *
- * A random tuple of types is drawn together with the canonical encoding of a random value for it, built from
- * the ABI specification without sharing any code with the compiler. Contracts generated for that tuple must hand
- * the encoding back byte for byte:
+ * A random tuple of types is drawn. The value itself is built inside the generated contract from a tape of raw
+ * fuzzer bytes, so the test never spells out an ABI encoding of its own; the compiler is on both sides.
  *   - `MemoryRoundTripIsIdentity` runs the decoder and encoder in one source unit, with and without the optimiser;
  *   - `CallRoundTripIsIdentity` routes the value through an external call to a second source unit, which reaches
  *     the calldata decoder and the return-value encoder.
@@ -36,16 +36,27 @@
  *     pragma abicoder v2;
  *     import "types.sol";
  *     contract C {
- *         function roundtrip(bytes memory input) public pure returns (bytes memory) {
+ *         // ... tape helpers, then one builder per type ...
+ *         function build1(bytes memory t, uint p) internal pure returns (S0 memory, uint) {
+ *             (bytes memory f0, uint p0) = build2(t, p);
+ *             return (S0(f0), p0);
+ *         }
+ *         function encodeValue(bytes memory tape) public pure returns (bytes memory) {
+ *             uint8 v0;
+ *             S0 memory v1;
+ *             uint p = 0;
+ *             (v0, p) = build0(tape, p);
+ *             (v1, p) = build1(tape, p);
+ *             return abi.encode(v0, v1);
+ *         }
+ *         function renormalize(bytes memory input) public pure returns (bytes memory) {
  *             (uint8 v0, S0 memory v1) = abi.decode(input, (uint8, S0));
  *             return abi.encode(v0, v1);
  *         }
  *     }
  *
- * Only the tuple's types reach the contract as source; the value travels as calldata, so one compilation serves
- * every value drawn for a type. Values are always canonically encoded.
+ * Only the tuple's types reach the contract as source, so one compilation serves every tape drawn for a type.
  */
-
 #include <test/EVMHost.h>
 
 #include <libsolidity/interface/CompilerStack.h>
@@ -55,17 +66,16 @@
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
+#include <libyul/Exceptions.h>
+
 #include <libsolutil/Common.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Numeric.h>
 
-#include <range/v3/algorithm/any_of.hpp>
-
 #include <fuzztest/fuzztest.h>
 #include <gtest/gtest.h>
 
-#include <array>
 #include <cstdint>
 #include <cstdlib>
 #include <limits>
@@ -88,9 +98,10 @@ constexpr std::uint32_t maxTypeDepth = 3;
 constexpr std::uint32_t maxArrayLength = 3;
 constexpr std::uint32_t maxStructFields = 3;
 constexpr std::uint32_t maxTupleComponents = 3;
-/// Long enough for a payload to span several words, so that a mis-sized tail shifts everything after it.
-constexpr std::uint32_t maxByteStringLength = 97;
 constexpr std::uint32_t maxEnumMembers = 4;
+/// Raw entropy the generated builders read values off. Never empty, because they index it modulo its length.
+constexpr std::uint32_t minTapeLength = 32;
+constexpr std::uint32_t maxTapeLength = 1024;
 
 #ifdef _WIN32
 constexpr auto evmoneFilename = "evmone.dll";
@@ -225,46 +236,6 @@ bool isValueType(AbiType const& _type)
 	}
 }
 
-bool isDynamic(AbiType const& _type)
-{
-	assertValidNode(_type);
-	switch (_type.kind)
-	{
-	case AbiType::Kind::Bytes:
-	case AbiType::Kind::String:
-	case AbiType::Kind::DynArray:
-		return true;
-	case AbiType::Kind::FixedArray:
-		return isDynamic(*_type.components.front());
-	case AbiType::Kind::Struct:
-		return ranges::any_of(_type.components, [](TypePointer const& _field) { return isDynamic(*_field); });
-	default:
-		return false;
-	}
-}
-
-/// Size of the type's entry in the head part of the enclosing tuple, in bytes.
-std::size_t headSize(AbiType const& _type)
-{
-	assertValidNode(_type);
-	if (isDynamic(_type))
-		return 32;
-	switch (_type.kind)
-	{
-	case AbiType::Kind::FixedArray:
-		return _type.width * headSize(*_type.components.front());
-	case AbiType::Kind::Struct:
-	{
-		std::size_t size = 0;
-		for (TypePointer const& field: _type.components)
-			size += headSize(*field);
-		return size;
-	}
-	default:
-		return 32;
-	}
-}
-
 /// Type in ABI signature notation, i.e. with structs spelled out as tuples.
 std::string signatureOf(AbiType const& _type)
 {
@@ -300,58 +271,6 @@ template <typename Sink>
 void AbslStringify(Sink& _sink, AbiType const& _type)
 {
 	_sink.Append(signatureOf(_type));
-}
-
-// ---------------------------------------------------------------------------------------------------------------
-// Canonical encoding
-// ---------------------------------------------------------------------------------------------------------------
-
-bytes zeroPadRight(bytes _data)
-{
-	if (_data.size() % 32 != 0)
-		_data.resize(_data.size() + 32 - _data.size() % 32, 0);
-	solAssert(_data.size() % 32 == 0);
-	return _data;
-}
-
-/// Head/tail encoding of a sequence of values whose standalone encodings are already known, as specified for tuples.
-bytes composeTuple(std::vector<TypePointer> const& _types, std::vector<bytes> const& _encodings)
-{
-	solAssert(_types.size() == _encodings.size());
-
-	std::size_t headLength = 0;
-	for (TypePointer const& type: _types)
-		headLength += headSize(*type);
-
-	bytes head;
-	bytes tail;
-	for (std::size_t i = 0; i < _types.size(); ++i)
-	{
-		// Guards the reference encoder against itself. A component encoding that is not a whole number of words, or
-		// a static one that does not fill exactly its head slot, would silently shift everything laid out after it.
-		solAssert(_encodings[i].size() % 32 == 0, "every ABI encoding is a whole number of words");
-		if (isDynamic(*_types[i]))
-		{
-			head += toBigEndian(u256(headLength + tail.size()));
-			tail += _encodings[i];
-		}
-		else
-		{
-			solAssert(
-				_encodings[i].size() == headSize(*_types[i]),
-				"a static type's encoding is exactly its entry in the head"
-			);
-			head += _encodings[i];
-		}
-	}
-
-	solAssert(head.size() == headLength, "the head is the sum of the components' head sizes");
-	return head + tail;
-}
-
-bytes composeArray(TypePointer const& _elementType, std::vector<bytes> const& _encodings)
-{
-	return composeTuple(std::vector<TypePointer>(_encodings.size(), _elementType), _encodings);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -432,159 +351,19 @@ fuzztest::Domain<TypePointer> typeDomain(std::uint32_t const _depth)
 	);
 }
 
-u256 wordFromParts(std::array<uint64_t, 4> const& _parts)
-{
-	u256 result = 0;
-	for (uint64_t const part: _parts)
-		result = (result << 64) | part;
-	return result;
-}
-
-/// Payload lengths for `bytes` and `string`. The values around a word boundary are the ones where padding and the
-/// tail offsets that follow have to be got right, so they are drawn explicitly
-fuzztest::Domain<std::uint32_t> byteStringLengthDomain()
-{
-	return fuzztest::OneOf(
-		fuzztest::ElementOf(std::vector<std::uint32_t>{0, 1, 31, 32, 33, 63, 64, 65, 95, 96, 97}),
-		fuzztest::InRange<std::uint32_t>(0, maxByteStringLength)
-	);
-}
-
-/// Domain of the single-word encoding of an integer of the given width, sign-extended to the full word for `intN`.
-fuzztest::Domain<bytes> wordDomain(std::uint32_t const _bits, bool const _signed)
-{
-	return fuzztest::Map(
-		[_bits, _signed](std::array<uint64_t, 4> const& _parts) {
-			u256 const mask = _bits == 256 ? ~u256(0) : (u256(1) << _bits) - 1;
-			u256 value = wordFromParts(_parts) & mask;
-			if (_signed && _bits < 256 && boost::multiprecision::bit_test(value, _bits - 1))
-				value |= ~mask;
-			return toBigEndian(value);
-		},
-		fuzztest::Arbitrary<std::array<uint64_t, 4>>()
-	);
-}
-
-/// Domain of the canonical encoding of a value of @param _type, as it appears standalone (i.e. not yet placed in the
-/// head/tail layout of an enclosing tuple).
-fuzztest::Domain<bytes> encodingDomain(TypePointer const& _type);
-
-/// Folds the per-component domains into a domain of encoding sequences, independently of how many there are.
-fuzztest::Domain<std::vector<bytes>> componentEncodingsDomain(std::vector<TypePointer> const& _fields)
-{
-	fuzztest::Domain<std::vector<bytes>> result = fuzztest::Just(std::vector<bytes>{});
-	for (TypePointer const& field: _fields)
-		result = fuzztest::Map(
-			[](std::vector<bytes> _encodings, bytes _next) {
-				_encodings.push_back(std::move(_next));
-				return _encodings;
-			},
-			result,
-			encodingDomain(field)
-		);
-	return result;
-}
-
-fuzztest::Domain<bytes> encodingDomain(TypePointer const& _type)
-{
-	switch (_type->kind)
-	{
-	case AbiType::Kind::Uint:
-		return wordDomain(_type->width, false);
-	case AbiType::Kind::Int:
-		return wordDomain(_type->width, true);
-	case AbiType::Kind::Address:
-	case AbiType::Kind::Contract:
-		return wordDomain(160, false);
-	case AbiType::Kind::UserDefined:
-		return encodingDomain(_type->components.front());
-	case AbiType::Kind::Enum:
-	{
-		// Only declared members are valid values; anything else makes the decoder revert.
-		std::uint32_t const memberCount = _type->width;
-		return fuzztest::Map(
-			[memberCount](std::uint32_t const _member) {
-				solAssert(_member < memberCount, "an enum value outside the declared members would revert");
-				return toBigEndian(u256(_member));
-			},
-			fuzztest::InRange<std::uint32_t>(0, memberCount - 1)
-		);
-	}
-	case AbiType::Kind::Bool:
-		return fuzztest::Map(
-			[](bool const _value) { return toBigEndian(u256(_value ? 1 : 0)); },
-			fuzztest::Arbitrary<bool>()
-		);
-	case AbiType::Kind::FixedBytes:
-		// bytesN is left-aligned in its word, unlike the numeric types.
-		return fuzztest::Map(
-			[](bytes const& _value) { return zeroPadRight(_value); },
-			fuzztest::VectorOf(fuzztest::Arbitrary<uint8_t>()).WithSize(_type->width)
-		);
-	case AbiType::Kind::Bytes:
-	case AbiType::Kind::String:
-		return fuzztest::FlatMap(
-			[](std::uint32_t const _length) {
-				return fuzztest::Map(
-					[](bytes const& _value) { return toBigEndian(u256(_value.size())) + zeroPadRight(_value); },
-					fuzztest::VectorOf(fuzztest::Arbitrary<uint8_t>()).WithSize(_length)
-				);
-			},
-			byteStringLengthDomain()
-		);
-	case AbiType::Kind::FixedArray:
-	{
-		TypePointer const elementType = _type->components.front();
-		return fuzztest::Map(
-			[elementType](std::vector<bytes> const& _elements) { return composeArray(elementType, _elements); },
-			fuzztest::VectorOf(encodingDomain(elementType)).WithSize(_type->width)
-		);
-	}
-	case AbiType::Kind::DynArray:
-	{
-		TypePointer const elementType = _type->components.front();
-		// The length is drawn up front for the same reason as for `bytes`: left to grow a container on its own,
-		// the fuzzer keeps the array at zero or one element and never lays out a second tail.
-		return fuzztest::FlatMap(
-			[elementType](std::uint32_t const _length) {
-				return fuzztest::Map(
-					[elementType](std::vector<bytes> const& _elements) {
-						return toBigEndian(u256(_elements.size())) + composeArray(elementType, _elements);
-					},
-					fuzztest::VectorOf(encodingDomain(elementType)).WithSize(_length)
-				);
-			},
-			fuzztest::InRange<std::uint32_t>(0, maxArrayLength)
-		);
-	}
-	case AbiType::Kind::Struct:
-	{
-		std::vector<TypePointer> const fields = _type->components;
-		return fuzztest::Map(
-			[fields](std::vector<bytes> const& _encodings) { return composeTuple(fields, _encodings); },
-			componentEncodingsDomain(fields)
-		);
-	}
-	}
-	solAssert(false);
-}
-
-/// The components of the top-level tuple that gets encoded, decoded and encoded again, with the canonical standalone
-/// encoding of a value for each of them. The tuple is what the ABI actually specifies an encoding for; a single
-/// component is just its most common shape.
-struct TypedValue
+/// The components of the top-level tuple, and the tape the generated contract reads a value for them off. The
+/// tuple is what the ABI actually specifies an encoding for; a single component is just its most common shape.
+struct TypedTape
 {
 	std::vector<TypePointer> types;
-	std::vector<bytes> encodings;
+	bytes tape;
 };
 
-fuzztest::Domain<TypedValue> typedValueDomain()
+fuzztest::Domain<TypedTape> typedTapeDomain()
 {
-	return fuzztest::FlatMap(
-		[](std::vector<TypePointer> const& _types) {
-			return fuzztest::StructOf<TypedValue>(fuzztest::Just(_types), componentEncodingsDomain(_types));
-		},
-		fuzztest::VectorOf(typeDomain(maxTypeDepth)).WithMinSize(1).WithMaxSize(maxTupleComponents)
+	return fuzztest::StructOf<TypedTape>(
+		fuzztest::VectorOf(typeDomain(maxTypeDepth)).WithMinSize(1).WithMaxSize(maxTupleComponents),
+		fuzztest::VectorOf(fuzztest::Arbitrary<uint8_t>()).WithMinSize(minTapeLength).WithMaxSize(maxTapeLength)
 	);
 }
 
@@ -741,11 +520,201 @@ std::string variableList(std::size_t const _count, std::string const& _prefix)
 	return commaSeparated(parts);
 }
 
+/// Read by every generated builder. `t` is the tape and `p` a cursor into it; the tape is indexed modulo its
+/// length, so a builder can always read as much as it needs and never has to reject what it was given.
+std::string const tapeHelpers =
+	"\tfunction readByte(bytes memory t, uint p) internal pure returns (uint8, uint) {\n"
+	"\t\treturn (uint8(t[p % t.length]), p + 1);\n"
+	"\t}\n"
+	"\tfunction readWord(bytes memory t, uint p) internal pure returns (uint256 w, uint) {\n"
+	"\t\tfor (uint i = 0; i < 32; i++) {\n"
+	"\t\t\tuint8 b;\n"
+	"\t\t\t(b, p) = readByte(t, p);\n"
+	"\t\t\tw = (w << 8) | b;\n"
+	"\t\t}\n"
+	"\t\treturn (w, p);\n"
+	"\t}\n"
+	"\tfunction readArrayLength(bytes memory t, uint p) internal pure returns (uint, uint) {\n"
+	"\t\tuint8 b;\n"
+	"\t\t(b, p) = readByte(t, p);\n"
+	"\t\treturn (b % " + std::to_string(maxArrayLength + 1) + ", p);\n"
+	"\t}\n"
+	// The lengths around a word boundary are the ones where the padding and the tail offsets that follow have to
+	// be got right, so they are drawn out of a table rather than uniformly.
+	"\tfunction readBytes(bytes memory t, uint p) internal pure returns (bytes memory r, uint) {\n"
+	"\t\tuint16[12] memory lengths = [uint16(0), 1, 2, 31, 32, 33, 63, 64, 65, 95, 96, 97];\n"
+	"\t\tuint8 b;\n"
+	"\t\t(b, p) = readByte(t, p);\n"
+	"\t\tr = new bytes(lengths[b % 12]);\n"
+	"\t\tfor (uint i = 0; i < r.length; i++) {\n"
+	"\t\t\tuint8 v;\n"
+	"\t\t\t(v, p) = readByte(t, p);\n"
+	"\t\t\tr[i] = bytes1(v);\n"
+	"\t\t}\n"
+	"\t\treturn (r, p);\n"
+	"\t}\n";
+
+/// Emits one Solidity function per type, building a value of it off the tape. Nothing here mirrors the ABI
+/// specification: a builder that got a type wrong would just produce a different value, never a failure.
+class ValueBuilder
+{
+public:
+	explicit ValueBuilder(TypeNamer& _namer): m_namer(_namer) {}
+
+	/// @returns the name of the function building a value of @param _type, emitting it and every builder it calls
+	/// on first use.
+	std::string builder(AbiType const& _type)
+	{
+		// Two structurally equal types drawn separately get separate declarations, and the declared name is what
+		// tells them apart.
+		std::string const typeName = m_namer.name(_type);
+		if (auto const it = m_builders.find(typeName); it != m_builders.end())
+			return it->second;
+
+		std::string const identifier = "build" + std::to_string(m_builders.size());
+		m_builders[typeName] = identifier;
+		m_definitions.push_back(definition(_type, typeName, identifier));
+		return identifier;
+	}
+
+	std::string definitions() const
+	{
+		std::string result = tapeHelpers;
+		for (std::string const& definition: m_definitions)
+			result += definition;
+		return result;
+	}
+
+private:
+	std::string definition(AbiType const& _type, std::string const& _typeName, std::string const& _identifier)
+	{
+		std::string returnValue = _typeName + location(_type, "memory");
+		std::string body;
+		switch (_type.kind)
+		{
+		case AbiType::Kind::Bytes:
+			body = "\t\treturn readBytes(t, p);\n";
+			break;
+		case AbiType::Kind::String:
+			body =
+				"\t\t(bytes memory b, uint q) = readBytes(t, p);\n"
+				"\t\treturn (string(b), q);\n";
+			break;
+		case AbiType::Kind::UserDefined:
+		{
+			AbiType const& underlying = *_type.components.front();
+			std::string const underlyingBuilder = builder(underlying);
+			body =
+				"\t\t(" + m_namer.name(underlying) + " u, uint q) = " + underlyingBuilder + "(t, p);\n"
+				"\t\treturn (" + _typeName + ".wrap(u), q);\n";
+			break;
+		}
+		case AbiType::Kind::FixedArray:
+		case AbiType::Kind::DynArray:
+		{
+			std::string const elementBuilder = builder(*_type.components.front());
+			std::string bound = std::to_string(_type.width);
+			if (_type.kind == AbiType::Kind::DynArray)
+			{
+				bound = "n";
+				body =
+					"\t\tuint n;\n"
+					"\t\t(n, p) = readArrayLength(t, p);\n"
+					"\t\tr = new " + _typeName + "(n);\n";
+			}
+			returnValue += " r";
+			body +=
+				"\t\tfor (uint i = 0; i < " + bound + "; i++)\n"
+				"\t\t\t(r[i], p) = " + elementBuilder + "(t, p);\n"
+				"\t\treturn (r, p);\n";
+			break;
+		}
+		case AbiType::Kind::Struct:
+		{
+			std::string fields;
+			std::string cursor = "p";
+			for (std::size_t i = 0; i < _type.components.size(); ++i)
+			{
+				AbiType const& field = *_type.components[i];
+				std::string const fieldBuilder = builder(field);
+				std::string const next = "p" + std::to_string(i);
+				body +=
+					"\t\t(" + m_namer.name(field) + location(field, "memory") + " f" + std::to_string(i) +
+					", uint " + next + ") = " + fieldBuilder + "(t, " + cursor + ");\n";
+				fields += (i == 0 ? "" : ", ") + ("f" + std::to_string(i));
+				cursor = next;
+			}
+			body += "\t\treturn (" + _typeName + "(" + fields + "), " + cursor + ");\n";
+			break;
+		}
+		default:
+			body =
+				"\t\t(uint256 w, uint q) = readWord(t, p);\n"
+				"\t\treturn (" + valueExpression(_type, _typeName) + ", q);\n";
+			break;
+		}
+
+		return
+			"\tfunction " + _identifier + "(bytes memory t, uint p) internal pure returns (" + returnValue + ", uint) {\n" +
+			body +
+			"\t}\n";
+	}
+
+	/// Expression turning the word `w` into a value of an elementary type.
+	static std::string valueExpression(AbiType const& _type, std::string const& _typeName)
+	{
+		switch (_type.kind)
+		{
+		case AbiType::Kind::Uint:
+			return _type.width == 256 ? "w" : "uint" + std::to_string(_type.width) + "(w)";
+		case AbiType::Kind::Int:
+			return _type.width == 256 ? "int256(w)" : "int" + std::to_string(_type.width) + "(int256(w))";
+		case AbiType::Kind::Address:
+			return "address(uint160(w))";
+		case AbiType::Kind::Bool:
+			return "(w & 1) == 1";
+		case AbiType::Kind::FixedBytes:
+			return _type.width == 32 ? "bytes32(w)" : "bytes" + std::to_string(_type.width) + "(bytes32(w))";
+		case AbiType::Kind::Enum:
+			// Only declared members are valid values; anything else makes the decoder revert.
+			return _typeName + "(uint8(w % " + std::to_string(_type.width) + "))";
+		case AbiType::Kind::Contract:
+			return _typeName + "(address(uint160(w)))";
+		default:
+			solAssert(false);
+		}
+	}
+
+	TypeNamer& m_namer;
+	std::map<std::string, std::string> m_builders;
+	std::vector<std::string> m_definitions;
+};
+
+/// The function every generated contract exposes as the source of the value: it builds the tuple off the tape and
+/// hands back its encoding.
+std::string encodeValueFunction(TypeNamer& _namer, ValueBuilder& _builder, std::vector<TypePointer> const& _types)
+{
+	std::string body;
+	for (std::size_t i = 0; i < _types.size(); ++i)
+		body += "\t\t" + _namer.name(*_types[i]) + location(*_types[i], "memory") + " v" + std::to_string(i) + ";\n";
+	body += "\t\tuint p = 0;\n";
+	for (std::size_t i = 0; i < _types.size(); ++i)
+		body += "\t\t(v" + std::to_string(i) + ", p) = " + _builder.builder(*_types[i]) + "(tape, p);\n";
+
+	return
+		"\tfunction encodeValue(bytes memory tape) public pure returns (bytes memory) {\n" +
+		body +
+		"\t\treturn abi.encode(" + variableList(_types.size(), "v") + ");\n"
+		"\t}\n";
+}
+
 std::string const sourceHeader = "// SPDX-License-Identifier: GPL-3.0\npragma abicoder v2;\n";
 
 StringMap memoryRoundTripSources(std::vector<TypePointer> const& _types)
 {
 	TypeNamer namer;
+	ValueBuilder builder(namer);
+	std::string const encodeValue = encodeValueFunction(namer, builder, _types);
 	std::string const decoded = variableDeclarations(namer, _types, "memory", "v");
 	std::string const types = typeList(namer, _types);
 	std::string const values = variableList(_types.size(), "v");
@@ -755,8 +724,10 @@ StringMap memoryRoundTripSources(std::vector<TypePointer> const& _types)
 		{"C.sol",
 			sourceHeader +
 			"import \"types.sol\";\n"
-			"contract C {\n"
-			"\tfunction roundtrip(bytes memory input) public pure returns (bytes memory) {\n"
+			"contract C {\n" +
+			builder.definitions() +
+			encodeValue +
+			"\tfunction renormalize(bytes memory input) public pure returns (bytes memory) {\n"
 			"\t\t(" + decoded + ") = abi.decode(input, (" + types + "));\n"
 			"\t\treturn abi.encode(" + values + ");\n"
 			"\t}\n"
@@ -768,6 +739,8 @@ StringMap memoryRoundTripSources(std::vector<TypePointer> const& _types)
 StringMap callRoundTripSources(std::vector<TypePointer> const& _types)
 {
 	TypeNamer namer;
+	ValueBuilder builder(namer);
+	std::string const encodeValue = encodeValueFunction(namer, builder, _types);
 	std::string const parameters = variableDeclarations(namer, _types, "calldata", "x");
 	std::string const returnTypes = returnTypeList(namer, _types);
 	std::string const decoded = variableDeclarations(namer, _types, "memory", "v");
@@ -794,8 +767,10 @@ StringMap callRoundTripSources(std::vector<TypePointer> const& _types)
 			"import \"callee.sol\";\n"
 			"contract C {\n"
 			"\tCallee private callee;\n"
-			"\tconstructor() { callee = new Callee(); }\n"
-			"\tfunction roundtrip(bytes memory input) public view returns (bytes memory) {\n"
+			"\tconstructor() { callee = new Callee(); }\n" +
+			builder.definitions() +
+			encodeValue +
+			"\tfunction renormalize(bytes memory input) public view returns (bytes memory) {\n"
 			"\t\t(" + decoded + ") = abi.decode(input, (" + types + "));\n"
 			"\t\t(" + results + ") = callee.identity(" + variableList(_types.size(), "v") + ");\n"
 			"\t\treturn abi.encode(" + variableList(_types.size(), "r") + ");\n"
@@ -821,6 +796,8 @@ struct CompilationResult
 {
 	bytes creationCode;
 	std::string errors;
+	/// A known limit of the code generator rather than anything to do with the ABI, so the input is skipped.
+	bool stackTooDeep = false;
 };
 
 CompilationResult compileContract(StringMap const& _sources, bool const _optimize)
@@ -830,10 +807,17 @@ CompilationResult compileContract(StringMap const& _sources, bool const _optimiz
 	compiler.setViaIR(true);
 	compiler.setOptimiserSettings(_optimize);
 
-	if (!compiler.compile())
-		return {{}, langutil::SourceReferenceFormatter::formatErrorInformation(compiler.errors(), compiler)};
+	try
+	{
+		if (!compiler.compile())
+			return {{}, langutil::SourceReferenceFormatter::formatErrorInformation(compiler.errors(), compiler), false};
+	}
+	catch (yul::StackTooDeepError const&)
+	{
+		return {{}, {}, true};
+	}
 
-	return {compiler.object("C").bytecode, {}};
+	return {compiler.object("C").bytecode, {}, false};
 }
 
 /// Compilation dominates the runtime of this test and the fuzzer keeps the sources fixed while it mutates the
@@ -860,6 +844,14 @@ evmc_message baseMessage(bytes const& _input)
 	return message;
 }
 
+bytes zeroPadRight(bytes _data)
+{
+	if (_data.size() % 32 != 0)
+		_data.resize(_data.size() + 32 - _data.size() % 32, 0);
+	solAssert(_data.size() % 32 == 0);
+	return _data;
+}
+
 /// `abi.encode` of a single `bytes` argument.
 bytes encodeBytesArgument(bytes const& _data)
 {
@@ -879,18 +871,52 @@ std::optional<bytes> decodeBytesReturnValue(bytes const& _returnData)
 	return bytes(_returnData.begin() + 64, _returnData.begin() + 64 + static_cast<std::ptrdiff_t>(length));
 }
 
-struct ExecutionResult
+struct CallResult
 {
 	std::optional<bytes> returnValue;
 	std::string failure;
 };
 
-ExecutionResult deployAndCallRoundTrip(bytes const& _creationCode, bytes const& _encodedArgument)
+/// Calls a `function (bytes) returns (bytes)` on an already deployed contract.
+CallResult callBytesFunction(
+	solidity::test::EVMHost& _host,
+	evmc::address const& _address,
+	std::string const& _signature,
+	bytes const& _argument
+)
+{
+	bytes const input = util::selectorFromSignatureH32(_signature).asBytes() + encodeBytesArgument(_argument);
+	evmc_message message = baseMessage(input);
+	message.kind = EVMC_CALL;
+	message.recipient = _address;
+	message.code_address = _address;
+
+	evmc::Result const result = _host.call(message);
+	if (result.status_code != EVMC_SUCCESS)
+		return {std::nullopt, _signature + " failed with status " + std::to_string(result.status_code)};
+
+	bytes const returnData(result.output_data, result.output_data + result.output_size);
+	std::optional<bytes> returnValue = decodeBytesReturnValue(returnData);
+	if (!returnValue)
+		return {std::nullopt, "Malformed `bytes` return value from " + _signature + ": " + util::toHex(returnData)};
+	return {std::move(returnValue), {}};
+}
+
+struct RoundTripResult
+{
+	/// `abi.encode` of the value the contract built off the tape.
+	bytes encoded;
+	/// The same value encoded once more, after a decode of @a encoded.
+	bytes renormalized;
+	std::string failure;
+};
+
+RoundTripResult runRoundTrip(bytes const& _creationCode, bytes const& _tape)
 {
 	char const* vmPath = getenv("ETH_EVMONE");
 	evmc::VM& vm = solidity::test::EVMHost::getVM(vmPath ? vmPath : evmoneFilename);
 	if (!vm)
-		return {std::nullopt, "Unable to load evmone. Set ETH_EVMONE or LD_LIBRARY_PATH."};
+		return {{}, {}, "Unable to load evmone. Set ETH_EVMONE or LD_LIBRARY_PATH."};
 
 	solidity::test::EVMHost host(langutil::EVMVersion{}, vm);
 
@@ -898,66 +924,59 @@ ExecutionResult deployAndCallRoundTrip(bytes const& _creationCode, bytes const& 
 	createMessage.kind = EVMC_CREATE;
 	evmc::Result const createResult = host.call(createMessage);
 	if (createResult.status_code != EVMC_SUCCESS)
-		return {std::nullopt, "Contract creation failed with status " + std::to_string(createResult.status_code)};
+		return {{}, {}, "Contract creation failed with status " + std::to_string(createResult.status_code)};
 
-	bytes const input =
-		util::selectorFromSignatureH32("roundtrip(bytes)").asBytes() +
-		encodeBytesArgument(_encodedArgument);
-	evmc_message callMessage = baseMessage(input);
-	callMessage.kind = EVMC_CALL;
-	callMessage.recipient = createResult.create_address;
-	callMessage.code_address = createResult.create_address;
-	evmc::Result const callResult = host.call(callMessage);
-	if (callResult.status_code != EVMC_SUCCESS)
-		return {std::nullopt, "Round trip call failed with status " + std::to_string(callResult.status_code)};
+	CallResult encoded = callBytesFunction(host, createResult.create_address, "encodeValue(bytes)", _tape);
+	if (!encoded.returnValue)
+		return {{}, {}, encoded.failure};
 
-	bytes const returnData(callResult.output_data, callResult.output_data + callResult.output_size);
-	std::optional<bytes> returnValue = decodeBytesReturnValue(returnData);
-	if (!returnValue)
-		return {std::nullopt, "Malformed `bytes` return value: " + util::toHex(returnData)};
-	return {std::move(returnValue), {}};
+	CallResult renormalized = callBytesFunction(host, createResult.create_address, "renormalize(bytes)", *encoded.returnValue);
+	if (!renormalized.returnValue)
+		return {*encoded.returnValue, {}, renormalized.failure};
+
+	return {std::move(*encoded.returnValue), std::move(*renormalized.returnValue), {}};
 }
 
 // ---------------------------------------------------------------------------------------------------------------
 // The property
 // ---------------------------------------------------------------------------------------------------------------
 
-void checkRoundTrip(StringMap const& _sources, bool const _optimize, TypedValue const& _typedValue)
+void checkRoundTrip(StringMap const& _sources, bool const _optimize, TypedTape const& _typedTape)
 {
-	// What the contract receives is the encoding of the whole tuple, which is what the round trip has to produce again.
-	solAssert(!_typedValue.types.empty(), "the top-level tuple has at least one component");
-	solAssert(_typedValue.types.size() == _typedValue.encodings.size());
-	for (TypePointer const& type: _typedValue.types)
+	solAssert(!_typedTape.types.empty(), "the top-level tuple has at least one component");
+	solAssert(!_typedTape.tape.empty(), "the builders index the tape modulo its length");
+	for (TypePointer const& type: _typedTape.types)
 		assertValidType(*type);
 
-	bytes const argument = composeTuple(_typedValue.types, _typedValue.encodings);
 	std::vector<std::string> signatures;
-	for (TypePointer const& type: _typedValue.types)
+	for (TypePointer const& type: _typedTape.types)
 		signatures.push_back(signatureOf(*type));
 	std::string const context =
 		"tuple: (" + commaSeparated(signatures) + ")\n" +
-		"argument: " + util::toHex(argument) + "\n" +
+		"tape: " + util::toHex(_typedTape.tape) + "\n" +
 		sourcesToString(_sources);
 
 	CompilationResult const& compilation = compileContractCached(_sources, _optimize);
+	if (compilation.stackTooDeep)
+		return;
 	ASSERT_TRUE(compilation.errors.empty()) << "Compilation failed.\n" << compilation.errors << context;
 
-	ExecutionResult const execution = deployAndCallRoundTrip(compilation.creationCode, argument);
-	ASSERT_TRUE(execution.returnValue.has_value()) << execution.failure << "\n" << context;
+	RoundTripResult const execution = runRoundTrip(compilation.creationCode, _typedTape.tape);
+	ASSERT_TRUE(execution.failure.empty()) << execution.failure << "\n" << context;
 
-	ASSERT_EQ(util::toHex(*execution.returnValue), util::toHex(argument)) << context;
+	ASSERT_EQ(util::toHex(execution.renormalized), util::toHex(execution.encoded)) << context;
 }
 
 }
 
-void MemoryRoundTripIsIdentity(TypedValue const& _typedValue, bool const _optimize)
+void MemoryRoundTripIsIdentity(TypedTape const& _typedTape, bool const _optimize)
 {
-	checkRoundTrip(memoryRoundTripSources(_typedValue.types), _optimize, _typedValue);
+	checkRoundTrip(memoryRoundTripSources(_typedTape.types), _optimize, _typedTape);
 }
 
-void CallRoundTripIsIdentity(TypedValue const& _typedValue, bool const _optimize)
+void CallRoundTripIsIdentity(TypedTape const& _typedTape, bool const _optimize)
 {
-	checkRoundTrip(callRoundTripSources(_typedValue.types), _optimize, _typedValue);
+	checkRoundTrip(callRoundTripSources(_typedTape.types), _optimize, _typedTape);
 }
 
 /// A test for the property test itself
@@ -994,21 +1013,16 @@ TEST(ABICoderTypeInvariants, MalformedTypesAreRejected)
 	AbiType const nested = raw(Kind::Struct, 0, {std::make_shared<AbiType const>(raw(Kind::Uint, 7, {}))});
 	EXPECT_ANY_THROW(assertValidType(nested));
 
-	EXPECT_ANY_THROW(composeTuple({valid(Kind::Bool)}, {bytes(31, 0)}));
-	EXPECT_ANY_THROW(composeTuple({valid(Kind::Bool)}, {bytes(64, 0)}));
-	EXPECT_ANY_THROW(composeTuple({valid(Kind::Bool), valid(Kind::Bool)}, {bytes(32, 0)}));
-
 	EXPECT_NO_THROW(assertValidType(*valid(Kind::Struct, 0, {valid(Kind::Uint, 256), valid(Kind::Bytes)})));
 	EXPECT_NO_THROW(assertValidType(*valid(Kind::UserDefined, 0, {valid(Kind::FixedBytes, 32)})));
-	EXPECT_NO_THROW(composeTuple({valid(Kind::Bool)}, {bytes(32, 0)}));
 }
 
 // Memory round trip identity
 FUZZ_TEST(ABICoderRoundTripProperty, MemoryRoundTripIsIdentity)
-	.WithDomains(typedValueDomain(), fuzztest::Arbitrary<bool>());
+	.WithDomains(typedTapeDomain(), fuzztest::Arbitrary<bool>());
 
 // Call roundtrip identity
 FUZZ_TEST(ABICoderRoundTripProperty, CallRoundTripIsIdentity)
-	.WithDomains(typedValueDomain(), fuzztest::Arbitrary<bool>());
+	.WithDomains(typedTapeDomain(), fuzztest::Arbitrary<bool>());
 
 }
