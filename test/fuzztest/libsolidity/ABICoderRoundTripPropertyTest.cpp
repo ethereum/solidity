@@ -18,7 +18,7 @@
 /**
  * Property test for the ABI coders: decoding an encoded value and encoding it again must be the identity.
  *
- * A random tuple of types is drawn together with the canonical encoding of a random value for it, built here from
+ * A random tuple of types is drawn together with the canonical encoding of a random value for it, built from
  * the ABI specification without sharing any code with the compiler. Contracts generated for that tuple must hand
  * the encoding back byte for byte:
  *   - `MemoryRoundTripIsIdentity` runs the decoder and encoder in one source unit, across coder v1/v2, legacy/IR
@@ -44,16 +44,8 @@
  *         }
  *     }
  *
- * and for the value `(42, S0("abc"))` the encoding handed to it, which it has to return unchanged, is
- *
- *     00..002a    head: 42
- *     00..0040    head: where S0 starts, just past the head
- *     00..0020    S0: where f0 starts, counted from the start of S0 rather than of the whole encoding
- *     00..0003    S0: length of "abc"
- *     616263..    S0: "abc", padded out to a whole word
- *
  * Only the tuple's types reach the contract as source; the value travels as calldata, so one compilation serves
- * every value drawn for a type. Values are always canonically encoded
+ * every value drawn for a type. Values are always canonically encoded.
  */
 
 #include <test/EVMHost.h>
