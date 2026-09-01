@@ -25,25 +25,32 @@
  *     codegen and optimiser settings;
  *   - `CrossCoderCallRoundTripIsIdentity` routes the value through an external call to a second source unit, which
  *     may use the other coder version. That reaches the calldata decoder and pairs a v1 encoder with a v2 decoder
- *     and the other way round.
+ *     and the other way around.
  *
- * For the tuple `(uint8, bytes)` the generated source unit is
+ * For the tuple `(uint8, S0)` the generated source units are
  *
+ *     // types.sol -- struct, enum and user-defined type declarations, shared by every other unit
+ *     struct S0 {
+ *         bytes f0;
+ *     }
+ *
+ *     // C.sol
  *     pragma abicoder v2;
- *     import "types.sol";                        // struct, enum and user-defined declarations; none needed here
+ *     import "types.sol";
  *     contract C {
  *         function roundtrip(bytes memory input) public pure returns (bytes memory) {
- *             (uint8 v0, bytes memory v1) = abi.decode(input, (uint8, bytes));
+ *             (uint8 v0, S0 memory v1) = abi.decode(input, (uint8, S0));
  *             return abi.encode(v0, v1);
  *         }
  *     }
  *
- * and for the value `(42, "abc")` the encoding handed to it, which it has to return unchanged, is
+ * and for the value `(42, S0("abc"))` the encoding handed to it, which it has to return unchanged, is
  *
  *     00..002a    head: 42
- *     00..0040    head: where the tail starts, which is just past the head
- *     00..0003    tail: length of "abc"
- *     616263..    tail: "abc", padded out to a whole word
+ *     00..0040    head: where S0 starts, just past the head
+ *     00..0020    S0: where f0 starts, counted from the start of S0 rather than of the whole encoding
+ *     00..0003    S0: length of "abc"
+ *     616263..    S0: "abc", padded out to a whole word
  *
  * Only the tuple's types reach the contract as source; the value travels as calldata, so one compilation serves
  * every value drawn for a type. Values are always canonically encoded, which puts one known bug out of scope: ABI
