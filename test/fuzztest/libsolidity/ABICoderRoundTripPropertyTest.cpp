@@ -16,14 +16,66 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
- * Property test for the ABI coders: encoding a value, decoding that encoding and encoding the result again must
- * reproduce the first encoding byte for byte. A random tuple of types is drawn. The value itself is built inside the
- * generated contract from a tape of raw fuzzer bytes.
+ * Property test for the ABI coders. A random tuple of types is drawn, and the value itself is built inside the
+ * generated contract from a tape of raw fuzzer bytes, so the test never spells out an ABI encoding of its own --
+ * the compiler is on both sides. Only the tuple's types reach the contract as source, so one compilation serves
+ * every tape drawn for a type.
  *
- *   - `MemoryRoundTripIsIdentity` runs the decoder and encoder
- *   - `CallRoundTripIsIdentity` routes the value through an external call,
- *   which reaches the calldata decoder and the return-value encoder.
+ * Two properties are checked per input, both with and without the optimiser:
+ *   - `renormalize`: encoding a value, decoding that encoding and encoding the result again reproduces the first
+ *     encoding byte for byte;
+ *   - `roundTripEquals`: the value that comes back out of the round trip compares equal to the one that went in,
+ *     through generated `eq` functions that use `==`, `keccak256` and element-wise loops. The first property alone
+ *     holds for any encoder whose information loss is idempotent -- one writing an array length one short, say --
+ *     because the decoder then faithfully reproduces the loss and the re-encoding matches. Comparing the values
+ *     through EVM primitives instead of through another encoding closes that gap.
  *
+ * Neither property can see a bug where the encoder and the decoder are wrong in the same way; the round trip
+ * shows self-consistency, not conformance to the ABI spec. That is what the hand-written expectations in
+ * `test/libsolidity/semanticTests/abiEncoderV2/` cover.
+ *
+ * `MemoryRoundTripIsIdentity` keeps the round trip inside a single contract. `CallRoundTripIsIdentity` routes the
+ * value through an external call to a second contract, which reaches the calldata decoder and the return-value
+ * encoder.
+ *
+ * For the tuple `(uint8, S0)` the generated source units are
+ *
+ *     // types.sol -- struct, enum and user-defined type declarations, shared by every other unit
+ *     struct S0 {
+ *         bytes f0;
+ *     }
+ *
+ *     // C.sol
+ *     pragma abicoder v2;
+ *     import "types.sol";
+ *     contract C {
+ *         // ... tape helpers, then one builder and one comparison per type ...
+ *         function build1(bytes memory t, uint p) internal pure returns (S0 memory, uint) {
+ *             (bytes memory f0, uint p0) = build2(t, p);
+ *             return (S0(f0), p0);
+ *         }
+ *         function eq1(S0 memory a, S0 memory b) internal pure returns (bool) {
+ *             if (!eq2(a.f0, b.f0)) return false;
+ *             return true;
+ *         }
+ *         function encodeValue(bytes memory tape) public pure returns (bytes memory) {
+ *             uint8 v0;
+ *             S0 memory v1;
+ *             uint p = 0;
+ *             (v0, p) = build0(tape, p);
+ *             (v1, p) = build1(tape, p);
+ *             return abi.encode(v0, v1);
+ *         }
+ *         function roundTripEquals(bytes memory tape) public pure returns (bool) {
+ *             // ... same prologue ...
+ *             (uint8 w0, S0 memory w1) = abi.decode(abi.encode(v0, v1), (uint8, S0));
+ *             return eq0(v0, w0) && eq1(v1, w1);
+ *         }
+ *         function renormalize(bytes memory input) public pure returns (bytes memory) {
+ *             (uint8 v0, S0 memory v1) = abi.decode(input, (uint8, S0));
+ *             return abi.encode(v0, v1);
+ *         }
+ *     }
  */
 #include <test/EVMHost.h>
 
@@ -661,21 +713,145 @@ private:
 	std::vector<std::string> m_definitions;
 };
 
+/// Emits one Solidity function per type, comparing two values of it. Comparison goes through EVM primitives
+/// instead of through another encoding, so that an encoder losing information in a way the decoder reproduces
+/// cannot pass: `encode(decode(encode(v))) == encode(v)` holds for any encoder whose loss is idempotent, e.g. one
+/// writing an array length one short.
+class EqualityChecker
+{
+public:
+	explicit EqualityChecker(TypeNamer& _namer): m_namer(_namer) {}
+
+	/// @returns the name of the function comparing two values of @param _type, emitting it and every comparison it
+	/// calls on first use.
+	std::string checker(AbiType const& _type)
+	{
+		std::string const typeName = m_namer.name(_type);
+		if (auto const it = m_checkers.find(typeName); it != m_checkers.end())
+			return it->second;
+
+		std::string const identifier = "eq" + std::to_string(m_checkers.size());
+		m_checkers[typeName] = identifier;
+		m_definitions.push_back(definition(_type, typeName, identifier));
+		return identifier;
+	}
+
+	std::string definitions() const
+	{
+		std::string result;
+		for (std::string const& definition: m_definitions)
+			result += definition;
+		return result;
+	}
+
+private:
+	std::string definition(AbiType const& _type, std::string const& _typeName, std::string const& _identifier)
+	{
+		std::string body;
+		switch (_type.kind)
+		{
+		case AbiType::Kind::Bytes:
+			body = "\t\treturn keccak256(a) == keccak256(b);\n";
+			break;
+		case AbiType::Kind::String:
+			body = "\t\treturn keccak256(bytes(a)) == keccak256(bytes(b));\n";
+			break;
+		case AbiType::Kind::UserDefined:
+			// A user-defined value type carries no operators of its own unless some are attached to it.
+			body = "\t\treturn " + _typeName + ".unwrap(a) == " + _typeName + ".unwrap(b);\n";
+			break;
+		case AbiType::Kind::FixedArray:
+		case AbiType::Kind::DynArray:
+		{
+			std::string const elementChecker = checker(*_type.components.front());
+			std::string bound = std::to_string(_type.width);
+			if (_type.kind == AbiType::Kind::DynArray)
+			{
+				bound = "a.length";
+				body = "\t\tif (a.length != b.length) return false;\n";
+			}
+			body +=
+				"\t\tfor (uint i = 0; i < " + bound + "; i++)\n"
+				"\t\t\tif (!" + elementChecker + "(a[i], b[i])) return false;\n"
+				"\t\treturn true;\n";
+			break;
+		}
+		case AbiType::Kind::Struct:
+		{
+			for (std::size_t i = 0; i < _type.components.size(); ++i)
+			{
+				std::string const field = ".f" + std::to_string(i);
+				body +=
+					"\t\tif (!" + checker(*_type.components[i]) + "(a" + field + ", b" + field + ")) return false;\n";
+			}
+			body += "\t\treturn true;\n";
+			break;
+		}
+		default:
+			body = "\t\treturn a == b;\n";
+			break;
+		}
+
+		std::string const parameter = _typeName + location(_type, "memory");
+		return
+			"\tfunction " + _identifier + "(" + parameter + " a, " + parameter + " b) internal pure returns (bool) {\n" +
+			body +
+			"\t}\n";
+	}
+
+	TypeNamer& m_namer;
+	std::map<std::string, std::string> m_checkers;
+	std::vector<std::string> m_definitions;
+};
+
 /// The function every generated contract exposes as the source of the value: it builds the tuple off the tape and
 /// hands back its encoding.
+std::string buildTupleStatements(TypeNamer& _namer, ValueBuilder& _builder, std::vector<TypePointer> const& _types)
+{
+	std::string statements;
+	for (std::size_t i = 0; i < _types.size(); ++i)
+		statements += "\t\t" + _namer.name(*_types[i]) + location(*_types[i], "memory") + " v" + std::to_string(i) + ";\n";
+	statements += "\t\tuint p = 0;\n";
+	for (std::size_t i = 0; i < _types.size(); ++i)
+		statements += "\t\t(v" + std::to_string(i) + ", p) = " + _builder.builder(*_types[i]) + "(tape, p);\n";
+	return statements;
+}
+
 std::string encodeValueFunction(TypeNamer& _namer, ValueBuilder& _builder, std::vector<TypePointer> const& _types)
 {
-	std::string body;
-	for (std::size_t i = 0; i < _types.size(); ++i)
-		body += "\t\t" + _namer.name(*_types[i]) + location(*_types[i], "memory") + " v" + std::to_string(i) + ";\n";
-	body += "\t\tuint p = 0;\n";
-	for (std::size_t i = 0; i < _types.size(); ++i)
-		body += "\t\t(v" + std::to_string(i) + ", p) = " + _builder.builder(*_types[i]) + "(tape, p);\n";
-
 	return
 		"\tfunction encodeValue(bytes memory tape) public pure returns (bytes memory) {\n" +
-		body +
+		buildTupleStatements(_namer, _builder, _types) +
 		"\t\treturn abi.encode(" + variableList(_types.size(), "v") + ");\n"
+		"\t}\n";
+}
+
+/// The second function every generated contract exposes: it builds the tuple off the tape, sends it through
+/// @param _transport -- the round trip under test, which yields `w0`..`wN` -- and compares that to the original.
+std::string roundTripEqualsFunction(
+	TypeNamer& _namer,
+	ValueBuilder& _builder,
+	EqualityChecker& _checker,
+	std::vector<TypePointer> const& _types,
+	std::string const& _mutability,
+	std::string const& _transport
+)
+{
+	std::vector<std::string> comparisons;
+	for (std::size_t i = 0; i < _types.size(); ++i)
+	{
+		std::string const index = std::to_string(i);
+		comparisons.push_back(_checker.checker(*_types[i]) + "(v" + index + ", w" + index + ")");
+	}
+	std::string conjunction;
+	for (std::string const& comparison: comparisons)
+		conjunction += (conjunction.empty() ? "" : " && ") + comparison;
+
+	return
+		"\tfunction roundTripEquals(bytes memory tape) public " + _mutability + " returns (bool) {\n" +
+		buildTupleStatements(_namer, _builder, _types) +
+		"\t\t(" + variableDeclarations(_namer, _types, "memory", "w") + ") = " + _transport + ";\n"
+		"\t\treturn " + conjunction + ";\n"
 		"\t}\n";
 }
 
@@ -685,10 +861,19 @@ StringMap memoryRoundTripSources(std::vector<TypePointer> const& _types)
 {
 	TypeNamer namer;
 	ValueBuilder builder(namer);
-	std::string const encodeValue = encodeValueFunction(namer, builder, _types);
-	std::string const decoded = variableDeclarations(namer, _types, "memory", "v");
+	EqualityChecker checker(namer);
 	std::string const types = typeList(namer, _types);
 	std::string const values = variableList(_types.size(), "v");
+	std::string const encodeValue = encodeValueFunction(namer, builder, _types);
+	std::string const roundTripEquals = roundTripEqualsFunction(
+		namer,
+		builder,
+		checker,
+		_types,
+		"pure",
+		"abi.decode(abi.encode(" + values + "), (" + types + "))"
+	);
+	std::string const decoded = variableDeclarations(namer, _types, "memory", "v");
 
 	return {
 		{"types.sol", sourceHeader + namer.declarations()},
@@ -697,7 +882,9 @@ StringMap memoryRoundTripSources(std::vector<TypePointer> const& _types)
 			"import \"types.sol\";\n"
 			"contract C {\n" +
 			builder.definitions() +
+			checker.definitions() +
 			encodeValue +
+			roundTripEquals +
 			"\tfunction renormalize(bytes memory input) public pure returns (bytes memory) {\n"
 			"\t\t(" + decoded + ") = abi.decode(input, (" + types + "));\n"
 			"\t\treturn abi.encode(" + values + ");\n"
@@ -711,7 +898,16 @@ StringMap callRoundTripSources(std::vector<TypePointer> const& _types)
 {
 	TypeNamer namer;
 	ValueBuilder builder(namer);
+	EqualityChecker checker(namer);
 	std::string const encodeValue = encodeValueFunction(namer, builder, _types);
+	std::string const roundTripEquals = roundTripEqualsFunction(
+		namer,
+		builder,
+		checker,
+		_types,
+		"view",
+		"callee.identity(" + variableList(_types.size(), "v") + ")"
+	);
 	std::string const parameters = variableDeclarations(namer, _types, "calldata", "x");
 	std::string const returnTypes = returnTypeList(namer, _types);
 	std::string const decoded = variableDeclarations(namer, _types, "memory", "v");
@@ -739,7 +935,9 @@ StringMap callRoundTripSources(std::vector<TypePointer> const& _types)
 			"\tCallee private callee;\n"
 			"\tconstructor() { callee = new Callee(); }\n" +
 			builder.definitions() +
+			checker.definitions() +
 			encodeValue +
+			roundTripEquals +
 			"\tfunction renormalize(bytes memory input) public view returns (bytes memory) {\n"
 			"\t\t(" + decoded + ") = abi.decode(input, (" + types + "));\n"
 			"\t\t(" + results + ") = callee.identity(" + variableList(_types.size(), "v") + ");\n"
@@ -847,8 +1045,8 @@ struct CallResult
 	std::string failure;
 };
 
-/// Calls a `function (bytes) returns (bytes)` on an already deployed contract.
-CallResult callBytesFunction(
+/// Calls a `function (bytes) returns (...)` on an already deployed contract, yielding the raw return data.
+CallResult callWithTape(
 	solidity::test::EVMHost& _host,
 	evmc::address const& _address,
 	std::string const& _signature,
@@ -865,11 +1063,49 @@ CallResult callBytesFunction(
 	if (result.status_code != EVMC_SUCCESS)
 		return {std::nullopt, _signature + " failed with status " + std::to_string(result.status_code)};
 
-	bytes const returnData(result.output_data, result.output_data + result.output_size);
-	std::optional<bytes> returnValue = decodeBytesReturnValue(returnData);
+	return {bytes(result.output_data, result.output_data + result.output_size), {}};
+}
+
+/// Calls a `function (bytes) returns (bytes)` on an already deployed contract.
+CallResult callBytesFunction(
+	solidity::test::EVMHost& _host,
+	evmc::address const& _address,
+	std::string const& _signature,
+	bytes const& _argument
+)
+{
+	CallResult raw = callWithTape(_host, _address, _signature, _argument);
+	if (!raw.returnValue)
+		return raw;
+
+	std::optional<bytes> returnValue = decodeBytesReturnValue(*raw.returnValue);
 	if (!returnValue)
-		return {std::nullopt, "Malformed `bytes` return value from " + _signature + ": " + util::toHex(returnData)};
+		return {std::nullopt, "Malformed `bytes` return value from " + _signature + ": " + util::toHex(*raw.returnValue)};
 	return {std::move(returnValue), {}};
+}
+
+struct BoolCallResult
+{
+	std::optional<bool> returnValue;
+	std::string failure;
+};
+
+/// Calls a `function (bytes) returns (bool)` on an already deployed contract.
+BoolCallResult callBoolFunction(
+	solidity::test::EVMHost& _host,
+	evmc::address const& _address,
+	std::string const& _signature,
+	bytes const& _argument
+)
+{
+	CallResult raw = callWithTape(_host, _address, _signature, _argument);
+	if (!raw.returnValue)
+		return {std::nullopt, raw.failure};
+
+	u256 const word = raw.returnValue->size() == 32 ? fromBigEndian<u256>(*raw.returnValue) : 2;
+	if (word > 1)
+		return {std::nullopt, "Malformed `bool` return value from " + _signature + ": " + util::toHex(*raw.returnValue)};
+	return {word == 1, {}};
 }
 
 struct RoundTripResult
@@ -878,6 +1114,8 @@ struct RoundTripResult
 	bytes encoded;
 	/// The same value encoded once more, after a decode of @a encoded.
 	bytes renormalized;
+	/// Whether the value survived the round trip, compared through EVM primitives rather than through the coder.
+	bool valuesEqual = false;
 	std::string failure;
 };
 
@@ -886,7 +1124,7 @@ RoundTripResult runRoundTrip(bytes const& _creationCode, bytes const& _tape)
 	char const* vmPath = getenv("ETH_EVMONE");
 	evmc::VM& vm = solidity::test::EVMHost::getVM(vmPath ? vmPath : evmoneFilename);
 	if (!vm)
-		return {{}, {}, "Unable to load evmone. Set ETH_EVMONE or LD_LIBRARY_PATH."};
+		return {{}, {}, false, "Unable to load evmone. Set ETH_EVMONE or LD_LIBRARY_PATH."};
 
 	solidity::test::EVMHost host(langutil::EVMVersion{}, vm);
 
@@ -894,17 +1132,21 @@ RoundTripResult runRoundTrip(bytes const& _creationCode, bytes const& _tape)
 	createMessage.kind = EVMC_CREATE;
 	evmc::Result const createResult = host.call(createMessage);
 	if (createResult.status_code != EVMC_SUCCESS)
-		return {{}, {}, "Contract creation failed with status " + std::to_string(createResult.status_code)};
+		return {{}, {}, false, "Contract creation failed with status " + std::to_string(createResult.status_code)};
 
 	CallResult encoded = callBytesFunction(host, createResult.create_address, "encodeValue(bytes)", _tape);
 	if (!encoded.returnValue)
-		return {{}, {}, encoded.failure};
+		return {{}, {}, false, encoded.failure};
 
 	CallResult renormalized = callBytesFunction(host, createResult.create_address, "renormalize(bytes)", *encoded.returnValue);
 	if (!renormalized.returnValue)
-		return {*encoded.returnValue, {}, renormalized.failure};
+		return {*encoded.returnValue, {}, false, renormalized.failure};
 
-	return {std::move(*encoded.returnValue), std::move(*renormalized.returnValue), {}};
+	BoolCallResult const equal = callBoolFunction(host, createResult.create_address, "roundTripEquals(bytes)", _tape);
+	if (!equal.returnValue)
+		return {*encoded.returnValue, *renormalized.returnValue, false, equal.failure};
+
+	return {std::move(*encoded.returnValue), std::move(*renormalized.returnValue), *equal.returnValue, {}};
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -935,6 +1177,7 @@ void checkRoundTrip(StringMap const& _sources, bool const _optimize, TypedTape c
 	ASSERT_TRUE(execution.failure.empty()) << execution.failure << "\n" << context;
 
 	ASSERT_EQ(util::toHex(execution.renormalized), util::toHex(execution.encoded)) << context;
+	ASSERT_TRUE(execution.valuesEqual) << "The value did not survive the round trip.\n" << context;
 }
 
 }
