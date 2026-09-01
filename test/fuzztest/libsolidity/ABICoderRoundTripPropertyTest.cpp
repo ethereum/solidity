@@ -21,11 +21,10 @@
  * A random tuple of types is drawn together with the canonical encoding of a random value for it, built from
  * the ABI specification without sharing any code with the compiler. Contracts generated for that tuple must hand
  * the encoding back byte for byte:
- *   - `MemoryRoundTripIsIdentity` runs the decoder and encoder in one source unit, across coder v1/v2, legacy/IR
- *     codegen and optimiser settings;
- *   - `CrossCoderCallRoundTripIsIdentity` routes the value through an external call to a second source unit, which
- *     may use the other coder version. That reaches the calldata decoder and pairs a v1 encoder with a v2 decoder
- *     and the other way around.
+ *   - `MemoryRoundTripIsIdentity` runs the decoder and encoder in one source unit, across legacy/IR codegen and
+ *     optimiser settings;
+ *   - `CallRoundTripIsIdentity` routes the value through an external call to a second source unit, which reaches
+ *     the calldata decoder and the return-value encoder.
  *
  * For the tuple `(uint8, S0)` the generated source units are
  *
@@ -269,24 +268,6 @@ std::size_t headSize(AbiType const& _type)
 	}
 	default:
 		return 32;
-	}
-}
-
-/// ABI coder v1 only handles elementary types plus a single level of array nesting over value types. Deeper types
-/// are rejected either by `Type::fullEncodingType` or by the legacy encoder ("Nested memory arrays not yet
-/// implemented here").
-bool supportedByCoderV1(AbiType const& _type)
-{
-	assertValidNode(_type);
-	switch (_type.kind)
-	{
-	case AbiType::Kind::FixedArray:
-	case AbiType::Kind::DynArray:
-		return isValueType(*_type.components.front());
-	case AbiType::Kind::Struct:
-		return false;
-	default:
-		return true;
 	}
 }
 
@@ -711,13 +692,6 @@ private:
 	std::vector<std::string> m_declarations;
 };
 
-enum class Coder { V1, V2 };
-
-std::string coderPragma(Coder const _coder)
-{
-	return _coder == Coder::V1 ? "pragma abicoder v1;\n" : "pragma abicoder v2;\n";
-}
-
 std::string commaSeparated(std::vector<std::string> const& _parts)
 {
 	std::string result;
@@ -773,9 +747,9 @@ std::string variableList(std::size_t const _count, std::string const& _prefix)
 	return commaSeparated(parts);
 }
 
-std::string const licenseHeader = "// SPDX-License-Identifier: GPL-3.0\n";
+std::string const sourceHeader = "// SPDX-License-Identifier: GPL-3.0\npragma abicoder v2;\n";
 
-StringMap memoryRoundTripSources(std::vector<TypePointer> const& _types, Coder const _coder)
+StringMap memoryRoundTripSources(std::vector<TypePointer> const& _types)
 {
 	TypeNamer namer;
 	std::string const decoded = variableDeclarations(namer, _types, "memory", "v");
@@ -783,10 +757,9 @@ StringMap memoryRoundTripSources(std::vector<TypePointer> const& _types, Coder c
 	std::string const values = variableList(_types.size(), "v");
 
 	return {
-		{"types.sol", licenseHeader + namer.declarations()},
+		{"types.sol", sourceHeader + namer.declarations()},
 		{"C.sol",
-			licenseHeader +
-			coderPragma(_coder) +
+			sourceHeader +
 			"import \"types.sol\";\n"
 			"contract C {\n"
 			"\tfunction roundtrip(bytes memory input) public pure returns (bytes memory) {\n"
@@ -798,11 +771,7 @@ StringMap memoryRoundTripSources(std::vector<TypePointer> const& _types, Coder c
 	};
 }
 
-StringMap crossCoderCallSources(
-	std::vector<TypePointer> const& _types,
-	Coder const _callerCoder,
-	Coder const _calleeCoder
-)
+StringMap callRoundTripSources(std::vector<TypePointer> const& _types)
 {
 	TypeNamer namer;
 	std::string const parameters = variableDeclarations(namer, _types, "calldata", "x");
@@ -813,10 +782,9 @@ StringMap crossCoderCallSources(
 
 	return {
 		// The declarations get their own source unit so that both sides of the call refer to the same types.
-		{"types.sol", licenseHeader + namer.declarations()},
+		{"types.sol", sourceHeader + namer.declarations()},
 		{"callee.sol",
-			licenseHeader +
-			coderPragma(_calleeCoder) +
+			sourceHeader +
 			"import \"types.sol\";\n"
 			"contract Callee {\n"
 			"\tfunction identity(" + parameters + ")\n"
@@ -827,8 +795,7 @@ StringMap crossCoderCallSources(
 			"}\n"
 		},
 		{"caller.sol",
-			licenseHeader +
-			coderPragma(_callerCoder) +
+			sourceHeader +
 			"import \"types.sol\";\n"
 			"import \"callee.sol\";\n"
 			"contract C {\n"
@@ -1009,41 +976,14 @@ void checkRoundTrip(StringMap const& _sources, CompilationSettings const _settin
 
 }
 
-bool supportedByCoderV1(std::vector<TypePointer> const& _types)
+void MemoryRoundTripIsIdentity(TypedValue const& _typedValue, bool const _viaIR, bool const _optimize)
 {
-	return ranges::all_of(_types, [](TypePointer const& _type) { return supportedByCoderV1(*_type); });
+	checkRoundTrip(memoryRoundTripSources(_typedValue.types), {_viaIR, _optimize}, _typedValue);
 }
 
-void MemoryRoundTripIsIdentity(
-	TypedValue const& _typedValue,
-	Coder _coder,
-	bool const _viaIR,
-	bool const _optimize
-)
+void CallRoundTripIsIdentity(TypedValue const& _typedValue, bool const _optimize)
 {
-	// The IR pipeline only supports coder v2, and so does any type v1 cannot express.
-	if (_viaIR || !supportedByCoderV1(_typedValue.types))
-		_coder = Coder::V2;
-
-	checkRoundTrip(memoryRoundTripSources(_typedValue.types, _coder), {_viaIR, _optimize}, _typedValue);
-}
-
-void CrossCoderCallRoundTripIsIdentity(
-	TypedValue const& _typedValue,
-	Coder _callerCoder,
-	Coder _calleeCoder,
-	bool const _optimize
-)
-{
-	// A v1 source unit cannot even name a type that needs v2, no matter which side of the call it is on.
-	if (!supportedByCoderV1(_typedValue.types))
-		_callerCoder = _calleeCoder = Coder::V2;
-
-	checkRoundTrip(
-		crossCoderCallSources(_typedValue.types, _callerCoder, _calleeCoder),
-		{false, _optimize},
-		_typedValue
-	);
+	checkRoundTrip(callRoundTripSources(_typedValue.types), {false, _optimize}, _typedValue);
 }
 
 /// A test for the property test itself
@@ -1093,17 +1033,14 @@ TEST(ABICoderTypeInvariants, MalformedTypesAreRejected)
 FUZZ_TEST(ABICoderRoundTripProperty, MemoryRoundTripIsIdentity)
 	.WithDomains(
 		typedValueDomain(),
-		fuzztest::ElementOf({Coder::V1, Coder::V2}),
 		fuzztest::Arbitrary<bool>(),
 		fuzztest::Arbitrary<bool>()
 	);
 
 // Call roundtrip identity
-FUZZ_TEST(ABICoderRoundTripProperty, CrossCoderCallRoundTripIsIdentity)
+FUZZ_TEST(ABICoderRoundTripProperty, CallRoundTripIsIdentity)
 	.WithDomains(
 		typedValueDomain(),
-		fuzztest::ElementOf({Coder::V1, Coder::V2}),
-		fuzztest::ElementOf({Coder::V1, Coder::V2}),
 		fuzztest::Arbitrary<bool>()
 	);
 
