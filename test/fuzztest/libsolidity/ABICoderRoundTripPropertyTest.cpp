@@ -17,45 +17,13 @@
 // SPDX-License-Identifier: GPL-3.0
 /**
  * Property test for the ABI coders: encoding a value, decoding that encoding and encoding the result again must
- * reproduce the first encoding byte for byte.
+ * reproduce the first encoding byte for byte. A random tuple of types is drawn. The value itself is built inside the
+ * generated contract from a tape of raw fuzzer bytes.
  *
- * A random tuple of types is drawn. The value itself is built inside the generated contract from a tape of raw
- * fuzzer bytes, so the test never spells out an ABI encoding of its own; the compiler is on both sides.
- *   - `MemoryRoundTripIsIdentity` runs the decoder and encoder in one source unit, with and without the optimiser;
- *   - `CallRoundTripIsIdentity` routes the value through an external call to a second source unit, which reaches
- *     the calldata decoder and the return-value encoder.
+ *   - `MemoryRoundTripIsIdentity` runs the decoder and encoder
+ *   - `CallRoundTripIsIdentity` routes the value through an external call,
+ *   which reaches the calldata decoder and the return-value encoder.
  *
- * For the tuple `(uint8, S0)` the generated source units are
- *
- *     // types.sol -- struct, enum and user-defined type declarations, shared by every other unit
- *     struct S0 {
- *         bytes f0;
- *     }
- *
- *     // C.sol
- *     pragma abicoder v2;
- *     import "types.sol";
- *     contract C {
- *         // ... tape helpers, then one builder per type ...
- *         function build1(bytes memory t, uint p) internal pure returns (S0 memory, uint) {
- *             (bytes memory f0, uint p0) = build2(t, p);
- *             return (S0(f0), p0);
- *         }
- *         function encodeValue(bytes memory tape) public pure returns (bytes memory) {
- *             uint8 v0;
- *             S0 memory v1;
- *             uint p = 0;
- *             (v0, p) = build0(tape, p);
- *             (v1, p) = build1(tape, p);
- *             return abi.encode(v0, v1);
- *         }
- *         function renormalize(bytes memory input) public pure returns (bytes memory) {
- *             (uint8 v0, S0 memory v1) = abi.decode(input, (uint8, S0));
- *             return abi.encode(v0, v1);
- *         }
- *     }
- *
- * Only the tuple's types reach the contract as source, so one compilation serves every tape drawn for a type.
  */
 #include <test/EVMHost.h>
 
