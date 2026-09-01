@@ -554,8 +554,7 @@ std::string const tapeHelpers =
 	"\t\treturn (r, p);\n"
 	"\t}\n";
 
-/// Emits one Solidity function per type, building a value of it off the tape. Nothing here mirrors the ABI
-/// specification: a builder that got a type wrong would just produce a different value, never a failure.
+/// Emits one Solidity function per type, building a value of it off the tape.
 class ValueBuilder
 {
 public:
