@@ -18,8 +18,11 @@
 /**
  * Property test for the ABI coders. A random tuple of types is drawn, and the value itself is built inside the
  * generated contract from a tape of raw fuzzer bytes, so the test never spells out an ABI encoding of its own --
- * the compiler is on both sides. Only the tuple's types reach the contract as source, so one compilation serves
- * every tape drawn for a type.
+ * the compiler is on both sides. That holds out to the EVM boundary too: the contract's only external entry point
+ * is a `fallback(bytes calldata) returns (bytes memory)`, which Solidity hands the whole calldata undecoded and
+ * whose result is returned uninterpreted, so the harness exchanges plain byte strings and never lays out a head,
+ * a length prefix or padding of its own. Only the tuple's types reach the contract as source, so one compilation
+ * serves every tape drawn for a type.
  *
  * Two properties are checked per input, both with and without the optimiser:
  *   - `renormalize`: encoding a value, decoding that encoding and encoding the result again reproduces the first
@@ -29,53 +32,6 @@
  *     holds for any encoder whose information loss is idempotent -- one writing an array length one short, say --
  *     because the decoder then faithfully reproduces the loss and the re-encoding matches. Comparing the values
  *     through EVM primitives instead of through another encoding closes that gap.
- *
- * Neither property can see a bug where the encoder and the decoder are wrong in the same way; the round trip
- * shows self-consistency, not conformance to the ABI spec. That is what the hand-written expectations in
- * `test/libsolidity/semanticTests/abiEncoderV2/` cover.
- *
- * `MemoryRoundTripIsIdentity` keeps the round trip inside a single contract. `CallRoundTripIsIdentity` routes the
- * value through an external call to a second contract, which reaches the calldata decoder and the return-value
- * encoder.
- *
- * For the tuple `(uint8, S0)` the generated source units are
- *
- *     // types.sol -- struct, enum and user-defined type declarations, shared by every other unit
- *     struct S0 {
- *         bytes f0;
- *     }
- *
- *     // C.sol
- *     pragma abicoder v2;
- *     import "types.sol";
- *     contract C {
- *         // ... tape helpers, then one builder and one comparison per type ...
- *         function build1(bytes memory t, uint p) internal pure returns (S0 memory, uint) {
- *             (bytes memory f0, uint p0) = build2(t, p);
- *             return (S0(f0), p0);
- *         }
- *         function eq1(S0 memory a, S0 memory b) internal pure returns (bool) {
- *             if (!eq2(a.f0, b.f0)) return false;
- *             return true;
- *         }
- *         function encodeValue(bytes memory tape) public pure returns (bytes memory) {
- *             uint8 v0;
- *             S0 memory v1;
- *             uint p = 0;
- *             (v0, p) = build0(tape, p);
- *             (v1, p) = build1(tape, p);
- *             return abi.encode(v0, v1);
- *         }
- *         function roundTripEquals(bytes memory tape) public pure returns (bool) {
- *             // ... same prologue ...
- *             (uint8 w0, S0 memory w1) = abi.decode(abi.encode(v0, v1), (uint8, S0));
- *             return eq0(v0, w0) && eq1(v1, w1);
- *         }
- *         function renormalize(bytes memory input) public pure returns (bytes memory) {
- *             (uint8 v0, S0 memory v1) = abi.decode(input, (uint8, S0));
- *             return abi.encode(v0, v1);
- *         }
- *     }
  */
 #include <test/EVMHost.h>
 
@@ -90,7 +46,6 @@
 
 #include <libsolutil/Common.h>
 #include <libsolutil/CommonData.h>
-#include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Numeric.h>
 #include <libsolutil/Whiskers.h>
 
@@ -820,7 +775,7 @@ std::string buildTupleStatements(TypeNamer& _namer, ValueBuilder& _builder, std:
 std::string encodeValueFunction(TypeNamer& _namer, ValueBuilder& _builder, std::vector<TypePointer> const& _types)
 {
 	return
-		"\tfunction encodeValue(bytes memory tape) public pure returns (bytes memory) {\n" +
+		"\tfunction encodeValue(bytes memory tape) internal pure returns (bytes memory) {\n" +
 		buildTupleStatements(_namer, _builder, _types) +
 		"\t\treturn abi.encode(" + variableList(_types.size(), "v") + ");\n"
 		"\t}\n";
@@ -848,12 +803,25 @@ std::string roundTripEqualsFunction(
 		conjunction += (conjunction.empty() ? "" : " && ") + comparison;
 
 	return
-		"\tfunction roundTripEquals(bytes memory tape) public " + _mutability + " returns (bool) {\n" +
+		"\tfunction roundTripEquals(bytes memory tape) internal " + _mutability + " returns (bool) {\n" +
 		buildTupleStatements(_namer, _builder, _types) +
 		"\t\t(" + variableDeclarations(_namer, _types, "memory", "w") + ") = " + _transport + ";\n"
 		"\t\treturn " + conjunction + ";\n"
 		"\t}\n";
 }
+
+/// The contract's only external entry point. Solidity hands a non-empty fallback the entire calldata undecoded
+/// and returns its result uninterpreted -- no selector, no offset, no length prefix, no padding -- so the harness
+/// side of this test needs to know nothing about how values are encoded. The leading byte selecting the mode is
+/// this test's own convention, not part of any ABI.
+std::string const rawDispatcher = R"(	fallback(bytes calldata input) external returns (bytes memory) {
+		bytes memory payload = input[1:];
+		if (uint8(input[0]) == 0) return encodeValue(payload);
+		if (uint8(input[0]) == 1) return renormalize(payload);
+		if (roundTripEquals(payload)) return hex"01";
+		return hex"00";
+	}
+)";
 
 std::string const sourceHeader = "// SPDX-License-Identifier: GPL-3.0\npragma abicoder v2;\n";
 
@@ -885,10 +853,11 @@ StringMap memoryRoundTripSources(std::vector<TypePointer> const& _types)
 			checker.definitions() +
 			encodeValue +
 			roundTripEquals +
-			"\tfunction renormalize(bytes memory input) public pure returns (bytes memory) {\n"
+			"\tfunction renormalize(bytes memory input) internal pure returns (bytes memory) {\n"
 			"\t\t(" + decoded + ") = abi.decode(input, (" + types + "));\n"
 			"\t\treturn abi.encode(" + values + ");\n"
-			"\t}\n"
+			"\t}\n" +
+			rawDispatcher +
 			"}\n"
 		},
 	};
@@ -938,11 +907,12 @@ StringMap callRoundTripSources(std::vector<TypePointer> const& _types)
 			checker.definitions() +
 			encodeValue +
 			roundTripEquals +
-			"\tfunction renormalize(bytes memory input) public view returns (bytes memory) {\n"
+			"\tfunction renormalize(bytes memory input) internal view returns (bytes memory) {\n"
 			"\t\t(" + decoded + ") = abi.decode(input, (" + types + "));\n"
 			"\t\t(" + results + ") = callee.identity(" + variableList(_types.size(), "v") + ");\n"
 			"\t\treturn abi.encode(" + variableList(_types.size(), "r") + ");\n"
-			"\t}\n"
+			"\t}\n" +
+			rawDispatcher +
 			"}\n"
 		},
 	};
@@ -1012,32 +982,8 @@ evmc_message baseMessage(bytes const& _input)
 	return message;
 }
 
-bytes zeroPadRight(bytes _data)
-{
-	if (_data.size() % 32 != 0)
-		_data.resize(_data.size() + 32 - _data.size() % 32, 0);
-	solAssert(_data.size() % 32 == 0);
-	return _data;
-}
-
-/// `abi.encode` of a single `bytes` argument.
-bytes encodeBytesArgument(bytes const& _data)
-{
-	return toBigEndian(u256(32)) + toBigEndian(u256(_data.size())) + zeroPadRight(_data);
-}
-
-/// Inverse of `encodeBytesArgument`, accepting only the canonical encoding the compiler produces.
-std::optional<bytes> decodeBytesReturnValue(bytes const& _returnData)
-{
-	if (_returnData.size() < 64)
-		return std::nullopt;
-	if (fromBigEndian<u256>(bytes(_returnData.begin(), _returnData.begin() + 32)) != 32)
-		return std::nullopt;
-	u256 const length = fromBigEndian<u256>(bytes(_returnData.begin() + 32, _returnData.begin() + 64));
-	if (length > _returnData.size() - 64)
-		return std::nullopt;
-	return bytes(_returnData.begin() + 64, _returnData.begin() + 64 + static_cast<std::ptrdiff_t>(length));
-}
+/// The modes the generated `fallback` dispatches on.
+enum class Mode: std::uint8_t { EncodeValue = 0, Renormalize = 1, RoundTripEquals = 2 };
 
 struct CallResult
 {
@@ -1045,15 +991,16 @@ struct CallResult
 	std::string failure;
 };
 
-/// Calls a `function (bytes) returns (...)` on an already deployed contract, yielding the raw return data.
-CallResult callWithTape(
+/// Sends @param _payload to the contract's fallback and hands back its return data. Both directions are raw:
+/// the fallback receives the calldata undecoded and its result is returned uninterpreted.
+CallResult callRaw(
 	solidity::test::EVMHost& _host,
 	evmc::address const& _address,
-	std::string const& _signature,
-	bytes const& _argument
+	Mode const _mode,
+	bytes const& _payload
 )
 {
-	bytes const input = util::selectorFromSignatureH32(_signature).asBytes() + encodeBytesArgument(_argument);
+	bytes const input = bytes{static_cast<uint8_t>(_mode)} + _payload;
 	evmc_message message = baseMessage(input);
 	message.kind = EVMC_CALL;
 	message.recipient = _address;
@@ -1061,51 +1008,13 @@ CallResult callWithTape(
 
 	evmc::Result const result = _host.call(message);
 	if (result.status_code != EVMC_SUCCESS)
-		return {std::nullopt, _signature + " failed with status " + std::to_string(result.status_code)};
+		return {
+			std::nullopt,
+			"Call in mode " + std::to_string(static_cast<int>(_mode)) +
+			" failed with status " + std::to_string(result.status_code)
+		};
 
 	return {bytes(result.output_data, result.output_data + result.output_size), {}};
-}
-
-/// Calls a `function (bytes) returns (bytes)` on an already deployed contract.
-CallResult callBytesFunction(
-	solidity::test::EVMHost& _host,
-	evmc::address const& _address,
-	std::string const& _signature,
-	bytes const& _argument
-)
-{
-	CallResult raw = callWithTape(_host, _address, _signature, _argument);
-	if (!raw.returnValue)
-		return raw;
-
-	std::optional<bytes> returnValue = decodeBytesReturnValue(*raw.returnValue);
-	if (!returnValue)
-		return {std::nullopt, "Malformed `bytes` return value from " + _signature + ": " + util::toHex(*raw.returnValue)};
-	return {std::move(returnValue), {}};
-}
-
-struct BoolCallResult
-{
-	std::optional<bool> returnValue;
-	std::string failure;
-};
-
-/// Calls a `function (bytes) returns (bool)` on an already deployed contract.
-BoolCallResult callBoolFunction(
-	solidity::test::EVMHost& _host,
-	evmc::address const& _address,
-	std::string const& _signature,
-	bytes const& _argument
-)
-{
-	CallResult raw = callWithTape(_host, _address, _signature, _argument);
-	if (!raw.returnValue)
-		return {std::nullopt, raw.failure};
-
-	u256 const word = raw.returnValue->size() == 32 ? fromBigEndian<u256>(*raw.returnValue) : 2;
-	if (word > 1)
-		return {std::nullopt, "Malformed `bool` return value from " + _signature + ": " + util::toHex(*raw.returnValue)};
-	return {word == 1, {}};
 }
 
 struct RoundTripResult
@@ -1134,19 +1043,26 @@ RoundTripResult runRoundTrip(bytes const& _creationCode, bytes const& _tape)
 	if (createResult.status_code != EVMC_SUCCESS)
 		return {{}, {}, false, "Contract creation failed with status " + std::to_string(createResult.status_code)};
 
-	CallResult encoded = callBytesFunction(host, createResult.create_address, "encodeValue(bytes)", _tape);
+	CallResult encoded = callRaw(host, createResult.create_address, Mode::EncodeValue, _tape);
 	if (!encoded.returnValue)
 		return {{}, {}, false, encoded.failure};
 
-	CallResult renormalized = callBytesFunction(host, createResult.create_address, "renormalize(bytes)", *encoded.returnValue);
+	CallResult renormalized = callRaw(host, createResult.create_address, Mode::Renormalize, *encoded.returnValue);
 	if (!renormalized.returnValue)
 		return {*encoded.returnValue, {}, false, renormalized.failure};
 
-	BoolCallResult const equal = callBoolFunction(host, createResult.create_address, "roundTripEquals(bytes)", _tape);
+	CallResult const equal = callRaw(host, createResult.create_address, Mode::RoundTripEquals, _tape);
 	if (!equal.returnValue)
 		return {*encoded.returnValue, *renormalized.returnValue, false, equal.failure};
+	if (equal.returnValue->size() != 1 || equal.returnValue->front() > 1)
+		return {
+			*encoded.returnValue,
+			*renormalized.returnValue,
+			false,
+			"Expected a single status byte, got " + util::toHex(*equal.returnValue)
+		};
 
-	return {std::move(*encoded.returnValue), std::move(*renormalized.returnValue), *equal.returnValue, {}};
+	return {std::move(*encoded.returnValue), std::move(*renormalized.returnValue), equal.returnValue->front() == 1, {}};
 }
 
 // ---------------------------------------------------------------------------------------------------------------
