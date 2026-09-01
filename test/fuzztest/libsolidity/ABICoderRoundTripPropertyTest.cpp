@@ -525,7 +525,8 @@ std::string variableList(std::size_t const _count, std::string const& _prefix)
 /// length, so a builder can always read as much as it needs and never has to reject what it was given. The
 /// byte-string lengths come out of a table rather than a range, because the ones around a word boundary are
 /// where the padding and the tail offsets that follow have to be got right.
-std::string const tapeHelpers = util::Whiskers(R"(	function readByte(bytes memory t, uint p) internal pure returns (uint8, uint) {
+std::string const tapeHelpers = util::Whiskers(R"(
+	function readByte(bytes memory t, uint p) internal pure returns (uint8, uint) {
 		return (uint8(t[p % t.length]), p + 1);
 	}
 	function readWord(bytes memory t, uint p) internal pure returns (uint256 w, uint) {
