@@ -72,6 +72,7 @@
 #include <libsolutil/CommonData.h>
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Numeric.h>
+#include <libsolutil/Whiskers.h>
 
 #include <fuzztest/fuzztest.h>
 #include <gtest/gtest.h>
@@ -521,38 +522,40 @@ std::string variableList(std::size_t const _count, std::string const& _prefix)
 }
 
 /// Read by every generated builder. `t` is the tape and `p` a cursor into it; the tape is indexed modulo its
-/// length, so a builder can always read as much as it needs and never has to reject what it was given.
-std::string const tapeHelpers =
-	"\tfunction readByte(bytes memory t, uint p) internal pure returns (uint8, uint) {\n"
-	"\t\treturn (uint8(t[p % t.length]), p + 1);\n"
-	"\t}\n"
-	"\tfunction readWord(bytes memory t, uint p) internal pure returns (uint256 w, uint) {\n"
-	"\t\tfor (uint i = 0; i < 32; i++) {\n"
-	"\t\t\tuint8 b;\n"
-	"\t\t\t(b, p) = readByte(t, p);\n"
-	"\t\t\tw = (w << 8) | b;\n"
-	"\t\t}\n"
-	"\t\treturn (w, p);\n"
-	"\t}\n"
-	"\tfunction readArrayLength(bytes memory t, uint p) internal pure returns (uint, uint) {\n"
-	"\t\tuint8 b;\n"
-	"\t\t(b, p) = readByte(t, p);\n"
-	"\t\treturn (b % " + std::to_string(maxArrayLength + 1) + ", p);\n"
-	"\t}\n"
-	// The lengths around a word boundary are the ones where the padding and the tail offsets that follow have to
-	// be got right, so they are drawn out of a table rather than uniformly.
-	"\tfunction readBytes(bytes memory t, uint p) internal pure returns (bytes memory r, uint) {\n"
-	"\t\tuint16[12] memory lengths = [uint16(0), 1, 2, 31, 32, 33, 63, 64, 65, 95, 96, 97];\n"
-	"\t\tuint8 b;\n"
-	"\t\t(b, p) = readByte(t, p);\n"
-	"\t\tr = new bytes(lengths[b % 12]);\n"
-	"\t\tfor (uint i = 0; i < r.length; i++) {\n"
-	"\t\t\tuint8 v;\n"
-	"\t\t\t(v, p) = readByte(t, p);\n"
-	"\t\t\tr[i] = bytes1(v);\n"
-	"\t\t}\n"
-	"\t\treturn (r, p);\n"
-	"\t}\n";
+/// length, so a builder can always read as much as it needs and never has to reject what it was given. The
+/// byte-string lengths come out of a table rather than a range, because the ones around a word boundary are
+/// where the padding and the tail offsets that follow have to be got right.
+std::string const tapeHelpers = util::Whiskers(R"(	function readByte(bytes memory t, uint p) internal pure returns (uint8, uint) {
+		return (uint8(t[p % t.length]), p + 1);
+	}
+	function readWord(bytes memory t, uint p) internal pure returns (uint256 w, uint) {
+		for (uint i = 0; i < 32; i++) {
+			uint8 b;
+			(b, p) = readByte(t, p);
+			w = (w << 8) | b;
+		}
+		return (w, p);
+	}
+	function readArrayLength(bytes memory t, uint p) internal pure returns (uint, uint) {
+		uint8 b;
+		(b, p) = readByte(t, p);
+		return (b % <arrayLengthCount>, p);
+	}
+	function readBytes(bytes memory t, uint p) internal pure returns (bytes memory r, uint) {
+		uint16[12] memory lengths = [uint16(0), 1, 2, 31, 32, 33, 63, 64, 65, 95, 96, 97];
+		uint8 b;
+		(b, p) = readByte(t, p);
+		r = new bytes(lengths[b % lengths.length]);
+		for (uint i = 0; i < r.length; i++) {
+			uint8 v;
+			(v, p) = readByte(t, p);
+			r[i] = bytes1(v);
+		}
+		return (r, p);
+	}
+)")
+	("arrayLengthCount", std::to_string(maxArrayLength + 1))
+	.render();
 
 /// Emits one Solidity function per type, building a value of it off the tape.
 class ValueBuilder
