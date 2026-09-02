@@ -54,10 +54,12 @@
 
 #include <cstdint>
 #include <cstdlib>
+#include <iostream>
 #include <limits>
 #include <map>
 #include <memory>
 #include <optional>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -937,6 +939,7 @@ struct CompilationResult
 	std::string errors;
 	/// A known limit of the code generator rather than anything to do with the ABI, so the input is skipped.
 	bool stackTooDeep = false;
+	std::string stackTooDeepMessage;
 };
 
 CompilationResult compileContract(StringMap const& _sources, bool const _optimize)
@@ -951,9 +954,9 @@ CompilationResult compileContract(StringMap const& _sources, bool const _optimiz
 		if (!compiler.compile())
 			return {{}, langutil::SourceReferenceFormatter::formatErrorInformation(compiler.errors(), compiler), false};
 	}
-	catch (yul::StackTooDeepError const&)
+	catch (yul::StackTooDeepError const& _error)
 	{
-		return {{}, {}, true};
+		return {{}, {}, true, _error.comment() ? *_error.comment() : "Stack too deep."};
 	}
 
 	return {compiler.object("C").bytecode, {}, false};
@@ -1080,14 +1083,23 @@ void checkRoundTrip(StringMap const& _sources, bool const _optimize, TypedTape c
 	std::vector<std::string> signatures;
 	for (TypePointer const& type: _typedTape.types)
 		signatures.push_back(signatureOf(*type));
-	std::string const context =
+	std::string const contract =
 		"tuple: (" + commaSeparated(signatures) + ")\n" +
-		"tape: " + util::toHex(_typedTape.tape) + "\n" +
+		"optimize: " + (_optimize ? "true" : "false") + "\n" +
 		sourcesToString(_sources);
+	std::string const context = contract + "tape: " + util::toHex(_typedTape.tape) + "\n";
 
 	CompilationResult const& compilation = compileContractCached(_sources, _optimize);
 	if (compilation.stackTooDeep)
+	{
+		static std::set<std::string> reported;
+		if (reported.insert(contract).second)
+			std::cerr
+				<< "Skipping an input the via-IR code generator cannot compile.\n"
+				<< compilation.stackTooDeepMessage << "\n"
+				<< contract << std::endl;
 		return;
+	}
 	ASSERT_TRUE(compilation.errors.empty()) << "Compilation failed.\n" << compilation.errors << context;
 
 	RoundTripResult const execution = runRoundTrip(compilation.creationCode, _typedTape.tape);
