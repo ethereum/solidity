@@ -439,9 +439,7 @@ private:
 		if (m_stack.empty())
 			return std::nullopt;
 
-		// the desired offset for the slot bound for each destination with `empty` where no slot is bound for
-		// the destination (those slots are generated later, so the entry is never consulted)
-		std::vector desiredOffsetByDestination(m_target.size(), empty);
+		std::vector permutation(m_data.size(), empty);
 		// offsets whose target values will be generated later
 		std::vector<std::size_t> holes;
 		std::vector<std::size_t> parked;
@@ -455,11 +453,11 @@ private:
 			// can't serve the destination yet
 			bool const isParked = destination >= m_data.size();
 			if (!isParked)  // the destination can be served
-				desiredOffsetByDestination[destination.value] = destination.value;
+				permutation[pos.value] = destination.value;
 			if (isParked && isHole)  // parked and already standing in a hole, doesn't need to move (for now)
-				desiredOffsetByDestination[destination.value] = pos.value;
+				permutation[pos.value] = pos.value;
 			if (isParked && !isHole)  // parked but in the way: needs a free hole to wait in
-				parked.push_back(destination.value);
+				parked.push_back(pos.value);
 			if (!isParked && isHole)  // a free hole; an occupied one is not on offer for the parked slots below
 				holes.push_back(pos.value);
 		}
@@ -470,8 +468,8 @@ private:
 		yulAssert(parked.size() == holes.size());
 		ranges::sort(parked);
 		for (std::size_t i = 0; i < holes.size(); ++i)
-			desiredOffsetByDestination[parked[i]] = holes[i];
-		return permute(std::move(desiredOffsetByDestination));
+			permutation[parked[i]] = holes[i];
+		return permute(permutation);
 	}
 
 	/// Builds the target bottom-up. Every offset either holds its slot already, gets a retained slot that is
@@ -485,9 +483,10 @@ private:
 			if (m_pendingGenerations == 0)
 			{
 				yulAssert(m_data.size() == m_target.size());
-				// every slot goes to the offset it is bound for, so the desired offset of each destination
-				// is that destination itself
-				return permute(ranges::views::iota(std::size_t{0}, m_target.size()) | ranges::to<std::vector>);
+				// every slot goes to the offset it is bound for
+				return permute(ranges::views::iota(std::size_t{0}, m_target.size())
+					| ranges::views::transform([&](std::size_t i) { return destinationOf(StackOffset{i}).value().value; })
+					| ranges::to<std::vector>());
 			}
 
 			// a target offset that needs something DUPed urgently before it goes out of dup reach
@@ -625,15 +624,10 @@ private:
 		return buildBottomUp();
 	}
 
-	/// Brings every slot to the offset `_desiredOffsetByDestination` assigns to its destination
-	[[nodiscard]] std::optional<Blocked> permute(std::vector<std::size_t> _desiredOffsetByDestination)
+	[[nodiscard]] std::optional<Blocked> permute(std::vector<std::size_t> _permutation)
 	{
-		// the desired offset of the slot at `_pos`, looked up under the destination it is bound for
 		auto const desiredOf = [&](std::size_t const _pos) -> std::size_t& {
-			Destination const& destination = destinationOf(StackOffset{_pos});
-			// every slot has a destination at this point, surplus is gone before any permutation
-			yulAssert(destination.has_value());
-			return _desiredOffsetByDestination[destination->value];
+			return _permutation[_pos];
 		};
 
 		// Equal slots are interchangeable: among them, those already at one of their desired offsets stay, the
@@ -678,6 +672,19 @@ private:
 					desiredOf(movers[i]) = vacant[i];
 			}
 		}
+
+		auto exchangeWithTop = [this, &_permutation](StackOffset const _pos) -> std::optional<Blocked>
+		{
+			StackOffset const top{m_data.size() - 1};
+			if (m_data[_pos.value] == m_data[top.value])
+				m_mapping.swapDestinations(_pos, top);
+			else if (!isSwapReachable(_pos))
+				return blockSwapUnreachable(_pos);
+			else
+				swapWith(_pos);
+			std::swap(_permutation[_pos.value], _permutation[top.value]);
+			return std::nullopt;
+		};
 
 		while (true)
 		{
@@ -760,19 +767,6 @@ private:
 	{
 		m_stack.swap(_pos);
 		m_mapping.swapDestinations(_pos, StackOffset{m_data.size() - 1});
-	}
-
-	/// Exchange the top with the slot at `_pos`
-	[[nodiscard]] std::optional<Blocked> exchangeWithTop(StackOffset const _pos)
-	{
-		StackOffset const top{m_data.size() - 1};
-		if (m_data[_pos.value] == m_data[top.value])
-			m_mapping.swapDestinations(_pos, top);
-		else if (!isSwapReachable(_pos))
-			return blockSwapUnreachable(_pos);
-		else
-			swapWith(_pos);
-		return std::nullopt;
 	}
 
 	void pop()
