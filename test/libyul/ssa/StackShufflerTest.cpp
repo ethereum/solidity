@@ -483,7 +483,7 @@ Lines starting with // are comments. Comments at the end of lines are supported,
 		oss << "Plan:";
 		for (auto const& source: shuffleResult.sourceOf)
 			if (source)
-				oss << ' ' << *source;
+				oss << ' ' << source->value;
 			else
 				oss << " gen";
 		oss << "\nStatus: Admissible\n";

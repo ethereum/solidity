@@ -39,7 +39,7 @@ struct ShuffleResult
 	Status status = Status::Admissible;
 	ShuffleTrace trace{};
 	/// The plan: for every target offset the source offset that serves it; generated offsets are empty
-	std::vector<std::optional<std::size_t>> sourceOf{};
+	std::vector<std::optional<StackOffset>> sourceOf{};
 };
 
 /// Shuffles `_source` positionally to `_target` (junk slots in the target are wildcards) and returns the trace of

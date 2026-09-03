@@ -248,13 +248,13 @@ void checkShuffleProperties(
 	// every non-generated target offset is mapped to by an initial source offset holding the demanded slot (wildcards accept anything)
 	ASSERT_EQ(result.sourceOf.size(), target.size());
 	for (std::size_t targetOffset = 0; targetOffset < target.size(); ++targetOffset)
-		if (std::optional<std::size_t> const sourceOffset = result.sourceOf[targetOffset])
+		if (std::optional<StackOffset> const sourceOffset = result.sourceOf[targetOffset])
 		{
-			ASSERT_LT(*sourceOffset, initial.size());
+			ASSERT_LT(sourceOffset->value, initial.size());
 			if (!target[targetOffset].isJunk())
-				ASSERT_TRUE(initial[*sourceOffset] == target[targetOffset])
+				ASSERT_TRUE(initial[sourceOffset->value] == target[targetOffset])
 					<< "plan serves " << slotToString(target[targetOffset])
-					<< " from " << slotToString(initial[*sourceOffset]);
+					<< " from " << slotToString(initial[sourceOffset->value]);
 		}
 }
 
