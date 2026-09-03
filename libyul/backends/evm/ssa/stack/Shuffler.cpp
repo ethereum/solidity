@@ -305,8 +305,7 @@ public:
 		m_maxSwapDepth(_maxSwapDepth),
 		m_maxDupDepth(_maxDupDepth),
 		m_data(_source),
-		m_mapping(_mapping),
-		m_generated(_target.size(), false)
+		m_mapping(_mapping)
 	{
 		m_pendingGenerations = static_cast<std::size_t>(ranges::count_if(
 			ranges::views::iota(std::size_t{0}, _target.size()),
@@ -400,8 +399,7 @@ private:
 			return blockDupUnreachable(*copy);
 		else
 			yulAssert(false, "generated slot has no copy on the stack and is not spilled");
-		yulAssert(!m_generated[_targetOffset.value] && !m_plannedMapping.positionOf(_targetOffset).has_value());
-		m_generated[_targetOffset.value] = true;
+		yulAssert(m_mapping.positionOf(_targetOffset) == StackOffset{m_data.size() - 1});
 		--m_pendingGenerations;
 		return std::nullopt;
 	}
@@ -475,10 +473,16 @@ private:
 	/// Builds the target bottom-up. Every offset either holds its slot already, gets a retained slot that is
 	/// floating above it, or gets a freshly generated slot.
 	/// Once everything is generated the rest is one final permutation.
+	///
+	/// Loop invariant: every offset below `targetOffset` is final, i.e., holds the slot bound for it.
 	[[nodiscard]] std::optional<Blocked> buildBottomUp()
 	{
 		for (StackOffset targetOffset{0}; targetOffset < m_target.size(); ++targetOffset.value)
 		{
+			// the offset exists and already holds the slot bound for it: nothing to do
+			if (targetOffset < m_data.size() && isFinal(targetOffset))
+				continue;
+
 			// all is generated, the final permutation
 			if (m_pendingGenerations == 0)
 			{
@@ -493,8 +497,8 @@ private:
 			std::optional<StackOffset> urgentToDup;
 			for (StackOffset offset = targetOffset; offset < m_target.size(); ++offset.value)  // going bottom-up so we can start from targetOffset
 			{
-				// only slots that are not generated and don't have a source assigned (ie need to be duped) can be urgent
-				if (m_plannedMapping.positionOf(offset).has_value() || m_generated[offset.value])
+				// only offsets no slot is bound for yet (ie that need to be duped) can be urgent
+				if (m_mapping.positionOf(offset).has_value())
 					continue;
 				StackSlot const& slot = m_target[offset.value];
 				if (slot.isJunk() || canBeFreelyGenerated(slot) || isSpilled(slot, m_spills))
@@ -530,8 +534,7 @@ private:
 				!urgentToDup &&  // nothing urgent
 				sourceTop > targetOffset &&  // the new top sits above the current targetOffset
 				sourceTop < m_target.size()	&&  // the new top is in the target offset range
-				!m_plannedMapping.positionOf(sourceTop).has_value() &&   // the target at the source top pos needs a dup
-				!m_generated[sourceTop.value] &&  // and it's also not generated
+				!m_mapping.positionOf(sourceTop).has_value() &&  // no slot is bound for the offset at the source top yet
 				sourceTop.value - targetOffset.value < m_maxSwapDepth  // targetOffset stays in swap reach
 			)
 			{
@@ -544,8 +547,7 @@ private:
 			}
 
 			if (
-				m_plannedMapping.positionOf(targetOffset).has_value() ||  // there is a proper source slot for the target
-				m_generated[targetOffset.value]  // or it's generated (pushed/loaded etc)
+				m_mapping.positionOf(targetOffset).has_value()  // a slot is bound for the target: retained or generated already
 			)
 			{
 				// We go bottom-up, so the slot that should go into targetOffset is somewhere above
@@ -626,10 +628,6 @@ private:
 
 	[[nodiscard]] std::optional<Blocked> permute(std::vector<std::size_t> _permutation)
 	{
-		auto const desiredOf = [&](std::size_t const _pos) -> std::size_t& {
-			return _permutation[_pos];
-		};
-
 		// Equal slots are interchangeable: among them, those already at one of their desired offsets stay, the
 		// others take the remaining offsets. Otherwise equal slots would pass each other in cycles.
 		{
@@ -648,20 +646,23 @@ private:
 				if (ranges::distance(group) < 2)
 					continue;
 				// the group's desired offsets
-				std::vector<std::size_t> desired = group | ranges::views::transform(desiredOf) | ranges::to<std::vector>;
+				std::vector<std::size_t> desired =
+					group |
+					ranges::views::transform([&_permutation](std::size_t const _pos) { return _permutation[_pos]; }) |
+					ranges::to<std::vector>;
 				// sorted needed for set operations
 				ranges::sort(desired);
 				// slots already standing on one of the group's desired offsets stay put
-				// stayers = group \cap desired => desiredOf(pos) = pos
+				// stayers = group \cap desired => _permutation[pos] = pos
 				std::vector<std::size_t> stayers;
 				ranges::set_intersection(group, desired, std::back_inserter(stayers));
 				for (std::size_t const pos: stayers)
-					desiredOf(pos) = pos;
+					_permutation[pos] = pos;
 				// the others take the vacant offsets, both sides ascending, so nothing crosses
 				// movers = group ∖ desired
 				std::vector<std::size_t> movers;
 				ranges::set_difference(group, desired, std::back_inserter(movers));
-				// vacant = desired ∖ group => desiredOf(movers[i]) = vacant[i]
+				// vacant = desired ∖ group => _permutation[movers[i]] = vacant[i]
 				std::vector<std::size_t> vacant;
 				ranges::set_difference(desired, group, std::back_inserter(vacant));
 
@@ -669,7 +670,7 @@ private:
 				// |movers| =  |G ∖ D| = |G| − |G \cap D| and |vacant| = |D ∖ G| = |D| − |D \cap G|
 				yulAssert(movers.size() == vacant.size());
 				for (std::size_t i = 0; i < movers.size(); ++i)
-					desiredOf(movers[i]) = vacant[i];
+					_permutation[movers[i]] = vacant[i];
 			}
 		}
 
@@ -690,7 +691,7 @@ private:
 		{
 			std::size_t const top = m_data.size() - 1;
 			if (
-				StackOffset const desiredOfTop{desiredOf(top)};
+				StackOffset const desiredOfTop{_permutation[top]};
 				desiredOfTop != top
 			)
 			{
@@ -701,7 +702,7 @@ private:
 			}
 			StackOffset misplaced{empty};
 			for (std::size_t const pos: ranges::views::iota(std::size_t{0}, top) | ranges::views::reverse)
-				if (desiredOf(pos) != pos)  // not already in place
+				if (_permutation[pos] != pos)  // not already in place
 				{
 					misplaced = StackOffset{pos};  // we found something misplaced
 					break;
@@ -765,6 +766,7 @@ private:
 	/// Swaps the top with the slot at `_pos`, the destinations traveling along
 	void swapWith(StackOffset const _pos)
 	{
+		yulAssert(!isFinal(_pos), "swapping a final slot out of place");
 		m_stack.swap(_pos);
 		m_mapping.swapDestinations(_pos, StackOffset{m_data.size() - 1});
 	}
@@ -816,8 +818,6 @@ private:
 	/// The working stack and its (in sync) mapping
 	StackData m_data;
 	Mapping m_mapping;
-	/// Whether the slot for each target offset has been produced already
-	std::vector<std::uint8_t> m_generated;
 	/// Number of target offsets whose slot still has to be produced; decremented by `produce`
 	std::size_t m_pendingGenerations = 0;
 	ShuffleTrace m_trace;
