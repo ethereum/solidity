@@ -1248,14 +1248,18 @@ jobs:
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
     steps:
-      - install_dependencies_osx
+      - run:
+          name: Install test dependencies
+          command: .circleci/osx_install_test_dependencies.sh
       - soltest
 
   t_osx_cli:
     <<: *base_osx
     parallelism: 8 # Should match number of tests in .circleci/parallel_cli_tests.py
     steps:
-      - install_dependencies_osx
+      - run:
+          name: Install test dependencies
+          command: .circleci/osx_install_test_dependencies.sh
       - cmdline_tests
 
   b_ems:
