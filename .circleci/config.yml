@@ -1248,26 +1248,15 @@ jobs:
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
     steps:
-      - checkout
       - install_dependencies_osx
-      - attach_workspace:
-          at: build
-      - run_soltest
-      - store_test_results:
-          path: test_results/
-      - store_artifacts_test_results
-      - matrix_notify_failure_unless_pr
+      - soltest
 
   t_osx_cli:
     <<: *base_osx
     parallelism: 8 # Should match number of tests in .circleci/parallel_cli_tests.py
     steps:
-      - checkout
       - install_dependencies_osx
-      - attach_workspace:
-          at: build
-      - run_cmdline_tests
-      - matrix_notify_failure_unless_pr
+      - cmdline_tests
 
   b_ems:
     <<: *base_ems_large
