@@ -1094,8 +1094,12 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 						")\n";
 				else if (auto functionType = dynamic_cast<FunctionType const*>(paramTypes[i]))
 				{
+					// The argument's type may differ from the parameter type by an implicit
+					// conversion (e.g. payable to non-payable). This does not affect the runtime
+					// representation of an external function value (address, selector), so no
+					// actual conversion has to happen here.
 					solAssert(
-						IRVariable(arg).type() == *functionType &&
+						IRVariable(arg).type().isImplicitlyConvertibleTo(*functionType) &&
 						functionType->kind() == FunctionType::Kind::External &&
 						!functionType->hasBoundFirstArgument(),
 						""
