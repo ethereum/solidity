@@ -1026,6 +1026,8 @@ jobs:
   t_ubu_pyscripts:
     <<: *base_ubuntu2404_small
     steps:
+      - install_python3:
+          packages: pyyaml
       - checkout
       - run:
           name: Python unit tests
@@ -1042,7 +1044,7 @@ jobs:
       - checkout
       - run:
           name: Install dependencies
-          command: python -m pip install --user requests parsec tabulate
+          command: python -m pip install --user requests parsec tabulate pyyaml
       - run:
           name: Python unit tests
           command: python.exe test/pyscriptTests.py

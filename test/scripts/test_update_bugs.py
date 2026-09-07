@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+"""Tests for the known-bugs YAML to JSON generator."""
+
 import json
 import tempfile
 import unittest
@@ -9,7 +11,10 @@ import update_bugs
 
 
 class UpdateBugsTest(unittest.TestCase):
+    """Test generation of the JSON bug list from YAML."""
+
     def test_generates_equivalent_json(self):
+        """Verify that generated JSON preserves the existing bug data."""
         bugs_yaml = Path(__file__).parent.parent.parent / "docs" / "bugs.yaml"
         expected_json = Path(__file__).parent.parent.parent / "docs" / "bugs.json"
 

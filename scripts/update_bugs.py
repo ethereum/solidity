@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+"""Generate docs/bugs.json from the human-editable YAML bug list."""
+
 import json
 from pathlib import Path
 
@@ -12,6 +14,7 @@ BUGS_JSON = ROOT_PATH / "docs" / "bugs.json"
 
 
 def update_bugs(input_path=BUGS_YAML, output_path=BUGS_JSON):
+    """Generate the JSON bug list from the YAML source."""
     bugs = yaml.safe_load(input_path.read_text(encoding="utf8"))
 
     output_path.write_text(
