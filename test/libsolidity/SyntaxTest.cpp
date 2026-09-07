@@ -57,7 +57,8 @@ SyntaxTestSettings SyntaxTestSettings::fromReader(TestCaseReader& _reader)
 		"also"
 	);
 	settings.optimizeYul = _reader.boolSetting("optimize-yul", true);
-	settings.experimental = _reader.boolSetting("experimental", false);
+	settings.compileViaSSACFG = _reader.boolSetting("compileViaSSACFG", true);
+	settings.experimental = _reader.boolSetting("experimental", settings.compileViaSSACFG);
 	settings.stopAfter = _reader.enumSetting<PipelineStage>(
 		"stopAfter",
 		{
@@ -78,6 +79,7 @@ void SyntaxTest::setupCompiler(CompilerStack& _compiler)
 	_compiler.setEVMVersion(m_compilerInput.evmVersion);
 	_compiler.setOptimiserSettings(m_compilerInput.optimiserSettings);
 	_compiler.setViaIR(m_compilerInput.viaIR);
+	_compiler.setViaSSACFG(m_compilerInput.viaSSACFG);
 	_compiler.setExperimental(m_compilerInput.experimental);
 	_compiler.setMetadataFormat(m_compilerInput.metadataFormat);
 	_compiler.setMetadataHash(m_compilerInput.metadataHash);
@@ -112,6 +114,7 @@ TestCase::TestResult SyntaxTest::run(
 	bool compileViaYul =
 		m_settings.compileViaYul == CompileViaYul::True ||
 		m_settings.compileViaYul == CompileViaYul::Also;
+	bool compileViaSSACFG = m_settings.compileViaSSACFG;
 
 	parseCustomExpectations(m_reader.stream());
 
@@ -119,14 +122,32 @@ TestCase::TestResult SyntaxTest::run(
 	if (compileLegacy)
 	{
 		m_compilerInput.viaIR = false;
+		m_compilerInput.viaSSACFG = false;
 		parseAndAnalyze();
 		result = conclude(_stream, _linePrefix, _formatted);
 	}
 	if (compileViaYul && result == TestResult::Success)
 	{
 		m_compilerInput.viaIR = true;
+		m_compilerInput.viaSSACFG = false;
 		parseAndAnalyze();
 		result = conclude(_stream, _linePrefix, _formatted);
+	}
+	if (compileViaYul && compileViaSSACFG && result == TestResult::Success)
+	{
+		m_compilerInput.viaIR = true;
+		m_compilerInput.viaSSACFG = true;
+		parseAndAnalyze();
+		result = conclude(_stream, _linePrefix, _formatted);
+	}
+
+	if (result != TestResult::Success)
+	{
+		solidity::test::CommonOptions::get().printSelectedOptions(
+			_stream,
+			_linePrefix,
+			{"evmVersion", "optimize", "useABIEncoderV1", "batch"}
+		);
 	}
 
 	return result;

@@ -60,6 +60,7 @@ struct SyntaxTestSettings
 
 	CompileViaYul compileViaYul = CompileViaYul::False;
 	bool optimizeYul = false;
+	bool compileViaSSACFG = false;
 };
 
 class SyntaxTest: public AnalysisFramework, public solidity::test::CommonSyntaxTest

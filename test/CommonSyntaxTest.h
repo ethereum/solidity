@@ -71,6 +71,7 @@ struct CompilerInput
 	langutil::EVMVersion evmVersion;
 	bool experimental = false;
 	bool viaIR = false;
+	bool viaSSACFG = false;
 	OptimiserSettings optimiserSettings;
 	CompilerStack::MetadataFormat metadataFormat = CompilerStack::MetadataFormat::NoMetadata;
 	CompilerStack::MetadataHash metadataHash = CompilerStack::MetadataHash::None;
