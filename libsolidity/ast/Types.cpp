@@ -2763,7 +2763,17 @@ std::string TupleType::richIdentifier() const
 bool TupleType::operator==(Type const& _other) const
 {
 	if (auto tupleType = dynamic_cast<TupleType const*>(&_other))
-		return components() == tupleType->components();
+	{
+		TypePointers const& others = tupleType->components();
+		if (components().size() != others.size())
+			return false;
+		return equal(
+			components().cbegin(),
+			components().cend(),
+			others.cbegin(),
+			[](Type const* _a, Type const* _b) -> bool { return _a == _b || (_a && _b && *_a == *_b); }
+		);
+	}
 	else
 		return false;
 }
