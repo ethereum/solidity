@@ -1,6 +1,7 @@
 #include <test/fuzztest/libyul/SSACFGInterpreter.h>
 
 #include "libsolutil/Visitor.h"
+#include "range/v3/view/zip.hpp"
 
 #include <libyul/backends/evm/ssa/ControlFlowGraphs.h>
 
@@ -9,7 +10,11 @@ using namespace solidity::yul::ssa;
 using namespace solidity::yul::test;
 
 
-SSACFGInterpreter::SSACFGInterpreter(ControlFlowGraphs const& _cfgs): m_cfgs(_cfgs){}
+SSACFGInterpreter::SSACFGInterpreter(ControlFlowGraphs const& _cfgs, InterpreterState _state, bool const _disableMemoryTrace):
+	m_cfgs(_cfgs),
+	m_state(std::move(_state)),
+	m_evmInstructionInterpreter(_cfgs.mainGraph()->evmDialect.evmVersion(), m_state, _disableMemoryTrace)
+{}
 
 std::vector<u256> SSACFGInterpreter::runFunction(SSACFG const& _function, std::vector<u256> const& _arguments)
 {
@@ -102,7 +107,7 @@ void SSACFGInterpreter::executeInstruction(SSACFG const& _function, Frame& _fram
 		_frame.setValue(_function.upsilonPhi(_instId), _frame.value(inst.inputs.front()));
 		break;
 	case InstOpcode::BuiltinCall:
-		// todo
+		executeBuiltinCall(_function, _frame, _instId);
 		break;
 	case InstOpcode::Call:
 		// todo
@@ -135,5 +140,47 @@ void SSACFGInterpreter::executeInstruction(SSACFG const& _function, Frame& _fram
 	case InstOpcode::Tombstone:
 		yulAssert(false, fmt::format("Executed Tombstone slot {}.", _instId));
 		break;
+	}
+}
+
+void SSACFGInterpreter::executeBuiltinCall(SSACFG const& _function, Frame& _frame, InstId const _id)
+{
+	SSACFG::Inst const& inst = _function.inst(_id);
+	SSACFG::BuiltinCall const& payload = _function.builtinPayload(_id);
+	BuiltinFunctionForEVM const& builtin = _function.evmDialect.builtin(payload.builtin);
+
+	std::vector<Expression> arguments;
+	std::vector<u256> evaluated;
+	std::size_t literalIndex = 0;
+	std::size_t inputIndex = 0;
+	for (std::size_t i = 0; i < builtin.numParameters; ++i)
+		if (builtin.literalArgument(i).has_value())
+		{
+			yulAssert(literalIndex < payload.literalArguments.size(), "Missing literal argument in BuiltinCall payload.");
+			Literal const& literal = payload.literalArguments[literalIndex++];
+			arguments.emplace_back(literal);
+			evaluated.push_back(literal.value.unlimited() ? u256(0xdeadbeef) : literal.value.value());
+		}
+		else
+		{
+			yulAssert(inputIndex < inst.inputs.size(), "BuiltinCall has fewer inputs than non-literal parameters.");
+			arguments.emplace_back(Literal{langutil::DebugData::create(), LiteralKind::Number, LiteralValue{u256(0)}});
+			evaluated.push_back(_frame.value(inst.inputs[inputIndex++]));
+		}
+	yulAssert(inputIndex == inst.inputs.size(), "BuiltinCall has more inputs than non-literal parameters.");
+	yulAssert(literalIndex == payload.literalArguments.size(), "BuiltinCall has more literal arguments than literal parameters.");
+
+	u256 const result = m_evmInstructionInterpreter.evalBuiltin(builtin, arguments, evaluated);
+
+	if (builtin.numReturns == 1)
+		_frame.setValue(_id, result);
+	else
+	{
+		yulAssert(false, "the evm instruction interpreter can't handle builtins with multiple return values yet");
+		// todo
+		/*auto const projections = _function.projectionsOf(_id);
+		yulAssert(ranges::distance(projections) == builtin.numReturns);
+		for (auto const [proj, val]: ranges::views::zip(projections, ))
+			_frame.setValue(proj, val);*/
 	}
 }

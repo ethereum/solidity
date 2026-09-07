@@ -1,4 +1,8 @@
 #pragma once
+#include "test/tools/yulInterpreter/EVMInstructionInterpreter.h"
+#include "test/tools/yulInterpreter/Interpreter.h"
+
+
 #include <libsolutil/Numeric.h>
 
 #include <optional>
@@ -17,7 +21,7 @@ namespace solidity::yul::test
 class SSACFGInterpreter
 {
 public:
-	SSACFGInterpreter(ssa::ControlFlowGraphs const& _cfgs);
+	SSACFGInterpreter(ssa::ControlFlowGraphs const& _cfgs, InterpreterState _state, bool _disableMemoryTrace);
 
 	std::vector<u256> runFunction(ssa::SSACFG const& _function, std::vector<u256> const& _arguments);
 private:
@@ -35,8 +39,11 @@ private:
 	};
 
 	void executeInstruction(ssa::SSACFG const& _function, Frame& _frame, ssa::InstId _instId);
+	void executeBuiltinCall(ssa::SSACFG const& _function, Frame& _frame, ssa::InstId _id);
 
 	ssa::ControlFlowGraphs const& m_cfgs;
+	InterpreterState m_state;
+	EVMInstructionInterpreter m_evmInstructionInterpreter;
 };
 
 }
