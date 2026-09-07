@@ -160,7 +160,6 @@
         "introduced": "0.8.11",
         "fixed": "0.8.13",
         "severity": "very low"
-
     },
     {
         "uid": "SOL-2021-4",
@@ -486,7 +485,9 @@
         "link": "https://blog.soliditylang.org/2018/09/13/solidity-bugfix-release/",
         "fixed": "0.4.25",
         "severity": "medium/high",
-        "check": {"regex-source": "[^/]\\*\\* *[^/0-9 ]"}
+        "check": {
+            "regex-source": "[^/]\\*\\* *[^/0-9 ]"
+        }
     },
     {
         "uid": "SOL-2018-3",
@@ -497,7 +498,9 @@
         "introduced": "0.4.17",
         "fixed": "0.4.25",
         "severity": "very low",
-        "check": {"ast-compact-json-path": "$..[?(@.nodeType === 'EventDefinition')]..[?(@.nodeType === 'UserDefinedTypeName' && @.typeDescriptions.typeString.startsWith('struct'))]"}
+        "check": {
+            "ast-compact-json-path": "$..[?(@.nodeType === 'EventDefinition')]..[?(@.nodeType === 'UserDefinedTypeName' && @.typeDescriptions.typeString.startsWith('struct'))]"
+        }
     },
     {
         "uid": "SOL-2018-2",
@@ -508,7 +511,9 @@
         "introduced": "0.1.4",
         "fixed": "0.4.22",
         "severity": "medium",
-        "check": {"regex-source": "returns[^;{]*\\[\\s*[^\\] \\t\\r\\n\\v\\f][^\\]]*\\]\\s*\\[\\s*[^\\] \\t\\r\\n\\v\\f][^\\]]*\\][^{;]*[;{]"}
+        "check": {
+            "regex-source": "returns[^;{]*\\[\\s*[^\\] \\t\\r\\n\\v\\f][^\\]]*\\]\\s*\\[\\s*[^\\] \\t\\r\\n\\v\\f][^\\]]*\\][^{;]*[;{]"
+        }
     },
     {
         "uid": "SOL-2018-1",
