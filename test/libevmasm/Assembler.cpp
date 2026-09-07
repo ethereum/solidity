@@ -404,6 +404,33 @@ BOOST_AUTO_TEST_CASE(immutable)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(immutable_assigned_twice)
+{
+	// Regression test for https://github.com/argotorg/solidity/issues/16811 -
+	// assigning the same immutable twice used to silently drop the second write
+	// (it compiled down to a no-op POP; POP) instead of being rejected.
+	EVMVersion evmVersion = solidity::test::CommonOptions::get().evmVersion();
+	Assembly _assembly{evmVersion, true, {}};
+	_assembly.setSourceLocation({1, 3, std::make_shared<std::string>("root.asm")});
+
+	Assembly _subAsm{evmVersion, false, {}};
+	_subAsm.setSourceLocation({6, 8, std::make_shared<std::string>("sub.asm")});
+	_subAsm.appendImmutable("someImmutable");
+	std::shared_ptr<Assembly> _subAsmPtr = std::make_shared<Assembly>(_subAsm);
+
+	_assembly.append(u256(1));
+	_assembly.append(u256(0));
+	_assembly.appendImmutableAssignment("someImmutable");
+	_assembly.append(u256(2));
+	_assembly.append(u256(0));
+	_assembly.appendImmutableAssignment("someImmutable");
+
+	auto sub = _assembly.appendSubroutine(_subAsmPtr);
+	_assembly.pushSubroutineOffset(SubAssemblyID(sub.data()));
+
+	BOOST_CHECK_THROW(_assembly.assemble(), solidity::evmasm::AssemblyException);
+}
+
 BOOST_AUTO_TEST_CASE(subobject_encode_decode)
 {
 	EVMVersion evmVersion = solidity::test::CommonOptions::get().evmVersion();
