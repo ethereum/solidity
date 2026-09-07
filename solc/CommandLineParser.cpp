@@ -1061,6 +1061,7 @@ void CommandLineParser::processArgs()
 		{g_strModelCheckerContracts, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerDivModNoSlacks, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerEngine, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerExtCalls, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerInvariants, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerPrintQuery, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerShowProvedSafe, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
@@ -1069,7 +1070,6 @@ void CommandLineParser::processArgs()
 		{g_strModelCheckerSolvers, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerTimeout, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerBMCLoopIterations, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
-		{g_strModelCheckerContracts, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerTargets, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strViaSSACFG, {InputMode::Compiler, InputMode::CompilerWithASTImport, InputMode::Assembler}}
 	};
