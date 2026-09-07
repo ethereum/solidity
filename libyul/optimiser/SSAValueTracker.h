@@ -52,6 +52,10 @@ public:
 
 	static std::set<YulName> ssaVariables(Block const& _ast);
 
+	/// Determines whether the given expression and all of its identifier
+	/// dependencies are in Static Single Assignment (SSA) form.
+	bool isSSAWithDependencies(Expression const* _expression) const;
+
 private:
 	void setValue(YulName _name, Expression const* _value);
 
@@ -59,6 +63,8 @@ private:
 	/// YulName does not need to be reset because SSAValueTracker is short-lived.
 	Expression const m_zero{Literal{{}, LiteralKind::Number, LiteralValue(u256{0})}};
 	util::unordered_flat_map<YulName, Expression const*> m_values;
+	/// Cache for isSSAWithDependencies to avoid redundant traversals
+	mutable util::unordered_flat_map<Expression const*, bool> m_isSSACache;
 };
 
 }

@@ -1,5 +1,18 @@
 [
     {
+        "uid": "SOL-2026-4",
+        "name": "UnusedStoreEliminatorNonSSA",
+        "summary": "When the UnusedStoreEliminator optimizer step is run on non-SSA AST form, it may result in incorrect removal of storage or memory writes.",
+        "description": "UnusedStoreEliminator is an optimizer step that removes redundant writes to storage or memory. It uses DataflowAnalyzer to track variables representing read/write offsets and determine if there is an overlap. This tracking relies on the assumption that the code is in the Static Single Assignment (SSA) form, which guarantees that a variable never changes after it has been assigned a value. If such a change were to occur, some of the tracked values could get stale, possibly resulting in some cases of overlap being missed. The compiler's default optimizer sequence runs SSATransform before UnusedStoreEliminator, which normally ensures that this property is satisfied for the Yul variables the step reasons about; the user can also supply a custom sequence that skips SSATransform entirely, and the step has to be prepared to handle that case gracefully (even if not optimally). Separately, even when SSATransform does run, a write and a later read can still alias the same address one loop iteration apart through memory rather than through a shared Yul variable (e.g. a pointer advanced once per iteration, with the value written in iteration N read back through a different variable in iteration N+1); UnusedStoreEliminator's loop handling did not account for this cross-iteration aliasing, so this variant can be triggered by the default optimizer sequence, without any custom step sequence. The step failed to do that, which resulted in certain Yul patterns being incorrectly optimized through the removal of non-redundant writes. The affected patterns are possible in pure Yul and inline assembly and theoretically can happen in contracts built in pure solidity, but it's very unlikely and we haven't found any case where it's possible. The Yul optimizer is invoked in both the legacy and the IR-based code generation pipeline, so contracts can be affected regardless of the selected pipeline: in the IR-based pipeline the whole generated code is Yul, while in the legacy pipeline only inline assembly blocks that do not reference any Solidity-level variables, as well as Yul utility functions the compiler generates internally, are passed through the Yul optimizer.",
+        "link": "https://blog.soliditylang.org/2026/09/02/mstore-removal-without-ssa-transform-bug/",
+        "introduced": "0.8.13",
+        "fixed": "0.8.37",
+        "severity": "low",
+        "conditions": {
+            "yulOptimizer": true
+        }
+    },
+    {
         "uid": "SOL-2026-3",
         "name": "InheritanceOrderReversalOnStorageEndWarning",
         "summary": "Emitting a warning about storage base location being too close to the storage end unintentionally reversed the ``linearizedBaseContracts`` annotation, possibly leading to miscompilation due to reversing the order in which inheritance is resolved.",

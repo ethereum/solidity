@@ -55,7 +55,8 @@ void UnusedStoreEliminator::run(OptimiserStepContext& _context, Block& _ast)
 	ssaValues(_ast);
 	std::map<YulName, AssignedValue> values;
 	for (auto const& [name, expression]: ssaValues.values())
-		values[name] = AssignedValue{expression, {}};
+		if (ssaValues.isSSAWithDependencies(expression))
+			values[name] = AssignedValue{expression, {}};
 
 	bool const ignoreMemory = MSizeFinder::containsMSize(_context.dialect, _ast);
 	UnusedStoreEliminator rse{

@@ -26,6 +26,10 @@
 
 #include <libyul/AST.h>
 
+#include <libsolutil/Visitor.h>
+
+#include <algorithm>
+
 using namespace solidity;
 using namespace solidity::yul;
 
@@ -56,6 +60,38 @@ void SSAValueTracker::operator()(VariableDeclaration const& _varDecl)
 			setValue(var.name, nullptr);
 	else if (_varDecl.variables.size() == 1)
 		setValue(_varDecl.variables.front().name, _varDecl.value.get());
+}
+
+bool SSAValueTracker::isSSAWithDependencies(Expression const* _expression) const
+{
+	if (_expression == nullptr)
+		return true;
+
+	// Check cache first
+	if (
+		auto const cacheIt = m_isSSACache.find(_expression);
+		cacheIt != m_isSSACache.end()
+	)
+		return cacheIt->second;
+
+	bool const result = std::visit(
+		util::GenericVisitor{
+			[&](FunctionCall const& _call) {
+				return std::all_of(_call.arguments.begin(), _call.arguments.end(), [&](Expression const& _argument) {
+					return isSSAWithDependencies(&_argument);
+				});
+			},
+			[&](Identifier const& _identifier) {
+				auto const it = m_values.find(_identifier.name);
+				return it == m_values.end() ? false : isSSAWithDependencies(it->second);
+			},
+			[](Literal const&) { return true; }
+		},
+		*_expression
+	);
+
+	m_isSSACache[_expression] = result;
+	return result;
 }
 
 std::set<YulName> SSAValueTracker::ssaVariables(Block const& _ast)

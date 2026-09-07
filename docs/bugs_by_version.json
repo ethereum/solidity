@@ -1879,6 +1879,7 @@
     },
     "0.8.13": {
         "bugs": [
+            "UnusedStoreEliminatorNonSSA",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication",
@@ -1895,6 +1896,7 @@
     },
     "0.8.14": {
         "bugs": [
+            "UnusedStoreEliminatorNonSSA",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication",
@@ -1909,6 +1911,7 @@
     },
     "0.8.15": {
         "bugs": [
+            "UnusedStoreEliminatorNonSSA",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication",
@@ -1921,6 +1924,7 @@
     },
     "0.8.16": {
         "bugs": [
+            "UnusedStoreEliminatorNonSSA",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication",
@@ -1932,6 +1936,7 @@
     },
     "0.8.17": {
         "bugs": [
+            "UnusedStoreEliminatorNonSSA",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication",
@@ -1942,6 +1947,7 @@
     },
     "0.8.18": {
         "bugs": [
+            "UnusedStoreEliminatorNonSSA",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication",
@@ -1952,6 +1958,7 @@
     },
     "0.8.19": {
         "bugs": [
+            "UnusedStoreEliminatorNonSSA",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication",
@@ -1978,6 +1985,7 @@
     },
     "0.8.20": {
         "bugs": [
+            "UnusedStoreEliminatorNonSSA",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication",
@@ -1988,6 +1996,7 @@
     },
     "0.8.21": {
         "bugs": [
+            "UnusedStoreEliminatorNonSSA",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication"
@@ -1996,6 +2005,7 @@
     },
     "0.8.22": {
         "bugs": [
+            "UnusedStoreEliminatorNonSSA",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication"
@@ -2004,6 +2014,7 @@
     },
     "0.8.23": {
         "bugs": [
+            "UnusedStoreEliminatorNonSSA",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow"
         ],
@@ -2011,6 +2022,7 @@
     },
     "0.8.24": {
         "bugs": [
+            "UnusedStoreEliminatorNonSSA",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow"
         ],
@@ -2018,6 +2030,7 @@
     },
     "0.8.25": {
         "bugs": [
+            "UnusedStoreEliminatorNonSSA",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow"
         ],
@@ -2025,6 +2038,7 @@
     },
     "0.8.26": {
         "bugs": [
+            "UnusedStoreEliminatorNonSSA",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow"
         ],
@@ -2032,6 +2046,7 @@
     },
     "0.8.27": {
         "bugs": [
+            "UnusedStoreEliminatorNonSSA",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow"
         ],
@@ -2039,6 +2054,7 @@
     },
     "0.8.28": {
         "bugs": [
+            "UnusedStoreEliminatorNonSSA",
             "UnsoundSpillInMutualRecursion",
             "TransientStorageClearingHelperCollision",
             "LostStorageArrayWriteOnSlotOverflow"
@@ -2047,6 +2063,7 @@
     },
     "0.8.29": {
         "bugs": [
+            "UnusedStoreEliminatorNonSSA",
             "InheritanceOrderReversalOnStorageEndWarning",
             "UnsoundSpillInMutualRecursion",
             "TransientStorageClearingHelperCollision",
@@ -2071,6 +2088,7 @@
     },
     "0.8.30": {
         "bugs": [
+            "UnusedStoreEliminatorNonSSA",
             "InheritanceOrderReversalOnStorageEndWarning",
             "UnsoundSpillInMutualRecursion",
             "TransientStorageClearingHelperCollision",
@@ -2080,6 +2098,7 @@
     },
     "0.8.31": {
         "bugs": [
+            "UnusedStoreEliminatorNonSSA",
             "InheritanceOrderReversalOnStorageEndWarning",
             "UnsoundSpillInMutualRecursion",
             "TransientStorageClearingHelperCollision",
@@ -2089,6 +2108,7 @@
     },
     "0.8.32": {
         "bugs": [
+            "UnusedStoreEliminatorNonSSA",
             "InheritanceOrderReversalOnStorageEndWarning",
             "UnsoundSpillInMutualRecursion",
             "TransientStorageClearingHelperCollision"
@@ -2097,6 +2117,7 @@
     },
     "0.8.33": {
         "bugs": [
+            "UnusedStoreEliminatorNonSSA",
             "InheritanceOrderReversalOnStorageEndWarning",
             "UnsoundSpillInMutualRecursion",
             "TransientStorageClearingHelperCollision"
@@ -2105,6 +2126,7 @@
     },
     "0.8.34": {
         "bugs": [
+            "UnusedStoreEliminatorNonSSA",
             "InheritanceOrderReversalOnStorageEndWarning",
             "UnsoundSpillInMutualRecursion"
         ],
@@ -2112,13 +2134,16 @@
     },
     "0.8.35": {
         "bugs": [
+            "UnusedStoreEliminatorNonSSA",
             "InheritanceOrderReversalOnStorageEndWarning",
             "UnsoundSpillInMutualRecursion"
         ],
         "released": "2026-04-29"
     },
     "0.8.36": {
-        "bugs": [],
+        "bugs": [
+            "UnusedStoreEliminatorNonSSA"
+        ],
         "released": "2026-07-09"
     },
     "0.8.4": {
