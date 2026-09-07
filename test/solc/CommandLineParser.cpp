@@ -429,6 +429,7 @@ BOOST_AUTO_TEST_CASE(invalid_options_input_modes_combinations)
 		{"--model-checker-show-unsupported", {"--strict-assembly", "--standard-json", "--link", "--import-asm-json"}},
 		{"--model-checker-div-mod-no-slacks", {"--strict-assembly", "--standard-json", "--link", "--import-asm-json"}},
 		{"--model-checker-engine=bmc", {"--strict-assembly", "--standard-json", "--link", "--import-asm-json"}},
+		{"--model-checker-ext-calls=trusted", {"--strict-assembly", "--standard-json", "--link", "--import-asm-json"}},
 		{"--model-checker-invariants=contract,reentrancy", {"--strict-assembly", "--standard-json", "--link", "--import-asm-json"}},
 		{"--model-checker-solvers=z3,smtlib2", {"--strict-assembly", "--standard-json", "--link", "--import-asm-json"}},
 		{"--model-checker-timeout=5", {"--strict-assembly", "--standard-json", "--link", "--import-asm-json"}},
