@@ -1,5 +1,18 @@
 [
     {
+        "uid": "SOL-2026-4",
+        "name": "SpillSlotCollisionAcrossMutualRecursion",
+        "summary": "Local variables of two simultaneously active functions moved to fixed memory offsets by the stack limit evader may be assigned the same offset if the call graph contains mutual recursion, so that one variable is silently overwritten by the other.",
+        "description": "To work around the 16-slot stack access limit of the EVM, the IR-based code generator can, under some preconditions, move local variables to fixed memory offsets. Variables that can never be active at the same time may safely share an offset, so the reserved memory area is sized by a depth-first walk of the call graph that computes for every node the number of slots it and its callees need. To keep this walk from descending infinitely into recursive call chains, the slot count was initialized with zero upon entering it. This provisional zero was observable: a function reached again through a call graph cycle reported an empty footprint to its caller, the caller's count was finalized and cached on that basis, and the undercount propagated to every later caller, including functions outside the cycle. As a result, a function called by such a cycle and a function calling into it could be assigned the same memory slot even though both can be active at the same time. A relocated variable still needed after the call into the cycle returned had then been silently overwritten by the called function, producing wrong results. Triggering the bug requires the IR pipeline and a call graph in which a cycle of at least two mutually recursive functions both reaches a function needing relocation of variables to memory and is entered from a separate call chain whose own relocated variable is read again after the call towards the cycle returns. From 0.8.21 onward, it is independent of whether the optimizer is enabled.",
+        "link": "https://blog.soliditylang.org/2026/09/10/spill-slot-collision-across-mutual-recursion-bug/",
+        "introduced": "0.7.2",
+        "fixed": "0.8.37",
+        "severity": "low/medium",
+        "conditions": {
+            "viaIR": true
+        }
+    },
+    {
         "uid": "SOL-2026-3",
         "name": "InheritanceOrderReversalOnStorageEndWarning",
         "summary": "Emitting a warning about storage base location being too close to the storage end unintentionally reversed the ``linearizedBaseContracts`` annotation, possibly leading to miscompilation due to reversing the order in which inheritance is resolved.",

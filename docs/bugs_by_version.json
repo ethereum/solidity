@@ -1720,6 +1720,7 @@
     },
     "0.7.2": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
@@ -1738,6 +1739,7 @@
     },
     "0.7.3": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
@@ -1755,6 +1757,7 @@
     },
     "0.7.4": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
@@ -1771,6 +1774,7 @@
     },
     "0.7.5": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
@@ -1787,6 +1791,7 @@
     },
     "0.7.6": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
@@ -1803,6 +1808,7 @@
     },
     "0.8.0": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
@@ -1819,6 +1825,7 @@
     },
     "0.8.1": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
@@ -1835,6 +1842,7 @@
     },
     "0.8.10": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication",
@@ -1849,6 +1857,7 @@
     },
     "0.8.11": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication",
@@ -1864,6 +1873,7 @@
     },
     "0.8.12": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication",
@@ -1879,6 +1889,7 @@
     },
     "0.8.13": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication",
@@ -1895,6 +1906,7 @@
     },
     "0.8.14": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication",
@@ -1909,6 +1921,7 @@
     },
     "0.8.15": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication",
@@ -1921,6 +1934,7 @@
     },
     "0.8.16": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication",
@@ -1932,6 +1946,7 @@
     },
     "0.8.17": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication",
@@ -1942,6 +1957,7 @@
     },
     "0.8.18": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication",
@@ -1952,6 +1968,7 @@
     },
     "0.8.19": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication",
@@ -1962,6 +1979,7 @@
     },
     "0.8.2": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
@@ -1978,6 +1996,7 @@
     },
     "0.8.20": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication",
@@ -1988,6 +2007,7 @@
     },
     "0.8.21": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication"
@@ -1996,6 +2016,7 @@
     },
     "0.8.22": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication"
@@ -2004,6 +2025,7 @@
     },
     "0.8.23": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow"
         ],
@@ -2011,6 +2033,7 @@
     },
     "0.8.24": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow"
         ],
@@ -2018,6 +2041,7 @@
     },
     "0.8.25": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow"
         ],
@@ -2025,6 +2049,7 @@
     },
     "0.8.26": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow"
         ],
@@ -2032,6 +2057,7 @@
     },
     "0.8.27": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow"
         ],
@@ -2039,6 +2065,7 @@
     },
     "0.8.28": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "TransientStorageClearingHelperCollision",
             "LostStorageArrayWriteOnSlotOverflow"
@@ -2047,6 +2074,7 @@
     },
     "0.8.29": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "InheritanceOrderReversalOnStorageEndWarning",
             "UnsoundSpillInMutualRecursion",
             "TransientStorageClearingHelperCollision",
@@ -2056,6 +2084,7 @@
     },
     "0.8.3": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
@@ -2071,6 +2100,7 @@
     },
     "0.8.30": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "InheritanceOrderReversalOnStorageEndWarning",
             "UnsoundSpillInMutualRecursion",
             "TransientStorageClearingHelperCollision",
@@ -2080,6 +2110,7 @@
     },
     "0.8.31": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "InheritanceOrderReversalOnStorageEndWarning",
             "UnsoundSpillInMutualRecursion",
             "TransientStorageClearingHelperCollision",
@@ -2089,6 +2120,7 @@
     },
     "0.8.32": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "InheritanceOrderReversalOnStorageEndWarning",
             "UnsoundSpillInMutualRecursion",
             "TransientStorageClearingHelperCollision"
@@ -2097,6 +2129,7 @@
     },
     "0.8.33": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "InheritanceOrderReversalOnStorageEndWarning",
             "UnsoundSpillInMutualRecursion",
             "TransientStorageClearingHelperCollision"
@@ -2105,6 +2138,7 @@
     },
     "0.8.34": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "InheritanceOrderReversalOnStorageEndWarning",
             "UnsoundSpillInMutualRecursion"
         ],
@@ -2112,17 +2146,21 @@
     },
     "0.8.35": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "InheritanceOrderReversalOnStorageEndWarning",
             "UnsoundSpillInMutualRecursion"
         ],
         "released": "2026-04-29"
     },
     "0.8.36": {
-        "bugs": [],
+        "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion"
+        ],
         "released": "2026-07-09"
     },
     "0.8.4": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
@@ -2137,6 +2175,7 @@
     },
     "0.8.5": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication",
@@ -2152,6 +2191,7 @@
     },
     "0.8.6": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication",
@@ -2167,6 +2207,7 @@
     },
     "0.8.7": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication",
@@ -2182,6 +2223,7 @@
     },
     "0.8.8": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication",
@@ -2198,6 +2240,7 @@
     },
     "0.8.9": {
         "bugs": [
+            "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
             "LostStorageArrayWriteOnSlotOverflow",
             "VerbatimInvalidDeduplication",
