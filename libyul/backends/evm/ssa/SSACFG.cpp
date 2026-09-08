@@ -211,8 +211,8 @@ void SSACFG::checkInvariants() const
 	checkEntry();
 	checkArguments();
 	checkDominance();
-	checkProjectionsFollowProducerInBlock();
 	checkProducerProjectionsInBlock();
+	checkProjectionsFollowProducerInBlock();
 	checkBlockSuccPredSymmetry();
 	checkNonContinuingOperations();
 }
