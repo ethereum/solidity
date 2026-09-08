@@ -25,7 +25,6 @@
 #include <fmt/format.h>
 
 #include <set>
-#include <iostream>
 
 using namespace solidity::yul::ssa;
 

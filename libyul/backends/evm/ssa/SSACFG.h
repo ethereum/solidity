@@ -623,7 +623,6 @@ private:
 	void checkProducerProjectionsInBlock() const;
 	void checkProjectionsFollowProducerInBlock() const;
 	void checkBlockSuccPredSymmetry() const;
-	void checkPhiAtTopOfBlocks() const;
 	std::string graphName() const;
 	void checkNonContinuingOperations() const;
 #endif
