@@ -180,9 +180,9 @@ set(libyul_sources
     libyul/ssa/CallGraphTest.h
     libyul/ssa/ControlFlowGraphTest.cpp
     libyul/ssa/ControlFlowGraphTest.h
-    libyul/ssa/Invariants.cpp
     libyul/ssa/PrinterTest.cpp
     libyul/ssa/PrinterTest.h
+    libyul/ssa/SSACFGInvariants.cpp
     libyul/ssa/SpillTest.cpp
     libyul/ssa/SpillTest.h
     libyul/ssa/StackLayoutGeneratorTest.cpp
