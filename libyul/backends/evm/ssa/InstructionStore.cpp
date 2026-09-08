@@ -80,8 +80,8 @@ void InstructionStore::checkOpcodeShape(InstId const _id) const
 		yulAssert(i.inputs.size() == 1, fmt::format("Upsilon {} needs exactly one input", _id));
 		yulAssert(i.payload && std::holds_alternative<UpsilonPayload>(*i.payload), fmt::format("Upsilon {} lacks an upsilon payload", _id));
 		InstId const phi = upsilonPhi(_id);
-		yulAssert(inst(phi).isPhi(), fmt::format("Upsilon {} targets non-phi {}", _id, phi));
 		checkValidOperand(phi, fmt::format("target phi of upsilon {}", _id));
+		yulAssert(inst(phi).isPhi(), fmt::format("Upsilon {} targets non-phi {}", _id, phi));
 		break;
 	}
 	case InstOpcode::BuiltinCall:
