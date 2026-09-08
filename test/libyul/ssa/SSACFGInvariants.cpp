@@ -55,8 +55,7 @@ using Payload = InstructionStore::Payload;
 
 void expectAssertion(
 	std::function<void()> const& _call,
-	std::vector<std::string> const& _expectedFragments,
-	std::vector<std::string> const& _forbiddenFragments = {}
+	std::vector<std::string> const& _expectedFragments
 )
 {
 	try
@@ -71,11 +70,6 @@ void expectAssertion(
 			BOOST_CHECK_MESSAGE(
 				comment->find(fragment) != std::string::npos,
 				"Expected an assertion containing '" + fragment + "', got: " + *comment
-			);
-		for (std::string const& fragment: _forbiddenFragments)
-			BOOST_CHECK_MESSAGE(
-				comment->find(fragment) == std::string::npos,
-				"Expected an assertion not containing '" + fragment + "', got: " + *comment
 			);
 		return;
 	}
