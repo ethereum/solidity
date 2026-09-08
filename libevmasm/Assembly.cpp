@@ -47,6 +47,7 @@
 #include <fstream>
 #include <limits>
 #include <iterator>
+#include <set>
 #include <stack>
 
 using namespace solidity;
@@ -1036,11 +1037,17 @@ LinkerObject const& Assembly::assembleLegacy() const
 
 	bool setsImmutables = false;
 	bool pushesImmutables = false;
+	std::set<u256> assignedImmutables;
 
 	for (auto const& item: m_items)
 		if (item.type() == AssignImmutable)
 		{
 			item.setImmutableOccurrences(immutableReferencesBySub[item.data()].second.size());
+			assertThrow(
+				assignedImmutables.insert(item.data()).second,
+				AssemblyException,
+				"Immutable \"" + m_immutables.at(item.data()) + "\" is assigned more than once."
+			);
 			setsImmutables = true;
 		}
 		else if (item.type() == PushImmutable)

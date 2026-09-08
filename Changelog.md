@@ -24,6 +24,7 @@ Compiler Features:
 * Yul Optimizer: Remove the ineffective elimination of unused `returndatacopy()` operations in simple cases from UnusedStoreEliminator.
 
 Bugfixes:
+* Assembler: Report an error instead of silently discarding the value when the Yul builtin `setimmutable` is called more than once for the same immutable within a single object.
 * Code Generator: Fix ICE on parenthesized custom error construction in require statement.
 * Code Generator: Fix uninitialized internal function pointers being read from a packed storage slot with the wrong value when a subsequent variable in the slot holds a non-zero value.
 * Code Generator: Fix constants read in both checked and `unchecked` contexts within one contract getting the checked/unchecked semantics of whichever read was generated first via IR, which could remove a required overflow panic or introduce a spurious one.
