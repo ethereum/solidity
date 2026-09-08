@@ -568,10 +568,8 @@ void SSACFG::checkPhiOperands() const
 	{
 		if (isTombstone(instId) || !isPhi(instId))
 			continue;
-		std::vector<BlockId::ValueType> predecessors;
-		for (BlockId const pred: block(inst(instId).block).entries)
-			predecessors.push_back(pred.value);
-		std::vector<BlockId::ValueType>& sources = upsilonSources[instId.value];
+		std::vector<BlockId> predecessors = block(inst(instId).block).entries;
+		std::vector<BlockId>& sources = upsilonSources[instId];
 		std::sort(predecessors.begin(), predecessors.end());
 		std::sort(sources.begin(), sources.end());
 		yulAssert(
