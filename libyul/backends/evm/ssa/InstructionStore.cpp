@@ -157,9 +157,9 @@ void InstructionStore::checkValueDependencyAcyclic() const
 {
 	auto const nInsts = boost::numeric_cast<InstId::ValueType>(numInsts());
 	enum Color : std::uint8_t { White, Gray, Black };
-    // White    Not yet visited.
-    // Gray     On the current DFS path
-    // Black    Fully finished
+	// White    Not yet visited.
+	// Gray     On the current DFS path
+	// Black    Fully finished
 	//
 	std::vector<Color> color(nInsts, White);
 	std::vector<std::pair<InstId::ValueType, std::size_t>> stack;
