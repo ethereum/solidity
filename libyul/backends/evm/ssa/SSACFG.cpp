@@ -552,14 +552,14 @@ void SSACFG::checkArguments() const
 void SSACFG::checkPhiOperands() const
 {
 	// Collect, per phi, the source blocks of the Upsilons feeding it.
-	std::map<InstId::ValueType, std::vector<BlockId::ValueType>> upsilonSources; // upsilon -> [source block ID]
+	std::map<InstId, std::vector<BlockId>> upsilonSources; // phi -> [block of each upsilon feeding it]
 	for (InstId const instId: instructionIds())
 	{
 		if (isTombstone(instId) || !isUpsilon(instId))
 			continue;
 		InstId const phi = upsilonPhi(instId);
 		checkBlockRef(inst(instId).block, fmt::format("block of upsilon {}", instId));
-		upsilonSources[phi.value].push_back(inst(instId).block.value);
+		upsilonSources[phi].push_back(inst(instId).block);
 	}
 
 	// A phi must be fed by exactly one Upsilon per predecessor edge of its block, i.e. the
