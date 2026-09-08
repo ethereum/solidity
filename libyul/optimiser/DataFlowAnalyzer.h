@@ -177,7 +177,7 @@ private:
 	struct State
 	{
 		/// Current values of variables, always movable.
-		std::map<YulName, AssignedValue> value;
+		util::unordered_flat_map<YulName, AssignedValue> value;
 		/// m_references[a].contains(b) <=> the current expression assigned to a references b
 		/// The mapped vectors _must always_ be sorted
 		util::unordered_flat_map<YulName, std::vector<YulName>> sortedReferences;
@@ -212,7 +212,7 @@ protected:
 	struct Scope
 	{
 		explicit Scope(bool _isFunction): isFunction(_isFunction) {}
-		std::set<YulName> variables;
+		util::unordered_flat_set<YulName> variables;
 		bool isFunction;
 	};
 	/// Special expression whose address will be used in m_value.
