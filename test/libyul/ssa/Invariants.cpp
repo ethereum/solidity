@@ -915,7 +915,7 @@ BOOST_AUTO_TEST_CASE(definition_does_not_dominate_use)
 	InstId const definedInLeft = cfg.makeBuiltinCallWithProjections(
 		diamond.left,
 		BuiltinCall{fixture.builtin("add"), {}},
-		{diamond.leftValue, diamond.rightValue}, // inputs -- oops does not dominate, as scheduled in Left
+		{diamond.leftValue, diamond.rightValue}, // inputs
 		1 // num returns
 	);
 	cfg.inst(diamond.rightUpsilon).inputs[0] = definedInLeft;
