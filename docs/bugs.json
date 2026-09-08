@@ -1,5 +1,17 @@
 [
     {
+        "uid": "SOL-2026-5",
+        "name": "MemoryByteArrayElementDeleteClearsWholeWord",
+        "summary": "Applying ``delete`` to a single element of a ``bytes`` array in memory clears not only that element but the whole 32-byte word starting at the element's location, zeroing up to 31 bytes beyond the element.",
+        "description": "Elements of ``bytes`` arrays in memory are packed, each occupying a single byte. When a value is assigned to such an element, the evmasm code generator correctly stores it with a single-byte ``MSTORE8`` instruction. The code path in the evmasm pipeline implementing ``delete`` on such an element, however, wrote the zero value with a full-word ``MSTORE``, clearing the 32 bytes starting at the element's location. The bytes following the element within the array were silently zeroed. If the element was within the last 31 bytes of the array's allocation, the write also extended past it into the area where the allocator places the next memory object, clearing the most significant bytes of that object's first word. How many elements are in reach depends on the size of the allocation: arrays created with ``new bytes(n)`` or from literals occupy their length rounded up to a multiple of 32 bytes, so only elements falling within the last 31 bytes of that rounded-up area, if any, could be affected. The results of ``bytes.concat``, ``string.concat``, and the ``abi.encode*`` functions, on the other hand, are placed by the evmasm pipeline in an allocation of exactly the size of their data, so the next object starts immediately after their last element and each of their last 31 elements is in reach. Assigning zero to an element (``b[i] = 0``) was not affected, only the ``delete`` operator, and neither were byte arrays in transient storage, storage, or calldata. The bug exists only in the evmasm pipeline. Code compiled via IR is unaffected. Optimizer settings have no influence. The defective code predates the first released version of the compiler.",
+        "link": "https://blog.soliditylang.org/2026/09/10/memory-byte-array-element-delete-clears-whole-word-bug/",
+        "fixed": "0.8.37",
+        "severity": "low/medium",
+        "conditions": {
+            "viaIR": false
+        }
+    },
+    {
         "uid": "SOL-2026-4",
         "name": "SpillSlotCollisionAcrossMutualRecursion",
         "summary": "Local variables of two simultaneously active functions moved to fixed memory offsets by the stack limit evader may be assigned the same offset if the call graph contains mutual recursion, so that one variable is silently overwritten by the other.",

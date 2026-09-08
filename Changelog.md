@@ -1,6 +1,7 @@
 ### 0.8.37 (unreleased)
 
 Important Bugfixes:
+* Code Generator: Fix `delete` applied to an element of a `bytes` array in memory zeroing the whole 32-byte word starting at the element's location instead of only the element's byte.
 * Yul Optimizer: Fix too few memory slots being reserved when moving local variables to memory to work around stack-too-deep errors in code containing mutually recursive functions. Variables of two functions that can be active at the same time could be assigned the same slot, silently overwriting one of them while it was still in use.
 
 Language Features:
