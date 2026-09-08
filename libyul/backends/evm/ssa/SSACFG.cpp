@@ -212,6 +212,7 @@ void SSACFG::checkInvariants() const
 	checkArguments();
 	checkDominance();
 	checkProjectionsFollowProducerInBlock();
+	checkProducerProjectionsInBlock();
 	checkBlockSuccPredSymmetry();
 	checkNonContinuingOperations();
 }
@@ -224,6 +225,47 @@ void SSACFG::checkBlockSuccPredSymmetry() const {
 			yulAssert(contains(block(succBlockId).entries, parentBlockId),
 				fmt::format("Block {} lists {} as a successor, but not the other way round [graph {}]", parentBlockId, succBlockId, graphName()));
 		});
+	}
+}
+
+// Every multi-return operation must be directly followed by exactly one projection per return value
+void SSACFG::checkProducerProjectionsInBlock() const
+{
+	for (BlockId const blockId: liveBlocks())
+	{
+		BasicBlock const& bb = block(blockId);
+		for (std::size_t i = 0; i < bb.instructions.size(); ++i)
+		{
+			InstId const producerId = bb.instructions[i];
+			if (!inst(producerId).canHaveProjections())
+				continue;
+			std::size_t const numReturns = numReturnsOf(producerId);
+			if (numReturns < 2)
+				continue;
+
+			std::size_t const following = bb.instructions.size() - i - 1;
+			yulAssert(
+				following >= numReturns,
+				fmt::format(
+					"Operation {} returns {} values but only {} instructions follow it in block {} [graph {}]",
+					producerId, numReturns, following, blockId, graphName()
+				)
+			);
+			for (std::size_t k = 1; k <= numReturns; ++k)
+			{
+				InstId const projectionId = bb.instructions[i + k];
+				Inst const& projection = inst(projectionId);
+				yulAssert(
+					projection.isProjection() &&
+					projection.inputs.size() == 1 &&
+					projection.inputs.front() == producerId,
+					fmt::format(
+						"{} follows operation {} in block {} but is not one of its {} projections [graph {}]",
+						projectionId, producerId, blockId, numReturns, graphName()
+					)
+				);
+			}
+		}
 	}
 }
 
