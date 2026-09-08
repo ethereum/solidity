@@ -263,7 +263,7 @@ void SSACFG::checkProjectionsFollowProducerInBlock() const {
 	for (BlockId const blockId: liveBlocks())
 	{
 		BasicBlock const& bb = block(blockId);
-		for (size_t i = 0; i < bb.instructions.size(); i++) {
+		for (std::size_t i = 0; i < bb.instructions.size(); i++) {
 			auto const& projId = bb.instructions[i];
 			auto const& proj = m_instructions.inst(projId);
 			if (!proj.isProjection())
@@ -272,14 +272,14 @@ void SSACFG::checkProjectionsFollowProducerInBlock() const {
 			// Find producer
 			InstId producerId = InstId{};
 			yulAssert(i > 0, fmt::format("Projection {} is the first instruction of block {} [graph {}]", projId, blockId, graphName()));
-			ssize_t i2;
-			for (i2 = (ssize_t)i-1; i2 >= 0; i2--)
+			std::size_t producerPos = 0;
+			for (std::size_t j = i; j > 0; j--)
 			{
-				auto const& instId = bb.instructions[(size_t)i2];
-				auto const& instr = m_instructions.inst(instId);
-				if (!instr.isProjection())
+				InstId const instId = bb.instructions[j - 1];
+				if (!m_instructions.inst(instId).isProjection())
 				{
 					producerId = instId;
+					producerPos = j - 1;
 					break;
 				}
 			}
@@ -291,8 +291,8 @@ void SSACFG::checkProjectionsFollowProducerInBlock() const {
 
 			// Check producer-projection relationship
 			auto const trailingProjs = numTrailingProjections(producerId);
-			ssize_t diff = (ssize_t)i - i2;
-			yulAssert(diff <= trailingProjs, fmt::format("Projection {} is beyond the projection cluster of {} [graph {}]", projId, producerId, graphName()));
+			std::size_t const distanceFromProducer = i - producerPos;
+			yulAssert(distanceFromProducer <= trailingProjs, fmt::format("Projection {} is beyond the projection cluster of {} [graph {}]", projId, producerId, graphName()));
 			yulAssert(proj.inputs.size() == 1, fmt::format("Projection {} needs exactly one input [graph {}]", projId, graphName()));
 			yulAssert(proj.inputs[0] == producerId, fmt::format("Projection {} does not point at its producer {} [graph {}]", projId, producerId, graphName()));
 		}
