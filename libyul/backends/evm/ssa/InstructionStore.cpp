@@ -59,8 +59,8 @@ void InstructionStore::checkOpcodeShapes() const
 void InstructionStore::checkOpcodeShape(InstId const _id) const
 {
 	Inst const& i = inst(_id);
-	if(i.isTombstone())
-	  return;
+	if (i.isTombstone())
+		return;
 
 	for (InstId const in: i.inputs)
 		checkValidOperand(in, fmt::format("inputs of {}", _id));

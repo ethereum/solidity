@@ -103,7 +103,7 @@ public:
 		}
 		constexpr bool canHaveProjections() const noexcept
 		{
-		    return opcode == InstOpcode::Call || opcode == InstOpcode::BuiltinCall;
+			return opcode == InstOpcode::Call || opcode == InstOpcode::BuiltinCall;
 		}
 	};
 

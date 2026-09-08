@@ -16,7 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include "libyul/Exceptions.h"
+#include <libyul/Exceptions.h>
 #include <libyul/backends/evm/ssa/SSACFG.h>
 
 #include <libyul/backends/evm/ssa/ControlFlowGraphs.h>
@@ -36,7 +36,6 @@
 
 #ifdef SLOW_DEBUG
 #include <algorithm>
-#include <string_view>
 #include <map>
 #include <optional>
 #include <string>
@@ -220,8 +219,8 @@ void SSACFG::checkInvariants() const
 void SSACFG::checkBlockSuccPredSymmetry() const {
 	for (BlockId const parentBlockId: liveBlocks())
 	{
-		const auto& parentBlock = block(parentBlockId);
-		parentBlock.forEachExit([&](const BlockId succBlockId){
+		auto const& parentBlock = block(parentBlockId);
+		parentBlock.forEachExit([&](BlockId const succBlockId){
 			yulAssert(contains(block(succBlockId).entries, parentBlockId),
 				fmt::format("Block {} lists {} as a successor, but not the other way round [graph {}]", parentBlockId, succBlockId, graphName()));
 		});
@@ -244,10 +243,11 @@ void SSACFG::checkProjectionsFollowProducerInBlock() const {
 			InstId producerId = InstId{};
 			yulAssert(i > 0, fmt::format("Projection {} is the first instruction of block {} [graph {}]", projId, blockId, graphName()));
 			ssize_t i2;
-			for(i2 = (ssize_t)i-1; i2 >= 0; i2--) {
+			for (i2 = (ssize_t)i-1; i2 >= 0; i2--) {
 				auto const& instId = bb.instructions[(size_t)i2];
 				auto const& inst = m_instructions.inst(instId);
-				if (!inst.isProjection()) {
+				if (!inst.isProjection())
+				{
 					producerId = instId;
 					break;
 				}
