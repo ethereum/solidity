@@ -325,8 +325,6 @@ BOOST_AUTO_TEST_CASE(duplicate_graph_names)
 	expectAssertion([&] { fixture.cfgs.checkInvariants(); }, {"Duplicate CFG name"});
 }
 
-// InstructionStore::checkValidOperand
-
 BOOST_AUTO_TEST_CASE(operand_is_the_empty_id)
 {
 	Fixture fixture;
@@ -354,8 +352,6 @@ BOOST_AUTO_TEST_CASE(operand_is_a_tombstone)
 	cfg.inst(diamond.leftValue).opcode = InstOpcode::Tombstone;
 	expectAssertion([&] { cfg.checkInvariants(); }, {"Tombstone", "referenced"});
 }
-
-// InstructionStore::checkOpcodeShape
 
 BOOST_AUTO_TEST_CASE(const_with_inputs)
 {
@@ -835,7 +831,7 @@ BOOST_AUTO_TEST_CASE(entry_block_is_not_live)
 	SSACFG& cfg = fixture.addGraph();
 	Fixture::addSecondBlock(cfg);
 	cfg.entry = BlockId{99};
-	expectAssertion([&] { cfg.checkInvariants(); }, {"Entry block is not live"});
+	expectAssertion([&] { cfg.checkInvariants(); }, {"Entry block", "not live"});
 }
 
 BOOST_AUTO_TEST_CASE(entry_block_has_predecessors)
@@ -845,7 +841,7 @@ BOOST_AUTO_TEST_CASE(entry_block_has_predecessors)
 	BlockId const second = Fixture::addSecondBlock(cfg);
 	cfg.block(second).exit = BasicBlock::Jump{cfg.entry};
 	cfg.block(cfg.entry).entries = {second};
-	expectAssertion([&] { cfg.checkInvariants(); }, {"has predecessors"});
+	expectAssertion([&] { cfg.checkInvariants(); }, {"Entry block", "has predecessors"});
 }
 
 BOOST_AUTO_TEST_CASE(phi_in_the_entry_block)
