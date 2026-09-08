@@ -2,19 +2,20 @@
 // the literal lit7 are both demanded at arg positions.
 initial: [v0, phi1, phi2, JUNK, phi3]
 targetStackTop: [JUNK, JUNK, v4, lit7, JUNK, JUNK]
-targetStackSize: 6
 allowSpilling: true
 initialSpilledSet: {v4}
 // ----
 //             |      0      1      2      3      4      5
 //             +------------------------------------------
 //    (initial)|     v0   phi1   phi2      *   phi3
-//      PUSH v4|     v0   phi1   phi2      *   phi3     v4
-//        SWAP3|     v0   phi1     v4      *   phi3   phi2
-//          POP|     v0   phi1     v4      *   phi3
+//        SWAP2|     v0   phi1   phi3      *   phi2
+//          POP|     v0   phi1   phi3      *
+//      PUSH v4|     v0   phi1   phi3      *     v4
+//        SWAP2|     v0   phi1     v4      *   phi3
 //    PUSH lit7|     v0   phi1     v4      *   phi3   lit7
 //        SWAP2|     v0   phi1     v4   lit7   phi3      *
 //             +------------------------------------------
 //     (target)|      *      *     v4   lit7      *      *
+// Plan: 0 1 gen gen 4 3
 // Status: Admissible
 // Spilled: {v4}

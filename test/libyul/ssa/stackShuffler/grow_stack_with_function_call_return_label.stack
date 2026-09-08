@@ -1,0 +1,23 @@
+initial: [ReturnLabel[9], JUNK, v11, v6, v10, v18, JUNK, JUNK, phi31, JUNK, JUNK, phi49, JUNK, phi44, phi63, phi108, JUNK]
+targetStackTop: [ReturnLabel[9], JUNK, v11, v6, v10, v18, JUNK, phi31, JUNK, JUNK, phi49, JUNK, phi44, phi63, phi108, JUNK, FunctionCallReturnLabel[8], phi49, v11]
+allowSpilling: true
+// ----
+//             |              0      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15                         16     17     18
+//             +-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+//    (initial)| ReturnLabel[9]      *    v11     v6    v10    v18      *      *  phi31      *      *  phi49      *  phi44  phi63 phi108                          *
+//          POP| ReturnLabel[9]      *    v11     v6    v10    v18      *      *  phi31      *      *  phi49      *  phi44  phi63 phi108
+//        SWAP1| ReturnLabel[9]      *    v11     v6    v10    v18      *      *  phi31      *      *  phi49      *  phi44 phi108  phi63
+//        SWAP2| ReturnLabel[9]      *    v11     v6    v10    v18      *      *  phi31      *      *  phi49      *  phi63 phi108  phi44
+//        SWAP3| ReturnLabel[9]      *    v11     v6    v10    v18      *      *  phi31      *      *  phi49  phi44  phi63 phi108      *
+//        SWAP4| ReturnLabel[9]      *    v11     v6    v10    v18      *      *  phi31      *      *      *  phi44  phi63 phi108  phi49
+//        SWAP5| ReturnLabel[9]      *    v11     v6    v10    v18      *      *  phi31      *  phi49      *  phi44  phi63 phi108      *
+//        SWAP7| ReturnLabel[9]      *    v11     v6    v10    v18      *      *      *      *  phi49      *  phi44  phi63 phi108  phi31
+//        SWAP8| ReturnLabel[9]      *    v11     v6    v10    v18      *  phi31      *      *  phi49      *  phi44  phi63 phi108      *
+// PUSH FunctionCallReturnLabel[8]| ReturnLabel[9]      *    v11     v6    v10    v18      *  phi31      *      *  phi49      *  phi44  phi63 phi108      * FunctionCallReturnLabel[8]
+//         DUP7| ReturnLabel[9]      *    v11     v6    v10    v18      *  phi31      *      *  phi49      *  phi44  phi63 phi108      * FunctionCallReturnLabel[8]  phi49
+//        DUP16| ReturnLabel[9]      *    v11     v6    v10    v18      *  phi31      *      *  phi49      *  phi44  phi63 phi108      * FunctionCallReturnLabel[8]  phi49    v11
+//             +-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+//     (target)| ReturnLabel[9]      *    v11     v6    v10    v18      *  phi31      *      *  phi49      *  phi44  phi63 phi108      * FunctionCallReturnLabel[8]  phi49    v11
+// Plan: 0 1 2 3 4 5 6 8 7 9 11 10 13 14 15 16 gen gen gen
+// Status: Admissible
+// Spilled: {}

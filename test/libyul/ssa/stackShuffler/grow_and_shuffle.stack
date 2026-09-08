@@ -14,4 +14,5 @@ targetStackTop: [v2, lit1, v2, lit2, v2, lit1, v1, v3]
 //        SWAP5|     v2   lit1     v2   lit2     v2   lit1     v1     v3
 //             +--------------------------------------------------------
 //     (target)|     v2   lit1     v2   lit2     v2   lit1     v1     v3
+// Plan: 0 gen gen 1 gen gen 3 2
 // Status: Admissible

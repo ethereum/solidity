@@ -1,13 +1,14 @@
 initial: [v0, phi0, phi0, lit0, v0, v0]
-targetStackTop: [phi0, v0, v0, JUNK, phi0]
-targetStackTailSet: {v0}
-targetStackSize: 7
+targetStackTop: [v0, JUNK, phi0, v0, v0, JUNK, phi0]
 // ----
-//             |      0      1 |      2      3      4      5      6
-//             +-------------- +-----------------------------------
-//    (initial)|     v0   phi0 |   phi0   lit0     v0     v0
-//        SWAP2|     v0   phi0 |   phi0     v0     v0   lit0
-//         DUP4|     v0   phi0 |   phi0     v0     v0   lit0   phi0
-//             +-------------- +-----------------------------------
-//     (target)|          {v0} |   phi0     v0     v0      *   phi0
+//             |      0      1      2      3      4      5      6
+//             +-------------------------------------------------
+//    (initial)|     v0   phi0   phi0   lit0     v0     v0
+//        SWAP2|     v0   phi0   phi0     v0     v0   lit0
+//          POP|     v0   phi0   phi0     v0     v0
+//         DUP1|     v0   phi0   phi0     v0     v0     v0
+//         DUP4|     v0   phi0   phi0     v0     v0     v0   phi0
+//             +-------------------------------------------------
+//     (target)|     v0      *   phi0     v0     v0      *   phi0
+// Plan: 0 1 2 gen 4 5 gen
 // Status: Admissible

@@ -24,7 +24,7 @@ contract C is B layout at 7 {
 // gas legacy code: 71400
 // gas legacyOptimized: 106296
 // gas legacyOptimized code: 31400
-// gas ssaCFGOptimized: 104085
+// gas ssaCFGOptimized: 104082
 // gas ssaCFGOptimized code: 28800
 // x() -> 2
 // y() -> 4

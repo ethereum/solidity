@@ -1,14 +1,13 @@
-// We have arguments in the right order, but we need an extra copy of the top argument in the tail
+// The arguments are already in order; an extra copy of the top one is needed below them.
 initial: [v0, v1]
-targetStackTop: [v0, v1]
-targetStackTailSet: {v1}
-targetStackSize: 3
+targetStackTop: [v1, v0, v1]
 // ----
-//             |      0 |      1      2
-//             +------- +--------------
-//    (initial)|     v0 |     v1
-//        SWAP1|     v1 |     v0
-//         DUP2|     v1 |     v0     v1
-//             +------- +--------------
-//     (target)|   {v1} |     v0     v1
+//             |      0      1      2
+//             +---------------------
+//    (initial)|     v0     v1
+//        SWAP1|     v1     v0
+//         DUP2|     v1     v0     v1
+//             +---------------------
+//     (target)|     v1     v0     v1
+// Plan: 1 0 gen
 // Status: Admissible

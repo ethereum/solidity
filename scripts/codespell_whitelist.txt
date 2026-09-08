@@ -4,3 +4,4 @@ keypair
 wast
 slippy
 exitIn
+positionOf

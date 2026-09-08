@@ -21,6 +21,7 @@
 #include <libyul/backends/evm/ssa/Stack.h>
 #include <libyul/backends/evm/ssa/StackShuffler.h>
 #include <libyul/backends/evm/ssa/StackLayout.h>
+#include <libyul/backends/evm/ssa/stack/Shuffler.h>
 
 #include <deque>
 
@@ -141,9 +142,9 @@ void SpillSet::ensureDefSiteFeasible(
 		return result;
 	}();
 	StackData workStack = _defStack;
-	StackShufflerResult result = shuffleWithSpillDiscovery(workStack, target, spillSetWithoutOwner);
+	stack::ShuffleResult result = stack::shuffle(workStack, target, spillSetWithoutOwner);
 	yulAssert(
-		result.status == StackShufflerResult::Status::Admissible,
+		result.status == stack::ShuffleResult::Status::Admissible,
 		fmt::format("def-site store for {} infeasible even after spilling siblings (status={})", _value, static_cast<int>(result.status))
 	);
 

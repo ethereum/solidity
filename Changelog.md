@@ -14,6 +14,7 @@ Compiler Features:
 * EVM-ASM Optimizer: Improve performance of block deduplicator.
 * General: Improve performance throughout the compiler using Boost's flat versions of unordered set and map.
 * General: Remove support for the experimental Generic Solidity prototype (`pragma experimental solidity`).
+* General: Replace the current greedy stack shuffler in the experimental SSA CFG pipeline with a planning one.
 * SMTChecker: Emit a deprecation warning for the BMC engine.
 * SMTChecker: Support `block.slotnum`.
 * Standard JSON Interface: Fix the entire output being replaced by a `JSONError` ("Error writing output JSON.") when an error message quotes a long source line and truncating it splits a multi-byte character.

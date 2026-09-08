@@ -31,6 +31,7 @@ fuzztest_setup_fuzzing_flags()
 
 set(yul_fuzztest_sources
 	libyul/StackLimitEvaderPropertyTest.cpp
+	libyul/StackShufflerPropertyTest.cpp
 	libyul/TarjanSCCPropertyTest.cpp
 )
 detect_stray_source_files("${yul_fuzztest_sources}" "libyul/")

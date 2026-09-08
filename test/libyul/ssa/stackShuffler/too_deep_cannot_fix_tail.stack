@@ -1,13 +1,10 @@
-// Value v1 is in the args region but needed in the tail (offset 0, depth 17). The tail position is beyond
-// swap range so fixTailSlot cannot swap v1 down. All other args are already in their correct positions.
+// v1 has to move from the top to offset 1 under 16 retained slots; the top position becomes a wildcard.
 initial: [JUNK, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v1]
-targetStackTop: [v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, JUNK]
-targetStackTailSet: {v1}
-targetStackSize: 18
+targetStackTop: [v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, JUNK]
 // ----
-//             |      0 |      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16     17
-//             +------- +-----------------------------------------------------------------------------------------------------------------------
-//    (initial)|      * |     v2     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15    v16    v17     v1
-//             +------- +-----------------------------------------------------------------------------------------------------------------------
-//     (target)|   {v1} |     v2     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15    v16    v17      *
-// Status: StackTooDeep (culprit: v1)
+//             |      0      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16     17
+//             +------------------------------------------------------------------------------------------------------------------------------
+//    (initial)|      *     v2     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15    v16    v17     v1
+//             +------------------------------------------------------------------------------------------------------------------------------
+//     (target)|     v1     v2     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15    v16    v17      *
+// Status: StackTooDeep (would spill: v17)

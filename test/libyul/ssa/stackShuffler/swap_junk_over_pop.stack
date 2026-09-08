@@ -1,14 +1,16 @@
-// here, the algorithm should prefer a swap of junk into tail over pop and dup
+// the junk slot should be swapped away and kept rather than popped and pushed again
 initial: [v0, JUNK, v2]
-targetStackTop: [lit2, v2, v0]
-targetStackSize: 4
+targetStackTop: [JUNK, lit2, v2, v0]
 // ----
-//             |      0 |      1      2      3
-//             +------- +---------------------
-//    (initial)|     v0 |      *     v2
-//    PUSH lit2|     v0 |      *     v2   lit2
-//        SWAP2|     v0 |   lit2     v2      *
-//        SWAP3|      * |   lit2     v2     v0
-//             +------- +---------------------
-//     (target)|     {} |   lit2     v2     v0
+//             |      0      1      2      3
+//             +----------------------------
+//    (initial)|     v0      *     v2
+//        SWAP1|     v0     v2      *
+//          POP|     v0     v2
+//    PUSH lit2|     v0     v2   lit2
+//        SWAP1|     v0   lit2     v2
+//         DUP3|     v0   lit2     v2     v0
+//             +----------------------------
+//     (target)|      *   lit2     v2     v0
+// Plan: 0 gen 2 gen
 // Status: Admissible

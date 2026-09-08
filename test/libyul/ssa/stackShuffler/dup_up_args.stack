@@ -1,19 +1,18 @@
 // populate args by a sequence of dups
 initial: [JUNK, v12, phi9, phi13, JUNK, JUNK, JUNK, JUNK, JUNK, JUNK, JUNK, JUNK, v65, v67]
-targetStackTop: [lit27, phi13, phi9, v12, v67]
-targetStackTailSet: {phi9, v12, phi13, v65}
-targetStackSize: 21
+targetStackTop: [JUNK, v12, phi9, phi13, JUNK, JUNK, JUNK, JUNK, JUNK, JUNK, JUNK, JUNK, v65, JUNK, v12, phi9, lit27, phi13, phi9, v12, v67]
 // ----
-//             |      0      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15 |     16     17     18     19     20
-//             +---------------------------------------------------------------------------------------------------------------- +-----------------------------------
+//             |      0      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16     17     18     19     20
+//             +---------------------------------------------------------------------------------------------------------------------------------------------------
 //    (initial)|      *    v12   phi9  phi13      *      *      *      *      *      *      *      *    v65    v67
 //        DUP13|      *    v12   phi9  phi13      *      *      *      *      *      *      *      *    v65    v67    v12
 //        DUP13|      *    v12   phi9  phi13      *      *      *      *      *      *      *      *    v65    v67    v12   phi9
-//   PUSH lit27|      *    v12   phi9  phi13      *      *      *      *      *      *      *      *    v65    v67    v12   phi9 |  lit27
-//        DUP14|      *    v12   phi9  phi13      *      *      *      *      *      *      *      *    v65    v67    v12   phi9 |  lit27  phi13
-//         DUP3|      *    v12   phi9  phi13      *      *      *      *      *      *      *      *    v65    v67    v12   phi9 |  lit27  phi13   phi9
-//         DUP5|      *    v12   phi9  phi13      *      *      *      *      *      *      *      *    v65    v67    v12   phi9 |  lit27  phi13   phi9    v12
-//         DUP7|      *    v12   phi9  phi13      *      *      *      *      *      *      *      *    v65    v67    v12   phi9 |  lit27  phi13   phi9    v12    v67
-//             +---------------------------------------------------------------------------------------------------------------- +-----------------------------------
-//     (target)|                                                                                         {phi9, v12, phi13, v65} |  lit27  phi13   phi9    v12    v67
+//   PUSH lit27|      *    v12   phi9  phi13      *      *      *      *      *      *      *      *    v65    v67    v12   phi9  lit27
+//        DUP14|      *    v12   phi9  phi13      *      *      *      *      *      *      *      *    v65    v67    v12   phi9  lit27  phi13
+//         DUP3|      *    v12   phi9  phi13      *      *      *      *      *      *      *      *    v65    v67    v12   phi9  lit27  phi13   phi9
+//         DUP5|      *    v12   phi9  phi13      *      *      *      *      *      *      *      *    v65    v67    v12   phi9  lit27  phi13   phi9    v12
+//         DUP7|      *    v12   phi9  phi13      *      *      *      *      *      *      *      *    v65    v67    v12   phi9  lit27  phi13   phi9    v12    v67
+//             +---------------------------------------------------------------------------------------------------------------------------------------------------
+//     (target)|      *    v12   phi9  phi13      *      *      *      *      *      *      *      *    v65      *    v12   phi9  lit27  phi13   phi9    v12    v67
+// Plan: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 gen gen gen gen gen gen gen
 // Status: Admissible

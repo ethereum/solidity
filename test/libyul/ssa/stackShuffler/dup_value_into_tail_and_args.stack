@@ -17,4 +17,5 @@ targetStackTop: [JUNK, JUNK, v2, JUNK, JUNK, JUNK, JUNK, JUNK, JUNK, JUNK, JUNK,
 //        SWAP2|      *      *     v2      *      *      *      *      *      *      *      *      *      *      *   lit1     v2   lit2     v2   lit3     v1     v3
 //             +---------------------------------------------------------------------------------------------------------------------------------------------------
 //     (target)|      *      *     v2      *      *      *      *      *      *      *      *      *      *      *   lit1     v2   lit2     v2   lit3     v1     v3
+// Plan: 0 1 gen 3 4 5 6 7 8 9 10 11 12 13 gen 15 gen gen gen 14 16
 // Status: Admissible

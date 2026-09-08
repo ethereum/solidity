@@ -49,10 +49,10 @@ contract C {
 // gas irOptimized: 116512
 // gas legacy: 120226
 // gas legacyOptimized: 116941
-// gas ssaCFGOptimized: 116505
+// gas ssaCFGOptimized: 116465
 // test2() -> 0x20, 0x14, "[b called][a called]"
 // test3() -> 0x20, 0x14, "[b called][a called]"
 // gas irOptimized: 103138
 // gas legacy: 105192
 // gas legacyOptimized: 103752
-// gas ssaCFGOptimized: 103084
+// gas ssaCFGOptimized: 103074

@@ -1,15 +1,13 @@
 initial: [phi0, v0, lit0, v0,   lit0, v0, lit0, v0, v0, lit0, v0, v0]
-targetStackTop: [JUNK, lit0, v0, phi0, v0, v0, lit0, v0, v0]
-targetStackTailSet: {}
-targetStackSize: 12
+targetStackTop: [JUNK, JUNK, JUNK, JUNK, lit0, v0, phi0, v0, v0, lit0, v0, v0]
 // ----
-//             |      0      1      2 |      3      4      5      6      7      8      9     10     11
-//             +--------------------- +---------------------------------------------------------------
-//    (initial)|   phi0     v0   lit0 |     v0   lit0     v0   lit0     v0     v0   lit0     v0     v0
-//          POP|   phi0     v0   lit0 |     v0   lit0     v0   lit0     v0     v0   lit0     v0
-//        DUP11|   phi0     v0   lit0 |     v0   lit0     v0   lit0     v0     v0   lit0     v0   phi0
-//        SWAP5|   phi0     v0   lit0 |     v0   lit0     v0   phi0     v0     v0   lit0     v0   lit0
-//       SWAP10|   phi0   lit0   lit0 |     v0   lit0     v0   phi0     v0     v0   lit0     v0     v0
-//             +--------------------- +---------------------------------------------------------------
-//     (target)|                   {} |      *   lit0     v0   phi0     v0     v0   lit0     v0     v0
+//             |      0      1      2      3      4      5      6      7      8      9     10     11
+//             +------------------------------------------------------------------------------------
+//    (initial)|   phi0     v0   lit0     v0   lit0     v0   lit0     v0     v0   lit0     v0     v0
+//        SWAP5|   phi0     v0   lit0     v0   lit0     v0     v0     v0     v0   lit0     v0   lit0
+//       SWAP11|   lit0     v0   lit0     v0   lit0     v0     v0     v0     v0   lit0     v0   phi0
+//        SWAP5|   lit0     v0   lit0     v0   lit0     v0   phi0     v0     v0   lit0     v0     v0
+//             +------------------------------------------------------------------------------------
+//     (target)|      *      *      *      *   lit0     v0   phi0     v0     v0   lit0     v0     v0
+// Plan: 6 1 2 3 4 5 0 7 8 9 10 11
 // Status: Admissible

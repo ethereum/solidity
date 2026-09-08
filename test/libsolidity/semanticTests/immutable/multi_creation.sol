@@ -35,7 +35,7 @@ contract C {
 // gas legacy code: 60800
 // gas legacyOptimized: 86870
 // gas legacyOptimized code: 37200
-// gas ssaCFGOptimized: 86830
+// gas ssaCFGOptimized: 86824
 // gas ssaCFGOptimized code: 34400
 // x() -> 7
 // y() -> 5

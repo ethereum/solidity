@@ -9,28 +9,29 @@ targetStackTop: [v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14
 //             |      0      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16     17
 //             +------------------------------------------------------------------------------------------------------------------------------
 //    (initial)|     v1     v2     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15    v16    v17
-//       SWAP16|    v17     v2     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15    v16     v1
-//       SWAP15|    v17     v1     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15    v16     v2
-//       SWAP14|    v17     v1     v2     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15    v16     v3
-//       SWAP13|    v17     v1     v2     v3     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15    v16     v4
-//       SWAP12|    v17     v1     v2     v3     v4     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15    v16     v5
-//       SWAP11|    v17     v1     v2     v3     v4     v5     v7     v8     v9    v10    v11    v12    v13    v14    v15    v16     v6
-//       SWAP10|    v17     v1     v2     v3     v4     v5     v6     v8     v9    v10    v11    v12    v13    v14    v15    v16     v7
-//        SWAP9|    v17     v1     v2     v3     v4     v5     v6     v7     v9    v10    v11    v12    v13    v14    v15    v16     v8
-//        SWAP8|    v17     v1     v2     v3     v4     v5     v6     v7     v8    v10    v11    v12    v13    v14    v15    v16     v9
-//        SWAP7|    v17     v1     v2     v3     v4     v5     v6     v7     v8     v9    v11    v12    v13    v14    v15    v16    v10
-//        SWAP6|    v17     v1     v2     v3     v4     v5     v6     v7     v8     v9    v10    v12    v13    v14    v15    v16    v11
-//        SWAP5|    v17     v1     v2     v3     v4     v5     v6     v7     v8     v9    v10    v11    v13    v14    v15    v16    v12
-//        SWAP4|    v17     v1     v2     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v14    v15    v16    v13
-//        SWAP3|    v17     v1     v2     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v15    v16    v14
-//        SWAP2|    v17     v1     v2     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v16    v15
-//        SWAP1|    v17     v1     v2     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15    v16
-//          POP|    v17     v1     v2     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15
+//        SWAP1|     v1     v2     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15    v17    v16
+//          POP|     v1     v2     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15    v17
+//       SWAP15|    v17     v2     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15     v1
+//       SWAP14|    v17     v1     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15     v2
+//       SWAP13|    v17     v1     v2     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15     v3
+//       SWAP12|    v17     v1     v2     v3     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15     v4
+//       SWAP11|    v17     v1     v2     v3     v4     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15     v5
+//       SWAP10|    v17     v1     v2     v3     v4     v5     v7     v8     v9    v10    v11    v12    v13    v14    v15     v6
+//        SWAP9|    v17     v1     v2     v3     v4     v5     v6     v8     v9    v10    v11    v12    v13    v14    v15     v7
+//        SWAP8|    v17     v1     v2     v3     v4     v5     v6     v7     v9    v10    v11    v12    v13    v14    v15     v8
+//        SWAP7|    v17     v1     v2     v3     v4     v5     v6     v7     v8    v10    v11    v12    v13    v14    v15     v9
+//        SWAP6|    v17     v1     v2     v3     v4     v5     v6     v7     v8     v9    v11    v12    v13    v14    v15    v10
+//        SWAP5|    v17     v1     v2     v3     v4     v5     v6     v7     v8     v9    v10    v12    v13    v14    v15    v11
+//        SWAP4|    v17     v1     v2     v3     v4     v5     v6     v7     v8     v9    v10    v11    v13    v14    v15    v12
+//        SWAP3|    v17     v1     v2     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v14    v15    v13
+//        SWAP2|    v17     v1     v2     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v15    v14
+//        SWAP1|    v17     v1     v2     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15
 //      PUSH v0|    v17     v1     v2     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15     v0
 //       SWAP16|     v0     v1     v2     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15    v17
 //     PUSH v16|     v0     v1     v2     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15    v17    v16
 //        SWAP1|     v0     v1     v2     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15    v16    v17
 //             +------------------------------------------------------------------------------------------------------------------------------
 //     (target)|     v0     v1     v2     v3     v4     v5     v6     v7     v8     v9    v10    v11    v12    v13    v14    v15    v16    v17
+// Plan: gen 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 gen 16
 // Status: Admissible
 // Spilled: {v0, v16}

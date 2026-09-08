@@ -141,7 +141,6 @@ constexpr bool canBeFreelyGenerated(StackSlot const& _slot)
 	return _slot.isLiteralValue() || _slot.isJunk() || _slot.isFunctionCallReturnLabel();
 }
 
-using StackData = std::vector<StackSlot>;
 std::string slotToString(StackSlot const& _slot);
 std::string stackToString(StackData const& _stackData);
 
@@ -156,6 +155,7 @@ struct StackOffset
 // comparison operations with size_t
 constexpr auto operator<=>(StackOffset const lhs, size_t const rhs) noexcept { return lhs.value <=> rhs; }
 constexpr auto operator<=>(size_t const lhs, StackOffset const rhs) noexcept { return lhs <=> rhs.value; }
+constexpr bool operator==(StackOffset const lhs, size_t const rhs) noexcept { return lhs.value == rhs; }
 
 /// Distance from the stack top (depth 0 = top).
 /// Natural for stack operations (SWAP1 = swap with depth 1); used for operations that
@@ -169,8 +169,6 @@ struct StackDepth
 // comparison operations with size_t
 constexpr auto operator<=>(StackDepth const lhs, size_t const rhs) noexcept { return lhs.value <=> rhs; }
 constexpr auto operator<=>(size_t const lhs, StackDepth const rhs) noexcept { return lhs <=> rhs.value; }
-
-/// Maximum stack depth reachable by the EVM
-std::size_t constexpr reachableStackDepth = 16;
+constexpr bool operator==(StackDepth const lhs, size_t const rhs) noexcept { return lhs.value == rhs; }
 
 }

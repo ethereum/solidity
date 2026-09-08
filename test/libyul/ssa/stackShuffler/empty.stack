@@ -1,8 +1,6 @@
 // populate an empty stack with junk
 initial: []
-targetStackTop: []
-targetStackTailSet: {}
-targetStackSize: 3
+targetStackTop: [JUNK, JUNK, JUNK]
 // ----
 //             |      0      1      2
 //             +---------------------
@@ -11,5 +9,6 @@ targetStackSize: 3
 //    PUSH JUNK|      *      *
 //    PUSH JUNK|      *      *      *
 //             +---------------------
-//     (target)|
+//     (target)|      *      *      *
+// Plan: gen gen gen
 // Status: Admissible
