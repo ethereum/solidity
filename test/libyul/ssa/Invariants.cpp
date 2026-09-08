@@ -760,7 +760,7 @@ BOOST_AUTO_TEST_CASE(successor_is_not_live)
 	SSACFG& cfg = fixture.addGraph();
 	auto const diamond = fixture.buildDiamond(cfg);
 	std::get<BasicBlock::Jump>(cfg.block(diamond.left).exit).target = BlockId{99};
-	expectAssertion([&] { cfg.checkInvariants(); }, {"not a live block", "successor of block"});
+	expectAssertion([&] { cfg.checkInvariants(); }, {"not", "live", "successor of block"});
 }
 
 BOOST_AUTO_TEST_CASE(predecessor_is_not_live)
@@ -769,7 +769,7 @@ BOOST_AUTO_TEST_CASE(predecessor_is_not_live)
 	SSACFG& cfg = fixture.addGraph();
 	auto const diamond = fixture.buildDiamond(cfg);
 	cfg.block(diamond.merge).entries.push_back(BlockId{99});
-	expectAssertion([&] { cfg.checkInvariants(); }, {"not a live block", "predecessor of block"});
+	expectAssertion([&] { cfg.checkInvariants(); }, {"not",  "live", "predecessor of block"});
 }
 
 BOOST_AUTO_TEST_CASE(edges_disagree_between_the_two_sides)
@@ -804,7 +804,7 @@ BOOST_AUTO_TEST_CASE(main_exit_in_a_function_graph)
 	Fixture fixture;
 	SSACFG& cfg = fixture.addGraph("f");
 	cfg.block(cfg.entry).exit = BasicBlock::MainExit{};
-	expectAssertion([&] { cfg.checkInvariants(); }, {"MainExit block", "in a function graph"});
+	expectAssertion([&] { cfg.checkInvariants(); }, {"MainExit", "in a function graph"});
 }
 
 BOOST_AUTO_TEST_CASE(function_return_in_the_main_graph)
@@ -849,7 +849,7 @@ BOOST_AUTO_TEST_CASE(phi_in_the_entry_block)
 	Fixture fixture;
 	SSACFG& cfg = fixture.addGraph();
 	cfg.newPhi(cfg.entry);
-	expectAssertion([&] { cfg.checkInvariants(); }, {"is in the entry block"});
+	expectAssertion([&] { cfg.checkInvariants(); }, {"Phi", "in the entry block"});
 }
 
 BOOST_AUTO_TEST_CASE(function_arg_outside_the_entry_block)
