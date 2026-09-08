@@ -492,7 +492,7 @@ void SSACFG::checkBlockConstraints() const
 
 		// Const is pinned to entry
 		if (i.opcode == InstOpcode::Const)
-			yulAssert(i.block == entry, fmt::format("Const {} not pinned to entry [graph {}]", instId, graphName()));
+			yulAssert(i.block == entry, fmt::format("Const {} not pinned to entry block [graph {}]", instId, graphName()));
 
 		// Num returns of an operation matches trailing projections
 		if (i.isOperation())
