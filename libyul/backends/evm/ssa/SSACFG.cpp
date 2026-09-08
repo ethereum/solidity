@@ -495,18 +495,18 @@ void SSACFG::checkBlockConstraints() const
 
 void SSACFG::checkEdgeConsistency() const
 {
-	std::map<std::pair<BlockId::ValueType, BlockId::ValueType>, int> succSide, predSide;
+	std::map<std::pair<BlockId, BlockId>, int> succSide, predSide;
 	for (BlockId const blockId: liveBlocks())
 	{
 		BasicBlock const& bb = block(blockId);
 		bb.forEachExit([&](BlockId const succ) {
 			checkBlockRef(succ, fmt::format("successor of block {}", blockId));
-			++succSide[{blockId.value, succ.value}];
+			++succSide[{blockId, succ}];
 		});
 		for (BlockId const pred: bb.entries)
 		{
 			checkBlockRef(pred, fmt::format("predecessor of block {}", blockId));
-			++predSide[{pred.value, blockId.value}];
+			++predSide[{pred, blockId}];
 		}
 	}
 	yulAssert(succSide == predSide, fmt::format("CFG predecessor/successor edges are inconsistent [graph {}]", graphName()));
