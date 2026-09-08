@@ -985,7 +985,7 @@ BOOST_AUTO_TEST_CASE(live_block_unreachable_from_entry)
 	SSACFG& cfg = fixture.addGraph();
 	cfg.makeBlock(nullptr);
 	BOOST_CHECK_NO_THROW(cfg.checkInvariants());
-	expectAssertion([&] { cfg.checkAllBlocksReachable(); }, {"live but unreachable from the entry block"});
+	expectAssertion([&] { cfg.checkAllBlocksReachable(); }, {"live but unreachable"});
 }
 
 BOOST_AUTO_TEST_SUITE_END()
