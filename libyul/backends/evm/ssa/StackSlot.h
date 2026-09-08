@@ -141,7 +141,6 @@ constexpr bool canBeFreelyGenerated(StackSlot const& _slot)
 	return _slot.isLiteralValue() || _slot.isJunk() || _slot.isFunctionCallReturnLabel();
 }
 
-using StackData = std::vector<StackSlot>;
 std::string slotToString(StackSlot const& _slot);
 std::string stackToString(StackData const& _stackData);
 
