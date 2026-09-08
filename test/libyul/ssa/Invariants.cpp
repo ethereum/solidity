@@ -188,12 +188,20 @@ struct Fixture
 		instruction.payload.reset();
 	}
 
-	static void unschedule(SSACFG& _cfg, BlockId const _block, InstId const _id)
+	static void unschedule(SSACFG& _cfg, InstId const _id)
 	{
-		auto& instructions = _cfg.block(_block).instructions;
+		auto& instructions = _cfg.block(_cfg.inst(_id).block).instructions;
 		auto const it = std::find(instructions.begin(), instructions.end(), _id);
 		BOOST_REQUIRE(it != instructions.end());
 		instructions.erase(it);
+	}
+
+	/// Reschedules an instruction at the end of another block, keeping Inst::block in sync.
+	static void moveTo(SSACFG& _cfg, InstId const _id, BlockId const _target)
+	{
+		unschedule(_cfg, _id);
+		_cfg.inst(_id).block = _target;
+		_cfg.block(_target).instructions.push_back(_id);
 	}
 };
 
@@ -719,7 +727,7 @@ BOOST_AUTO_TEST_CASE(instruction_never_scheduled)
 	Fixture fixture;
 	SSACFG& cfg = fixture.addGraph();
 	auto const diamond = fixture.buildDiamond(cfg);
-	Fixture::unschedule(cfg, diamond.left, diamond.leftUpsilon);
+	Fixture::unschedule(cfg, diamond.leftUpsilon);
 	expectAssertion([&] { cfg.checkInvariants(); }, {"scheduled 0 times"});
 }
 
@@ -737,12 +745,9 @@ BOOST_AUTO_TEST_CASE(const_not_pinned_to_entry)
 {
 	Fixture fixture;
 	SSACFG& cfg = fixture.addGraph();
-	auto const diamond = fixture.buildDiamond(cfg);
-	Fixture::unschedule(cfg, diamond.entry, diamond.leftValue);
-	cfg.inst(diamond.leftValue).block = diamond.left;
-	auto& leftInstructions = cfg.block(diamond.left).instructions;
-	leftInstructions.insert(leftInstructions.begin(), diamond.leftValue);
-	expectAssertion([&] { cfg.checkInvariants(); }, {"not pinned to entry"});
+	BlockId const second = Fixture::addSecondBlock(cfg);
+	Fixture::moveTo(cfg, cfg.newLiteral(nullptr, 1), second);
+	expectAssertion([&] { cfg.checkInvariants(); }, {"not pinned to entry block"});
 }
 
 BOOST_AUTO_TEST_CASE(broken_projection_cluster)
@@ -859,9 +864,7 @@ BOOST_AUTO_TEST_CASE(function_arg_outside_the_entry_block)
 	BlockId const second = Fixture::addSecondBlock(cfg);
 	InstId const argument = cfg.newFunctionArgument();
 	cfg.arguments.push_back(argument);
-	Fixture::unschedule(cfg, cfg.entry, argument);
-	cfg.inst(argument).block = second;
-	cfg.block(second).instructions.push_back(argument);
+	Fixture::moveTo(cfg, argument, second);
 	expectAssertion([&] { cfg.checkInvariants(); }, {"FunctionArg", "not in entry block"});
 }
 
@@ -898,7 +901,7 @@ BOOST_AUTO_TEST_CASE(use_before_definition_in_the_same_block)
 	InstId const a = cfg.newLiteral(nullptr, 1);
 	InstId const b = cfg.newLiteral(nullptr, 2);
 	InstId const sum = cfg.makeBuiltinCallWithProjections(cfg.entry, BuiltinCall{fixture.builtin("add"), {}}, {a, b}, 1);
-	Fixture::unschedule(cfg, cfg.entry, sum);
+	Fixture::unschedule(cfg, sum);
 	auto& instructions = cfg.block(cfg.entry).instructions;
 	instructions.insert(instructions.begin(), sum);
 	expectAssertion([&] { cfg.checkInvariants(); }, {"defined later in the same block"});
@@ -912,8 +915,8 @@ BOOST_AUTO_TEST_CASE(definition_does_not_dominate_use)
 	InstId const definedInLeft = cfg.makeBuiltinCallWithProjections(
 		diamond.left,
 		BuiltinCall{fixture.builtin("add"), {}},
-		{diamond.leftValue, diamond.rightValue},
-		1
+		{diamond.leftValue, diamond.rightValue}, // inputs -- oops does not dominate, as scheduled in Left
+		1 // num returns
 	);
 	cfg.inst(diamond.rightUpsilon).inputs[0] = definedInLeft;
 	expectAssertion([&] { cfg.checkInvariants(); }, {"does not dominate"});
@@ -928,9 +931,7 @@ BOOST_AUTO_TEST_CASE(producer_projections_missing_from_block)
 
 	// The producer's block still dominates the projection's new block, so SSA dominance holds and
 	// only the "one projection per return value, right after the producer" rule is broken.
-	Fixture::unschedule(cfg, cfg.entry, cluster.secondProjection);
-	cfg.inst(cluster.secondProjection).block = second;
-	cfg.block(second).instructions = {cluster.secondProjection};
+	Fixture::moveTo(cfg, cluster.secondProjection, second);
 	expectAssertion([&] { cfg.checkInvariants(); }, {"returns 2 values but only 1 instructions follow it"});
 }
 
@@ -942,9 +943,7 @@ BOOST_AUTO_TEST_CASE(producer_followed_by_a_non_projection)
 	auto const cluster = fixture.addTwoReturnCall(cfg, cfg.entry);
 	fixture.addScratchInstruction(cfg, cfg.entry);
 
-	Fixture::unschedule(cfg, cfg.entry, cluster.secondProjection);
-	cfg.inst(cluster.secondProjection).block = second;
-	cfg.block(second).instructions = {cluster.secondProjection};
+	Fixture::moveTo(cfg, cluster.secondProjection, second);
 	expectAssertion([&] { cfg.checkInvariants(); }, {"but is not one of its 2 projections"});
 }
 
