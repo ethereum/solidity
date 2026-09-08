@@ -259,13 +259,15 @@ void SSACFG::checkProducerProjectionsInBlock() const
 
 // Check if a projection is a direct successor of a producer, i.e.
 // there are no other instructions in between. Does not check order.
-void SSACFG::checkProjectionsFollowProducerInBlock() const {
+void SSACFG::checkProjectionsFollowProducerInBlock() const
+{
 	for (BlockId const blockId: liveBlocks())
 	{
 		BasicBlock const& bb = block(blockId);
-		for (std::size_t i = 0; i < bb.instructions.size(); i++) {
-			auto const& projId = bb.instructions[i];
-			auto const& proj = m_instructions.inst(projId);
+		for (std::size_t i = 0; i < bb.instructions.size(); i++)
+		{
+			InstId const projId = bb.instructions[i];
+			Inst const& proj = m_instructions.inst(projId);
 			if (!proj.isProjection())
 				continue;
 
