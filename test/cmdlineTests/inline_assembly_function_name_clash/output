@@ -3,168 +3,168 @@
         "input.sol:C": {
             "function-debug-runtime": {
                 "abi_decode": {
-                    "entryPoint": 80,
+                    "entryPoint": 79,
                     "parameterSlots": 2,
                     "returnSlots": 0
                 },
                 "abi_encode_uint256": {
-                    "entryPoint": 111,
+                    "entryPoint": 110,
                     "parameterSlots": 2,
                     "returnSlots": 1
                 },
                 "abi_encode_uint256_to_uint256": {
-                    "entryPoint": 98,
+                    "entryPoint": 97,
                     "parameterSlots": 2,
                     "returnSlots": 0
                 },
                 "allocate_unbounded": {
-                    "entryPoint": 66,
+                    "entryPoint": 65,
                     "parameterSlots": 0,
                     "returnSlots": 1
                 },
                 "cleanup_uint256": {
-                    "entryPoint": 95,
+                    "entryPoint": 94,
                     "parameterSlots": 1,
                     "returnSlots": 1
                 },
                 "convert_uint256_to_uint256": {
-                    "entryPoint": 276,
+                    "entryPoint": 275,
                     "parameterSlots": 1,
                     "returnSlots": 1
                 },
                 "external_fun_f": {
-                    "entryPoint": 132,
+                    "entryPoint": 131,
                     "parameterSlots": 0,
                     "returnSlots": 0
                 },
                 "external_fun_g": {
-                    "entryPoint": 185,
+                    "entryPoint": 184,
                     "parameterSlots": 0,
                     "returnSlots": 0
                 },
                 "fun_f": {
-                    "entryPoint": 442,
+                    "entryPoint": 441,
                     "id": 25,
                     "parameterSlots": 0,
                     "returnSlots": 1
                 },
                 "fun_f_inner": {
-                    "entryPoint": 430,
+                    "entryPoint": 429,
                     "parameterSlots": 1,
                     "returnSlots": 1
                 },
                 "fun_g": {
-                    "entryPoint": 564,
+                    "entryPoint": 563,
                     "id": 36,
                     "parameterSlots": 0,
                     "returnSlots": 1
                 },
                 "fun_g_inner": {
-                    "entryPoint": 552,
+                    "entryPoint": 551,
                     "parameterSlots": 1,
                     "returnSlots": 1
                 },
                 "identity": {
-                    "entryPoint": 273,
+                    "entryPoint": 272,
                     "parameterSlots": 1,
                     "returnSlots": 1
                 },
                 "modifier_m": {
-                    "entryPoint": 509,
+                    "entryPoint": 508,
                     "id": 14,
                     "parameterSlots": 1,
                     "returnSlots": 1
                 },
                 "modifier_m_17": {
-                    "entryPoint": 344,
+                    "entryPoint": 343,
                     "id": 14,
                     "parameterSlots": 1,
                     "returnSlots": 1
                 },
                 "modifier_m_19": {
-                    "entryPoint": 387,
+                    "entryPoint": 386,
                     "id": 14,
                     "parameterSlots": 1,
                     "returnSlots": 1
                 },
                 "modifier_m_28": {
-                    "entryPoint": 466,
+                    "entryPoint": 465,
                     "id": 14,
                     "parameterSlots": 1,
                     "returnSlots": 1
                 },
                 "prepare_store_uint256": {
-                    "entryPoint": 304,
+                    "entryPoint": 303,
                     "parameterSlots": 1,
                     "returnSlots": 1
                 },
                 "revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74": {
-                    "entryPoint": 238,
+                    "entryPoint": 237,
                     "parameterSlots": 0,
                     "returnSlots": 0
                 },
                 "revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb": {
-                    "entryPoint": 72,
+                    "entryPoint": 71,
                     "parameterSlots": 0,
                     "returnSlots": 0
                 },
                 "revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b": {
-                    "entryPoint": 76,
+                    "entryPoint": 75,
                     "parameterSlots": 0,
                     "returnSlots": 0
                 },
                 "shift_left": {
-                    "entryPoint": 246,
+                    "entryPoint": 245,
                     "parameterSlots": 1,
                     "returnSlots": 1
                 },
                 "shift_right_unsigned": {
-                    "entryPoint": 60,
+                    "entryPoint": 59,
                     "parameterSlots": 1,
                     "returnSlots": 1
                 },
                 "update_byte_slice_shift": {
-                    "entryPoint": 251,
+                    "entryPoint": 250,
                     "parameterSlots": 2,
                     "returnSlots": 1
                 },
                 "update_storage_value_offset_uint256_to_uint256": {
-                    "entryPoint": 307,
+                    "entryPoint": 306,
                     "parameterSlots": 2,
                     "returnSlots": 0
                 },
                 "usr$f": {
-                    "entryPoint": 339,
+                    "entryPoint": 338,
                     "parameterSlots": 0,
                     "returnSlots": 1
                 },
                 "usr$f_17": {
-                    "entryPoint": 382,
+                    "entryPoint": 381,
                     "parameterSlots": 0,
                     "returnSlots": 1
                 },
                 "usr$f_22": {
-                    "entryPoint": 425,
+                    "entryPoint": 424,
                     "parameterSlots": 0,
                     "returnSlots": 1
                 },
                 "usr$f_26": {
-                    "entryPoint": 461,
+                    "entryPoint": 460,
                     "parameterSlots": 0,
                     "returnSlots": 1
                 },
                 "usr$f_32": {
-                    "entryPoint": 504,
+                    "entryPoint": 503,
                     "parameterSlots": 0,
                     "returnSlots": 1
                 },
                 "usr$f_37": {
-                    "entryPoint": 547,
+                    "entryPoint": 546,
                     "parameterSlots": 0,
                     "returnSlots": 1
                 },
                 "zero_value_for_split_uint256": {
-                    "entryPoint": 242,
+                    "entryPoint": 241,
                     "parameterSlots": 0,
                     "returnSlots": 1
                 }

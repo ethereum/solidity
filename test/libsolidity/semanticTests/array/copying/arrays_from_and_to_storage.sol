@@ -10,7 +10,7 @@ contract Test {
 }
 // ----
 // set(uint24[]): 0x20, 18, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 -> 18
-// gas irOptimized: 95505
+// gas irOptimized: 95502
 // gas legacy: 104176
 // gas legacyOptimized: 96785
 // data(uint256): 7 -> 8

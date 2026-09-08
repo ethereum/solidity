@@ -8,14 +8,14 @@ contract C {
 }
 // ----
 // constructor(): 1, 2, 3 ->
-// gas irOptimized: 124991
-// gas irOptimized code: 14800
+// gas irOptimized: 124975
+// gas irOptimized code: 14600
 // gas legacy: 142553
 // gas legacy code: 46200
 // gas legacyOptimized: 126306
 // gas legacyOptimized code: 23400
-// gas ssaCFGOptimized: 124797
-// gas ssaCFGOptimized code: 13200
+// gas ssaCFGOptimized: 124781
+// gas ssaCFGOptimized code: 13000
 // a(uint256): 0 -> 1
 // a(uint256): 1 -> 2
 // a(uint256): 2 -> 3

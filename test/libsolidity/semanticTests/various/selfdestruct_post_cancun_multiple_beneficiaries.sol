@@ -35,27 +35,27 @@ contract D {
 // EVMVersion: >=cancun
 // ----
 // constructor(), 2 ether ->
-// gas irOptimized: 108104
-// gas irOptimized code: 119200
+// gas irOptimized: 108072
+// gas irOptimized code: 118800
 // gas legacy: 120439
 // gas legacy code: 253800
 // gas legacyOptimized: 109015
 // gas legacyOptimized code: 130800
-// gas ssaCFGOptimized: 107852
-// gas ssaCFGOptimized code: 116200
+// gas ssaCFGOptimized: 107820
+// gas ssaCFGOptimized code: 115800
 // balance: 0x1111111111111111111111111111111111111111 -> 0
 // balance: 0x2222222222222222222222222222222222222222 -> 0
 // balance -> 2000000000000000000
 // exists() -> false
 // test_deploy_and_terminate_twice() ->
-// gas irOptimized: 121395
-// gas irOptimized code: 14000
+// gas irOptimized: 121386
+// gas irOptimized code: 13800
 // gas legacy: 122386
 // gas legacy code: 43200
 // gas legacyOptimized: 121596
 // gas legacyOptimized code: 22800
-// gas ssaCFGOptimized: 121367
-// gas ssaCFGOptimized code: 12600
+// gas ssaCFGOptimized: 121358
+// gas ssaCFGOptimized code: 12400
 // exists() -> false
 // balance: 0x1111111111111111111111111111111111111111 -> 1000000000000000000
 // balance: 0x2222222222222222222222222222222222222222 -> 0

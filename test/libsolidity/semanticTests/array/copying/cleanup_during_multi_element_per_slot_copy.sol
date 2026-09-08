@@ -16,12 +16,12 @@ contract C {
 }
 // ----
 // constructor()
-// gas irOptimized: 89349
-// gas irOptimized code: 140200
+// gas irOptimized: 89333
+// gas irOptimized code: 140000
 // gas legacy: 100902
 // gas legacy code: 271400
 // gas legacyOptimized: 83062
 // gas legacyOptimized code: 91800
-// gas ssaCFGOptimized: 88679
-// gas ssaCFGOptimized code: 138000
+// gas ssaCFGOptimized: 88663
+// gas ssaCFGOptimized code: 137800
 // f() -> 0

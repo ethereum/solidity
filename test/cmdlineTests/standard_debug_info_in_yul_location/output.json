@@ -160,7 +160,7 @@ object \"C_54\" {
             /// @src 0:79:510  \"contract C...\"
             mstore(64, memoryguard(128))
 
-            if iszero(lt(calldatasize(), 4))
+            if gt(calldatasize(), 3)
             {
                 let selector := shift_right_224_unsigned(calldataload(0))
                 switch selector
@@ -651,7 +651,7 @@ object \"C_54\" {
             {
                 /// @src 0:79:510  \"contract C...\"
                 mstore(64, memoryguard(0x80))
-                if iszero(lt(calldatasize(), 4))
+                if gt(calldatasize(), 3)
                 {
                     switch shr(224, calldataload(0))
                     case 0x26121ff0 {
@@ -996,7 +996,7 @@ object \"D_72\" {
             /// @src 1:91:181  \"contract D is C(3)...\"
             mstore(64, memoryguard(128))
 
-            if iszero(lt(calldatasize(), 4))
+            if gt(calldatasize(), 3)
             {
                 let selector := shift_right_224_unsigned(calldataload(0))
                 switch selector
@@ -1494,7 +1494,7 @@ object \"D_72\" {
             {
                 /// @src 1:91:181  \"contract D is C(3)...\"
                 mstore(64, memoryguard(0x80))
-                if iszero(lt(calldatasize(), 4))
+                if gt(calldatasize(), 3)
                 {
                     switch shr(224, calldataload(0))
                     case 0x26121ff0 {

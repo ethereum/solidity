@@ -37,9 +37,9 @@ contract C {
 }
 // ----
 // from_storage() -> 0x20, 2, 0x40, 0xa0, 2, 10, 11, 3, 12, 13, 14
-// gas irOptimized: 147749
+// gas irOptimized: 147746
 // gas legacy: 154218
 // gas legacyOptimized: 147020
-// gas ssaCFGOptimized: 147516
+// gas ssaCFGOptimized: 147513
 // from_storage_ptr() -> 0x20, 2, 0x40, 0xa0, 2, 10, 11, 3, 12, 13, 14
 // from_memory() -> 0x20, 2, 0x40, 0xa0, 2, 10, 11, 3, 12, 13, 14

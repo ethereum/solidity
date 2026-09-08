@@ -17,7 +17,7 @@ object "D_8" {
         code {
             {
                 /// @src 0:82:166  "contract D {..."
-                if iszero(lt(calldatasize(), 4))
+                if gt(calldatasize(), 3)
                 {
                     if eq(0x26121ff0, shr(224, calldataload(0)))
                     {

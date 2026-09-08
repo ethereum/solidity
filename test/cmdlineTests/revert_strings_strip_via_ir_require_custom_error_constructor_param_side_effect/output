@@ -27,7 +27,7 @@ sub_0: assembly {
       dup1
       0x40
       mstore
-      jumpi(tag_2, iszero(lt(calldatasize, 0x04)))
+      jumpi(tag_2, gt(calldatasize, 0x03))
       0x00
       dup1
       revert

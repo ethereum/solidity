@@ -27,7 +27,7 @@ object "C_6" {
             {
                 /// @src 0:60:103  "contract C..."
                 mstore(64, memoryguard(0x80))
-                if iszero(lt(calldatasize(), 4))
+                if gt(calldatasize(), 3)
                 {
                     let selector := shift_right_unsigned(calldataload(0))
                     if eq(0x26121ff0, selector) { external_fun_f() }

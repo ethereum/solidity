@@ -16,7 +16,7 @@ object "C_16" {
         code {
             {
                 let _1 := memoryguard(0x80)
-                if iszero(lt(calldatasize(), 4))
+                if gt(calldatasize(), 3)
                 {
                     if eq(0x26121ff0, shr(224, calldataload(0)))
                     {

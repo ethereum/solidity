@@ -20,7 +20,7 @@ tag_1:
 stop
 
 sub_0: assembly {
-      jumpi(tag_1, iszero(lt(calldatasize, 0x04)))
+      jumpi(tag_1, gt(calldatasize, 0x03))
       0x00
       dup1
       revert

@@ -18,7 +18,7 @@ object "Arraysum_34" {
             {
                 /// @src 0:80:429  "contract Arraysum {..."
                 mstore(64, memoryguard(0x80))
-                if iszero(lt(calldatasize(), 4))
+                if gt(calldatasize(), 3)
                 {
                     if eq(0x81d73423, shr(224, calldataload(0)))
                     {

@@ -9,11 +9,11 @@ contract c {
 // EVMVersion: >=byzantium
 // ----
 // (): 1, 2, 3, 4, 5 ->
-// gas irOptimized: 155122
+// gas irOptimized: 155119
 // gas legacy: 155473
 // gas legacyOptimized: 155296
-// gas ssaCFGOptimized: 155110
+// gas ssaCFGOptimized: 155107
 // checkIfDataIsEmpty() -> false
 // sendMessage() -> true, 0x40, 0
-// gas irOptimized: 41925
+// gas irOptimized: 41920
 // checkIfDataIsEmpty() -> true

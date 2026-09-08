@@ -38,7 +38,7 @@ contract C is B {
 }
 // ----
 // test() -> 5, 10
-// gas irOptimized: 65040
-// gas irOptimized code: 26200
+// gas irOptimized: 65031
+// gas irOptimized code: 26000
 // gas legacy: 66250
 // gas legacy code: 36400

@@ -29,13 +29,13 @@ contract C {
 // EVMVersion: >=constantinople
 // ----
 // f() -> 3, 7, 5
-// gas irOptimized: 86892
-// gas irOptimized code: 37200
+// gas irOptimized: 86883
+// gas irOptimized code: 36800
 // gas legacy: 87839
 // gas legacy code: 60800
 // gas legacyOptimized: 86870
 // gas legacyOptimized code: 37200
-// gas ssaCFGOptimized: 86830
-// gas ssaCFGOptimized code: 34400
+// gas ssaCFGOptimized: 86821
+// gas ssaCFGOptimized code: 34000
 // x() -> 7
 // y() -> 5

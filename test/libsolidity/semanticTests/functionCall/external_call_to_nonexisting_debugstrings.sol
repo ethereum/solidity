@@ -25,14 +25,14 @@ contract C {
 // revertStrings: debug
 // ----
 // constructor(), 1 ether ->
-// gas irOptimized: 98698
-// gas irOptimized code: 284200
+// gas irOptimized: 98682
+// gas irOptimized code: 284000
 // gas legacy: 123258
 // gas legacy code: 682400
 // gas legacyOptimized: 106969
 // gas legacyOptimized code: 386400
-// gas ssaCFGOptimized: 97470
-// gas ssaCFGOptimized code: 269600
+// gas ssaCFGOptimized: 97454
+// gas ssaCFGOptimized code: 269400
 // f(uint256): 0 -> FAILURE, hex"08c379a0", 0x20, 37, "Target contract does not contain", " code"
 // f(uint256): 1 -> FAILURE, hex"08c379a0", 0x20, 37, "Target contract does not contain", " code"
 // f(uint256): 2 -> FAILURE, hex"08c379a0", 0x20, 37, "Target contract does not contain", " code"

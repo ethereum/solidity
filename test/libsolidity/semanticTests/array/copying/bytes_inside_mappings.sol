@@ -5,22 +5,22 @@ contract c {
 }
 // ----
 // set(uint256): 1, 2 -> true
-// gas irOptimized: 110560
+// gas irOptimized: 110557
 // gas legacy: 111310
 // gas legacyOptimized: 110741
-// gas ssaCFGOptimized: 110561
+// gas ssaCFGOptimized: 110558
 // set(uint256): 2, 2, 3, 4, 5 -> true
-// gas irOptimized: 177511
+// gas irOptimized: 177508
 // gas legacy: 178312
 // gas legacyOptimized: 177716
-// gas ssaCFGOptimized: 177503
+// gas ssaCFGOptimized: 177500
 // storageEmpty -> 0
 // copy(uint256,uint256): 1, 2 -> true
-// gas irOptimized: 48421
+// gas irOptimized: 48419
 // storageEmpty -> 0
 // copy(uint256,uint256): 99, 1 -> true
-// gas irOptimized: 35641
+// gas irOptimized: 35639
 // storageEmpty -> 0
 // copy(uint256,uint256): 99, 2 -> true
-// gas irOptimized: 35641
+// gas irOptimized: 35639
 // storageEmpty -> 1

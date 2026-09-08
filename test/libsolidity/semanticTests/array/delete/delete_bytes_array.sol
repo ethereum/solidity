@@ -32,4 +32,4 @@ contract C {
 // ----
 // f() -> 0
 // g() -> 0
-// gas irOptimized: 56617
+// gas irOptimized: 56615

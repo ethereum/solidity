@@ -21,11 +21,11 @@ contract A {
 // EVMVersion: >=constantinople
 // ----
 // f(), 10 ether -> 3007, 3008, 3009
-// gas irOptimized: 187022
-// gas irOptimized code: 67200
+// gas irOptimized: 187010
+// gas irOptimized code: 66600
 // gas legacy: 190858
 // gas legacy code: 190200
 // gas legacyOptimized: 187256
 // gas legacyOptimized code: 92400
-// gas ssaCFGOptimized: 186940
-// gas ssaCFGOptimized code: 61200
+// gas ssaCFGOptimized: 186928
+// gas ssaCFGOptimized code: 60600

@@ -29,11 +29,11 @@ contract C {
 // compileViaYul: true
 // ----
 // test1((uint8[],uint8[2])[][]): 0x20, 2, 0x40, 0x0140, 1, 0x20, 0x60, 3, 7, 2, 1, 2, 2, 0x40, 0x0100, 0x60, 17, 19, 2, 11, 13, 0x60, 31, 37, 2, 23, 29 -> 0x20, 2, 0x40, 0x0140, 1, 0x20, 0x60, 3, 7, 2, 1, 2, 2, 0x40, 0x0100, 0x60, 17, 19, 2, 11, 13, 0x60, 31, 37, 2, 23, 29
-// gas irOptimized: 304750
-// gas ssaCFGOptimized: 304427
+// gas irOptimized: 304747
+// gas ssaCFGOptimized: 304424
 // test2((uint8[],uint8[2])[][1]): 0x20, 0x20, 1, 0x20, 0x60, 17, 19, 2, 11, 13 -> 0x20, 0x20, 1, 0x20, 0x60, 17, 19, 2, 11, 13
-// gas irOptimized: 116659
-// gas ssaCFGOptimized: 116383
+// gas irOptimized: 116656
+// gas ssaCFGOptimized: 116380
 // test3((uint8[],uint8[2])[1][]): 0x20, 2, 0x40, 0x0120, 0x20, 0x60, 3, 7, 2, 1, 2, 0x20, 0x60, 17, 19, 2, 11, 13 -> 0x20, 2, 0x40, 0x0120, 0x20, 0x60, 3, 7, 2, 1, 2, 0x20, 0x60, 17, 19, 2, 11, 13
-// gas irOptimized: 187942
-// gas ssaCFGOptimized: 187713
+// gas irOptimized: 187939
+// gas ssaCFGOptimized: 187710

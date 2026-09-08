@@ -38,7 +38,7 @@ stop
 
 sub_0: assembly {
       mstore(0x40, 0x80)
-      jumpi(tag_10, lt(calldatasize, 0x04))
+      jumpi(tag_10, iszero(gt(calldatasize, 0x03)))
       tag_11
       calldataload(0x00)
       tag_1
@@ -196,7 +196,7 @@ object "C_7" {
     object "C_7_deployed" {
         code {
             mstore(64, memoryguard(128))
-            if iszero(lt(calldatasize(), 4))
+            if gt(calldatasize(), 3)
             {
                 let selector := shift_right_224_unsigned(calldataload(0))
                 switch selector

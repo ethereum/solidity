@@ -18,7 +18,7 @@ object "C_59" {
             {
                 /// @src 0:346:625  "contract C {..."
                 mstore(64, memoryguard(0x80))
-                if iszero(lt(calldatasize(), 4))
+                if gt(calldatasize(), 3)
                 {
                     if eq(0xf8eddcc6, shr(224, calldataload(0)))
                     {

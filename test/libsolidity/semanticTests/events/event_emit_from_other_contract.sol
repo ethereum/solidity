@@ -15,13 +15,13 @@ contract C {
 }
 // ----
 // constructor() ->
-// gas irOptimized: 113970
-// gas irOptimized code: 51400
+// gas irOptimized: 113932
+// gas irOptimized code: 51000
 // gas legacy: 119791
 // gas legacy code: 125200
 // gas legacyOptimized: 114187
 // gas legacyOptimized code: 57400
-// gas ssaCFGOptimized: 113683
-// gas ssaCFGOptimized code: 47800
+// gas ssaCFGOptimized: 113651
+// gas ssaCFGOptimized code: 47400
 // deposit(bytes32), 18 wei: 0x1234 ->
 // ~ emit Deposit(address,bytes32,uint256) from 0x137aa4dfc0911524504fcd4d98501f179bc13b4a: #0xc06afe3a8444fc0004668591e8306bfb9968e79e, #0x1234, 0x00

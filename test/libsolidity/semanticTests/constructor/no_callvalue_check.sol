@@ -19,11 +19,11 @@ contract C {
 // EVMVersion: >=constantinople
 // ----
 // f(), 2000 ether -> true
-// gas irOptimized: 117688
+// gas irOptimized: 117685
 // gas irOptimized code: 1800
 // gas legacy: 117889
 // gas legacy code: 4800
 // gas legacyOptimized: 117761
 // gas legacyOptimized code: 4800
-// gas ssaCFGOptimized: 117693
+// gas ssaCFGOptimized: 117690
 // gas ssaCFGOptimized code: 1800

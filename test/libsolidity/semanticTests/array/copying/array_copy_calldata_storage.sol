@@ -20,8 +20,8 @@ contract c {
 }
 // ----
 // store(uint256[9],uint8[3][]): 21, 22, 23, 24, 25, 26, 27, 28, 29, 0x140, 4, 1, 2, 3, 11, 12, 13, 21, 22, 23, 31, 32, 33 -> 32
-// gas irOptimized: 647730
+// gas irOptimized: 647727
 // gas legacy: 659420
 // gas legacyOptimized: 648899
-// gas ssaCFGOptimized: 647762
+// gas ssaCFGOptimized: 647759
 // retrieve() -> 9, 28, 9, 28, 4, 3, 32

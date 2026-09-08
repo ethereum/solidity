@@ -68,11 +68,11 @@ contract C {
 // testCall() -> true
 // tloadAllowedStaticCall() -> true
 // tstoreNotAllowedStaticCall() -> true
-// gas irOptimized: 98419721
-// gas irOptimized code: 19000
+// gas irOptimized: 98419917
+// gas irOptimized code: 18800
 // gas legacy: 98409087
 // gas legacy code: 30000
 // gas legacyOptimized: 98420962
 // gas legacyOptimized code: 17800
-// gas ssaCFGOptimized: 98421102
-// gas ssaCFGOptimized code: 17600
+// gas ssaCFGOptimized: 98421298
+// gas ssaCFGOptimized code: 17400

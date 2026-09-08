@@ -12,13 +12,13 @@ contract D is C {
 }
 // ----
 // constructor(): 2, 0 ->
-// gas irOptimized: 101581
-// gas irOptimized code: 20200
+// gas irOptimized: 101565
+// gas irOptimized code: 20000
 // gas legacy: 105192
 // gas legacy code: 32000
 // gas legacyOptimized: 101503
 // gas legacyOptimized code: 17000
-// gas ssaCFGOptimized: 101460
-// gas ssaCFGOptimized code: 18800
+// gas ssaCFGOptimized: 101444
+// gas ssaCFGOptimized code: 18600
 // i() -> 2
 // k() -> 1

@@ -31,10 +31,10 @@ contract D is A, B, C layout at 42 {
 }
 // ----
 // test() -> 1, 2, 3, 5
-// gas irOptimized: 110112
+// gas irOptimized: 110109
 // gas legacy: 111881
 // gas legacyOptimized: 110945
-// gas ssaCFGOptimized: 110206
+// gas ssaCFGOptimized: 110203
 // x() -> 1
 // y() -> 2
 // w() -> 3

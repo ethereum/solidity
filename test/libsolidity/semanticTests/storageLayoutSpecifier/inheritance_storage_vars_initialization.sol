@@ -14,20 +14,20 @@ contract F {
 }
 // ----
 // withSpecifier() -> 1, 10, 15
-// gas irOptimized: 121822
-// gas irOptimized code: 30800
+// gas irOptimized: 121810
+// gas irOptimized code: 30600
 // gas legacy: 123715
 // gas legacy code: 63400
 // gas legacyOptimized: 121966
 // gas legacyOptimized code: 23800
-// gas ssaCFGOptimized: 121773
-// gas ssaCFGOptimized code: 29600
+// gas ssaCFGOptimized: 121761
+// gas ssaCFGOptimized code: 29400
 // withoutSpecifier() -> 1, 10, 15
-// gas irOptimized: 121768
-// gas irOptimized code: 27600
+// gas irOptimized: 121756
+// gas irOptimized code: 27400
 // gas legacy: 123599
 // gas legacy code: 40400
 // gas legacyOptimized: 121916
 // gas legacyOptimized code: 20600
-// gas ssaCFGOptimized: 121729
-// gas ssaCFGOptimized code: 26400
+// gas ssaCFGOptimized: 121717
+// gas ssaCFGOptimized code: 26200

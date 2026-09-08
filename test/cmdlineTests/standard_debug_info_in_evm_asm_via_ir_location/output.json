@@ -77,7 +77,7 @@ stop
 sub_0: assembly {
         /* \"C\":79:503  contract C... */
       mstore(0x40, 0x80)
-      jumpi(tag_2, iszero(lt(calldatasize, 0x04)))
+      jumpi(tag_2, gt(calldatasize, 0x03))
       0x00
       dup1
       revert
@@ -423,7 +423,7 @@ stop
 sub_0: assembly {
         /* \"D\":91:181  contract D is C(3)... */
       mstore(0x40, 0x80)
-      jumpi(tag_2, iszero(lt(calldatasize, 0x04)))
+      jumpi(tag_2, gt(calldatasize, 0x03))
       0x00
       dup1
       revert

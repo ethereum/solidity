@@ -64,14 +64,14 @@ contract D {
 // EVMVersion: >=cancun
 // ----
 // constructor(), 1 ether ->
-// gas irOptimized: 67028
-// gas irOptimized code: 175400
+// gas irOptimized: 66972
+// gas irOptimized code: 175000
 // gas legacy: 76227
 // gas legacy code: 298200
 // gas legacyOptimized: 66516
 // gas legacyOptimized code: 168000
-// gas ssaCFGOptimized: 66800
-// gas ssaCFGOptimized code: 172400
+// gas ssaCFGOptimized: 66768
+// gas ssaCFGOptimized code: 172000
 // exists() -> false
 // test_create_and_terminate() ->
 // exists() -> false

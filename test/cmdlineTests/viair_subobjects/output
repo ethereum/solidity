@@ -57,7 +57,7 @@ object "D_16" {
                 /// @src 0:96:165  "contract D {..."
                 let _1 := memoryguard(0x80)
                 mstore(64, _1)
-                if iszero(lt(calldatasize(), 4))
+                if gt(calldatasize(), 3)
                 {
                     if eq(0x26121ff0, shr(224, calldataload(0)))
                     {

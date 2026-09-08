@@ -40,7 +40,7 @@ object \"C_11\" {
             /// @src 0:78:243  \"contract C { function f() external pure returns (string memory) { return \\\"abcdabcdcafecafeabcdabcdcafecafeffffzzzzoooo0123456789,.<,>.?:;'[{]}|`~!@#$%^&*()-_=+\\\"; } }\"
             mstore(64, memoryguard(128))
 
-            if iszero(lt(calldatasize(), 4))
+            if gt(calldatasize(), 3)
             {
                 let selector := shift_right_224_unsigned(calldataload(0))
                 switch selector

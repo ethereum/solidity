@@ -16,7 +16,7 @@ object "C_19" {
         code {
             {
                 mstore(64, 128)
-                if iszero(lt(calldatasize(), 4))
+                if gt(calldatasize(), 3)
                 {
                     switch shr(224, calldataload(0))
                     case 0x26121ff0 {

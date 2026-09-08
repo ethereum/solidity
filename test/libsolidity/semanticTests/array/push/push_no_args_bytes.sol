@@ -21,10 +21,10 @@ contract C {
 // ----
 // l() -> 0
 // g(uint256): 70 ->
-// gas irOptimized: 181778
+// gas irOptimized: 181775
 // gas legacy: 175192
 // gas legacyOptimized: 175005
-// gas ssaCFGOptimized: 182024
+// gas ssaCFGOptimized: 182021
 // l() -> 70
 // a(uint256): 69 -> left(69)
 // f() ->

@@ -88,10 +88,10 @@ contract C {
 // arrayLength() -> 0
 // canaryValue() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 // fillArray()
-// gas irOptimized: 197352
+// gas irOptimized: 197349
 // gas legacy: 220574
 // gas legacyOptimized: 206839
-// gas ssaCFGOptimized: 197540
+// gas ssaCFGOptimized: 197537
 // arrayLength() -> 96
 // canaryValue() -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 // getArrayBytes(uint256,uint256): 0, 5 -> 0x20, 5, 0x0102030405000000000000000000000000000000000000000000000000000000

@@ -28,9 +28,9 @@ contract C {
 // getXAsUint() -> 0, 1, 2, 3, 4, 5, 6, 7, 8
 // getYAsUint() -> 0, 0, 0, 0, 0, 0, 0, 0, 2, 2
 // copy()
-// gas irOptimized: 190810
+// gas irOptimized: 190807
 // gas legacy: 195580
 // gas legacyOptimized: 190906
-// gas ssaCFGOptimized: 190920
+// gas ssaCFGOptimized: 190917
 // getXAsUint() -> 0, 1, 2, 3, 4, 5, 6, 7, 8
 // getYAsUint() -> 0, 1, 2, 3, 4, 5, 6, 7, 8, 0

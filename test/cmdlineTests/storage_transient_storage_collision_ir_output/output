@@ -54,7 +54,7 @@ object "C_25" {
         code {
             {
                 mstore(64, memoryguard(0x80))
-                if iszero(lt(calldatasize(), 4))
+                if gt(calldatasize(), 3)
                 {
                     let selector := shift_right_unsigned(calldataload(0))
                     switch selector

@@ -31,11 +31,11 @@ contract C {
 // compileViaYul: true
 // ----
 // test1((uint8[],uint8[2])[][][]): 0x20, 1, 0x20, 2, 0x40, 0x0140, 1, 0x20, 0x60, 3, 7, 2, 1, 2, 2, 0x40, 0x0100, 0x60, 17, 19, 2, 11, 13, 0x60, 31, 37, 2, 23, 29 -> 0x20, 2, 0x40, 0x0140, 1, 0x20, 0x60, 3, 7, 2, 1, 2, 2, 0x40, 0x0100, 0x60, 17, 19, 2, 11, 13, 0x60, 31, 37, 2, 23, 29
-// gas irOptimized: 327936
-// gas ssaCFGOptimized: 327612
+// gas irOptimized: 327933
+// gas ssaCFGOptimized: 327609
 // test2((uint8[],uint8[2])[][1][]): 0x20, 2, 0x40, 0x0160, 0x20, 1, 0x20, 0x60, 17, 19, 2, 11, 13, 0x20, 1, 0x20, 0x60, 31, 37, 2, 23, 29 -> 0x20, 0x20, 1, 0x20, 0x60, 17, 19, 2, 11, 13
-// gas irOptimized: 141168
-// gas ssaCFGOptimized: 140888
+// gas irOptimized: 141165
+// gas ssaCFGOptimized: 140885
 // test3((uint8[],uint8[2])[1][][2]): 0x20, 0x40, 0x60, 0, 2, 0x40, 288, 0x20, 0x60, 3, 7, 2, 1, 2, 0x20, 0x60, 17, 19, 2, 11, 13 -> 0x20, 2, 0x40, 288, 0x20, 0x60, 3, 7, 2, 1, 2, 0x20, 0x60, 17, 19, 2, 11, 13
-// gas irOptimized: 188448
-// gas ssaCFGOptimized: 188289
+// gas irOptimized: 188445
+// gas ssaCFGOptimized: 188286

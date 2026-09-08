@@ -24,11 +24,11 @@ contract Main {
 }
 // ----
 // f(uint256): 0x34 -> 0x46bddb1178e94d7f2892ff5f366840eb658911794f2c3a44c450aa2c505186c1
-// gas irOptimized: 99552
-// gas irOptimized code: 12400
+// gas irOptimized: 99535
+// gas irOptimized code: 12200
 // gas legacy: 101551
 // gas legacy code: 23600
 // gas legacyOptimized: 99612
 // gas legacyOptimized code: 13400
-// gas ssaCFGOptimized: 99510
-// gas ssaCFGOptimized code: 11000
+// gas ssaCFGOptimized: 99501
+// gas ssaCFGOptimized code: 10800
