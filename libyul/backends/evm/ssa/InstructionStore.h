@@ -170,6 +170,11 @@ public:
 		return static_cast<NumReturnsSizeType>(count);
 	}
 
+#ifdef SLOW_DEBUG
+	void checkInvariants() const;
+	void checkValidOperand(InstId _id, std::string const& _ctx) const;
+#endif
+
 	/// Allocates a new Phi Inst defined in `_definingBlock`. Returns the new InstId.
 	InstId appendPhi(BlockId const _definingBlock)
 	{
@@ -464,8 +469,6 @@ private:
 	};
 
 #ifdef SLOW_DEBUG
-	void checkInvariants() const;
-	void checkValidOperand(InstId _id, std::string const& _ctx) const;
 	void checkOpcodeShapes() const;
 	void checkOpcodeShape(InstId _id) const;
 	void checkLiteralDedup() const;
