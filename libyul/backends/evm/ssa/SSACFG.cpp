@@ -306,6 +306,11 @@ void SSACFG::checkBlockRef(BlockId const _id, std::string const& _ctx) const
 	yulAssert(hasBlock(_id), fmt::format("BlockId {} referenced by {} is not a live block [graph {}]", _id, _ctx, graphName()));
 }
 
+void SSACFG::checkOperand(InstId const _id, std::string const& _ctx) const
+{
+	m_instructions.checkValidOperand(_id, fmt::format("{} [graph {}]", _ctx, graphName()));
+}
+
 std::vector<std::uint32_t> SSACFG::checkScheduling() const
 {
 	std::vector<std::uint32_t> scheduleCount(numInsts(), 0);
@@ -314,17 +319,17 @@ std::vector<std::uint32_t> SSACFG::checkScheduling() const
 		BasicBlock const& bb = block(blockId);
 		for (InstId const instId: bb.instructions)
 		{
-			m_instructions.checkValidOperand(instId, fmt::format("instructions of block {}", blockId));
+			checkOperand(instId, fmt::format("instructions of block {}", blockId));
 			yulAssert(inst(instId).block == blockId,
 				fmt::format("{} scheduled in block {} but inst.block is {} [graph {}]", instId, blockId, inst(instId).block, graphName())
 			);
 			++scheduleCount[instId.value];
 		}
 		if (auto const* cj = std::get_if<BasicBlock::ConditionalJump>(&bb.exit))
-			m_instructions.checkValidOperand(cj->condition, fmt::format("condition of block {}", blockId));
+			checkOperand(cj->condition, fmt::format("condition of block {}", blockId));
 		else if (auto const* ret = std::get_if<BasicBlock::FunctionReturn>(&bb.exit))
 			for (InstId const rv: ret->returnValues)
-				m_instructions.checkValidOperand(rv, fmt::format("return value of block {}", blockId));
+				checkOperand(rv, fmt::format("return value of block {}", blockId));
 	}
 	return scheduleCount;
 }
@@ -546,7 +551,7 @@ void SSACFG::checkArguments() const
 
 	for (InstId const arg: arguments)
 	{
-		m_instructions.checkValidOperand(arg, "cfg.arguments");
+		checkOperand(arg, "cfg.arguments");
 		yulAssert(isFunctionArg(arg), fmt::format("arguments entry {} is not a FunctionArg [graph {}]", arg, graphName()));
 	}
 }
