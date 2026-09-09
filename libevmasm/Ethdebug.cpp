@@ -191,12 +191,17 @@ Json ethdebug::program(std::string_view _name, unsigned _sourceID, Assembly cons
 	};
 }
 
-Json ethdebug::resources(std::vector<Source> const& _sources, std::string_view _version)
+Json ethdebug::resources(
+	std::vector<Source> const& _sources,
+	std::string_view _version,
+	std::map<std::string, schema::type::Type> _types,
+	std::map<std::string, schema::pointer::Template> _pointers
+)
 {
 	schema::info::Resources result;
 	result.compilation = materialCompilation(_sources, _version);
-	result.types = Json::object();
-	result.pointers = Json::object();
+	result.types = std::move(_types);
+	result.pointers = std::move(_pointers);
 	return result;
 }
 

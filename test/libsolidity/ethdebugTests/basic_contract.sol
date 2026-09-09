@@ -19,6 +19,9 @@ contract C {
 // .resources.compilation.sources | length: 1
 // .resources.compilation.sources[0].id: 0
 // .resources.compilation.sources[0].language: Solidity
+// .resources.types.t_uint256.kind: uint
+// .resources.types.t_uint256.bits: 256
+// .resources.pointers | length: 1
 //
 // C.contract.name: C
 // C.creation.environment: create

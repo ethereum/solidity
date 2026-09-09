@@ -21,8 +21,52 @@
 #include <libsolutil/Numeric.h>
 #include <libsolutil/Visitor.h>
 
+#include <cctype>
+#include <string_view>
+
 using namespace solidity;
 using namespace solidity::evmasm::ethdebug;
+
+namespace
+{
+
+/// The identifier grammar of ethdebug/format/pointer/identifier:
+/// `^[a-zA-Z_\-]+[a-zA-Z0-9$_\-]*$`.
+bool isIdentifier(std::string_view _text)
+{
+	auto const isStart = [](char _c) { return std::isalpha(static_cast<unsigned char>(_c)) || _c == '_' || _c == '-'; };
+	auto const isRest = [&](char _c) { return isStart(_c) || std::isdigit(static_cast<unsigned char>(_c)) || _c == '$'; };
+	if (_text.empty() || !isStart(_text.front()))
+		return false;
+	for (char const c: _text)
+		if (!isRest(c))
+			return false;
+	return true;
+}
+
+void requireIdentifier(std::string_view _text, std::string_view _what)
+{
+	solRequire(isIdentifier(_text), schema::EthdebugException, std::string(_what) + " \"" + std::string(_text) + "\" is not an identifier.");
+}
+
+/// A region reference is an identifier or `$this`.
+void requireRegionReference(std::string_view _text)
+{
+	solRequire(_text == "$this" || isIdentifier(_text), schema::EthdebugException, "Region reference \"" + std::string(_text) + "\" is not an identifier.");
+}
+
+void requireBits(unsigned _bits)
+{
+	solRequire(_bits >= 8 && _bits <= 256 && _bits % 8 == 0, schema::EthdebugException, "Type width must be a multiple of 8 bits up to 256.");
+}
+
+void requirePlaces(unsigned _places)
+{
+	solRequire(_places >= 1 && _places <= 80, schema::EthdebugException, "Fixed point type must have between 1 and 80 decimal places.");
+}
+
+}
+
 
 void schema::data::to_json(Json& _json, HexValue const& _hexValue)
 {
@@ -89,6 +133,335 @@ void schema::materials::to_json(Json& _json, Compilation const& _compilation)
 	if (_compilation.settings)
 		_json["settings"] = *_compilation.settings;
 	_json["sources"] = _compilation.sources;
+}
+
+void schema::type::to_json(Json& _json, Reference const& _reference)
+{
+	_json = Json::object();
+	_json["id"] = _reference.id;
+}
+
+void schema::type::to_json(Json& _json, Specifier const& _specifier)
+{
+	std::visit(util::GenericVisitor{
+		[&](Reference const& _reference) { _json = _reference; },
+		[&](TypePtr const& _type)
+		{
+			solRequire(_type, EthdebugException, "Type specifier without a type.");
+			_json = *_type;
+		}
+	}, _specifier.value);
+}
+
+void schema::type::to_json(Json& _json, Wrapper const& _wrapper)
+{
+	_json = Json::object();
+	if (_wrapper.name)
+		_json["name"] = *_wrapper.name;
+	_json["type"] = _wrapper.type;
+}
+
+void schema::type::to_json(Json& _json, Definition const& _definition)
+{
+	solRequire(_definition.name || _definition.location, EthdebugException, "Type definition has no properties.");
+	_json = Json::object();
+	if (_definition.name)
+		_json["name"] = *_definition.name;
+	if (_definition.location)
+		_json["location"] = *_definition.location;
+}
+
+void schema::type::to_json(Json& _json, Type const& _type)
+{
+	_json = Json::object();
+	auto const definition = [&](std::optional<Definition> const& _definition) {
+		if (_definition)
+			_json["definition"] = *_definition;
+	};
+	std::visit(util::GenericVisitor{
+		[&](UInt const& _uint)
+		{
+			requireBits(_uint.bits);
+			_json["kind"] = "uint";
+			_json["bits"] = _uint.bits;
+		},
+		[&](Int const& _int)
+		{
+			requireBits(_int.bits);
+			_json["kind"] = "int";
+			_json["bits"] = _int.bits;
+		},
+		[&](Bool const&) { _json["kind"] = "bool"; },
+		[&](Bytes const& _bytes)
+		{
+			_json["kind"] = "bytes";
+			if (_bytes.size)
+				_json["size"] = *_bytes.size;
+		},
+		[&](String const& _string)
+		{
+			_json["kind"] = "string";
+			if (_string.encoding)
+				_json["encoding"] = *_string.encoding;
+		},
+		[&](UFixed const& _ufixed)
+		{
+			requireBits(_ufixed.bits);
+			requirePlaces(_ufixed.places);
+			_json["kind"] = "ufixed";
+			_json["bits"] = _ufixed.bits;
+			_json["places"] = _ufixed.places;
+		},
+		[&](Fixed const& _fixed)
+		{
+			requireBits(_fixed.bits);
+			requirePlaces(_fixed.places);
+			_json["kind"] = "fixed";
+			_json["bits"] = _fixed.bits;
+			_json["places"] = _fixed.places;
+		},
+		[&](Address const& _address)
+		{
+			_json["kind"] = "address";
+			if (_address.payable)
+				_json["payable"] = *_address.payable;
+		},
+		[&](Contract const& _contract)
+		{
+			_json["kind"] = "contract";
+			if (_contract.payable)
+				_json["payable"] = *_contract.payable;
+			if (_contract.kind == Contract::Kind::Library)
+				_json["library"] = true;
+			else if (_contract.kind == Contract::Kind::Interface)
+				_json["interface"] = true;
+			definition(_contract.definition);
+		},
+		[&](Enum const& _enum)
+		{
+			_json["kind"] = "enum";
+			_json["values"] = _enum.values;
+			definition(_enum.definition);
+		},
+		[&](Alias const& _alias)
+		{
+			_json["kind"] = "alias";
+			_json["contains"] = _alias.contains;
+			definition(_alias.definition);
+		},
+		[&](Array const& _array)
+		{
+			_json["kind"] = "array";
+			_json["contains"] = _array.contains;
+			if (_array.count)
+				_json["count"] = *_array.count;
+		},
+		[&](Mapping const& _mapping)
+		{
+			_json["kind"] = "mapping";
+			_json["contains"] = Json{{"key", _mapping.key}, {"value", _mapping.value}};
+		},
+		[&](Struct const& _struct)
+		{
+			_json["kind"] = "struct";
+			_json["contains"] = _struct.contains;
+			definition(_struct.definition);
+		},
+		[&](Tuple const& _tuple)
+		{
+			_json["kind"] = "tuple";
+			_json["contains"] = _tuple.contains;
+		},
+		[&](Function const& _function)
+		{
+			_json["kind"] = "function";
+			_json[_function.visibility == Function::Visibility::Internal ? "internal" : "external"] = true;
+			Json contains{{"parameters", _function.parameters}};
+			if (_function.returns)
+				contains["returns"] = *_function.returns;
+			_json["contains"] = std::move(contains);
+			definition(_function.definition);
+		}
+	}, _type.value);
+}
+
+void schema::pointer::to_json(Json& _json, Expression const& _expression)
+{
+	auto const operands = [](Operands const& _operands, std::optional<size_t> _arity = std::nullopt) {
+		if (_arity)
+			solRequire(_operands.size() == *_arity, EthdebugException, "Pointer expression has the wrong number of operands.");
+		return Json(_operands);
+	};
+	std::visit(util::GenericVisitor{
+		[&](Literal const& _literal) { _json = _literal.value; },
+		[&](Variable const& _variable)
+		{
+			requireIdentifier(_variable.identifier, "Pointer expression variable");
+			_json = _variable.identifier;
+		},
+		[&](Constant const _constant)
+		{
+			solRequire(_constant == Constant::WordSize, EthdebugException, "Unknown pointer expression constant.");
+			_json = "$wordsize";
+		},
+		[&](Lookup const& _lookup)
+		{
+			requireRegionReference(_lookup.region);
+			char const* property = nullptr;
+			switch (_lookup.property)
+			{
+			case Lookup::Property::Slot: property = ".slot"; break;
+			case Lookup::Property::Offset: property = ".offset"; break;
+			case Lookup::Property::Length: property = ".length"; break;
+			}
+			_json = Json{{property, _lookup.region}};
+		},
+		[&](Read const& _read)
+		{
+			requireRegionReference(_read.region);
+			_json = Json{{"$read", _read.region}};
+		},
+		[&](Arithmetic const& _arithmetic)
+		{
+			switch (_arithmetic.op)
+			{
+			case Arithmetic::Operator::Sum: _json = Json{{"$sum", operands(_arithmetic.operands)}}; break;
+			case Arithmetic::Operator::Product: _json = Json{{"$product", operands(_arithmetic.operands)}}; break;
+			case Arithmetic::Operator::Difference: _json = Json{{"$difference", operands(_arithmetic.operands, 2)}}; break;
+			case Arithmetic::Operator::Quotient: _json = Json{{"$quotient", operands(_arithmetic.operands, 2)}}; break;
+			case Arithmetic::Operator::Remainder: _json = Json{{"$remainder", operands(_arithmetic.operands, 2)}}; break;
+			}
+		},
+		[&](Keccak256 const& _keccak256) { _json = Json{{"$keccak256", operands(_keccak256.operands)}}; },
+		[&](Concat const& _concat) { _json = Json{{"$concat", operands(_concat.operands)}}; },
+		[&](Resize const& _resize)
+		{
+			solRequire(_resize.operand, EthdebugException, "Resize expression without an operand.");
+			if (_resize.size)
+			{
+				solRequire(*_resize.size > 0, EthdebugException, "Resize expression needs a positive byte width.");
+				_json = Json{{"$sized" + std::to_string(*_resize.size), *_resize.operand}};
+			}
+			else
+				_json = Json{{"$wordsized", *_resize.operand}};
+		}
+	}, _expression.value);
+}
+
+void schema::pointer::to_json(Json& _json, Region const& _region)
+{
+	_json = Json::object();
+	if (_region.name)
+	{
+		requireIdentifier(*_region.name, "Region name");
+		_json["name"] = *_region.name;
+	}
+	char const* location = nullptr;
+	bool wordOriented = false;
+	switch (_region.location)
+	{
+	case Location::Stack: location = "stack"; wordOriented = true; break;
+	case Location::Storage: location = "storage"; wordOriented = true; break;
+	case Location::Transient: location = "transient"; wordOriented = true; break;
+	case Location::Memory: location = "memory"; break;
+	case Location::Calldata: location = "calldata"; break;
+	case Location::Returndata: location = "returndata"; break;
+	case Location::Code: location = "code"; break;
+	}
+	_json["location"] = location;
+	// Word-oriented locations address by slot, byte-oriented ones by offset and length.
+	if (wordOriented)
+	{
+		solRequire(_region.slot, EthdebugException, "A stack, storage or transient region must address its slot.");
+	}
+	else
+	{
+		solRequire(!_region.slot && _region.offset && _region.length, EthdebugException, "A memory, calldata, returndata or code region must address its offset and length.");
+	}
+	if (_region.slot)
+		_json["slot"] = *_region.slot;
+	if (_region.offset)
+		_json["offset"] = *_region.offset;
+	if (_region.length)
+		_json["length"] = *_region.length;
+}
+
+void schema::pointer::to_json(Json& _json, Pointer const& _pointer)
+{
+	auto const subPointer = [](PointerPtr const& _sub, std::string_view _what) -> Pointer const& {
+		solRequire(_sub, EthdebugException, std::string(_what) + " is missing.");
+		return *_sub;
+	};
+	std::visit(util::GenericVisitor{
+		[&](Region const& _region) { _json = _region; },
+		[&](Group const& _group)
+		{
+			solRequire(!_group.members.empty(), EthdebugException, "A group pointer must have at least one member.");
+			_json = Json{{"group", _group.members}};
+		},
+		[&](List const& _list)
+		{
+			requireIdentifier(_list.each, "List index name");
+			_json = Json{{"list", Json{
+				{"count", _list.count},
+				{"each", _list.each},
+				{"is", subPointer(_list.is, "List element pointer")}
+			}}};
+		},
+		[&](Conditional const& _conditional)
+		{
+			_json = Json{{"if", _conditional.condition}, {"then", subPointer(_conditional.then, "Conditional consequent")}};
+			if (_conditional.otherwise)
+				_json["else"] = *_conditional.otherwise;
+		},
+		[&](Scope const& _scope)
+		{
+			solRequire(!_scope.definitions.empty(), EthdebugException, "A scope pointer must define at least one variable.");
+			// Definitions are ordered while JSON object members are not, so each
+			// definition becomes its own define/in level.
+			Json inner = subPointer(_scope.in, "Scope target pointer");
+			for (auto definition = _scope.definitions.rbegin(); definition != _scope.definitions.rend(); ++definition)
+			{
+				requireIdentifier(definition->first, "Scope variable");
+				inner = Json{{"define", Json{{definition->first, definition->second}}}, {"in", std::move(inner)}};
+			}
+			_json = std::move(inner);
+		},
+		[&](TemplateReference const& _reference)
+		{
+			requireIdentifier(_reference.name, "Template name");
+			_json = Json{{"template", _reference.name}};
+			if (!_reference.yields.empty())
+			{
+				Json yields = Json::object();
+				for (auto const& [producedName, newName]: _reference.yields)
+				{
+					requireIdentifier(producedName, "Yielded region name");
+					requireIdentifier(newName, "Yielded region name");
+					yields[producedName] = newName;
+				}
+				_json["yields"] = std::move(yields);
+			}
+		},
+		[&](Templates const& _templates)
+		{
+			Json templates = Json::object();
+			for (auto const& [templateName, definition]: _templates.templates)
+			{
+				requireIdentifier(templateName, "Template name");
+				templates[templateName] = definition;
+			}
+			_json = Json{{"templates", std::move(templates)}, {"in", subPointer(_templates.in, "Templates target pointer")}};
+		}
+	}, _pointer.value);
+}
+
+void schema::pointer::to_json(Json& _json, Template const& _template)
+{
+	for (std::string const& parameter: _template.expect)
+		requireIdentifier(parameter, "Template parameter");
+	solRequire(_template.body, EthdebugException, "Pointer template without a body.");
+	_json = Json{{"expect", _template.expect}, {"for", *_template.body}};
 }
 
 void schema::to_json(Json& _json, Program::Contract const& _contract)
@@ -170,6 +543,13 @@ void schema::to_json(Json& _json, Program::Environment const& _environment)
 void schema::info::to_json(Json& _json, Resources const& _resources)
 {
 	_json["compilation"] = _resources.compilation;
-	_json["types"] = _resources.types;
-	_json["pointers"] = _resources.pointers;
+	_json["types"] = Json::object();
+	for (auto const& [id, type]: _resources.types)
+		_json["types"][id] = type;
+	_json["pointers"] = Json::object();
+	for (auto const& [name, pointerTemplate]: _resources.pointers)
+	{
+		requireIdentifier(name, "Pointer template name");
+		_json["pointers"][name] = pointerTemplate;
+	}
 }

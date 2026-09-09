@@ -61,7 +61,12 @@ interface C {
                 ]
             },
             "pointers": {},
-            "types": {}
+            "types": {
+                "t_bytes32": {
+                    "kind": "bytes",
+                    "size": 32
+                }
+            }
         }
     },
     "sources": {

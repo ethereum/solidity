@@ -14,6 +14,9 @@ import schema_helpers
 # pragma pylint: enable=import-error
 
 
+PROGRAM_OUTPUTS = {"evm.bytecode.ethdebug": "create", "evm.deployedBytecode.ethdebug": "call"}
+
+
 def get_nested_value(dictionary, *keys):
     for key in keys:
         dictionary = dictionary[key]
@@ -29,10 +32,16 @@ def validator(schema_id, ethdebug_schema_repository):
 
 def ethdebug_programs(solc_output, output_selection):
     assert "contracts" in solc_output
-    for source_name, source_contracts in solc_output["contracts"].items():
+    for (source_name, source_contracts) in solc_output["contracts"].items():
         assert len(source_contracts) > 0
-        for contract_name, contract_output in source_contracts.items():
-            yield source_name, contract_name, get_nested_value(contract_output, *(output_selection.split(".")))
+        for (contract_name, contract_output) in source_contracts.items():
+            # Interfaces and abstract contracts have no bytecode and therefore no program.
+            try:
+                program = get_nested_value(contract_output, *(output_selection.split(".")))
+            except KeyError:
+                continue
+            if program is not None:
+                yield (source_name, contract_name, program)
 
 
 def load_standard_json_input(path):
@@ -64,6 +73,7 @@ def ethdebug_schema_repository():
 
 
 class EthdebugSchemaConformityTest(unittest.TestCase):
+
     # Set by test/ethdebugSchemaTests.py.
     config = None
 
@@ -143,10 +153,6 @@ class EthdebugSchemaConformityTest(unittest.TestCase):
         for (source_name, source_input) in self.standard_json_input["sources"].items():
             self.assertEqual(ethdebug_sources[source_name]["contents"], source_input["content"])
             self.assertEqual(ethdebug_sources[source_name]["language"], "Solidity")
-
-    def test_resources_include_empty_type_and_pointer_tables(self):
-        self.assertEqual(self.solc_output["ethdebug"]["resources"]["types"], {})
-        self.assertEqual(self.solc_output["ethdebug"]["resources"]["pointers"], {})
 
     def test_resources_and_compilation_share_compilation(self):
         self.assertEqual(self.solc_output["ethdebug"]["resources"]["compilation"], self.solc_output["ethdebug"]["compilation"])
