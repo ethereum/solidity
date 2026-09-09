@@ -35,7 +35,9 @@ std::vector<u256> SSACFGInterpreter::runFunction(SSACFG const& _function, std::v
 	while (currentBlockId.hasValue())
 	{
 		SSACFG::BasicBlock const& block = _function.block(currentBlockId);
-		// todo execute instructions
+
+		for (InstId const& _instId: block.instructions)
+			executeInstruction(_function, frame, _instId);
 
 		std::optional<std::vector<u256>> result;
 		std::visit(util::GenericVisitor{
