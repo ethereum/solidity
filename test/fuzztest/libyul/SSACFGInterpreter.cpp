@@ -110,7 +110,7 @@ void SSACFGInterpreter::executeInstruction(SSACFG const& _function, Frame& _fram
 		executeBuiltinCall(_function, _frame, _instId);
 		break;
 	case InstOpcode::Call:
-		// todo
+		executeCall(_function, _frame, _instId);
 		break;
 	case InstOpcode::Unreachable:
 		yulAssert(false, fmt::format("Executed Unreachable instruction v{}.", _instId));
@@ -174,13 +174,38 @@ void SSACFGInterpreter::executeBuiltinCall(SSACFG const& _function, Frame& _fram
 
 	if (builtin.numReturns == 1)
 		_frame.setValue(_id, result);
-	else
-	{
+	else if (builtin.numReturns >= 2)
 		yulAssert(false, "the evm instruction interpreter can't handle builtins with multiple return values yet");
-		// todo
-		/*auto const projections = _function.projectionsOf(_id);
-		yulAssert(ranges::distance(projections) == builtin.numReturns);
-		for (auto const [proj, val]: ranges::views::zip(projections, ))
-			_frame.setValue(proj, val);*/
+}
+
+void SSACFGInterpreter::executeCall(SSACFG const& _function, Frame& _frame, InstId const _id)
+{
+	SSACFG::Inst const& inst = _function.inst(_id);
+	SSACFG::Call const& payload = _function.callPayload(_id);
+	SSACFG const* callee = m_cfgs.functionGraph(payload.graphID);
+	yulAssert(callee, fmt::format("Call to unknown function graph {}.", payload.graphID));
+	std::vector<u256> arguments;
+	for (InstId const input: inst.inputs)
+		arguments.push_back(_frame.value(input));
+
+	std::vector<u256> const results = runFunction(*callee, arguments);
+
+	yulAssert(
+			payload.canContinue,
+			fmt::format("Call v{} is marked as non-continuing but the callee returned.", _id.value)
+		);
+	yulAssert(
+		results.size() == payload.numReturns,
+		fmt::format("Call v{} expects {} return values, callee produced {}.", _id.value, payload.numReturns, results.size())
+	);
+
+	if (payload.numReturns == 1)
+		_frame.setValue(_id, results.front());
+	else if (payload.numReturns >= 2)
+	{
+		auto const projections = _function.projectionsOf(_id);
+		yulAssert(ranges::distance(projections) == payload.numReturns);
+		for (auto const [proj, val]: ranges::views::zip(projections, results))
+			_frame.setValue(proj, val);
 	}
 }

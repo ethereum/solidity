@@ -40,6 +40,7 @@ private:
 
 	void executeInstruction(ssa::SSACFG const& _function, Frame& _frame, ssa::InstId _instId);
 	void executeBuiltinCall(ssa::SSACFG const& _function, Frame& _frame, ssa::InstId _id);
+	void executeCall(ssa::SSACFG const& _function, Frame& _frame, ssa::InstId _id);
 
 	ssa::ControlFlowGraphs const& m_cfgs;
 	InterpreterState m_state;
