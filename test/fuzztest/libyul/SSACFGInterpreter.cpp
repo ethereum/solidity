@@ -1,9 +1,11 @@
 #include <test/fuzztest/libyul/SSACFGInterpreter.h>
 
-#include "libsolutil/Visitor.h"
-#include "range/v3/view/zip.hpp"
-
 #include <libyul/backends/evm/ssa/ControlFlowGraphs.h>
+
+#include <libsolutil/Visitor.h>
+
+#include <range/v3/algorithm/any_of.hpp>
+#include <range/v3/view/zip.hpp>
 
 using namespace solidity;
 using namespace solidity::yul::ssa;
@@ -18,7 +20,12 @@ SSACFGInterpreter::SSACFGInterpreter(ControlFlowGraphs const& _cfgs, Interpreter
 
 std::vector<u256> SSACFGInterpreter::runFunction(SSACFG const& _function, std::vector<u256> const& _arguments)
 {
-	// todo assert m_cfgs.functionGraphs contains _function
+	yulAssert(
+		ranges::any_of(
+			m_cfgs.functionGraphs,
+			[&_function](std::unique_ptr<SSACFG> const& _graph) { return _graph.get() == &_function; }
+		)
+	);
 	yulAssert(_function.arguments.size() == _arguments.size(), "Arguments must have the same size");
 	Frame frame(_function.numInsts());
 	for (std::size_t i = 0; i < _arguments.size(); ++i)
@@ -32,7 +39,7 @@ std::vector<u256> SSACFGInterpreter::runFunction(SSACFG const& _function, std::v
 	BlockId currentBlockId = _function.entry;
 	yulAssert(currentBlockId.hasValue());
 
-	while (currentBlockId.hasValue())
+	while (true)
 	{
 		SSACFG::BasicBlock const& block = _function.block(currentBlockId);
 
@@ -40,11 +47,12 @@ std::vector<u256> SSACFGInterpreter::runFunction(SSACFG const& _function, std::v
 			executeInstruction(_function, frame, _instId);
 
 		std::optional<std::vector<u256>> result;
+		BlockId nextBlockId;
 		std::visit(util::GenericVisitor{
 			[&](SSACFG::BasicBlock::MainExit const&) { result = std::vector<u256>{}; },
-			[&](SSACFG::BasicBlock::Jump const& _jump) { currentBlockId = _jump.target; },
+			[&](SSACFG::BasicBlock::Jump const& _jump) { nextBlockId = _jump.target; },
 			[&](SSACFG::BasicBlock::ConditionalJump const& _jump) {
-				currentBlockId = frame.value(_jump.condition) != 0 ? _jump.nonZero : _jump.zero;
+				nextBlockId = frame.value(_jump.condition) != 0 ? _jump.nonZero : _jump.zero;
 			},
 			[&](SSACFG::BasicBlock::FunctionReturn const& _return) {
 				std::vector<u256> values;
@@ -64,13 +72,22 @@ std::vector<u256> SSACFGInterpreter::runFunction(SSACFG const& _function, std::v
 		}, block.exit);
 
 		if (result.has_value())
-		{
 			return *result;
-		}
-	}
 
-	return {};
+		yulAssert(nextBlockId.hasValue(), fmt::format("Block {} exits to an empty block id.", currentBlockId.value));
+
+		_function.forEachUpsilon(_function.block(currentBlockId), [&](InstId const _upsilon, SSACFG::Inst const&) {
+			if (
+				InstId const phi = _function.upsilonPhi(_upsilon);
+				_function.inst(phi).block == nextBlockId
+			)
+				frame.setValue(phi, frame.value(_upsilon));
+		});
+
+		currentBlockId = nextBlockId;
+	}
 }
+
 u256 const& SSACFGInterpreter::Frame::value(InstId const _id) const
 {
 	yulAssert(_id.hasValue(), "Use of an empty InstId.");
@@ -102,11 +119,11 @@ void SSACFGInterpreter::executeInstruction(SSACFG const& _function, Frame& _fram
 		_frame.setValue(_instId, _function.literalPayload(_instId));
 		break;
 	case InstOpcode::Phi:
-		// no-op, the phi values are populated by upsilons
+		yulAssert(_frame.hasValue(_instId), fmt::format("Phi {} read on an edge that carries no Upsilon for it.", _instId));
 		break;
 	case InstOpcode::Upsilon:
 		yulAssert(inst.inputs.size() == 1, "Upsilon with != 1 inputs.");
-		_frame.setValue(_function.upsilonPhi(_instId), _frame.value(inst.inputs.front()));
+		_frame.setValue(_instId, _frame.value(inst.inputs.front()));
 		break;
 	case InstOpcode::BuiltinCall:
 		executeBuiltinCall(_function, _frame, _instId);
@@ -125,7 +142,8 @@ void SSACFGInterpreter::executeInstruction(SSACFG const& _function, Frame& _fram
 		yulAssert(inst.inputs.size() == 1, "Projection with != 1 inputs.");
 		InstId const producer = inst.inputs.front();
 		std::size_t const index = _function.projectionIndex(_instId);
-		yulAssert(_instId.value == producer.value + index);
+		// Projections occupy the slots immediately trailing their producer; see SSACFG::projectionsOf.
+		yulAssert(_instId.value == producer.value + 1u + index);
 		yulAssert(_frame.hasValue(_instId), "Called projection inst without the generating parent instruction");
 		break;
 	}
