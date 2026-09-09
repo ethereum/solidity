@@ -1,5 +1,18 @@
 [
     {
+        "uid": "SOL-2026-6",
+        "name": "MisorderedNamedParametersInRequireWithCustomErrors",
+        "summary": "Custom error arguments passed to ``require`` using named-parameter syntax are ABI-encoded in call-site order instead of declaration order when compiling via IR.",
+        "description": "When a custom error is passed as the second argument of ``require`` and instantiated using named-parameter syntax (e.g., ``require(cond, MyError({b: 1, a: 2}))``), the IR-based code generator encoded the arguments in the order they appeared at the call site rather than reordering them to match the parameter order declared in the error definition. The arguments are still type-checked against their named slots, but the type system does not require the call-site order to match the declaration, so the bug could be triggered even when the supplied values would type-check in either order. When all arguments occupied the same number of stack slots (e.g., all single-slot value types), the resulting payload could contain the values in the wrong positions for the error's signature. When the call-site argument types differed in stack-slot width (for example a ``calldata`` reference next to a value type), the misordering also misaligned the helper's parameters slot-by-slot, producing a payload of an entirely different shape than the error's ABI signature — values landed in unrelated positions, dynamic-type lengths were read from arbitrary stack values, and string/bytes data could be copied from arbitrary calldata offsets. In the best case this triggered an EVM-level error during encoding; in the worst case a structurally valid payload containing wrong data was encoded successfully. The bug was specific to custom errors passed as the second argument of ``require``. Standalone ``revert ErrorName({...})`` statements, event emissions, function calls, struct constructor invocations and other constructs supporting named parameters were not affected. The evmasm pipeline was also unaffected.",
+        "link": "https://blog.soliditylang.org/2026/09/10/misordered-named-parameters-in-require-with-custom-errors-bug/",
+        "introduced": "0.8.26",
+        "fixed": "0.8.37",
+        "severity": "very low",
+        "conditions": {
+            "viaIR": true
+        }
+    },
+    {
         "uid": "SOL-2026-5",
         "name": "MemoryByteArrayElementDeleteClearsWholeWord",
         "summary": "Applying ``delete`` to a single element of a ``bytes`` array in memory clears not only that element but the whole 32-byte word starting at the element's location, zeroing up to 31 bytes beyond the element.",

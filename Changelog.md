@@ -30,6 +30,7 @@ Bugfixes:
 * Commandline Interface: Report proper error instead of ICE on non-hex mixed-case address value given via `--libraries`.
 * Commandline Interface: Reject `--model-checker-ext-calls` in unsupported input modes instead of silently ignoring it.
 * Type Checker: Report an unimplemented feature error instead of ICE when a variable of a fixed point type is accessed in inline assembly.
+* Yul IR Code Generation: Encode custom error named parameters in declaration order instead of call-site order when used from a `require` function.
 * Yul Optimizer: Fix incorrect removal of `returndatacopy()` operations referencing a stale result of `returndatasize()`.
 
 Build System:

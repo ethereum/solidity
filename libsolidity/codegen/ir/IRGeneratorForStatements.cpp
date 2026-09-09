@@ -967,8 +967,8 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			_functionCall.expression().annotation().type->category() == Type::Category::TypeType,
 			"Expected category to be TypeType"
 		);
-		solAssert(_functionCall.arguments().size() == 1, "Expected one argument for type conversion");
-		define(_functionCall, *_functionCall.arguments().front());
+		solAssert(_functionCall.sortedArguments().size() == 1, "Expected one argument for type conversion");
+		define(_functionCall, *_functionCall.sortedArguments().front());
 		return;
 	}
 
@@ -1169,7 +1169,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			auto const errorConstructorCall = dynamic_cast<FunctionCall const*>(resolveOuterUnaryTuples(arguments[1].get()));
 			solAssert(errorConstructorCall);
 			appendCode() << m_utils.requireWithErrorFunction(*errorConstructorCall) << "(" <<IRVariable(*arguments[0]).name();
-			for (auto argument: errorConstructorCall->arguments())
+			for (auto argument: errorConstructorCall->sortedArguments())
 				if (argument->annotation().type->sizeOnStack() > 0)
 					appendCode() << ", " << IRVariable(*argument).commaSeparatedList();
 			appendCode() << ")\n";
