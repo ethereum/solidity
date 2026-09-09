@@ -111,9 +111,11 @@ private:
 	static std::string formatEventParameter(std::optional<AnnotatedEventSignature> _signature, bool _indexed, size_t _index, bytes const& _data);
 
 	OptimiserSettings optimizerSettingsFor(RequiresYulOptimizer _requiresYulOptimizer);
+	std::string primaryContractName() const;
 
 	SourceMap m_sources;
 	std::size_t m_lineOffset;
+	std::string m_mainContractOverride;
 	std::vector<TestFunctionCall> m_tests;
 	std::map<std::string, Builtin> const m_builtins;
 	std::vector<SideEffectHook> const m_sideEffectHooks;

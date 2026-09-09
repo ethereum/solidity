@@ -67,6 +67,7 @@ SemanticTest::SemanticTest(
 	EVMVersionRestrictedTestCase(_filename),
 	m_sources(m_reader.sources()),
 	m_lineOffset(m_reader.lineNumber()),
+	m_mainContractOverride(boost::algorithm::trim_copy(m_reader.stringSetting("mainContract", ""))),
 	m_builtins(makeBuiltins()),
 	m_sideEffectHooks(makeSideEffectHooks()),
 	m_enforceGasCost(_enforceGasCost),
@@ -427,6 +428,9 @@ TestCase::TestResult SemanticTest::runTest(
 		else
 		{
 			bytes output;
+			std::string lastNameForAbi;
+			if (test.call().kind != FunctionCall::Kind::LowLevel)
+				lastNameForAbi = primaryContractName();
 			if (test.call().kind == FunctionCall::Kind::LowLevel)
 				output = callLowLevel(test.call().arguments.rawBytes(), test.call().value.value);
 			else if (test.call().kind == FunctionCall::Kind::Builtin)
@@ -444,7 +448,7 @@ TestCase::TestResult SemanticTest::runTest(
 			{
 				soltestAssert(
 					m_allowNonExistingFunctions ||
-					m_compiler.interfaceSymbols(m_compiler.lastContractName(m_sources.mainSourceFile))["methods"].contains(test.call().signature),
+					m_compiler.interfaceSymbols(lastNameForAbi)["methods"].contains(test.call().signature),
 					"The function " + test.call().signature + " is not known to the compiler"
 				);
 
@@ -472,7 +476,7 @@ TestCase::TestResult SemanticTest::runTest(
 			test.setFailure(!m_transactionSuccessful);
 			test.setRawBytes(std::move(output));
 			if (test.call().kind != FunctionCall::Kind::LowLevel)
-				test.setContractABI(m_compiler.contractABI(m_compiler.lastContractName(m_sources.mainSourceFile)));
+				test.setContractABI(m_compiler.contractABI(lastNameForAbi));
 		}
 
 		std::vector<std::string> effects;
@@ -715,4 +719,42 @@ bool SemanticTest::deploy(
 {
 	auto output = compileAndRunWithoutCheck(m_sources.sources, _value, _contractName, _arguments, _libraries, m_sources.mainSourceFile);
 	return !output.empty() && m_transactionSuccessful;
+}
+
+std::string SemanticTest::primaryContractName() const
+{
+	if (!m_mainContractOverride.empty())
+	{
+		auto const names = m_compiler.contractNames();
+		if (m_mainContractOverride.find(':') != std::string::npos)
+		{
+			soltestAssert(
+				std::find(names.begin(), names.end(), m_mainContractOverride) != names.end(),
+				"mainContract setting does not match any compiled contract."
+			);
+			return m_mainContractOverride;
+		}
+		std::string const suffix = ":" + m_mainContractOverride;
+		std::string match;
+		for (auto const& n: names)
+			if (boost::algorithm::ends_with(n, suffix))
+			{
+				soltestAssert(match.empty(), "mainContract setting is ambiguous.");
+				match = n;
+			}
+		soltestAssert(!match.empty(), "mainContract setting does not match any compiled contract.");
+		return match;
+	}
+
+	std::string name = m_compiler.lastContractName(m_sources.mainSourceFile);
+	if (name.empty())
+	{
+		auto const names = m_compiler.contractNames();
+		if (names.size() == 1)
+			name = names.front();
+		else
+			soltestAssert(false, "Ambiguous contract selection: main source has no contracts.");
+	}
+	soltestAssert(!name.empty(), "No contract found after successful compilation.");
+	return name;
 }

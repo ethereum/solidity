@@ -839,12 +839,28 @@ std::vector<std::string> CompilerStack::contractNames() const
 std::string const CompilerStack::lastContractName(std::optional<std::string> const& _sourceName) const
 {
 	solAssert(m_stackState >= AnalysisSuccessful, "Parsing was not successful.");
-	// try to find some user-supplied contract
+	auto collectLastContractNameFromSource = [](Source const& _source) -> std::string
+	{
+		std::string contractName;
+		if (_source.ast)
+			for (auto const* contract: ASTNode::filteredNodes<ContractDefinition>(_source.ast->nodes()))
+				contractName = contract->fullyQualifiedName();
+		return contractName;
+	};
+
+	if (_sourceName)
+	{
+		auto const sourceIt = m_sources.find(*_sourceName);
+		if (sourceIt != m_sources.end())
+			return collectLastContractNameFromSource(sourceIt->second);
+		return {};
+	}
+
 	std::string contractName;
 	for (auto const& it: m_sources)
-		if (_sourceName.value_or(it.first) == it.first)
-			for (auto const* contract: ASTNode::filteredNodes<ContractDefinition>(it.second.ast->nodes()))
-				contractName = contract->fullyQualifiedName();
+		if (std::string const sourceContractName = collectLastContractNameFromSource(it.second); !sourceContractName.empty())
+			contractName = sourceContractName;
+
 	return contractName;
 }
 
