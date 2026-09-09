@@ -136,6 +136,10 @@ private:
 
 	void acceptAndConvert(Expression const& _expression, Type const& _type, bool _cleanupNeeded = false);
 
+	/// Evaluates @a _expression for its side effects (e.g. panics) and discards the result, avoiding
+	/// unnecessary materialization (e.g. string/bytes memory encoding) of values that are never used.
+	void evaluateForSideEffectsAndDiscard(Expression const& _expression);
+
 	/// @returns the CompilerUtils object containing the current context.
 	CompilerUtils utils();
 

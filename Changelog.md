@@ -27,6 +27,7 @@ Bugfixes:
 * Code Generator: Fix ICE on parenthesized custom error construction in require statement.
 * Code Generator: Fix uninitialized internal function pointers being read from a packed storage slot with the wrong value when a subsequent variable in the slot holds a non-zero value.
 * Code Generator: Fix constants read in both checked and `unchecked` contexts within one contract getting the checked/unchecked semantics of whichever read was generated first via IR, which could remove a required overflow panic or introduce a spurious one.
+* Code Generator: Fix evaluation of reason expression for `require` and `revert` functions in legacy pipeline when `--revert-strings strip` is set.
 * Commandline Interface: Report proper error instead of ICE on non-hex mixed-case address value given via `--libraries`.
 * Commandline Interface: Reject `--model-checker-ext-calls` in unsupported input modes instead of silently ignoring it.
 * Type Checker: Report an unimplemented feature error instead of ICE when a variable of a fixed point type is accessed in inline assembly.

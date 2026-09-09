@@ -300,6 +300,42 @@ bool ExpressionCompiler::visit(Conditional const& _condition)
 	return false;
 }
 
+void ExpressionCompiler::evaluateForSideEffectsAndDiscard(Expression const& _expression)
+{
+	Expression const& expression = *resolveOuterUnaryTuples(&_expression);
+
+	if (auto const* conditional = dynamic_cast<Conditional const*>(&expression))
+	{
+		// The condition, and whichever one of the two branches ends up being selected at runtime,
+		// are both evaluated (recursively, so either can still panic on its own) purely for their
+		// side effects. The branch that is not taken is skipped entirely and its value never needs
+		// to be materialized.
+		CompilerContext::LocationSetter locationSetter(m_context, *conditional);
+		conditional->condition().accept(*this);
+		evmasm::AssemblyItem trueTag = m_context.appendConditionalJump();
+		evaluateForSideEffectsAndDiscard(conditional->falseExpression());
+		evmasm::AssemblyItem endTag = m_context.appendJumpToNew();
+		m_context << trueTag;
+		evaluateForSideEffectsAndDiscard(conditional->trueExpression());
+		m_context << endTag;
+		return;
+	}
+
+	if (auto const* identifier = dynamic_cast<Identifier const*>(&expression))
+		if (auto const* variable = dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration))
+			if (variable->isConstant())
+			{
+				// Referencing a constant normally materializes its value converted to the constant's
+				// declared type (e.g. encodes a string constant into memory). Evaluate the initializer
+				// itself instead, since the converted/materialized value is never used here.
+				evaluateForSideEffectsAndDiscard(*variable->value());
+				return;
+			}
+
+	expression.accept(*this);
+	utils().popStackElement(*expression.annotation().type);
+}
+
 bool ExpressionCompiler::visit(Assignment const& _assignment)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _assignment);
@@ -886,11 +922,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				solAssert(function.parameterTypes().size() == 1, "");
 				if (m_context.revertStrings() == RevertStrings::Strip)
 				{
-					if (!*arguments.front()->annotation().isPure)
-					{
-						arguments.front()->accept(*this);
-						utils().popStackElement(*arguments.front()->annotation().type);
-					}
+					evaluateForSideEffectsAndDiscard(*arguments.front());
 					m_context.appendRevert();
 				}
 				else
@@ -1360,13 +1392,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				}
 
 				if (m_context.revertStrings() == RevertStrings::Strip)
-				{
-					if (!*arguments.at(1)->annotation().isPure)
-					{
-						arguments.at(1)->accept(*this);
-						utils().popStackElement(*arguments.at(1)->annotation().type);
-					}
-				}
+					evaluateForSideEffectsAndDiscard(*arguments.at(1));
 				else
 				{
 					arguments.at(1)->accept(*this);
