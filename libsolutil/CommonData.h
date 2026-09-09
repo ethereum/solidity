@@ -550,29 +550,6 @@ void iterateReplacingWindow(std::vector<T>& _vector, F const& _f, std::index_seq
 
 }
 
-/// Checks if two collections possess a non-empty intersection.
-/// Assumes that both inputs are sorted in ascending order.
-template<typename Collection1, typename Collection2>
-requires (
-	std::forward_iterator<std::ranges::iterator_t<Collection1>> &&
-	std::forward_iterator<std::ranges::iterator_t<Collection2>>
-)
-bool hasNonemptyIntersectionSorted(Collection1 const& _collection1, Collection2 const& _collection2)
-{
-	auto it1 = std::ranges::begin(_collection1);
-	auto it2 = std::ranges::begin(_collection2);
-	while (it1 != std::ranges::end(_collection1) && it2 != std::ranges::end(_collection2))
-	{
-		if (*it1 == *it2)
-			return true;
-		if (*it1 < *it2)
-			++it1;
-		else
-			++it2;
-	}
-	return false;
-}
-
 /// Function that iterates over the vector @param _vector,
 /// calling the function @param _f on sequences of @tparam N of its
 /// elements. If @param _f returns a vector, these elements are replaced by

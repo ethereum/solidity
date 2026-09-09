@@ -18,10 +18,12 @@ Compiler Features:
 * General: Replace the current greedy stack shuffler in the experimental SSA CFG pipeline with a planning one.
 * SMTChecker: Emit a deprecation warning for the BMC engine.
 * SMTChecker: Support `block.slotnum`.
+* Yul Optimizer: Improve performance of `DataFlowAnalyzer::clearValues()`.
 * Standard JSON Interface: Fix the entire output being replaced by a `JSONError` ("Error writing output JSON.") when an error message quotes a long source line and truncating it splits a multi-byte character.
 * Yul Optimizer: `LoopInvariantCodeMotion` can now move expressions depending on function parameters out of loops.
 * Yul Optimizer: `UnusedStoreEliminator` can now recognize redundant memory and storage operations whose start offset or length is a function parameter.
 * Yul Optimizer: Remove the ineffective elimination of unused `returndatacopy()` operations in simple cases from UnusedStoreEliminator.
+
 
 Bugfixes:
 * Code Generator: Fix ICE on parenthesized custom error construction in require statement.

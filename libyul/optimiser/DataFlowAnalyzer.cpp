@@ -266,7 +266,7 @@ void DataFlowAnalyzer::handleAssignment(std::set<YulName> const& _variables, Exp
 	std::vector const referencedVariablesSorted(referencedVariables.begin(), referencedVariables.end());
 	for (auto const& name: _variables)
 	{
-		m_state.sortedReferences[name] = referencedVariablesSorted;
+		setSortedReferences(name, referencedVariablesSorted);
 		if (!_isDeclaration)
 		{
 			// assignment to slot denoted by "name"
@@ -311,7 +311,7 @@ void DataFlowAnalyzer::popScope()
 	for (auto const& name: m_variableScopes.back().variables)
 	{
 		m_state.value.erase(name);
-		m_state.sortedReferences.erase(name);
+		eraseSortedReferences(name);
 	}
 	m_variableScopes.pop_back();
 }
@@ -346,20 +346,51 @@ void DataFlowAnalyzer::clearValues(std::set<YulName> const& _variablesToClear)
 			_variablesToClear.count(_item.second);
 	});
 
-	// Also clear variables that reference variables to be cleared.
-	std::set<YulName> referencingVariablesToClear;
-	std::vector const sortedVariablesToClear(_variablesToClear.begin(), _variablesToClear.end());
-	for (auto const& [referencingVariable, referencedVariables]: m_state.sortedReferences)
-		// instead of checking each variable in `referencedVariables`, we check if there is any intersection making use of the
-		// sortedness of the vectors, which can increase performance by up to 50% in pathological cases
-		if (hasNonemptyIntersectionSorted(referencedVariables, sortedVariablesToClear))
-			referencingVariablesToClear.emplace(referencingVariable);
+	// Also clear the variables directly referencing the ones to be cleared.
+	// Rather than scanning all of m_state.sortedReferences, look them up through the reverse index.
+	util::unordered_flat_set<YulName> variablesToClearWithReferencers(
+		_variablesToClear.begin(),
+		_variablesToClear.end()
+	);
+	for (YulName const& variableToClear: _variablesToClear)
+		if (auto const* referencers = util::valueOrNullptr(m_state.reverseReferences, variableToClear))
+			variablesToClearWithReferencers.insert(referencers->begin(), referencers->end());
 
 	// Clear the value and update the reference relation.
-	for (auto const& name: _variablesToClear + referencingVariablesToClear)
+	// The erasures are independent of each other, so their order cannot affect the resulting state.
+	for (YulName const& name: variablesToClearWithReferencers)
 	{
 		m_state.value.erase(name);
-		m_state.sortedReferences.erase(name);
+		eraseSortedReferences(name);
+	}
+}
+
+void DataFlowAnalyzer::setSortedReferences(
+	YulName _referencer,
+	std::vector<YulName> const& _referencedVariablesSorted
+)
+{
+	eraseSortedReferences(_referencer);
+	for (YulName const& referenced: _referencedVariablesSorted)
+		m_state.reverseReferences[referenced].insert(_referencer);
+	m_state.sortedReferences[_referencer] = _referencedVariablesSorted;
+}
+
+void DataFlowAnalyzer::eraseSortedReferences(YulName _referencer)
+{
+	auto const* previouslyReferenced = util::valueOrNullptr(m_state.sortedReferences, _referencer);
+	if (previouslyReferenced)
+	{
+		for (YulName const& referenced: *previouslyReferenced)
+		{
+			auto it = m_state.reverseReferences.find(referenced);
+			yulAssert(it != m_state.reverseReferences.end());
+			size_t const erasedBackPointers = it->second.erase(_referencer);
+			yulAssert(erasedBackPointers == 1);
+			if (it->second.empty())
+				m_state.reverseReferences.erase(it);
+		}
+		m_state.sortedReferences.erase(_referencer);
 	}
 }
 

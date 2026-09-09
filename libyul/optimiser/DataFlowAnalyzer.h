@@ -31,6 +31,7 @@
 
 #include <libsolutil/Numeric.h>
 #include <libsolutil/Common.h>
+#include <libsolutil/UnorderedContainers.h>
 
 #include <map>
 #include <set>
@@ -122,6 +123,9 @@ protected:
 
 	/// Clears information about the values assigned to the given variables,
 	/// for example at points where control flow is merged.
+	/// The cached values and outgoing references of the variables directly referencing them are
+	/// cleared as well, while storage, memory and keccak knowledge is cleared only for entries
+	/// involving one of the given variables.
 	void clearValues(std::set<YulName> const& _variablesToClear);
 
 	virtual void assignValue(YulName _variable, Expression const* _value);
@@ -168,6 +172,18 @@ protected:
 	std::map<FunctionHandle, SideEffects> m_functionSideEffects;
 
 private:
+	/// Replaces the outgoing references of @a _referencer, i.e. the variables that the expression
+	/// currently assigned to it refers to, and keeps m_state.reverseReferences in sync.
+	/// @a _referencedVariablesSorted must be sorted and duplicate-free.
+	void setSortedReferences(
+		YulName _referencer,
+		std::vector<YulName> const& _referencedVariablesSorted
+	);
+
+	/// Removes @a _referencer's entry from m_state.sortedReferences, if any, together with the
+	/// corresponding back-pointers in m_state.reverseReferences.
+	void eraseSortedReferences(YulName _referencer);
+
 	struct Environment
 	{
 		util::unordered_flat_map<YulName, YulName> storage;
@@ -179,9 +195,17 @@ private:
 	{
 		/// Current values of variables, always movable.
 		std::map<YulName, AssignedValue> value;
-		/// m_references[a].contains(b) <=> the current expression assigned to a references b
-		/// The mapped vectors _must always_ be sorted
+		/// sortedReferences[a].contains(b) <=> the current expression assigned to a references b
+		/// The mapped vectors _must always_ be duplicate-free, which eraseSortedReferences()
+		/// relies on to remove exactly one back-pointer per entry, and sorted, which is what
+		/// the sortedReferences() accessor gives its callers.
 		util::unordered_flat_map<YulName, std::vector<YulName>> sortedReferences;
+		/// Reverse index of sortedReferences:
+		/// reverseReferences[b].contains(a) <=> sortedReferences[a].contains(b)
+		/// Kept in sync by setSortedReferences() and eraseSortedReferences(), so that
+		/// clearValues() can find the variables directly referencing a given variable
+		/// without scanning the whole of sortedReferences.
+		util::unordered_flat_map<YulName, util::unordered_flat_set<YulName>> reverseReferences;
 
 		Environment environment;
 	};
