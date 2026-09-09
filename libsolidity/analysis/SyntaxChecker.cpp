@@ -346,10 +346,10 @@ bool SyntaxChecker::visit(Literal const& _literal)
 		if (value.find("_.") != ASTString::npos)
 			m_errorReporter.syntaxError(1023_error, _literal.location(), "Invalid use of underscores in number literal. No underscores in front of the fraction part allowed.");
 
-		if (value.find("_e") != ASTString::npos)
+		if (value.find("_e") != ASTString::npos || value.find("_E") != ASTString::npos)
 			m_errorReporter.syntaxError(6415_error, _literal.location(), "Invalid use of underscores in number literal. No underscore at the end of the mantissa allowed.");
 
-		if (value.find("e_") != ASTString::npos)
+		if (value.find("e_") != ASTString::npos || value.find("E_") != ASTString::npos)
 			m_errorReporter.syntaxError(6165_error, _literal.location(), "Invalid use of underscores in number literal. No underscore in front of exponent allowed.");
 	}
 

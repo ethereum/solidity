@@ -4,6 +4,8 @@ contract C {
     uint D2 = 12__34;
     uint D3 = 12_e34;
     uint D4 = 12e_34;
+    uint D5 = 12_E34;
+    uint D6 = 12E_34;
   }
 }
 // ----
@@ -11,3 +13,5 @@ contract C {
 // SyntaxError 2990: (77-83): Invalid use of underscores in number literal. Only one consecutive underscore between digits is allowed.
 // SyntaxError 6415: (99-105): Invalid use of underscores in number literal. No underscore at the end of the mantissa allowed.
 // SyntaxError 6165: (121-127): Invalid use of underscores in number literal. No underscore in front of exponent allowed.
+// SyntaxError 6415: (143-149): Invalid use of underscores in number literal. No underscore at the end of the mantissa allowed.
+// SyntaxError 6165: (165-171): Invalid use of underscores in number literal. No underscore in front of exponent allowed.
