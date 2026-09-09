@@ -467,7 +467,7 @@ Input Description
         //   yulCFGJson - Control Flow Graph (CFG) of the Single Static Assignment (SSA) form of the contract (experimental)
         //
         // Global level (needs "*" as file name and "*" as contract name):
-        //   ethdebug.resources - Global ethdebug output (ethdebug/format/info/resources schema) containing source list and compiler info (experimental)
+        //   ethdebug.resources - Global ethdebug output (ethdebug/format/info/resources schema) containing source list and compiler info, the type documents of the types referenced by state variables, functions and modifiers, and the pointer templates of the state variables in storage and transient storage (experimental)
         //   ethdebug.compilation - Global ethdebug compilation output (the 'compilation' key from ethdebug/format/info/resources schema) (experimental)
         //
         // Note that using `evm`, `evm.bytecode`, etc. will select every
