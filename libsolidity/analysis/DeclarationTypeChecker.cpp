@@ -143,17 +143,35 @@ void DeclarationTypeChecker::endVisit(UserDefinedValueTypeDefinition const& _use
 {
 	TypeName const* typeName = _userDefined.underlyingType();
 	solAssert(typeName, "");
-	if (!dynamic_cast<ElementaryTypeName const*>(typeName))
+
+	if (
+		!dynamic_cast<ElementaryTypeName const*>(typeName) &&
+		!dynamic_cast<FunctionTypeName const*>(typeName)
+	)
 		m_errorReporter.fatalTypeError(
 			8657_error,
 			typeName->location(),
-			"The underlying type for a user defined value type has to be an elementary value type."
+			"The underlying type for a user defined value type has to be an elementary value type or an internal function type."
 		);
 
 	Type const* type = typeName->annotation().type;
 	solAssert(type, "");
 	solAssert(!dynamic_cast<UserDefinedValueType const*>(type), "");
-	if (!type->isValueType())
+
+	if (auto const* funType = dynamic_cast<FunctionType const*>(type))
+	{
+		if (funType->kind() != FunctionType::Kind::Internal)
+			m_errorReporter.fatalTypeError(
+				8657_error,
+				typeName->location(),
+				"The underlying type of the user defined value type \"" +
+				_userDefined.name() +
+				"\" has to be an internal function type, but \"" +
+				type->toString(true) +
+				"\" is an external function type."
+			);
+	}
+	else if (!type->isValueType())
 		m_errorReporter.typeError(
 			8129_error,
 			_userDefined.location(),
