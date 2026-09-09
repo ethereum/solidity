@@ -3642,7 +3642,17 @@ bool TypeChecker::visit(IndexAccess const& _access)
 			if (expectType(*index, *TypeProvider::uint256()))
 			{
 				if (auto indexValue = dynamic_cast<RationalNumberType const*>(type(*index)))
+				{
+					// Mirror the zero-length rejection from
+					// DeclarationTypeChecker::endVisit(ArrayTypeName). Static array types
+					// written as expressions (e.g. inside `abi.decode((T[0][]))`) never
+					// go through that visitor, so without this guard the zero-length
+					// element type propagates to codegen and triggers an ICE in
+					// callers that assume `calldataStride() > 0`.
+					if (indexValue->value() == 0)
+						m_errorReporter.fatalTypeError(1406_error, index->location(), "Array with zero length specified.");
 					length = indexValue->literalValue(nullptr);
+				}
 				else
 					m_errorReporter.fatalTypeError(3940_error, index->location(), "Integer constant expected.");
 			}
