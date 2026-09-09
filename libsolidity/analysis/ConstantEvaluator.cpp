@@ -60,7 +60,7 @@ bool fitsPrecisionExp(bigint const& _base, bigint const& _exp)
 	if (mostSignificantBaseBit > bitsMax) // _base >= 2 ^ 4096
 		return false;
 
-	bigint bitsNeeded = _exp * (mostSignificantBaseBit + 1);
+	bigint bitsNeeded = _exp * mostSignificantBaseBit + 1;
 
 	return bitsNeeded <= bitsMax;
 }
