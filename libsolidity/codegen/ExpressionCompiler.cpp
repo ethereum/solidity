@@ -2053,7 +2053,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				solAssert(false, "min/max not available for the given type.");
 
 		}
-		else if ((std::set<std::string>{"encode", "encodePacked", "encodeWithSelector", "encodeWithSignature", "decode"}).count(member))
+		else if ((std::set<std::string>{"encode", "encodePacked", "encodeCall", "encodeWithSelector", "encodeWithSignature", "decode"}).count(member))
 		{
 			// no-op
 		}
