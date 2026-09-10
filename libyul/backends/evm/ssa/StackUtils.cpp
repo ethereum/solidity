@@ -18,15 +18,10 @@
 
 #include <libyul/backends/evm/ssa/StackUtils.h>
 
-#include <libyul/backends/evm/ssa/StackShuffler.h>
-
 #include <libevmasm/GasMeter.h>
 
-#include <range/v3/numeric/accumulate.hpp>
 #include <range/v3/view/iota.hpp>
 #include <range/v3/view/zip.hpp>
-
-#include <boost/container/flat_map.hpp>
 
 #include <fmt/ranges.h>
 
