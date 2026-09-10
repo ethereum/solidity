@@ -18,10 +18,10 @@
 
 #include <libyul/backends/evm/ssa/spill/SpillSet.h>
 
-#include <libyul/backends/evm/ssa/Stack.h>
-#include <libyul/backends/evm/ssa/StackShuffler.h>
-#include <libyul/backends/evm/ssa/StackLayout.h>
 #include <libyul/backends/evm/ssa/stack/Shuffler.h>
+
+#include <libyul/backends/evm/ssa/Stack.h>
+#include <libyul/backends/evm/ssa/StackLayout.h>
 
 #include <deque>
 
