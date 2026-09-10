@@ -16,22 +16,12 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
- * Property test for the ABI coders. A random tuple of types is drawn, and the value itself is built inside the
- * generated contract from a tape of raw fuzzer bytes, so the test never spells out an ABI encoding of its own --
- * the compiler is on both sides. That holds out to the EVM boundary too: the contract's only external entry point
- * is a `fallback(bytes calldata) returns (bytes memory)`, which Solidity hands the whole calldata undecoded and
- * whose result is returned uninterpreted, so the harness exchanges plain byte strings and never lays out a head,
- * a length prefix or padding of its own. Only the tuple's types reach the contract as source, so one compilation
- * serves every tape drawn for a type.
- *
- * Two properties are checked per input, both with and without the optimiser:
- *   - `renormalize`: encoding a value, decoding that encoding and encoding the result again reproduces the first
- *     encoding byte for byte;
- *   - `roundTripEquals`: the value that comes back out of the round trip compares equal to the one that went in,
- *     through generated `eq` functions that use `==`, `keccak256` and element-wise loops. The first property alone
- *     holds for any encoder whose information loss is idempotent -- one writing an array length one short, say --
- *     because the decoder then faithfully reproduces the loss and the re-encoding matches. Comparing the values
- *     through EVM primitives instead of through another encoding closes that gap.
+ * Property test for the ABI coders. The generated contract builds a value of a random type tuple off a tape of
+ * fuzzer bytes, and a raw `fallback` exchanges plain byte strings, so the harness never encodes anything itself.
+ * Checked with and without the optimiser:
+ *   - `renormalize`: encode(decode(encode(v))) == encode(v), byte for byte;
+ *   - `roundTripEquals`: the round-tripped value equals v via EVM primitives. This catches idempotent information
+ *     loss (e.g. an array length written one short) that the first property misses.
  */
 #include <test/EVMHost.h>
 
@@ -75,7 +65,7 @@ constexpr std::uint32_t maxArrayLength = 3;
 constexpr std::uint32_t maxStructFields = 3;
 constexpr std::uint32_t maxTupleComponents = 3;
 constexpr std::uint32_t maxEnumMembers = 4;
-/// Raw entropy the generated builders read values off. Never empty, because they index it modulo its length.
+/// Never empty: builders index the tape modulo its length.
 constexpr std::uint32_t minTapeLength = 32;
 constexpr std::uint32_t maxTapeLength = 1024;
 
@@ -104,10 +94,8 @@ struct AbiType
 	};
 
 	Kind kind{};
-	/// Bit width for Uint/Int, byte width for FixedBytes, element count for FixedArray, member count for Enum.
-	/// Unused otherwise. Outside of validation, read it through the accessors below.
+	/// Outside of validation, read these through the accessors below.
 	std::uint32_t width = 0;
-	/// Element type for arrays and underlying type for UserDefined (exactly one entry), field types for structs.
 	std::vector<TypePointer> components;
 
 	std::uint32_t bits() const { solAssert(kind == Kind::Uint || kind == Kind::Int); return width; }
@@ -123,8 +111,7 @@ struct AbiType
 	std::vector<TypePointer> const& fields() const { solAssert(kind == Kind::Struct); return components; }
 };
 
-/// The kinds that occupy a single word and take no components. Kept separate from `isValueType` so that the
-/// invariant check below cannot recurse back into the functions it is guarding.
+/// Separate from `isValueType` so that `assertValidNode` cannot recurse into what it guards.
 bool isElementaryValueKind(AbiType::Kind const _kind)
 {
 	switch (_kind)
@@ -140,7 +127,6 @@ bool isElementaryValueKind(AbiType::Kind const _kind)
 	}
 }
 
-// Invariants for the datatypes in the test itself
 void assertValidNode(AbiType const& _type)
 {
 	std::size_t const componentCount = _type.components.size();
@@ -191,7 +177,6 @@ void assertValidNode(AbiType const& _type)
 	}
 }
 
-/// Invariants for the datatypes in the test itself
 void assertValidType(AbiType const& _type)
 {
 	assertValidNode(_type);
@@ -224,7 +209,7 @@ bool isValueType(AbiType const& _type)
 	}
 }
 
-/// Type in ABI signature notation, i.e. with structs spelled out as tuples.
+/// Structs are spelled out as tuples.
 std::string signatureOf(AbiType const& _type)
 {
 	assertValidNode(_type);
@@ -253,8 +238,7 @@ std::string signatureOf(AbiType const& _type)
 	solAssert(false);
 }
 
-/// FuzzTest picks a printer per type. Without this it would descend into `AbiType`'s members, and since those
-/// are `AbiType` pointers again, the printer would instantiate itself indefinitely
+/// Otherwise FuzzTest's printer recurses into `AbiType`'s members and instantiates itself indefinitely.
 template <typename Sink>
 void AbslStringify(Sink& _sink, AbiType const& _type)
 {
@@ -265,7 +249,6 @@ void AbslStringify(Sink& _sink, AbiType const& _type)
 // Domains
 // ---------------------------------------------------------------------------------------------------------------
 
-/// Every elementary value type: all 32 widths of `uintN`/`intN`/`bytesN` plus `address` and `bool`
 std::vector<TypePointer> elementaryValueTypes()
 {
 	std::vector<TypePointer> types{
@@ -281,7 +264,7 @@ std::vector<TypePointer> elementaryValueTypes()
 	return types;
 }
 
-/// Contract and enum types, which Solidity spells differently but encodes as `address` and `uint8`.
+/// Encoded as `address` and `uint8`.
 std::vector<TypePointer> enumAndContractTypes()
 {
 	std::vector<TypePointer> types{makeType(AbiType::Kind::Contract)};
@@ -290,7 +273,6 @@ std::vector<TypePointer> enumAndContractTypes()
 	return types;
 }
 
-/// A user-defined value type wraps an elementary value type; those are the only underlying types Solidity accepts.
 std::vector<TypePointer> userDefinedValueTypes()
 {
 	std::vector<TypePointer> types;
@@ -299,7 +281,7 @@ std::vector<TypePointer> userDefinedValueTypes()
 	return types;
 }
 
-/// Each group gets a quarter of the draws
+/// Each group: 1/4 of draws
 fuzztest::Domain<TypePointer> elementaryTypeDomain()
 {
 	return fuzztest::OneOf(
@@ -339,8 +321,6 @@ fuzztest::Domain<TypePointer> typeDomain(std::uint32_t const _depth)
 	);
 }
 
-/// The components of the top-level tuple, and the tape the generated contract reads a value for them off. The
-/// tuple is what the ABI actually specifies an encoding for; a single component is just its most common shape.
 struct TypedTape
 {
 	std::vector<TypePointer> types;
@@ -359,9 +339,6 @@ fuzztest::Domain<TypedTape> typedTapeDomain()
 // Solidity source generation
 // ---------------------------------------------------------------------------------------------------------------
 
-/// Renders Solidity type names, collecting the declarations the rendered names refer to along the way. Structs,
-/// enums and user-defined value types each need one, and they all go into a single source unit that every generated
-/// contract imports.
 class TypeNamer
 {
 public:
@@ -388,14 +365,13 @@ public:
 	}
 
 private:
-	/// @returns the name of the type's declaration, emitting the declaration on first use.
+	/// Emits the declaration on first use.
 	std::string declaredName(AbiType const& _type)
 	{
 		if (auto const it = m_names.find(&_type); it != m_names.end())
 			return it->second;
 
-		// Everything the declaration refers to is named first, so that nested declarations precede the ones using
-		// them. Solidity does not require that, but it keeps the generated source readable when a case fails.
+		// Components first, so nested declarations precede their users. Only for readable failure output.
 		std::vector<std::string> componentNames;
 		for (TypePointer const& component: _type.components)
 			componentNames.push_back(name(*component));
@@ -461,13 +437,13 @@ std::string commaSeparated(std::vector<std::string> const& _parts)
 	return result;
 }
 
-/// Data location suffix for a variable of the given type. Value types must not carry one.
+/// Value types must not carry one.
 std::string location(AbiType const& _type, std::string const& _location)
 {
 	return isValueType(_type) ? "" : " " + _location;
 }
 
-/// e.g. "S0, uint8[]" -- the type list `abi.decode` takes.
+/// e.g. "S0, uint8[]"
 std::string typeList(TypeNamer& _namer, std::vector<TypePointer> const& _types)
 {
 	std::vector<std::string> parts;
@@ -476,7 +452,7 @@ std::string typeList(TypeNamer& _namer, std::vector<TypePointer> const& _types)
 	return commaSeparated(parts);
 }
 
-/// e.g. "S0 memory, uint8" -- the return type list of the callee.
+/// e.g. "S0 memory, uint8"
 std::string returnTypeList(TypeNamer& _namer, std::vector<TypePointer> const& _types)
 {
 	std::vector<std::string> parts;
@@ -485,7 +461,7 @@ std::string returnTypeList(TypeNamer& _namer, std::vector<TypePointer> const& _t
 	return commaSeparated(parts);
 }
 
-/// e.g. "S0 calldata x0, uint8 x1" -- a parameter or local variable list.
+/// e.g. "S0 calldata x0, uint8 x1"
 std::string variableDeclarations(
 	TypeNamer& _namer,
 	std::vector<TypePointer> const& _types,
@@ -499,7 +475,7 @@ std::string variableDeclarations(
 	return commaSeparated(parts);
 }
 
-/// e.g. "x0, x1" -- the variables declared by `variableDeclarations` with the same prefix.
+/// e.g. "x0, x1"
 std::string variableList(std::size_t const _count, std::string const& _prefix)
 {
 	std::vector<std::string> parts;
@@ -508,9 +484,7 @@ std::string variableList(std::size_t const _count, std::string const& _prefix)
 	return commaSeparated(parts);
 }
 
-/// Read by every generated builder. `Tape` is passed by memory reference, so reading advances `pos` for the
-/// caller too. The data is indexed modulo its length, so a builder can always read as much as it needs and never
-/// has to reject what it was given.
+/// `Tape` is passed by reference, so reads advance `pos` for the caller. Indexing wraps, so reads never fail.
 std::string const tapeHelpers = util::Whiskers(R"(
 	struct Tape { bytes data; uint pos; }
 	function readByte(Tape memory t) internal pure returns (uint8 b) {
@@ -534,17 +508,15 @@ std::string const tapeHelpers = util::Whiskers(R"(
 	("arrayLengthCount", std::to_string(maxArrayLength + 1))
 	.render();
 
-/// Emits one Solidity function per type, building a value of it off the tape.
 class ValueBuilder
 {
 public:
 	explicit ValueBuilder(TypeNamer& _namer): m_namer(_namer) {}
 
-	/// @returns the name of the function building a value of @param _type, emitting it and every builder it calls
-	/// on first use.
+	/// Emits the builder and those it calls on first use.
 	std::string builder(AbiType const& _type)
 	{
-		// Two structurally equal types drawn separately get separate declarations, the declared name tells them apart
+		// Keyed by declared name: structurally equal types can have distinct declarations.
 		std::string const typeName = m_namer.name(_type);
 		if (auto const it = m_builders.find(typeName); it != m_builders.end())
 			return it->second;
@@ -587,7 +559,7 @@ private:
 				"\t\t\tr[i] = " + builder(_type.element()) + "(t);\n";
 			break;
 		case AbiType::Kind::Struct:
-			// Separate statements rather than a struct constructor call, whose argument evaluation order is unspecified.
+			// Not a constructor call: its argument evaluation order is unspecified.
 			for (std::size_t i = 0; i < _type.fields().size(); ++i)
 				body += "\t\tr.f" + std::to_string(i) + " = " + builder(*_type.fields()[i]) + "(t);\n";
 			break;
@@ -605,7 +577,6 @@ private:
 			"\t}\n";
 	}
 
-	/// Expression turning the word `w` into a value of an elementary type.
 	static std::string valueExpression(AbiType const& _type, std::string const& _typeName)
 	{
 		switch (_type.kind)
@@ -623,7 +594,7 @@ private:
 				"bytes32(w)" :
 				"bytes" + std::to_string(_type.byteWidth()) + "(bytes32(w))";
 		case AbiType::Kind::Enum:
-			// Only declared members are valid values; anything else makes the decoder revert.
+			// Undeclared members make the decoder revert.
 			return _typeName + "(uint8(w % " + std::to_string(_type.memberCount()) + "))";
 		case AbiType::Kind::Contract:
 			return _typeName + "(address(uint160(w)))";
@@ -637,17 +608,12 @@ private:
 	std::vector<std::string> m_definitions;
 };
 
-/// Emits one Solidity function per type, comparing two values of it. Comparison goes through EVM primitives
-/// instead of through another encoding, so that an encoder losing information in a way the decoder reproduces
-/// cannot pass: `encode(decode(encode(v))) == encode(v)` holds for any encoder whose loss is idempotent, e.g. one
-/// writing an array length one short.
 class EqualityChecker
 {
 public:
 	explicit EqualityChecker(TypeNamer& _namer): m_namer(_namer) {}
 
-	/// @returns the name of the function comparing two values of @param _type, emitting it and every comparison it
-	/// calls on first use.
+	/// Emits the checker and those it calls on first use.
 	std::string checker(AbiType const& _type)
 	{
 		std::string const typeName = m_namer.name(_type);
@@ -681,7 +647,7 @@ private:
 			body = "\t\treturn keccak256(bytes(a)) == keccak256(bytes(b));\n";
 			break;
 		case AbiType::Kind::UserDefined:
-			// A user-defined value type carries no operators of its own unless some are attached to it.
+			// No `==` unless one is attached.
 			body = "\t\treturn " + _typeName + ".unwrap(a) == " + _typeName + ".unwrap(b);\n";
 			break;
 		case AbiType::Kind::FixedArray:
@@ -721,8 +687,6 @@ private:
 	std::vector<std::string> m_definitions;
 };
 
-/// The function every generated contract exposes as the source of the value: it builds the tuple off the tape and
-/// hands back its encoding.
 std::string buildTupleStatements(TypeNamer& _namer, ValueBuilder& _builder, std::vector<TypePointer> const& _types)
 {
 	std::string statements = "\t\tTape memory t = Tape(tape, 0);\n";
@@ -742,8 +706,7 @@ std::string encodeValueFunction(TypeNamer& _namer, ValueBuilder& _builder, std::
 		"\t}\n";
 }
 
-/// The second function every generated contract exposes: it builds the tuple off the tape, sends it through
-/// @param _transport -- the round trip under test, which yields `w0`..`wN` -- and compares that to the original.
+/// @param _transport the round trip under test, yielding `w0`..`wN`.
 std::string roundTripEqualsFunction(
 	TypeNamer& _namer,
 	ValueBuilder& _builder,
@@ -771,10 +734,7 @@ std::string roundTripEqualsFunction(
 		"\t}\n";
 }
 
-/// The contract's only external entry point. Solidity hands a non-empty fallback the entire calldata undecoded
-/// and returns its result uninterpreted -- no selector, no offset, no length prefix, no padding -- so the harness
-/// side of this test needs to know nothing about how values are encoded. The leading byte selecting the mode is
-/// this test's own convention, not part of any ABI.
+/// Calldata arrives undecoded and the result leaves raw. The leading mode byte is this test's own convention.
 std::string const rawDispatcher = R"(
 	fallback(bytes calldata input) external returns (bytes memory) {
 		bytes memory payload = input[1:];
@@ -896,7 +856,7 @@ struct CompilationResult
 {
 	bytes creationCode;
 	std::string errors;
-	/// A known limit of the code generator rather than anything to do with the ABI, so the input is skipped.
+	/// A codegen limit unrelated to the ABI; the input is skipped.
 	bool stackTooDeep = false;
 	std::string stackTooDeepMessage;
 };
@@ -921,8 +881,7 @@ CompilationResult compileContract(StringMap const& _sources, bool const _optimiz
 	return {compiler.object("C").bytecode, {}, false};
 }
 
-/// Compilation dominates the runtime of this test and the fuzzer keeps the sources fixed while it mutates the
-/// encoding, so results are memoised.
+/// Compilation dominates the runtime, and the fuzzer often mutates only the tape.
 CompilationResult const& compileContractCached(StringMap const& _sources, bool const _optimize)
 {
 	static std::map<std::pair<StringMap, bool>, CompilationResult> cache;
@@ -945,7 +904,7 @@ evmc_message baseMessage(bytes const& _input)
 	return message;
 }
 
-/// The modes the generated `fallback` dispatches on.
+/// Must match `rawDispatcher`.
 enum class Mode: std::uint8_t { EncodeValue = 0, Renormalize = 1, RoundTripEquals = 2 };
 
 struct CallResult
@@ -954,8 +913,6 @@ struct CallResult
 	std::string failure;
 };
 
-/// Sends @param _payload to the contract's fallback and hands back its return data. Both directions are raw:
-/// the fallback receives the calldata undecoded and its result is returned uninterpreted.
 CallResult callRaw(
 	solidity::test::EVMHost& _host,
 	evmc::address const& _address,
@@ -982,11 +939,9 @@ CallResult callRaw(
 
 struct RoundTripResult
 {
-	/// `abi.encode` of the value the contract built off the tape.
 	bytes encoded;
-	/// The same value encoded once more, after a decode of @a encoded.
+	/// `encoded`, decoded and encoded again.
 	bytes renormalized;
-	/// Whether the value survived the round trip, compared through EVM primitives rather than through the coder.
 	bool valuesEqual = false;
 	std::string failure;
 };
@@ -1080,11 +1035,10 @@ void CallRoundTripIsIdentity(TypedTape const& _typedTape, bool const _optimize)
 	checkRoundTrip(callRoundTripSources(_typedTape.types), _optimize, _typedTape);
 }
 
-/// A test for the property test itself
 TEST(ABICoderTypeInvariants, MalformedTypesAreRejected)
 {
 	using Kind = AbiType::Kind;
-	// Bypasses `makeType`, which validates on construction.
+	// Bypasses `makeType`'s validation.
 	auto raw = [](Kind _kind, std::uint32_t _width, std::vector<TypePointer> _components) {
 		return AbiType{_kind, _width, std::move(_components)};
 	};
@@ -1103,7 +1057,6 @@ TEST(ABICoderTypeInvariants, MalformedTypesAreRejected)
 	EXPECT_ANY_THROW(assertValidNode(raw(Kind::Enum, 0, {})));
 	EXPECT_ANY_THROW(assertValidNode(raw(Kind::Enum, 257, {})));
 	EXPECT_ANY_THROW(assertValidNode(raw(Kind::UserDefined, 0, {})));
-	// `bytes` is not a value type, so it cannot be an underlying type.
 	EXPECT_ANY_THROW(assertValidNode(raw(Kind::UserDefined, 0, {valid(Kind::Bytes)})));
 	EXPECT_ANY_THROW(assertValidNode(raw(Kind::FixedArray, 0, {valid(Kind::Bool)})));
 	EXPECT_ANY_THROW(assertValidNode(raw(Kind::FixedArray, 2, {})));
@@ -1118,11 +1071,9 @@ TEST(ABICoderTypeInvariants, MalformedTypesAreRejected)
 	EXPECT_NO_THROW(assertValidType(*valid(Kind::UserDefined, 0, {valid(Kind::FixedBytes, 32)})));
 }
 
-// Memory round trip identity
 FUZZ_TEST(ABICoderRoundTripProperty, MemoryRoundTripIsIdentity)
 	.WithDomains(typedTapeDomain(), fuzztest::Arbitrary<bool>());
 
-// Call roundtrip identity
 FUZZ_TEST(ABICoderRoundTripProperty, CallRoundTripIsIdentity)
 	.WithDomains(typedTapeDomain(), fuzztest::Arbitrary<bool>());
 
