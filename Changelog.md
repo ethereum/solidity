@@ -1,4 +1,4 @@
-### 0.8.37 (unreleased)
+### 0.8.37 (2026-09-10)
 
 Important Bugfixes:
 * Code Generator: Fix `delete` applied to an element of a `bytes` array in memory zeroing the whole 32-byte word starting at the element's location instead of only the element's byte.

@@ -2283,6 +2283,10 @@
         ],
         "released": "2026-07-09"
     },
+    "0.8.37": {
+        "bugs": [],
+        "released": "2026-09-10"
+    },
     "0.8.4": {
         "bugs": [
             "MemoryByteArrayElementDeleteClearsWholeWord",
