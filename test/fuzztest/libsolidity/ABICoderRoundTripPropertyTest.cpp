@@ -443,38 +443,6 @@ std::string location(AbiType const& _type, std::string const& _location)
 	return isValueType(_type) ? "" : " " + _location;
 }
 
-/// e.g. "S0, uint8[]"
-std::string typeList(TypeNamer& _namer, std::vector<TypePointer> const& _types)
-{
-	std::vector<std::string> parts;
-	for (TypePointer const& type: _types)
-		parts.push_back(_namer.name(*type));
-	return commaSeparated(parts);
-}
-
-/// e.g. "S0 memory, uint8"
-std::string returnTypeList(TypeNamer& _namer, std::vector<TypePointer> const& _types)
-{
-	std::vector<std::string> parts;
-	for (TypePointer const& type: _types)
-		parts.push_back(_namer.name(*type) + location(*type, "memory"));
-	return commaSeparated(parts);
-}
-
-/// e.g. "S0 calldata x0, uint8 x1"
-std::string variableDeclarations(
-	TypeNamer& _namer,
-	std::vector<TypePointer> const& _types,
-	std::string const& _location,
-	std::string const& _prefix
-)
-{
-	std::vector<std::string> parts;
-	for (std::size_t i = 0; i < _types.size(); ++i)
-		parts.push_back(_namer.name(*_types[i]) + location(*_types[i], _location) + " " + _prefix + std::to_string(i));
-	return commaSeparated(parts);
-}
-
 /// e.g. "x0, x1"
 std::string variableList(std::size_t const _count, std::string const& _prefix)
 {
@@ -687,53 +655,6 @@ private:
 	std::vector<std::string> m_definitions;
 };
 
-std::string buildTupleStatements(TypeNamer& _namer, ValueBuilder& _builder, std::vector<TypePointer> const& _types)
-{
-	std::string statements = "\t\tTape memory t = Tape(tape, 0);\n";
-	for (std::size_t i = 0; i < _types.size(); ++i)
-		statements +=
-			"\t\t" + _namer.name(*_types[i]) + location(*_types[i], "memory") + " v" + std::to_string(i) +
-			" = " + _builder.builder(*_types[i]) + "(t);\n";
-	return statements;
-}
-
-std::string encodeValueFunction(TypeNamer& _namer, ValueBuilder& _builder, std::vector<TypePointer> const& _types)
-{
-	return
-		"\tfunction encodeValue(bytes memory tape) internal pure returns (bytes memory) {\n" +
-		buildTupleStatements(_namer, _builder, _types) +
-		"\t\treturn abi.encode(" + variableList(_types.size(), "v") + ");\n"
-		"\t}\n";
-}
-
-/// @param _transport the round trip under test, yielding `w0`..`wN`.
-std::string roundTripEqualsFunction(
-	TypeNamer& _namer,
-	ValueBuilder& _builder,
-	EqualityChecker& _checker,
-	std::vector<TypePointer> const& _types,
-	std::string const& _mutability,
-	std::string const& _transport
-)
-{
-	std::vector<std::string> comparisons;
-	for (std::size_t i = 0; i < _types.size(); ++i)
-	{
-		std::string const index = std::to_string(i);
-		comparisons.push_back(_checker.checker(*_types[i]) + "(v" + index + ", w" + index + ")");
-	}
-	std::string conjunction;
-	for (std::string const& comparison: comparisons)
-		conjunction += (conjunction.empty() ? "" : " && ") + comparison;
-
-	return
-		"\tfunction roundTripEquals(bytes memory tape) internal " + _mutability + " returns (bool) {\n" +
-		buildTupleStatements(_namer, _builder, _types) +
-		"\t\t(" + variableDeclarations(_namer, _types, "memory", "w") + ") = " + _transport + ";\n"
-		"\t\treturn " + conjunction + ";\n"
-		"\t}\n";
-}
-
 /// Calldata arrives undecoded and the result leaves raw. The leading mode byte is this test's own convention.
 std::string const rawDispatcher = R"(
 	fallback(bytes calldata input) external returns (bytes memory) {
@@ -747,98 +668,154 @@ std::string const rawDispatcher = R"(
 
 std::string const sourceHeader = "// SPDX-License-Identifier: GPL-3.0\npragma abicoder v2;\n";
 
-StringMap memoryRoundTripSources(std::vector<TypePointer> const& _types)
+class ContractGenerator
 {
-	TypeNamer namer;
-	ValueBuilder builder(namer);
-	EqualityChecker checker(namer);
-	std::string const types = typeList(namer, _types);
-	std::string const values = variableList(_types.size(), "v");
-	std::string const encodeValue = encodeValueFunction(namer, builder, _types);
-	std::string const roundTripEquals = roundTripEqualsFunction(
-		namer,
-		builder,
-		checker,
-		_types,
-		"pure",
-		"abi.decode(abi.encode(" + values + "), (" + types + "))"
-	);
-	std::string const decoded = variableDeclarations(namer, _types, "memory", "v");
+public:
+	explicit ContractGenerator(std::vector<TypePointer> _types): m_types(std::move(_types)) {}
 
-	return {
-		{"types.sol", sourceHeader + namer.declarations()},
-		{"C.sol",
-			sourceHeader +
-			"import \"types.sol\";\n"
-			"contract C {\n" +
-			builder.definitions() +
-			checker.definitions() +
-			encodeValue +
-			roundTripEquals +
-			"\tfunction renormalize(bytes memory input) internal pure returns (bytes memory) {\n"
-			"\t\t(" + decoded + ") = abi.decode(input, (" + types + "));\n"
-			"\t\treturn abi.encode(" + values + ");\n"
-			"\t}\n" +
-			rawDispatcher +
-			"}\n"
-		},
-	};
-}
+	StringMap memoryRoundTripSources()
+	{
+		// Everything is generated before `declarations()`/`definitions()` are read below.
+		std::string const types = typeList();
+		std::string const values = variableList(m_types.size(), "v");
+		std::string const encodeValue = encodeValueFunction();
+		std::string const roundTripEquals =
+			roundTripEqualsFunction("pure", "abi.decode(abi.encode(" + values + "), (" + types + "))");
+		std::string const decoded = variableDeclarations("memory", "v");
 
-StringMap callRoundTripSources(std::vector<TypePointer> const& _types)
-{
-	TypeNamer namer;
-	ValueBuilder builder(namer);
-	EqualityChecker checker(namer);
-	std::string const encodeValue = encodeValueFunction(namer, builder, _types);
-	std::string const roundTripEquals = roundTripEqualsFunction(
-		namer,
-		builder,
-		checker,
-		_types,
-		"view",
-		"callee.identity(" + variableList(_types.size(), "v") + ")"
-	);
-	std::string const parameters = variableDeclarations(namer, _types, "calldata", "x");
-	std::string const returnTypes = returnTypeList(namer, _types);
-	std::string const decoded = variableDeclarations(namer, _types, "memory", "v");
-	std::string const results = variableDeclarations(namer, _types, "memory", "r");
-	std::string const types = typeList(namer, _types);
+		return {
+			{"types.sol", sourceHeader + m_namer.declarations()},
+			{"C.sol",
+				sourceHeader +
+				"import \"types.sol\";\n"
+				"contract C {\n" +
+				m_builder.definitions() +
+				m_checker.definitions() +
+				encodeValue +
+				roundTripEquals +
+				"\tfunction renormalize(bytes memory input) internal pure returns (bytes memory) {\n"
+				"\t\t(" + decoded + ") = abi.decode(input, (" + types + "));\n"
+				"\t\treturn abi.encode(" + values + ");\n"
+				"\t}\n" +
+				rawDispatcher +
+				"}\n"
+			},
+		};
+	}
 
-	return {
-		{"types.sol", sourceHeader + namer.declarations()},
-		{"callee.sol",
-			sourceHeader +
-			"import \"types.sol\";\n"
-			"contract Callee {\n"
-			"\tfunction identity(" + parameters + ")\n"
-			"\t\texternal pure returns (" + returnTypes + ")\n"
-			"\t{\n"
-			"\t\treturn (" + variableList(_types.size(), "x") + ");\n"
-			"\t}\n"
-			"}\n"
-		},
-		{"caller.sol",
-			sourceHeader +
-			"import \"types.sol\";\n"
-			"import \"callee.sol\";\n"
-			"contract C {\n"
-			"\tCallee private callee;\n"
-			"\tconstructor() { callee = new Callee(); }\n" +
-			builder.definitions() +
-			checker.definitions() +
-			encodeValue +
-			roundTripEquals +
-			"\tfunction renormalize(bytes memory input) internal view returns (bytes memory) {\n"
-			"\t\t(" + decoded + ") = abi.decode(input, (" + types + "));\n"
-			"\t\t(" + results + ") = callee.identity(" + variableList(_types.size(), "v") + ");\n"
-			"\t\treturn abi.encode(" + variableList(_types.size(), "r") + ");\n"
-			"\t}\n" +
-			rawDispatcher +
-			"}\n"
-		},
-	};
-}
+	StringMap callRoundTripSources()
+	{
+		std::string const encodeValue = encodeValueFunction();
+		std::string const roundTripEquals =
+			roundTripEqualsFunction("view", "callee.identity(" + variableList(m_types.size(), "v") + ")");
+		std::string const parameters = variableDeclarations("calldata", "x");
+		std::string const returnTypes = variableDeclarations("memory");
+		std::string const decoded = variableDeclarations("memory", "v");
+		std::string const results = variableDeclarations("memory", "r");
+		std::string const types = typeList();
+
+		return {
+			{"types.sol", sourceHeader + m_namer.declarations()},
+			{"callee.sol",
+				sourceHeader +
+				"import \"types.sol\";\n"
+				"contract Callee {\n"
+				"\tfunction identity(" + parameters + ")\n"
+				"\t\texternal pure returns (" + returnTypes + ")\n"
+				"\t{\n"
+				"\t\treturn (" + variableList(m_types.size(), "x") + ");\n"
+				"\t}\n"
+				"}\n"
+			},
+			{"caller.sol",
+				sourceHeader +
+				"import \"types.sol\";\n"
+				"import \"callee.sol\";\n"
+				"contract C {\n"
+				"\tCallee private callee;\n"
+				"\tconstructor() { callee = new Callee(); }\n" +
+				m_builder.definitions() +
+				m_checker.definitions() +
+				encodeValue +
+				roundTripEquals +
+				"\tfunction renormalize(bytes memory input) internal view returns (bytes memory) {\n"
+				"\t\t(" + decoded + ") = abi.decode(input, (" + types + "));\n"
+				"\t\t(" + results + ") = callee.identity(" + variableList(m_types.size(), "v") + ");\n"
+				"\t\treturn abi.encode(" + variableList(m_types.size(), "r") + ");\n"
+				"\t}\n" +
+				rawDispatcher +
+				"}\n"
+			},
+		};
+	}
+
+private:
+	/// e.g. "S0, uint8[]"
+	std::string typeList()
+	{
+		std::vector<std::string> parts;
+		for (TypePointer const& type: m_types)
+			parts.push_back(m_namer.name(*type));
+		return commaSeparated(parts);
+	}
+
+	/// e.g. "S0 calldata x0, uint8 x1", or "S0 calldata, uint8" without @param _prefix.
+	std::string variableDeclarations(std::string const& _location, std::string const& _prefix = "")
+	{
+		std::vector<std::string> parts;
+		for (std::size_t i = 0; i < m_types.size(); ++i)
+		{
+			std::string const name = _prefix.empty() ? "" : " " + _prefix + std::to_string(i);
+			parts.push_back(m_namer.name(*m_types[i]) + location(*m_types[i], _location) + name);
+		}
+		return commaSeparated(parts);
+	}
+
+	std::string buildTupleStatements()
+	{
+		std::string statements = "\t\tTape memory t = Tape(tape, 0);\n";
+		for (std::size_t i = 0; i < m_types.size(); ++i)
+			statements +=
+				"\t\t" + m_namer.name(*m_types[i]) + location(*m_types[i], "memory") + " v" + std::to_string(i) +
+				" = " + m_builder.builder(*m_types[i]) + "(t);\n";
+		return statements;
+	}
+
+	std::string encodeValueFunction()
+	{
+		return
+			"\tfunction encodeValue(bytes memory tape) internal pure returns (bytes memory) {\n" +
+			buildTupleStatements() +
+			"\t\treturn abi.encode(" + variableList(m_types.size(), "v") + ");\n"
+			"\t}\n";
+	}
+
+	/// @param _transport the round trip under test, yielding `w0`..`wN`.
+	std::string roundTripEqualsFunction(std::string const& _mutability, std::string const& _transport)
+	{
+		std::vector<std::string> comparisons;
+		for (std::size_t i = 0; i < m_types.size(); ++i)
+		{
+			std::string const index = std::to_string(i);
+			comparisons.push_back(m_checker.checker(*m_types[i]) + "(v" + index + ", w" + index + ")");
+		}
+		std::string conjunction;
+		for (std::string const& comparison: comparisons)
+			conjunction += (conjunction.empty() ? "" : " && ") + comparison;
+
+		return
+			"\tfunction roundTripEquals(bytes memory tape) internal " + _mutability + " returns (bool) {\n" +
+			buildTupleStatements() +
+			"\t\t(" + variableDeclarations("memory", "w") + ") = " + _transport + ";\n"
+			"\t\treturn " + conjunction + ";\n"
+			"\t}\n";
+	}
+
+	std::vector<TypePointer> m_types;
+	TypeNamer m_namer;
+	ValueBuilder m_builder{m_namer};
+	EqualityChecker m_checker{m_namer};
+};
 
 std::string sourcesToString(StringMap const& _sources)
 {
@@ -1027,12 +1004,12 @@ void checkRoundTrip(StringMap const& _sources, bool const _optimize, TypedTape c
 
 void MemoryRoundTripIsIdentity(TypedTape const& _typedTape, bool const _optimize)
 {
-	checkRoundTrip(memoryRoundTripSources(_typedTape.types), _optimize, _typedTape);
+	checkRoundTrip(ContractGenerator(_typedTape.types).memoryRoundTripSources(), _optimize, _typedTape);
 }
 
 void CallRoundTripIsIdentity(TypedTape const& _typedTape, bool const _optimize)
 {
-	checkRoundTrip(callRoundTripSources(_typedTape.types), _optimize, _typedTape);
+	checkRoundTrip(ContractGenerator(_typedTape.types).callRoundTripSources(), _optimize, _typedTape);
 }
 
 TEST(ABICoderTypeInvariants, MalformedTypesAreRejected)
