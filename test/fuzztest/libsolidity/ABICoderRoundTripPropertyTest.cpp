@@ -543,8 +543,7 @@ public:
 	/// on first use.
 	std::string builder(AbiType const& _type)
 	{
-		// Two structurally equal types drawn separately get separate declarations, and the declared name is what
-		// tells them apart.
+		// Two structurally equal types drawn separately get separate declarations, the declared name tells them apart
 		std::string const typeName = m_namer.name(_type);
 		if (auto const it = m_builders.find(typeName); it != m_builders.end())
 			return it->second;
@@ -1048,21 +1047,21 @@ RoundTripResult runRoundTrip(bytes const& _creationCode, bytes const& _tape)
 	CallResult encoded = callRaw(host, createResult.create_address, Mode::EncodeValue, _tape);
 	if (!encoded.returnValue)
 		return {{}, {}, false, encoded.failure};
+	yulAssert(encoded.failure.empty());
 
 	CallResult renormalized = callRaw(host, createResult.create_address, Mode::Renormalize, *encoded.returnValue);
 	if (!renormalized.returnValue)
 		return {*encoded.returnValue, {}, false, renormalized.failure};
+	yulAssert(renormalized.failure.empty());
 
 	CallResult const equal = callRaw(host, createResult.create_address, Mode::RoundTripEquals, _tape);
 	if (!equal.returnValue)
 		return {*encoded.returnValue, *renormalized.returnValue, false, equal.failure};
 	if (equal.returnValue->size() != 1 || equal.returnValue->front() > 1)
-		return {
-			*encoded.returnValue,
-			*renormalized.returnValue,
-			false,
-			"Expected a single status byte, got " + util::toHex(*equal.returnValue)
+		return {*encoded.returnValue, *renormalized.returnValue, false,
+			"Internal error? Expected a single status byte, got " + util::toHex(*equal.returnValue)
 		};
+	yulAssert(equal.failure.empty());
 
 	return {std::move(*encoded.returnValue), std::move(*renormalized.returnValue), equal.returnValue->front() == 1, {}};
 }
