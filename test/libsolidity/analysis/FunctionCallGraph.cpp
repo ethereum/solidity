@@ -824,8 +824,8 @@ BOOST_AUTO_TEST_CASE(inherited_functions_virtual_and_super)
 	checkCallGraphExpectations(std::get<1>(graphs), expectedDeployedEdges);
 }
 
-// D is abstract, so PostTypeContractLevelChecker does not reject the `super` call in B, and the
-// resolution is observable here. It must point at the external X.f() it actually resolves to
+// D is abstract, so PostTypeContractLevelChecker does not reject the `super` call in B
+// NOTE: C3 linearization of abstract contract D is [D, B, X, A]
 BOOST_AUTO_TEST_CASE(super_resolving_to_external_function_in_abstract_contract)
 {
 	std::unique_ptr<CompilerStack> compilerStack = parseAndAnalyzeContracts(R"(
