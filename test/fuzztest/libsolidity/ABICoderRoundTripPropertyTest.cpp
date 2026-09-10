@@ -797,49 +797,6 @@ private:
 // Compilation and execution
 // ---------------------------------------------------------------------------------------------------------------
 
-struct CompilationResult
-{
-	bytes creationCode;
-	std::string errors;
-	/// A codegen limit unrelated to the ABI; the input is skipped.
-	bool stackTooDeep = false;
-	std::string stackTooDeepMessage;
-};
-
-CompilationResult compileContract(StringMap const& _sources, bool const _optimize)
-{
-	CompilerStack compiler;
-	compiler.setSources(_sources);
-	compiler.setViaIR(true);
-	compiler.setOptimiserSettings(_optimize);
-
-	try
-	{
-		if (!compiler.compile())
-			return {.errors = langutil::SourceReferenceFormatter::formatErrorInformation(compiler.errors(), compiler)};
-	}
-	catch (yul::StackTooDeepError const& _error)
-	{
-		return {.stackTooDeep = true, .stackTooDeepMessage = _error.comment() ? *_error.comment() : "Stack too deep."};
-	}
-
-	return {.creationCode = compiler.object("C").bytecode};
-}
-
-/// Compilation dominates the runtime, and the fuzzer often mutates only the tape.
-CompilationResult const& compileContractCached(StringMap const& _sources, bool const _optimize)
-{
-	static std::map<std::pair<StringMap, bool>, CompilationResult> cache;
-	static constexpr std::size_t maxCacheSize = 512;
-
-	auto key = std::make_pair(_sources, _optimize);
-	if (auto const it = cache.find(key); it != cache.end())
-		return it->second;
-	if (cache.size() >= maxCacheSize)
-		cache.clear();
-	return cache.emplace(std::move(key), compileContract(_sources, _optimize)).first->second;
-}
-
 struct CallResult
 {
 	evmc_status_code status;
@@ -889,6 +846,14 @@ private:
 // ---------------------------------------------------------------------------------------------------------------
 // The property
 // ---------------------------------------------------------------------------------------------------------------
+struct CompilationResult
+{
+	bytes creationCode;
+	std::string errors;
+	/// A codegen limit unrelated to the ABI; the input is skipped.
+	bool stackTooDeep = false;
+	std::string stackTooDeepMessage;
+};
 
 void checkRoundTrip(StringMap const& _sources, bool const _optimize, TypedTape const& _typedTape)
 {
@@ -903,6 +868,40 @@ void checkRoundTrip(StringMap const& _sources, bool const _optimize, TypedTape c
 	{
 		char const* vmPath = getenv("ETH_EVMONE");
 		return solidity::test::EVMHost::getVM(vmPath ? vmPath : evmoneFilename);
+	};
+
+	auto compileContract = [](StringMap const& _sources, bool const _optimize) -> CompilationResult
+	{
+		CompilerStack compiler;
+		compiler.setSources(_sources);
+		compiler.setViaIR(true);
+		compiler.setOptimiserSettings(_optimize);
+
+		try
+		{
+			if (!compiler.compile())
+				return {.errors = langutil::SourceReferenceFormatter::formatErrorInformation(compiler.errors(), compiler)};
+		}
+		catch (yul::StackTooDeepError const& _error)
+		{
+			return {.stackTooDeep = true, .stackTooDeepMessage = _error.comment() ? *_error.comment() : "Stack too deep."};
+		}
+
+		return {.creationCode = compiler.object("C").bytecode};
+	};
+
+	/// Compilation dominates the runtime, and the fuzzer often mutates only the tape.
+	auto compileContractCached = [&](StringMap const& _sources, bool const _optimize) -> CompilationResult const&
+	{
+		static std::map<std::pair<StringMap, bool>, CompilationResult> cache;
+		static constexpr std::size_t maxCacheSize = 512;
+
+		auto key = std::make_pair(_sources, _optimize);
+		if (auto const it = cache.find(key); it != cache.end())
+			return it->second;
+		if (cache.size() >= maxCacheSize)
+			cache.clear();
+		return cache.emplace(std::move(key), compileContract(_sources, _optimize)).first->second;
 	};
 
 	solAssert(!_typedTape.types.empty(), "the top-level tuple has at least one component");
