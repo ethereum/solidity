@@ -16,12 +16,9 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
- * Property test for the ABI coders. The generated contract builds a value of a random type tuple off a tape of
- * fuzzer bytes, and a raw `fallback` exchanges plain byte strings, so the harness never encodes anything itself.
- * Checked with and without the optimiser:
- *   - `renormalize`: encode(decode(encode(v))) == encode(v), byte for byte;
- *   - `roundTripEquals`: the round-tripped value equals v via EVM primitives. This catches idempotent information
- *     loss (e.g. an array length written one short) that the first property misses.
+ * Property test for the ABI coders. Runs with and without the optimiser:
+ *   - `renormalize`: encode(decode(encode(v))) == encode(v), byte for byte
+ *   - `roundTripEquals`: the round-tripped value equals v via EVM primitives
  *
  * Main classes:
  *   - `AbiType`: one node of the random type tree drawn by the fuzzer.
@@ -66,6 +63,14 @@ namespace solidity::frontend::test
 
 namespace
 {
+
+#ifdef _WIN32
+constexpr auto evmoneFilename = "evmone.dll";
+#elif defined(__APPLE__)
+constexpr auto evmoneFilename = "libevmone.dylib";
+#else
+constexpr auto evmoneFilename = "libevmone.so";
+#endif
 
 constexpr std::uint32_t maxTypeDepth = 3;
 constexpr std::uint32_t maxArrayLength = 3;
@@ -843,14 +848,6 @@ CompilationResult const& compileContractCached(StringMap const& _sources, bool c
 		cache.clear();
 	return cache.emplace(std::move(key), compileContract(_sources, _optimize)).first->second;
 }
-
-#ifdef _WIN32
-constexpr auto evmoneFilename = "evmone.dll";
-#elif defined(__APPLE__)
-constexpr auto evmoneFilename = "libevmone.dylib";
-#else
-constexpr auto evmoneFilename = "libevmone.so";
-#endif
 
 evmc::VM& loadEvmone()
 {
