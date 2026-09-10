@@ -323,14 +323,6 @@ struct TypedTape
 	bytes tape;
 };
 
-fuzztest::Domain<TypedTape> typedTapeDomain()
-{
-	return fuzztest::StructOf<TypedTape>(
-		fuzztest::VectorOf(typeDomain(maxTypeDepth)).WithMinSize(1).WithMaxSize(maxTupleComponents),
-		fuzztest::VectorOf(fuzztest::Arbitrary<uint8_t>()).WithMinSize(minTapeLength).WithMaxSize(maxTapeLength)
-	);
-}
-
 // ---------------------------------------------------------------------------------------------------------------
 // Solidity source generation
 // ---------------------------------------------------------------------------------------------------------------
@@ -824,14 +816,14 @@ CompilationResult compileContract(StringMap const& _sources, bool const _optimiz
 	try
 	{
 		if (!compiler.compile())
-			return {{}, langutil::SourceReferenceFormatter::formatErrorInformation(compiler.errors(), compiler), false};
+			return {.errors = langutil::SourceReferenceFormatter::formatErrorInformation(compiler.errors(), compiler)};
 	}
 	catch (yul::StackTooDeepError const& _error)
 	{
-		return {{}, {}, true, _error.comment() ? *_error.comment() : "Stack too deep."};
+		return {.stackTooDeep = true, .stackTooDeepMessage = _error.comment() ? *_error.comment() : "Stack too deep."};
 	}
 
-	return {compiler.object("C").bytecode, {}, false};
+	return {.creationCode = compiler.object("C").bytecode};
 }
 
 /// Compilation dominates the runtime, and the fuzzer often mutates only the tape.
@@ -846,12 +838,6 @@ CompilationResult const& compileContractCached(StringMap const& _sources, bool c
 	if (cache.size() >= maxCacheSize)
 		cache.clear();
 	return cache.emplace(std::move(key), compileContract(_sources, _optimize)).first->second;
-}
-
-evmc::VM& loadEvmone()
-{
-	char const* vmPath = getenv("ETH_EVMONE");
-	return solidity::test::EVMHost::getVM(vmPath ? vmPath : evmoneFilename);
 }
 
 struct CallResult
@@ -904,16 +890,21 @@ private:
 // The property
 // ---------------------------------------------------------------------------------------------------------------
 
-std::string sourcesToString(StringMap const& _sources)
-{
-	std::string result;
-	for (auto const& [name, content]: _sources)
-		result += "==== " + name + " ====\n" + content;
-	return result;
-}
-
 void checkRoundTrip(StringMap const& _sources, bool const _optimize, TypedTape const& _typedTape)
 {
+	auto sourcesToString = [](StringMap const& _sources) -> std::string {
+		std::string result;
+		for (auto const& [name, content]: _sources)
+			result += "==== " + name + " ====\n" + content;
+		return result;
+	};
+
+	auto loadEvmone = []() ->evmc::VM&
+	{
+		char const* vmPath = getenv("ETH_EVMONE");
+		return solidity::test::EVMHost::getVM(vmPath ? vmPath : evmoneFilename);
+	};
+
 	solAssert(!_typedTape.types.empty(), "the top-level tuple has at least one component");
 	solAssert(!_typedTape.tape.empty(), "the builders index the tape modulo its length");
 	for (TypePointer const& type: _typedTape.types)
@@ -968,6 +959,20 @@ void CallRoundTripIsIdentity(TypedTape const& _typedTape, bool const _optimize)
 	checkRoundTrip(ContractGenerator(_typedTape.types).callRoundTripSources(), _optimize, _typedTape);
 }
 
+fuzztest::Domain<TypedTape> typedTapeDomain()
+{
+	return fuzztest::StructOf<TypedTape>(
+		fuzztest::VectorOf(typeDomain(maxTypeDepth)).WithMinSize(1).WithMaxSize(maxTupleComponents),
+		fuzztest::VectorOf(fuzztest::Arbitrary<uint8_t>()).WithMinSize(minTapeLength).WithMaxSize(maxTapeLength)
+	);
+}
+
+FUZZ_TEST(ABICoderRoundTripProperty, MemoryRoundTripIsIdentity)
+	.WithDomains(typedTapeDomain(), fuzztest::Arbitrary<bool>());
+
+FUZZ_TEST(ABICoderRoundTripProperty, CallRoundTripIsIdentity)
+	.WithDomains(typedTapeDomain(), fuzztest::Arbitrary<bool>());
+
 TEST(ABICoderTypeInvariants, MalformedTypesAreRejected)
 {
 	using Kind = AbiType::Kind;
@@ -1003,11 +1008,5 @@ TEST(ABICoderTypeInvariants, MalformedTypesAreRejected)
 	EXPECT_NO_THROW(assertValidType(*valid(Kind::Struct, 0, {valid(Kind::Uint, 256), valid(Kind::Bytes)})));
 	EXPECT_NO_THROW(assertValidType(*valid(Kind::UserDefined, 0, {valid(Kind::FixedBytes, 32)})));
 }
-
-FUZZ_TEST(ABICoderRoundTripProperty, MemoryRoundTripIsIdentity)
-	.WithDomains(typedTapeDomain(), fuzztest::Arbitrary<bool>());
-
-FUZZ_TEST(ABICoderRoundTripProperty, CallRoundTripIsIdentity)
-	.WithDomains(typedTapeDomain(), fuzztest::Arbitrary<bool>());
 
 }
