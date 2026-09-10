@@ -22,6 +22,13 @@
  *   - `renormalize`: encode(decode(encode(v))) == encode(v), byte for byte;
  *   - `roundTripEquals`: the round-tripped value equals v via EVM primitives. This catches idempotent information
  *     loss (e.g. an array length written one short) that the first property misses.
+ *
+ * Main classes:
+ *   - `AbiType`: one node of the random type tree drawn by the fuzzer.
+ *   - `TypeNamer`: renders Solidity type names and emits the declarations they need.
+ *   - `ValueBuilder`: emits a `buildN` function per type that reads a value off the tape.
+ *   - `EqualityChecker`: emits an `eqN` function per type that compares two values.
+ *   - `ContractGenerator`: assembles the complete contract sources for one type tuple.
  */
 #include <test/EVMHost.h>
 
@@ -37,6 +44,7 @@
 #include <libsolutil/Common.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Numeric.h>
+#include <libsolutil/StringUtils.h>
 #include <libsolutil/Whiskers.h>
 
 #include <fuzztest/fuzztest.h>
@@ -68,14 +76,6 @@ constexpr std::uint32_t maxEnumMembers = 4;
 /// Never empty: builders index the tape modulo its length.
 constexpr std::uint32_t minTapeLength = 32;
 constexpr std::uint32_t maxTapeLength = 1024;
-
-#ifdef _WIN32
-constexpr auto evmoneFilename = "evmone.dll";
-#elif defined(__APPLE__)
-constexpr auto evmoneFilename = "libevmone.dylib";
-#else
-constexpr auto evmoneFilename = "libevmone.so";
-#endif
 
 // ---------------------------------------------------------------------------------------------------------------
 // Type model
@@ -194,19 +194,11 @@ TypePointer makeType(AbiType::Kind _kind, std::uint32_t _width = 0, std::vector<
 bool isValueType(AbiType const& _type)
 {
 	assertValidNode(_type);
-	switch (_type.kind)
-	{
-	case AbiType::Kind::Uint:
-	case AbiType::Kind::Int:
-	case AbiType::Kind::Address:
-	case AbiType::Kind::Bool:
-	case AbiType::Kind::FixedBytes:
-	case AbiType::Kind::Enum:
-	case AbiType::Kind::Contract:
-	case AbiType::Kind::UserDefined:
-		return true;
-	default: return false;
-	}
+	return
+		isElementaryValueKind(_type.kind) ||
+		_type.kind == AbiType::Kind::Enum ||
+		_type.kind == AbiType::Kind::Contract ||
+		_type.kind == AbiType::Kind::UserDefined;
 }
 
 /// Structs are spelled out as tuples.
@@ -229,10 +221,10 @@ std::string signatureOf(AbiType const& _type)
 	case AbiType::Kind::DynArray: return signatureOf(_type.element()) + "[]";
 	case AbiType::Kind::Struct:
 	{
-		std::string fields;
+		std::vector<std::string> fields;
 		for (TypePointer const& field: _type.fields())
-			fields += (fields.empty() ? "" : ",") + signatureOf(*field);
-		return "(" + fields + ")";
+			fields.push_back(signatureOf(*field));
+		return "(" + util::joinHumanReadable(fields, ",") + ")";
 	}
 	}
 	solAssert(false);
@@ -410,12 +402,7 @@ private:
 			return "struct " + _identifier + " {\n" + fields + "}\n";
 		}
 		case AbiType::Kind::Enum:
-		{
-			std::string members;
-			for (std::uint32_t i = 0; i < _type.memberCount(); ++i)
-				members += (i == 0 ? "" : ", ") + ("M" + std::to_string(i));
-			return "enum " + _identifier + " { " + members + " }\n";
-		}
+			return "enum " + _identifier + " { " + util::suffixedVariableNameList("M", 0, _type.memberCount()) + " }\n";
 		case AbiType::Kind::UserDefined:
 			return "type " + _identifier + " is " + _componentNames.front() + ";\n";
 		case AbiType::Kind::Contract:
@@ -429,27 +416,10 @@ private:
 	std::vector<std::string> m_declarations;
 };
 
-std::string commaSeparated(std::vector<std::string> const& _parts)
-{
-	std::string result;
-	for (std::string const& part: _parts)
-		result += (result.empty() ? "" : ", ") + part;
-	return result;
-}
-
 /// Value types must not carry one.
 std::string location(AbiType const& _type, std::string const& _location)
 {
 	return isValueType(_type) ? "" : " " + _location;
-}
-
-/// e.g. "x0, x1"
-std::string variableList(std::size_t const _count, std::string const& _prefix)
-{
-	std::vector<std::string> parts;
-	for (std::size_t i = 0; i < _count; ++i)
-		parts.push_back(_prefix + std::to_string(i));
-	return commaSeparated(parts);
 }
 
 class ValueBuilder
@@ -658,18 +628,7 @@ private:
 	std::vector<std::string> m_definitions;
 };
 
-/// Calldata arrives undecoded and the result leaves raw. The leading mode byte is this test's own convention.
-std::string const rawDispatcher = R"(
-	fallback(bytes calldata input) external returns (bytes memory) {
-		bytes memory payload = input[1:];
-		if (uint8(input[0]) == 0) return encodeValue(payload);
-		if (uint8(input[0]) == 1) return renormalize(payload);
-		if (roundTripEquals(payload)) return hex"01";
-		return hex"00";
-	}
-)";
-
-std::string const sourceHeader = "// SPDX-License-Identifier: GPL-3.0\npragma abicoder v2;\n";
+enum class Mode: std::uint8_t { EncodeValue = 0, Renormalize = 1, RoundTripEquals = 2 };
 
 class ContractGenerator
 {
@@ -680,16 +639,16 @@ public:
 	{
 		// Everything is generated before `declarations()`/`definitions()` are read below.
 		std::string const types = typeList();
-		std::string const values = variableList(m_types.size(), "v");
+		std::string const values = util::suffixedVariableNameList("v", 0, m_types.size());
 		std::string const encodeValue = encodeValueFunction();
 		std::string const roundTripEquals =
 			roundTripEqualsFunction("pure", "abi.decode(abi.encode(" + values + "), (" + types + "))");
 		std::string const decoded = variableDeclarations("memory", "v");
 
 		return {
-			{"types.sol", sourceHeader + m_namer.declarations()},
+			{"types.sol", sourceHeader() + m_namer.declarations()},
 			{"C.sol",
-				sourceHeader +
+				sourceHeader() +
 				"import \"types.sol\";\n"
 				"contract C {\n" +
 				m_builder.definitions() +
@@ -700,7 +659,7 @@ public:
 				"\t\t(" + decoded + ") = abi.decode(input, (" + types + "));\n"
 				"\t\treturn abi.encode(" + values + ");\n"
 				"\t}\n" +
-				rawDispatcher +
+				rawDispatcher() +
 				"}\n"
 			},
 		};
@@ -708,9 +667,9 @@ public:
 
 	StringMap callRoundTripSources()
 	{
+		std::string const values = util::suffixedVariableNameList("v", 0, m_types.size());
 		std::string const encodeValue = encodeValueFunction();
-		std::string const roundTripEquals =
-			roundTripEqualsFunction("view", "callee.identity(" + variableList(m_types.size(), "v") + ")");
+		std::string const roundTripEquals = roundTripEqualsFunction("view", "callee.identity(" + values + ")");
 		std::string const parameters = variableDeclarations("calldata", "x");
 		std::string const returnTypes = variableDeclarations("memory");
 		std::string const decoded = variableDeclarations("memory", "v");
@@ -718,20 +677,20 @@ public:
 		std::string const types = typeList();
 
 		return {
-			{"types.sol", sourceHeader + m_namer.declarations()},
+			{"types.sol", sourceHeader() + m_namer.declarations()},
 			{"callee.sol",
-				sourceHeader +
+				sourceHeader() +
 				"import \"types.sol\";\n"
 				"contract Callee {\n"
 				"\tfunction identity(" + parameters + ")\n"
 				"\t\texternal pure returns (" + returnTypes + ")\n"
 				"\t{\n"
-				"\t\treturn (" + variableList(m_types.size(), "x") + ");\n"
+				"\t\treturn (" + util::suffixedVariableNameList("x", 0, m_types.size()) + ");\n"
 				"\t}\n"
 				"}\n"
 			},
 			{"caller.sol",
-				sourceHeader +
+				sourceHeader() +
 				"import \"types.sol\";\n"
 				"import \"callee.sol\";\n"
 				"contract C {\n"
@@ -743,23 +702,45 @@ public:
 				roundTripEquals +
 				"\tfunction renormalize(bytes memory input) internal view returns (bytes memory) {\n"
 				"\t\t(" + decoded + ") = abi.decode(input, (" + types + "));\n"
-				"\t\t(" + results + ") = callee.identity(" + variableList(m_types.size(), "v") + ");\n"
-				"\t\treturn abi.encode(" + variableList(m_types.size(), "r") + ");\n"
+				"\t\t(" + results + ") = callee.identity(" + values + ");\n"
+				"\t\treturn abi.encode(" + util::suffixedVariableNameList("r", 0, m_types.size()) + ");\n"
 				"\t}\n" +
-				rawDispatcher +
+				rawDispatcher() +
 				"}\n"
 			},
 		};
 	}
 
 private:
+	static std::string sourceHeader()
+	{
+		return "// SPDX-License-Identifier: GPL-3.0\npragma abicoder v2;\n";
+	}
+
+	/// Calldata arrives undecoded and the result leaves raw. The leading mode byte is this test's own convention.
+	static std::string rawDispatcher()
+	{
+		return util::Whiskers(R"(
+			fallback(bytes calldata input) external returns (bytes memory) {
+				bytes memory payload = input[1:];
+				if (uint8(input[0]) == <encodeValue>) return encodeValue(payload);
+				if (uint8(input[0]) == <renormalize>) return renormalize(payload);
+				if (roundTripEquals(payload)) return hex"01";
+				return hex"00";
+			}
+		)")
+			("encodeValue", std::to_string(static_cast<int>(Mode::EncodeValue)))
+			("renormalize", std::to_string(static_cast<int>(Mode::Renormalize)))
+			.render();
+	}
+
 	/// e.g. "S0, uint8[]"
 	std::string typeList()
 	{
 		std::vector<std::string> parts;
 		for (TypePointer const& type: m_types)
 			parts.push_back(m_namer.name(*type));
-		return commaSeparated(parts);
+		return util::joinHumanReadable(parts);
 	}
 
 	/// e.g. "S0 calldata x0, uint8 x1", or "S0 calldata, uint8" without @param _prefix.
@@ -771,7 +752,7 @@ private:
 			std::string const name = _prefix.empty() ? "" : " " + _prefix + std::to_string(i);
 			parts.push_back(m_namer.name(*m_types[i]) + location(*m_types[i], _location) + name);
 		}
-		return commaSeparated(parts);
+		return util::joinHumanReadable(parts);
 	}
 
 	std::string buildTupleStatements()
@@ -789,7 +770,7 @@ private:
 		return
 			"\tfunction encodeValue(bytes memory tape) internal pure returns (bytes memory) {\n" +
 			buildTupleStatements() +
-			"\t\treturn abi.encode(" + variableList(m_types.size(), "v") + ");\n"
+			"\t\treturn abi.encode(" + util::suffixedVariableNameList("v", 0, m_types.size()) + ");\n"
 			"\t}\n";
 	}
 
@@ -802,15 +783,12 @@ private:
 			std::string const index = std::to_string(i);
 			comparisons.push_back(m_checker.checker(*m_types[i]) + "(v" + index + ", w" + index + ")");
 		}
-		std::string conjunction;
-		for (std::string const& comparison: comparisons)
-			conjunction += (conjunction.empty() ? "" : " && ") + comparison;
 
 		return
 			"\tfunction roundTripEquals(bytes memory tape) internal " + _mutability + " returns (bool) {\n" +
 			buildTupleStatements() +
 			"\t\t(" + variableDeclarations("memory", "w") + ") = " + _transport + ";\n"
-			"\t\treturn " + conjunction + ";\n"
+			"\t\treturn " + util::joinHumanReadable(comparisons, " && ") + ";\n"
 			"\t}\n";
 	}
 
@@ -819,14 +797,6 @@ private:
 	ValueBuilder m_builder{m_namer};
 	EqualityChecker m_checker{m_namer};
 };
-
-std::string sourcesToString(StringMap const& _sources)
-{
-	std::string result;
-	for (auto const& [name, content]: _sources)
-		result += "==== " + name + " ====\n" + content;
-	return result;
-}
 
 // ---------------------------------------------------------------------------------------------------------------
 // Compilation and execution
@@ -884,9 +854,6 @@ evmc_message baseMessage(bytes const& _input)
 	return message;
 }
 
-/// Must match `rawDispatcher`.
-enum class Mode: std::uint8_t { EncodeValue = 0, Renormalize = 1, RoundTripEquals = 2 };
-
 struct CallResult
 {
 	std::optional<bytes> returnValue;
@@ -926,6 +893,14 @@ struct RoundTripResult
 	std::string failure;
 };
 
+#ifdef _WIN32
+constexpr auto evmoneFilename = "evmone.dll";
+#elif defined(__APPLE__)
+constexpr auto evmoneFilename = "libevmone.dylib";
+#else
+constexpr auto evmoneFilename = "libevmone.so";
+#endif
+
 RoundTripResult runRoundTrip(bytes const& _creationCode, bytes const& _tape)
 {
 	char const* vmPath = getenv("ETH_EVMONE");
@@ -944,12 +919,12 @@ RoundTripResult runRoundTrip(bytes const& _creationCode, bytes const& _tape)
 	CallResult encoded = callRaw(host, createResult.create_address, Mode::EncodeValue, _tape);
 	if (!encoded.returnValue)
 		return {{}, {}, false, encoded.failure};
-	yulAssert(encoded.failure.empty());
+	solAssert(encoded.failure.empty());
 
 	CallResult renormalized = callRaw(host, createResult.create_address, Mode::Renormalize, *encoded.returnValue);
 	if (!renormalized.returnValue)
 		return {*encoded.returnValue, {}, false, renormalized.failure};
-	yulAssert(renormalized.failure.empty());
+	solAssert(renormalized.failure.empty());
 
 	CallResult const equal = callRaw(host, createResult.create_address, Mode::RoundTripEquals, _tape);
 	if (!equal.returnValue)
@@ -958,7 +933,7 @@ RoundTripResult runRoundTrip(bytes const& _creationCode, bytes const& _tape)
 		return {*encoded.returnValue, *renormalized.returnValue, false,
 			"Internal error? Expected a single status byte, got " + util::toHex(*equal.returnValue)
 		};
-	yulAssert(equal.failure.empty());
+	solAssert(equal.failure.empty());
 
 	return {std::move(*encoded.returnValue), std::move(*renormalized.returnValue), equal.returnValue->front() == 1, {}};
 }
@@ -966,6 +941,14 @@ RoundTripResult runRoundTrip(bytes const& _creationCode, bytes const& _tape)
 // ---------------------------------------------------------------------------------------------------------------
 // The property
 // ---------------------------------------------------------------------------------------------------------------
+
+std::string sourcesToString(StringMap const& _sources)
+{
+	std::string result;
+	for (auto const& [name, content]: _sources)
+		result += "==== " + name + " ====\n" + content;
+	return result;
+}
 
 void checkRoundTrip(StringMap const& _sources, bool const _optimize, TypedTape const& _typedTape)
 {
@@ -978,7 +961,7 @@ void checkRoundTrip(StringMap const& _sources, bool const _optimize, TypedTape c
 	for (TypePointer const& type: _typedTape.types)
 		signatures.push_back(signatureOf(*type));
 	std::string const contract =
-		"tuple: (" + commaSeparated(signatures) + ")\n" +
+		"tuple: (" + util::joinHumanReadable(signatures) + ")\n" +
 		"optimize: " + (_optimize ? "true" : "false") + "\n" +
 		sourcesToString(_sources);
 	std::string const context = contract + "tape: " + util::toHex(_typedTape.tape) + "\n";
