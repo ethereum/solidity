@@ -2169,6 +2169,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 						*_memberAccess.annotation().referencedDeclaration
 					).resolveVirtual(m_context.mostDerivedContract(), super);
 
+				solAssert(resolvedFunctionDef.isVisibleInDerivedContracts(), "Super call resolved to a function not visible in current context.");
 				solAssert(resolvedFunctionDef.functionType(true));
 				solAssert(resolvedFunctionDef.functionType(true)->kind() == FunctionType::Kind::Internal);
 				assignInternalFunctionIDIfNotCalledDirectly(_memberAccess, resolvedFunctionDef);

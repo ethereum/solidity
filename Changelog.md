@@ -1,3 +1,8 @@
+### 0.3.38 (unreleased)
+
+Bugfixes:
+* Type Checker: Disallow `super` calls that would resolve to an implemented `external` function in the linearization of the most derived contract. Such calls previously caused an ICE via IR and jumped into the external function's body with the legacy pipeline.
+
 ### 0.8.37 (2026-09-10)
 
 Important Bugfixes:
