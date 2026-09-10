@@ -452,30 +452,6 @@ std::string variableList(std::size_t const _count, std::string const& _prefix)
 	return commaSeparated(parts);
 }
 
-/// `Tape` is passed by reference, so reads advance `pos` for the caller. Indexing wraps, so reads never fail.
-std::string const tapeHelpers = util::Whiskers(R"(
-	struct Tape { bytes data; uint pos; }
-	function readByte(Tape memory t) internal pure returns (uint8 b) {
-		b = uint8(t.data[t.pos % t.data.length]);
-		t.pos++;
-	}
-	function readWord(Tape memory t) internal pure returns (uint256 w) {
-		for (uint i = 0; i < 32; i++)
-			w = (w << 8) | readByte(t);
-	}
-	function readArrayLength(Tape memory t) internal pure returns (uint) {
-		return readByte(t) % <arrayLengthCount>;
-	}
-	function readBytes(Tape memory t) internal pure returns (bytes memory r) {
-		uint16[12] memory lengths = [uint16(0), 1, 2, 31, 32, 33, 63, 64, 65, 95, 96, 97];
-		r = new bytes(lengths[readByte(t) % lengths.length]);
-		for (uint i = 0; i < r.length; i++)
-			r[i] = bytes1(readByte(t));
-	}
-)")
-	("arrayLengthCount", std::to_string(maxArrayLength + 1))
-	.render();
-
 class ValueBuilder
 {
 public:
@@ -497,13 +473,40 @@ public:
 
 	std::string definitions() const
 	{
-		std::string result = tapeHelpers;
+		std::string result = tapeHelpers();
 		for (std::string const& definition: m_definitions)
 			result += definition;
 		return result;
 	}
 
 private:
+	/// `Tape` is passed by reference, so reads advance `pos` for the caller. Indexing wraps, so reads never fail.
+	static std::string tapeHelpers()
+	{
+		return util::Whiskers(R"(
+			struct Tape { bytes data; uint pos; }
+			function readByte(Tape memory t) internal pure returns (uint8 b) {
+				b = uint8(t.data[t.pos % t.data.length]);
+				t.pos++;
+			}
+			function readWord(Tape memory t) internal pure returns (uint256 w) {
+				for (uint i = 0; i < 32; i++)
+					w = (w << 8) | readByte(t);
+			}
+			function readArrayLength(Tape memory t) internal pure returns (uint) {
+				return readByte(t) % <arrayLengthCount>;
+			}
+			function readBytes(Tape memory t) internal pure returns (bytes memory r) {
+				uint16[12] memory lengths = [uint16(0), 1, 2, 31, 32, 33, 63, 64, 65, 95, 96, 97];
+				r = new bytes(lengths[readByte(t) % lengths.length]);
+				for (uint i = 0; i < r.length; i++)
+					r[i] = bytes1(readByte(t));
+			}
+		)")
+			("arrayLengthCount", std::to_string(maxArrayLength + 1))
+			.render();
+	}
+
 	std::string definition(AbiType const& _type, std::string const& _typeName, std::string const& _identifier)
 	{
 		std::string body;
