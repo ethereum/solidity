@@ -55,7 +55,6 @@
 #include <iostream>
 #include <limits>
 #include <memory>
-#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -845,54 +844,6 @@ CompilationResult const& compileContractCached(StringMap const& _sources, bool c
 	return cache.emplace(std::move(key), compileContract(_sources, _optimize)).first->second;
 }
 
-evmc_message baseMessage(bytes const& _input)
-{
-	evmc_message message = {};
-	message.gas = std::numeric_limits<int64_t>::max();
-	message.input_data = _input.data();
-	message.input_size = _input.size();
-	return message;
-}
-
-struct CallResult
-{
-	std::optional<bytes> returnValue;
-	std::string failure;
-};
-
-CallResult callRaw(
-	solidity::test::EVMHost& _host,
-	evmc::address const& _address,
-	Mode const _mode,
-	bytes const& _payload
-)
-{
-	bytes const input = bytes{static_cast<uint8_t>(_mode)} + _payload;
-	evmc_message message = baseMessage(input);
-	message.kind = EVMC_CALL;
-	message.recipient = _address;
-	message.code_address = _address;
-
-	evmc::Result const result = _host.call(message);
-	if (result.status_code != EVMC_SUCCESS)
-		return {
-			std::nullopt,
-			"Call in mode " + std::to_string(static_cast<int>(_mode)) +
-			" failed with status " + std::to_string(result.status_code)
-		};
-
-	return {bytes(result.output_data, result.output_data + result.output_size), {}};
-}
-
-struct RoundTripResult
-{
-	bytes encoded;
-	/// `encoded`, decoded and encoded again.
-	bytes renormalized;
-	bool valuesEqual = false;
-	std::string failure;
-};
-
 #ifdef _WIN32
 constexpr auto evmoneFilename = "evmone.dll";
 #elif defined(__APPLE__)
@@ -901,42 +852,57 @@ constexpr auto evmoneFilename = "libevmone.dylib";
 constexpr auto evmoneFilename = "libevmone.so";
 #endif
 
-RoundTripResult runRoundTrip(bytes const& _creationCode, bytes const& _tape)
+evmc::VM& loadEvmone()
 {
 	char const* vmPath = getenv("ETH_EVMONE");
-	evmc::VM& vm = solidity::test::EVMHost::getVM(vmPath ? vmPath : evmoneFilename);
-	if (!vm)
-		return {{}, {}, false, "Unable to load evmone. Set ETH_EVMONE or LD_LIBRARY_PATH."};
-
-	solidity::test::EVMHost host(langutil::EVMVersion{}, vm);
-
-	evmc_message createMessage = baseMessage(_creationCode);
-	createMessage.kind = EVMC_CREATE;
-	evmc::Result const createResult = host.call(createMessage);
-	if (createResult.status_code != EVMC_SUCCESS)
-		return {{}, {}, false, "Contract creation failed with status " + std::to_string(createResult.status_code)};
-
-	CallResult encoded = callRaw(host, createResult.create_address, Mode::EncodeValue, _tape);
-	if (!encoded.returnValue)
-		return {{}, {}, false, encoded.failure};
-	solAssert(encoded.failure.empty());
-
-	CallResult renormalized = callRaw(host, createResult.create_address, Mode::Renormalize, *encoded.returnValue);
-	if (!renormalized.returnValue)
-		return {*encoded.returnValue, {}, false, renormalized.failure};
-	solAssert(renormalized.failure.empty());
-
-	CallResult const equal = callRaw(host, createResult.create_address, Mode::RoundTripEquals, _tape);
-	if (!equal.returnValue)
-		return {*encoded.returnValue, *renormalized.returnValue, false, equal.failure};
-	if (equal.returnValue->size() != 1 || equal.returnValue->front() > 1)
-		return {*encoded.returnValue, *renormalized.returnValue, false,
-			"Internal error? Expected a single status byte, got " + util::toHex(*equal.returnValue)
-		};
-	solAssert(equal.failure.empty());
-
-	return {std::move(*encoded.returnValue), std::move(*renormalized.returnValue), equal.returnValue->front() == 1, {}};
+	return solidity::test::EVMHost::getVM(vmPath ? vmPath : evmoneFilename);
 }
+
+struct CallResult
+{
+	evmc_status_code status;
+	bytes output;
+};
+
+class DeployedContract
+{
+public:
+	DeployedContract(evmc::VM& _vm, bytes const& _creationCode): m_host(langutil::EVMVersion{}, _vm)
+	{
+		evmc_message message = baseMessage(_creationCode);
+		message.kind = EVMC_CREATE;
+		evmc::Result const result = m_host.call(message);
+		m_creationStatus = result.status_code;
+		m_address = result.create_address;
+	}
+
+	evmc_status_code creationStatus() const { return m_creationStatus; }
+
+	CallResult call(Mode const _mode, bytes const& _payload)
+	{
+		bytes const input = bytes{static_cast<uint8_t>(_mode)} + _payload;
+		evmc_message message = baseMessage(input);
+		message.kind = EVMC_CALL;
+		message.recipient = m_address;
+		message.code_address = m_address;
+		evmc::Result const result = m_host.call(message);
+		return {result.status_code, bytes(result.output_data, result.output_data + result.output_size)};
+	}
+
+private:
+	static evmc_message baseMessage(bytes const& _input)
+	{
+		evmc_message message = {};
+		message.gas = std::numeric_limits<int64_t>::max();
+		message.input_data = _input.data();
+		message.input_size = _input.size();
+		return message;
+	}
+
+	solidity::test::EVMHost m_host;
+	evmc::address m_address;
+	evmc_status_code m_creationStatus;
+};
 
 // ---------------------------------------------------------------------------------------------------------------
 // The property
@@ -979,11 +945,19 @@ void checkRoundTrip(StringMap const& _sources, bool const _optimize, TypedTape c
 	}
 	ASSERT_TRUE(compilation.errors.empty()) << "Compilation failed.\n" << compilation.errors << context;
 
-	RoundTripResult const execution = runRoundTrip(compilation.creationCode, _typedTape.tape);
-	ASSERT_TRUE(execution.failure.empty()) << execution.failure << "\n" << context;
+	evmc::VM& vm = loadEvmone();
+	ASSERT_TRUE(static_cast<bool>(vm)) << "Unable to load evmone. Set ETH_EVMONE or LD_LIBRARY_PATH.";
+	DeployedContract deployed(vm, compilation.creationCode);
+	ASSERT_EQ(deployed.creationStatus(), EVMC_SUCCESS) << "Contract creation failed.\n" << context;
 
-	ASSERT_EQ(util::toHex(execution.renormalized), util::toHex(execution.encoded)) << context;
-	ASSERT_TRUE(execution.valuesEqual) << "The value did not survive the round trip.\n" << context;
+	CallResult const encoded = deployed.call(Mode::EncodeValue, _typedTape.tape);
+	ASSERT_EQ(encoded.status, EVMC_SUCCESS) << "encodeValue failed.\n" << context;
+	CallResult const renormalized = deployed.call(Mode::Renormalize, encoded.output);
+	ASSERT_EQ(renormalized.status, EVMC_SUCCESS) << "renormalize failed.\n" << context;
+	ASSERT_EQ(util::toHex(renormalized.output), util::toHex(encoded.output)) << context;
+	CallResult const equal = deployed.call(Mode::RoundTripEquals, _typedTape.tape);
+	ASSERT_EQ(equal.status, EVMC_SUCCESS) << "roundTripEquals failed.\n" << context;
+	ASSERT_EQ(util::toHex(equal.output), "01") << "The value did not survive the round trip.\n" << context;
 }
 
 }
