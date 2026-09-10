@@ -19,4 +19,4 @@ contract D is A, X, B {
     function f() public override(A, X) returns (uint256) { return 7; }
 }
 // ----
-// TypeError 8476: (351-358): In contract "D", this "super" call resolves to external function "X.f", which cannot be called internally. Make "X.f" public, or change the order of base contracts in "D".
+// TypeError 8476: (351-358): In contract "D", the "super" call resolves to external function "X.f", which cannot be called internally. Make "X.f" public, or change the order of base contracts in "D".
