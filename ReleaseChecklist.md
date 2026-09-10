@@ -44,6 +44,8 @@ At least a day before the release:
 
 ### Changelog
 - [ ] Ensure that all changelog entries are correctly classified as language or compiler features.
+- [ ] Ensure that every important bug has a `bugs.json` entry **and** a changelog entry under "Important Bugfixes" (not "Bugfixes").
+    Verify that every bug list entry added in this release has a sequential `uid`, uses the new version in the `fixed` field and has a blog `link` matching the release date.
 - [ ] Sort the changelog entries alphabetically and correct any errors you notice. Commit it.
 - [ ] Update the changelog to include a release date.
 - [ ] Run `scripts/update_bugs_by_version.py` to regenerate `bugs_by_version.json` from the changelog and `bugs.json`.
