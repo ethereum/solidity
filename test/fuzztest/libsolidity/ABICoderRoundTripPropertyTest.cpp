@@ -420,7 +420,6 @@ private:
 	std::vector<std::string> m_declarations;
 };
 
-/// Value types must not carry one.
 std::string location(AbiType const& _type, std::string const& _location)
 {
 	return isValueType(_type) ? "" : " " + _location;
