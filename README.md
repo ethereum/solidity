@@ -76,7 +76,7 @@ Please follow the
 if you want to help.
 
 You can find our current feature and bug priorities for forthcoming
-releases in the [projects section](https://github.com/argotorg/solidity/projects).
+releases in the [Solidity GitHub project](https://github.com/orgs/argotorg/projects/38).
 
 ## Maintainers
 The Solidity programming language and compiler are open-source community projects governed by a core team.
