@@ -105,10 +105,22 @@ struct AbiType
 
 	Kind kind{};
 	/// Bit width for Uint/Int, byte width for FixedBytes, element count for FixedArray, member count for Enum.
-	/// Unused otherwise.
+	/// Unused otherwise. Outside of validation, read it through the accessors below.
 	std::uint32_t width = 0;
 	/// Element type for arrays and underlying type for UserDefined (exactly one entry), field types for structs.
 	std::vector<TypePointer> components;
+
+	std::uint32_t bits() const { solAssert(kind == Kind::Uint || kind == Kind::Int); return width; }
+	std::uint32_t byteWidth() const { solAssert(kind == Kind::FixedBytes); return width; }
+	std::uint32_t length() const { solAssert(kind == Kind::FixedArray); return width; }
+	std::uint32_t memberCount() const { solAssert(kind == Kind::Enum); return width; }
+	AbiType const& element() const
+	{
+		solAssert(kind == Kind::FixedArray || kind == Kind::DynArray);
+		return *components.front();
+	}
+	AbiType const& underlying() const { solAssert(kind == Kind::UserDefined); return *components.front(); }
+	std::vector<TypePointer> const& fields() const { solAssert(kind == Kind::Struct); return components; }
 };
 
 /// The kinds that occupy a single word and take no components. Kept separate from `isValueType` so that the
@@ -218,22 +230,22 @@ std::string signatureOf(AbiType const& _type)
 	assertValidNode(_type);
 	switch (_type.kind)
 	{
-	case AbiType::Kind::Uint: return "uint" + std::to_string(_type.width);
-	case AbiType::Kind::Int: return "int" + std::to_string(_type.width);
+	case AbiType::Kind::Uint: return "uint" + std::to_string(_type.bits());
+	case AbiType::Kind::Int: return "int" + std::to_string(_type.bits());
 	case AbiType::Kind::Address: return "address";
 	case AbiType::Kind::Bool: return "bool";
-	case AbiType::Kind::FixedBytes: return "bytes" + std::to_string(_type.width);
+	case AbiType::Kind::FixedBytes: return "bytes" + std::to_string(_type.byteWidth());
 	case AbiType::Kind::Bytes: return "bytes";
 	case AbiType::Kind::String: return "string";
 	case AbiType::Kind::Enum: return "uint8";
 	case AbiType::Kind::Contract: return "address";
-	case AbiType::Kind::UserDefined: return signatureOf(*_type.components.front());
-	case AbiType::Kind::FixedArray: return signatureOf(*_type.components.front()) + "[" + std::to_string(_type.width) + "]";
-	case AbiType::Kind::DynArray: return signatureOf(*_type.components.front()) + "[]";
+	case AbiType::Kind::UserDefined: return signatureOf(_type.underlying());
+	case AbiType::Kind::FixedArray: return signatureOf(_type.element()) + "[" + std::to_string(_type.length()) + "]";
+	case AbiType::Kind::DynArray: return signatureOf(_type.element()) + "[]";
 	case AbiType::Kind::Struct:
 	{
 		std::string fields;
-		for (TypePointer const& field: _type.components)
+		for (TypePointer const& field: _type.fields())
 			fields += (fields.empty() ? "" : ",") + signatureOf(*field);
 		return "(" + fields + ")";
 	}
@@ -357,8 +369,8 @@ public:
 	{
 		switch (_type.kind)
 		{
-		case AbiType::Kind::FixedArray: return name(*_type.components.front()) + "[" + std::to_string(_type.width) + "]";
-		case AbiType::Kind::DynArray: return name(*_type.components.front()) + "[]";
+		case AbiType::Kind::FixedArray: return name(_type.element()) + "[" + std::to_string(_type.length()) + "]";
+		case AbiType::Kind::DynArray: return name(_type.element()) + "[]";
 		case AbiType::Kind::Struct: return declaredName(_type);
 		case AbiType::Kind::Enum: return declaredName(_type);
 		case AbiType::Kind::UserDefined: return declaredName(_type);
@@ -424,7 +436,7 @@ private:
 		case AbiType::Kind::Enum:
 		{
 			std::string members;
-			for (std::uint32_t i = 0; i < _type.width; ++i)
+			for (std::uint32_t i = 0; i < _type.memberCount(); ++i)
 				members += (i == 0 ? "" : ", ") + ("M" + std::to_string(i));
 			return "enum " + _identifier + " { " + members + " }\n";
 		}
@@ -496,38 +508,27 @@ std::string variableList(std::size_t const _count, std::string const& _prefix)
 	return commaSeparated(parts);
 }
 
-/// Read by every generated builder. `t` is the tape and `p` a cursor into it; the tape is indexed modulo its
-/// length, so a builder can always read as much as it needs and never has to reject what it was given. The
-/// byte-string lengths come out of a table rather than a range, because the ones around a word boundary are
-/// where the padding and the tail offsets that follow have to be got right.
+/// Read by every generated builder. `Tape` is passed by memory reference, so reading advances `pos` for the
+/// caller too. The data is indexed modulo its length, so a builder can always read as much as it needs and never
+/// has to reject what it was given.
 std::string const tapeHelpers = util::Whiskers(R"(
-	function readByte(bytes memory t, uint p) internal pure returns (uint8, uint) {
-		return (uint8(t[p % t.length]), p + 1);
+	struct Tape { bytes data; uint pos; }
+	function readByte(Tape memory t) internal pure returns (uint8 b) {
+		b = uint8(t.data[t.pos % t.data.length]);
+		t.pos++;
 	}
-	function readWord(bytes memory t, uint p) internal pure returns (uint256 w, uint) {
-		for (uint i = 0; i < 32; i++) {
-			uint8 b;
-			(b, p) = readByte(t, p);
-			w = (w << 8) | b;
-		}
-		return (w, p);
+	function readWord(Tape memory t) internal pure returns (uint256 w) {
+		for (uint i = 0; i < 32; i++)
+			w = (w << 8) | readByte(t);
 	}
-	function readArrayLength(bytes memory t, uint p) internal pure returns (uint, uint) {
-		uint8 b;
-		(b, p) = readByte(t, p);
-		return (b % <arrayLengthCount>, p);
+	function readArrayLength(Tape memory t) internal pure returns (uint) {
+		return readByte(t) % <arrayLengthCount>;
 	}
-	function readBytes(bytes memory t, uint p) internal pure returns (bytes memory r, uint) {
+	function readBytes(Tape memory t) internal pure returns (bytes memory r) {
 		uint16[12] memory lengths = [uint16(0), 1, 2, 31, 32, 33, 63, 64, 65, 95, 96, 97];
-		uint8 b;
-		(b, p) = readByte(t, p);
-		r = new bytes(lengths[b % lengths.length]);
-		for (uint i = 0; i < r.length; i++) {
-			uint8 v;
-			(v, p) = readByte(t, p);
-			r[i] = bytes1(v);
-		}
-		return (r, p);
+		r = new bytes(lengths[readByte(t) % lengths.length]);
+		for (uint i = 0; i < r.length; i++)
+			r[i] = bytes1(readByte(t));
 	}
 )")
 	("arrayLengthCount", std::to_string(maxArrayLength + 1))
@@ -565,74 +566,41 @@ public:
 private:
 	std::string definition(AbiType const& _type, std::string const& _typeName, std::string const& _identifier)
 	{
-		std::string returnValue = _typeName + location(_type, "memory");
 		std::string body;
 		switch (_type.kind)
 		{
 		case AbiType::Kind::Bytes:
-			body = "\t\treturn readBytes(t, p);\n";
+			body = "\t\tr = readBytes(t);\n";
 			break;
 		case AbiType::Kind::String:
-			body =
-				"\t\t(bytes memory b, uint q) = readBytes(t, p);\n"
-				"\t\treturn (string(b), q);\n";
+			body = "\t\tr = string(readBytes(t));\n";
 			break;
 		case AbiType::Kind::UserDefined:
-		{
-			AbiType const& underlying = *_type.components.front();
-			std::string const underlyingBuilder = builder(underlying);
-			body =
-				"\t\t(" + m_namer.name(underlying) + " u, uint q) = " + underlyingBuilder + "(t, p);\n"
-				"\t\treturn (" + _typeName + ".wrap(u), q);\n";
+			body = "\t\tr = " + _typeName + ".wrap(" + builder(_type.underlying()) + "(t));\n";
 			break;
-		}
 		case AbiType::Kind::FixedArray:
 		case AbiType::Kind::DynArray:
-		{
-			std::string const elementBuilder = builder(*_type.components.front());
-			std::string bound = std::to_string(_type.width);
 			if (_type.kind == AbiType::Kind::DynArray)
-			{
-				bound = "n";
-				body =
-					"\t\tuint n;\n"
-					"\t\t(n, p) = readArrayLength(t, p);\n"
-					"\t\tr = new " + _typeName + "(n);\n";
-			}
-			returnValue += " r";
+				body = "\t\tr = new " + _typeName + "(readArrayLength(t));\n";
 			body +=
-				"\t\tfor (uint i = 0; i < " + bound + "; i++)\n"
-				"\t\t\t(r[i], p) = " + elementBuilder + "(t, p);\n"
-				"\t\treturn (r, p);\n";
+				"\t\tfor (uint i = 0; i < r.length; i++)\n"
+				"\t\t\tr[i] = " + builder(_type.element()) + "(t);\n";
 			break;
-		}
 		case AbiType::Kind::Struct:
-		{
-			std::string fields;
-			std::string cursor = "p";
-			for (std::size_t i = 0; i < _type.components.size(); ++i)
-			{
-				AbiType const& field = *_type.components[i];
-				std::string const fieldBuilder = builder(field);
-				std::string const next = "p" + std::to_string(i);
-				body +=
-					"\t\t(" + m_namer.name(field) + location(field, "memory") + " f" + std::to_string(i) +
-					", uint " + next + ") = " + fieldBuilder + "(t, " + cursor + ");\n";
-				fields += (i == 0 ? "" : ", ") + ("f" + std::to_string(i));
-				cursor = next;
-			}
-			body += "\t\treturn (" + _typeName + "(" + fields + "), " + cursor + ");\n";
+			// Separate statements rather than a struct constructor call, whose argument evaluation order is unspecified.
+			for (std::size_t i = 0; i < _type.fields().size(); ++i)
+				body += "\t\tr.f" + std::to_string(i) + " = " + builder(*_type.fields()[i]) + "(t);\n";
 			break;
-		}
 		default:
 			body =
-				"\t\t(uint256 w, uint q) = readWord(t, p);\n"
-				"\t\treturn (" + valueExpression(_type, _typeName) + ", q);\n";
+				"\t\tuint256 w = readWord(t);\n"
+				"\t\tr = " + valueExpression(_type, _typeName) + ";\n";
 			break;
 		}
 
 		return
-			"\tfunction " + _identifier + "(bytes memory t, uint p) internal pure returns (" + returnValue + ", uint) {\n" +
+			"\tfunction " + _identifier + "(Tape memory t) internal pure returns (" +
+				_typeName + location(_type, "memory") + " r) {\n" +
 			body +
 			"\t}\n";
 	}
@@ -643,18 +611,20 @@ private:
 		switch (_type.kind)
 		{
 		case AbiType::Kind::Uint:
-			return _type.width == 256 ? "w" : "uint" + std::to_string(_type.width) + "(w)";
+			return _type.bits() == 256 ? "w" : "uint" + std::to_string(_type.bits()) + "(w)";
 		case AbiType::Kind::Int:
-			return _type.width == 256 ? "int256(w)" : "int" + std::to_string(_type.width) + "(int256(w))";
+			return _type.bits() == 256 ? "int256(w)" : "int" + std::to_string(_type.bits()) + "(int256(w))";
 		case AbiType::Kind::Address:
 			return "address(uint160(w))";
 		case AbiType::Kind::Bool:
 			return "(w & 1) == 1";
 		case AbiType::Kind::FixedBytes:
-			return _type.width == 32 ? "bytes32(w)" : "bytes" + std::to_string(_type.width) + "(bytes32(w))";
+			return _type.byteWidth() == 32 ?
+				"bytes32(w)" :
+				"bytes" + std::to_string(_type.byteWidth()) + "(bytes32(w))";
 		case AbiType::Kind::Enum:
 			// Only declared members are valid values; anything else makes the decoder revert.
-			return _typeName + "(uint8(w % " + std::to_string(_type.width) + "))";
+			return _typeName + "(uint8(w % " + std::to_string(_type.memberCount()) + "))";
 		case AbiType::Kind::Contract:
 			return _typeName + "(address(uint160(w)))";
 		default:
@@ -716,27 +686,20 @@ private:
 			break;
 		case AbiType::Kind::FixedArray:
 		case AbiType::Kind::DynArray:
-		{
-			std::string const elementChecker = checker(*_type.components.front());
-			std::string bound = std::to_string(_type.width);
 			if (_type.kind == AbiType::Kind::DynArray)
-			{
-				bound = "a.length";
 				body = "\t\tif (a.length != b.length) return false;\n";
-			}
 			body +=
-				"\t\tfor (uint i = 0; i < " + bound + "; i++)\n"
-				"\t\t\tif (!" + elementChecker + "(a[i], b[i])) return false;\n"
+				"\t\tfor (uint i = 0; i < a.length; i++)\n"
+				"\t\t\tif (!" + checker(_type.element()) + "(a[i], b[i])) return false;\n"
 				"\t\treturn true;\n";
 			break;
-		}
 		case AbiType::Kind::Struct:
 		{
-			for (std::size_t i = 0; i < _type.components.size(); ++i)
+			for (std::size_t i = 0; i < _type.fields().size(); ++i)
 			{
 				std::string const field = ".f" + std::to_string(i);
 				body +=
-					"\t\tif (!" + checker(*_type.components[i]) + "(a" + field + ", b" + field + ")) return false;\n";
+					"\t\tif (!" + checker(*_type.fields()[i]) + "(a" + field + ", b" + field + ")) return false;\n";
 			}
 			body += "\t\treturn true;\n";
 			break;
@@ -762,12 +725,11 @@ private:
 /// hands back its encoding.
 std::string buildTupleStatements(TypeNamer& _namer, ValueBuilder& _builder, std::vector<TypePointer> const& _types)
 {
-	std::string statements;
+	std::string statements = "\t\tTape memory t = Tape(tape, 0);\n";
 	for (std::size_t i = 0; i < _types.size(); ++i)
-		statements += "\t\t" + _namer.name(*_types[i]) + location(*_types[i], "memory") + " v" + std::to_string(i) + ";\n";
-	statements += "\t\tuint p = 0;\n";
-	for (std::size_t i = 0; i < _types.size(); ++i)
-		statements += "\t\t(v" + std::to_string(i) + ", p) = " + _builder.builder(*_types[i]) + "(tape, p);\n";
+		statements +=
+			"\t\t" + _namer.name(*_types[i]) + location(*_types[i], "memory") + " v" + std::to_string(i) +
+			" = " + _builder.builder(*_types[i]) + "(t);\n";
 	return statements;
 }
 
