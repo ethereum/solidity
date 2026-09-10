@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// f() -> FAILURE, hex"b48fb6cf", hex"0000000000000000000000000000000000000000000000000000000000000002"
+// ParserError 2314: (6-11): Expected identifier but got 'error'

@@ -1,3 +1,9 @@
+### 0.9.0 (unreleased)
+
+Breaking changes:
+ * `error` is now a keyword that can only be used for defining errors.
+
+
 ### 0.8.37 (2026-09-10)
 
 Important Bugfixes:

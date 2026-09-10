@@ -1,6 +1,6 @@
 {
   "absolutePath": "a",
-  "id": 30,
+  "id": 26,
   "nodeType": "SourceUnit",
   "nodes": [
     {
@@ -33,7 +33,7 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "interface",
-      "id": 29,
+      "id": 25,
       "name": "I",
       "nameLocation": "31:1:1",
       "nodeType": "ContractDefinition",
@@ -78,134 +78,96 @@
         },
         {
           "body": {
-            "id": 27,
+            "id": 23,
             "nodeType": "Block",
-            "src": "85:88:1",
+            "src": "85:71:1",
             "statements": [
-              {
-                "assignments": [
-                  15
-                ],
-                "declarations": [
-                  {
-                    "constant": false,
-                    "id": 15,
-                    "mutability": "mutable",
-                    "name": "E",
-                    "nameLocation": "101:1:1",
-                    "nodeType": "VariableDeclaration",
-                    "src": "95:7:1",
-                    "stateVariable": false,
-                    "storageLocation": "default",
-                    "typeDescriptions": {},
-                    "typeName": {
-                      "id": 14,
-                      "nodeType": "UserDefinedTypeName",
-                      "pathNode": {
-                        "id": 13,
-                        "name": "error",
-                        "nameLocations": [
-                          "95:5:1"
-                        ],
-                        "nodeType": "IdentifierPath",
-                        "src": "95:5:1"
-                      },
-                      "src": "95:5:1",
-                      "typeDescriptions": {}
-                    },
-                    "visibility": "internal"
-                  }
-                ],
-                "id": 16,
-                "nodeType": "VariableDeclarationStatement",
-                "src": "95:7:1"
-              },
               {
                 "eventCall": {
                   "arguments": [],
                   "expression": {
-                    "id": 17,
+                    "id": 13,
                     "name": "E",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "src": "117:1:1",
+                    "src": "100:1:1",
                     "typeDescriptions": {}
                   },
-                  "id": 18,
+                  "id": 14,
                   "nameLocations": [],
                   "names": [],
                   "nodeType": "FunctionCall",
-                  "src": "117:3:1",
+                  "src": "100:3:1",
                   "tryCall": false,
                   "typeDescriptions": {}
                 },
-                "id": 19,
+                "id": 15,
                 "nodeType": "EmitStatement",
-                "src": "112:8:1"
+                "src": "95:8:1"
               },
               {
                 "expression": {
-                  "id": 21,
+                  "id": 17,
                   "nodeType": "UnaryOperation",
                   "operator": "++",
                   "prefix": true,
-                  "src": "130:3:1",
+                  "src": "113:3:1",
                   "subExpression": {
-                    "id": 20,
+                    "id": 16,
                     "name": "c",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "src": "132:1:1",
+                    "src": "115:1:1",
                     "typeDescriptions": {}
                   },
                   "typeDescriptions": {}
                 },
-                "id": 22,
+                "id": 18,
                 "nodeType": "ExpressionStatement",
-                "src": "130:3:1"
+                "src": "113:3:1"
               },
               {
                 "assignments": [
-                  24
+                  20
                 ],
                 "declarations": [
                   {
                     "constant": false,
-                    "id": 24,
+                    "id": 20,
                     "mutability": "mutable",
                     "name": "c",
-                    "nameLocation": "157:1:1",
+                    "nameLocation": "140:1:1",
                     "nodeType": "VariableDeclaration",
-                    "src": "143:15:1",
+                    "src": "126:15:1",
                     "stateVariable": false,
                     "storageLocation": "calldata",
                     "typeDescriptions": {},
                     "typeName": {
-                      "id": 23,
+                      "id": 19,
                       "name": "uint",
                       "nodeType": "ElementaryTypeName",
-                      "src": "143:4:1",
+                      "src": "126:4:1",
                       "typeDescriptions": {}
                     },
                     "visibility": "internal"
                   }
                 ],
-                "id": 26,
+                "id": 22,
                 "initialValue": {
                   "hexValue": "3132332e34",
-                  "id": 25,
+                  "id": 21,
                   "kind": "number",
                   "nodeType": "Literal",
-                  "src": "161:5:1",
+                  "src": "144:5:1",
                   "typeDescriptions": {},
                   "value": "123.4"
                 },
                 "nodeType": "VariableDeclarationStatement",
-                "src": "143:23:1"
+                "src": "126:23:1"
               }
             ]
           },
-          "id": 28,
+          "id": 24,
           "implemented": true,
           "kind": "function",
           "modifiers": [],
@@ -253,16 +215,16 @@
             "parameters": [],
             "src": "85:0:1"
           },
-          "src": "61:112:1",
+          "src": "61:95:1",
           "stateMutability": "nonpayable",
           "virtual": false,
           "visibility": "public"
         }
       ],
-      "src": "21:154:1",
+      "src": "21:137:1",
       "usedErrors": [],
       "usedEvents": []
     }
   ],
-  "src": "0:176:1"
+  "src": "0:159:1"
 }
