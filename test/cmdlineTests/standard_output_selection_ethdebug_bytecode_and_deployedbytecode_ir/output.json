@@ -10,7 +10,7 @@
                         "ethdebug": "<ETHDEBUG DEBUG DATA REMOVED>"
                     }
                 },
-                "ir": "/// ethdebug: enabled
+                "ir": "
 /// @use-src 0:\"a.sol\"
 object \"A1_14\" {
     code {
@@ -190,7 +190,7 @@ object \"A1_14\" {
                         "ethdebug": "<ETHDEBUG DEBUG DATA REMOVED>"
                     }
                 },
-                "ir": "/// ethdebug: enabled
+                "ir": "
 /// @use-src 0:\"a.sol\"
 object \"A2_27\" {
     code {
@@ -372,7 +372,7 @@ object \"A2_27\" {
                         "ethdebug": "<ETHDEBUG DEBUG DATA REMOVED>"
                     }
                 },
-                "ir": "/// ethdebug: enabled
+                "ir": "
 /// @use-src 1:\"b.sol\"
 object \"A1_42\" {
     code {
@@ -552,7 +552,7 @@ object \"A1_42\" {
                         "ethdebug": "<ETHDEBUG DEBUG DATA REMOVED>"
                     }
                 },
-                "ir": "/// ethdebug: enabled
+                "ir": "
 /// @use-src 1:\"b.sol\"
 object \"B2_55\" {
     code {

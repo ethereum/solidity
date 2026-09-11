@@ -1,11 +1,724 @@
 {
-    "errors": [
-        {
-            "component": "general",
-            "formattedMessage": "Optimization is not yet supported with ethdebug.",
-            "message": "Optimization is not yet supported with ethdebug.",
-            "severity": "error",
-            "type": "UnimplementedFeatureError"
+    "contracts": {
+        "a.sol": {
+            "A1": {
+                "evm": {
+                    "bytecode": {
+                        "ethdebug": "<ETHDEBUG DEBUG DATA REMOVED>"
+                    }
+                },
+                "ir": "
+/// @use-src 0:\"a.sol\"
+object \"A1_14\" {
+    code {
+        /// @src 0:58:123  \"contract A1 { function a(uint x) public pure { assert(x > 0); } }\"
+        mstore(64, memoryguard(128))
+        if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+
+        constructor_A1_14()
+
+        let _1 := allocate_unbounded()
+        codecopy(_1, dataoffset(\"A1_14_deployed\"), datasize(\"A1_14_deployed\"))
+
+        return(_1, datasize(\"A1_14_deployed\"))
+
+        function allocate_unbounded() -> memPtr {
+            memPtr := mload(64)
         }
-    ]
+
+        function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+            revert(0, 0)
+        }
+
+        /// @src 0:58:123  \"contract A1 { function a(uint x) public pure { assert(x > 0); } }\"
+        function constructor_A1_14() {
+
+            /// @src 0:58:123  \"contract A1 { function a(uint x) public pure { assert(x > 0); } }\"
+
+        }
+        /// @src 0:58:123  \"contract A1 { function a(uint x) public pure { assert(x > 0); } }\"
+
+    }
+    /// @use-src 0:\"a.sol\"
+    object \"A1_14_deployed\" {
+        code {
+            /// @src 0:58:123  \"contract A1 { function a(uint x) public pure { assert(x > 0); } }\"
+            mstore(64, memoryguard(128))
+
+            if iszero(lt(calldatasize(), 4))
+            {
+                let selector := shift_right_224_unsigned(calldataload(0))
+                switch selector
+
+                case 0xf0fdf834
+                {
+                    // a(uint256)
+
+                    external_fun_a_13()
+                }
+
+                default {}
+            }
+
+            revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
+
+            function shift_right_224_unsigned(value) -> newValue {
+                newValue :=
+
+                shr(224, value)
+
+            }
+
+            function allocate_unbounded() -> memPtr {
+                memPtr := mload(64)
+            }
+
+            function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+                revert(0, 0)
+            }
+
+            function revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() {
+                revert(0, 0)
+            }
+
+            function revert_error_c1322bf8034eace5e0b5c7295db60986aa89aae5e0ea0873e4689e076861a5db() {
+                revert(0, 0)
+            }
+
+            function cleanup_t_uint256(value) -> cleaned {
+                cleaned := value
+            }
+
+            function validator_revert_t_uint256(value) {
+                if iszero(eq(value, cleanup_t_uint256(value))) { revert(0, 0) }
+            }
+
+            function abi_decode_t_uint256(offset, end) -> value {
+                value := calldataload(offset)
+                validator_revert_t_uint256(value)
+            }
+
+            function abi_decode_tuple_t_uint256(headStart, dataEnd) -> value0 {
+                if slt(sub(dataEnd, headStart), 32) { revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() }
+
+                {
+
+                    let offset := 0
+
+                    value0 := abi_decode_t_uint256(add(headStart, offset), dataEnd)
+                }
+
+            }
+
+            function abi_encode_tuple__to__fromStack(headStart ) -> tail {
+                tail := add(headStart, 0)
+
+            }
+
+            function external_fun_a_13() {
+
+                if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+                let param_0 :=  abi_decode_tuple_t_uint256(4, calldatasize())
+                fun_a_13(param_0)
+                let memPos := allocate_unbounded()
+                let memEnd := abi_encode_tuple__to__fromStack(memPos  )
+                return(memPos, sub(memEnd, memPos))
+
+            }
+
+            function revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74() {
+                revert(0, 0)
+            }
+
+            function cleanup_t_rational_0_by_1(value) -> cleaned {
+                cleaned := value
+            }
+
+            function identity(value) -> ret {
+                ret := value
+            }
+
+            function convert_t_rational_0_by_1_to_t_uint256(value) -> converted {
+                converted := cleanup_t_uint256(identity(cleanup_t_rational_0_by_1(value)))
+            }
+
+            function panic_error_0x01() {
+                mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
+                mstore(4, 0x01)
+                revert(0, 0x24)
+            }
+
+            function assert_helper(condition) {
+                if iszero(condition) { panic_error_0x01() }
+            }
+
+            /// @ast-id 13
+            /// @src 0:72:121  \"function a(uint x) public pure { assert(x > 0); }\"
+            function fun_a_13(var_x_3) {
+
+                /// @src 0:112:113  \"x\"
+                let _1 := var_x_3
+                let expr_7 := _1
+                /// @src 0:116:117  \"0\"
+                let expr_8 := 0x00
+                /// @src 0:112:117  \"x > 0\"
+                let expr_9 := gt(cleanup_t_uint256(expr_7), convert_t_rational_0_by_1_to_t_uint256(expr_8))
+                /// @src 0:105:118  \"assert(x > 0)\"
+                assert_helper(expr_9)
+
+            }
+            /// @src 0:58:123  \"contract A1 { function a(uint x) public pure { assert(x > 0); } }\"
+
+        }
+
+        data \".metadata\" hex\"<BYTECODE REMOVED>\"
+    }
+
+}
+
+"
+            },
+            "A2": {
+                "evm": {
+                    "bytecode": {
+                        "ethdebug": "<ETHDEBUG DEBUG DATA REMOVED>"
+                    }
+                },
+                "ir": "
+/// @use-src 0:\"a.sol\"
+object \"A2_27\" {
+    code {
+        /// @src 0:124:189  \"contract A2 { function a(uint x) public pure { assert(x > 0); } }\"
+        mstore(64, memoryguard(128))
+        if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+
+        constructor_A2_27()
+
+        let _1 := allocate_unbounded()
+        codecopy(_1, dataoffset(\"A2_27_deployed\"), datasize(\"A2_27_deployed\"))
+
+        return(_1, datasize(\"A2_27_deployed\"))
+
+        function allocate_unbounded() -> memPtr {
+            memPtr := mload(64)
+        }
+
+        function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+            revert(0, 0)
+        }
+
+        /// @src 0:124:189  \"contract A2 { function a(uint x) public pure { assert(x > 0); } }\"
+        function constructor_A2_27() {
+
+            /// @src 0:124:189  \"contract A2 { function a(uint x) public pure { assert(x > 0); } }\"
+
+        }
+        /// @src 0:124:189  \"contract A2 { function a(uint x) public pure { assert(x > 0); } }\"
+
+    }
+    /// @use-src 0:\"a.sol\"
+    object \"A2_27_deployed\" {
+        code {
+            /// @src 0:124:189  \"contract A2 { function a(uint x) public pure { assert(x > 0); } }\"
+            mstore(64, memoryguard(128))
+
+            if iszero(lt(calldatasize(), 4))
+            {
+                let selector := shift_right_224_unsigned(calldataload(0))
+                switch selector
+
+                case 0xf0fdf834
+                {
+                    // a(uint256)
+
+                    external_fun_a_26()
+                }
+
+                default {}
+            }
+
+            revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
+
+            function shift_right_224_unsigned(value) -> newValue {
+                newValue :=
+
+                shr(224, value)
+
+            }
+
+            function allocate_unbounded() -> memPtr {
+                memPtr := mload(64)
+            }
+
+            function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+                revert(0, 0)
+            }
+
+            function revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() {
+                revert(0, 0)
+            }
+
+            function revert_error_c1322bf8034eace5e0b5c7295db60986aa89aae5e0ea0873e4689e076861a5db() {
+                revert(0, 0)
+            }
+
+            function cleanup_t_uint256(value) -> cleaned {
+                cleaned := value
+            }
+
+            function validator_revert_t_uint256(value) {
+                if iszero(eq(value, cleanup_t_uint256(value))) { revert(0, 0) }
+            }
+
+            function abi_decode_t_uint256(offset, end) -> value {
+                value := calldataload(offset)
+                validator_revert_t_uint256(value)
+            }
+
+            function abi_decode_tuple_t_uint256(headStart, dataEnd) -> value0 {
+                if slt(sub(dataEnd, headStart), 32) { revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() }
+
+                {
+
+                    let offset := 0
+
+                    value0 := abi_decode_t_uint256(add(headStart, offset), dataEnd)
+                }
+
+            }
+
+            function abi_encode_tuple__to__fromStack(headStart ) -> tail {
+                tail := add(headStart, 0)
+
+            }
+
+            function external_fun_a_26() {
+
+                if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+                let param_0 :=  abi_decode_tuple_t_uint256(4, calldatasize())
+                fun_a_26(param_0)
+                let memPos := allocate_unbounded()
+                let memEnd := abi_encode_tuple__to__fromStack(memPos  )
+                return(memPos, sub(memEnd, memPos))
+
+            }
+
+            function revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74() {
+                revert(0, 0)
+            }
+
+            function cleanup_t_rational_0_by_1(value) -> cleaned {
+                cleaned := value
+            }
+
+            function identity(value) -> ret {
+                ret := value
+            }
+
+            function convert_t_rational_0_by_1_to_t_uint256(value) -> converted {
+                converted := cleanup_t_uint256(identity(cleanup_t_rational_0_by_1(value)))
+            }
+
+            function panic_error_0x01() {
+                mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
+                mstore(4, 0x01)
+                revert(0, 0x24)
+            }
+
+            function assert_helper(condition) {
+                if iszero(condition) { panic_error_0x01() }
+            }
+
+            /// @ast-id 26
+            /// @src 0:138:187  \"function a(uint x) public pure { assert(x > 0); }\"
+            function fun_a_26(var_x_16) {
+
+                /// @src 0:178:179  \"x\"
+                let _1 := var_x_16
+                let expr_20 := _1
+                /// @src 0:182:183  \"0\"
+                let expr_21 := 0x00
+                /// @src 0:178:183  \"x > 0\"
+                let expr_22 := gt(cleanup_t_uint256(expr_20), convert_t_rational_0_by_1_to_t_uint256(expr_21))
+                /// @src 0:171:184  \"assert(x > 0)\"
+                assert_helper(expr_22)
+
+            }
+            /// @src 0:124:189  \"contract A2 { function a(uint x) public pure { assert(x > 0); } }\"
+
+        }
+
+        data \".metadata\" hex\"<BYTECODE REMOVED>\"
+    }
+
+}
+
+"
+            }
+        },
+        "b.sol": {
+            "A1": {
+                "evm": {
+                    "bytecode": {
+                        "ethdebug": "<ETHDEBUG DEBUG DATA REMOVED>"
+                    }
+                },
+                "ir": "
+/// @use-src 1:\"b.sol\"
+object \"A1_42\" {
+    code {
+        /// @src 1:58:123  \"contract A1 { function b(uint x) public pure { assert(x > 0); } }\"
+        mstore(64, memoryguard(128))
+        if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+
+        constructor_A1_42()
+
+        let _1 := allocate_unbounded()
+        codecopy(_1, dataoffset(\"A1_42_deployed\"), datasize(\"A1_42_deployed\"))
+
+        return(_1, datasize(\"A1_42_deployed\"))
+
+        function allocate_unbounded() -> memPtr {
+            memPtr := mload(64)
+        }
+
+        function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+            revert(0, 0)
+        }
+
+        /// @src 1:58:123  \"contract A1 { function b(uint x) public pure { assert(x > 0); } }\"
+        function constructor_A1_42() {
+
+            /// @src 1:58:123  \"contract A1 { function b(uint x) public pure { assert(x > 0); } }\"
+
+        }
+        /// @src 1:58:123  \"contract A1 { function b(uint x) public pure { assert(x > 0); } }\"
+
+    }
+    /// @use-src 1:\"b.sol\"
+    object \"A1_42_deployed\" {
+        code {
+            /// @src 1:58:123  \"contract A1 { function b(uint x) public pure { assert(x > 0); } }\"
+            mstore(64, memoryguard(128))
+
+            if iszero(lt(calldatasize(), 4))
+            {
+                let selector := shift_right_224_unsigned(calldataload(0))
+                switch selector
+
+                case 0xcd580ff3
+                {
+                    // b(uint256)
+
+                    external_fun_b_41()
+                }
+
+                default {}
+            }
+
+            revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
+
+            function shift_right_224_unsigned(value) -> newValue {
+                newValue :=
+
+                shr(224, value)
+
+            }
+
+            function allocate_unbounded() -> memPtr {
+                memPtr := mload(64)
+            }
+
+            function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+                revert(0, 0)
+            }
+
+            function revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() {
+                revert(0, 0)
+            }
+
+            function revert_error_c1322bf8034eace5e0b5c7295db60986aa89aae5e0ea0873e4689e076861a5db() {
+                revert(0, 0)
+            }
+
+            function cleanup_t_uint256(value) -> cleaned {
+                cleaned := value
+            }
+
+            function validator_revert_t_uint256(value) {
+                if iszero(eq(value, cleanup_t_uint256(value))) { revert(0, 0) }
+            }
+
+            function abi_decode_t_uint256(offset, end) -> value {
+                value := calldataload(offset)
+                validator_revert_t_uint256(value)
+            }
+
+            function abi_decode_tuple_t_uint256(headStart, dataEnd) -> value0 {
+                if slt(sub(dataEnd, headStart), 32) { revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() }
+
+                {
+
+                    let offset := 0
+
+                    value0 := abi_decode_t_uint256(add(headStart, offset), dataEnd)
+                }
+
+            }
+
+            function abi_encode_tuple__to__fromStack(headStart ) -> tail {
+                tail := add(headStart, 0)
+
+            }
+
+            function external_fun_b_41() {
+
+                if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+                let param_0 :=  abi_decode_tuple_t_uint256(4, calldatasize())
+                fun_b_41(param_0)
+                let memPos := allocate_unbounded()
+                let memEnd := abi_encode_tuple__to__fromStack(memPos  )
+                return(memPos, sub(memEnd, memPos))
+
+            }
+
+            function revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74() {
+                revert(0, 0)
+            }
+
+            function cleanup_t_rational_0_by_1(value) -> cleaned {
+                cleaned := value
+            }
+
+            function identity(value) -> ret {
+                ret := value
+            }
+
+            function convert_t_rational_0_by_1_to_t_uint256(value) -> converted {
+                converted := cleanup_t_uint256(identity(cleanup_t_rational_0_by_1(value)))
+            }
+
+            function panic_error_0x01() {
+                mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
+                mstore(4, 0x01)
+                revert(0, 0x24)
+            }
+
+            function assert_helper(condition) {
+                if iszero(condition) { panic_error_0x01() }
+            }
+
+            /// @ast-id 41
+            /// @src 1:72:121  \"function b(uint x) public pure { assert(x > 0); }\"
+            function fun_b_41(var_x_31) {
+
+                /// @src 1:112:113  \"x\"
+                let _1 := var_x_31
+                let expr_35 := _1
+                /// @src 1:116:117  \"0\"
+                let expr_36 := 0x00
+                /// @src 1:112:117  \"x > 0\"
+                let expr_37 := gt(cleanup_t_uint256(expr_35), convert_t_rational_0_by_1_to_t_uint256(expr_36))
+                /// @src 1:105:118  \"assert(x > 0)\"
+                assert_helper(expr_37)
+
+            }
+            /// @src 1:58:123  \"contract A1 { function b(uint x) public pure { assert(x > 0); } }\"
+
+        }
+
+        data \".metadata\" hex\"<BYTECODE REMOVED>\"
+    }
+
+}
+
+"
+            },
+            "B2": {
+                "evm": {
+                    "bytecode": {
+                        "ethdebug": "<ETHDEBUG DEBUG DATA REMOVED>"
+                    }
+                },
+                "ir": "
+/// @use-src 1:\"b.sol\"
+object \"B2_55\" {
+    code {
+        /// @src 1:124:189  \"contract B2 { function b(uint x) public pure { assert(x > 0); } }\"
+        mstore(64, memoryguard(128))
+        if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+
+        constructor_B2_55()
+
+        let _1 := allocate_unbounded()
+        codecopy(_1, dataoffset(\"B2_55_deployed\"), datasize(\"B2_55_deployed\"))
+
+        return(_1, datasize(\"B2_55_deployed\"))
+
+        function allocate_unbounded() -> memPtr {
+            memPtr := mload(64)
+        }
+
+        function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+            revert(0, 0)
+        }
+
+        /// @src 1:124:189  \"contract B2 { function b(uint x) public pure { assert(x > 0); } }\"
+        function constructor_B2_55() {
+
+            /// @src 1:124:189  \"contract B2 { function b(uint x) public pure { assert(x > 0); } }\"
+
+        }
+        /// @src 1:124:189  \"contract B2 { function b(uint x) public pure { assert(x > 0); } }\"
+
+    }
+    /// @use-src 1:\"b.sol\"
+    object \"B2_55_deployed\" {
+        code {
+            /// @src 1:124:189  \"contract B2 { function b(uint x) public pure { assert(x > 0); } }\"
+            mstore(64, memoryguard(128))
+
+            if iszero(lt(calldatasize(), 4))
+            {
+                let selector := shift_right_224_unsigned(calldataload(0))
+                switch selector
+
+                case 0xcd580ff3
+                {
+                    // b(uint256)
+
+                    external_fun_b_54()
+                }
+
+                default {}
+            }
+
+            revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
+
+            function shift_right_224_unsigned(value) -> newValue {
+                newValue :=
+
+                shr(224, value)
+
+            }
+
+            function allocate_unbounded() -> memPtr {
+                memPtr := mload(64)
+            }
+
+            function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+                revert(0, 0)
+            }
+
+            function revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() {
+                revert(0, 0)
+            }
+
+            function revert_error_c1322bf8034eace5e0b5c7295db60986aa89aae5e0ea0873e4689e076861a5db() {
+                revert(0, 0)
+            }
+
+            function cleanup_t_uint256(value) -> cleaned {
+                cleaned := value
+            }
+
+            function validator_revert_t_uint256(value) {
+                if iszero(eq(value, cleanup_t_uint256(value))) { revert(0, 0) }
+            }
+
+            function abi_decode_t_uint256(offset, end) -> value {
+                value := calldataload(offset)
+                validator_revert_t_uint256(value)
+            }
+
+            function abi_decode_tuple_t_uint256(headStart, dataEnd) -> value0 {
+                if slt(sub(dataEnd, headStart), 32) { revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() }
+
+                {
+
+                    let offset := 0
+
+                    value0 := abi_decode_t_uint256(add(headStart, offset), dataEnd)
+                }
+
+            }
+
+            function abi_encode_tuple__to__fromStack(headStart ) -> tail {
+                tail := add(headStart, 0)
+
+            }
+
+            function external_fun_b_54() {
+
+                if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+                let param_0 :=  abi_decode_tuple_t_uint256(4, calldatasize())
+                fun_b_54(param_0)
+                let memPos := allocate_unbounded()
+                let memEnd := abi_encode_tuple__to__fromStack(memPos  )
+                return(memPos, sub(memEnd, memPos))
+
+            }
+
+            function revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74() {
+                revert(0, 0)
+            }
+
+            function cleanup_t_rational_0_by_1(value) -> cleaned {
+                cleaned := value
+            }
+
+            function identity(value) -> ret {
+                ret := value
+            }
+
+            function convert_t_rational_0_by_1_to_t_uint256(value) -> converted {
+                converted := cleanup_t_uint256(identity(cleanup_t_rational_0_by_1(value)))
+            }
+
+            function panic_error_0x01() {
+                mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
+                mstore(4, 0x01)
+                revert(0, 0x24)
+            }
+
+            function assert_helper(condition) {
+                if iszero(condition) { panic_error_0x01() }
+            }
+
+            /// @ast-id 54
+            /// @src 1:138:187  \"function b(uint x) public pure { assert(x > 0); }\"
+            function fun_b_54(var_x_44) {
+
+                /// @src 1:178:179  \"x\"
+                let _1 := var_x_44
+                let expr_48 := _1
+                /// @src 1:182:183  \"0\"
+                let expr_49 := 0x00
+                /// @src 1:178:183  \"x > 0\"
+                let expr_50 := gt(cleanup_t_uint256(expr_48), convert_t_rational_0_by_1_to_t_uint256(expr_49))
+                /// @src 1:171:184  \"assert(x > 0)\"
+                assert_helper(expr_50)
+
+            }
+            /// @src 1:124:189  \"contract B2 { function b(uint x) public pure { assert(x > 0); } }\"
+
+        }
+
+        data \".metadata\" hex\"<BYTECODE REMOVED>\"
+    }
+
+}
+
+"
+            }
+        }
+    },
+    "sources": {
+        "a.sol": {
+            "id": 0
+        },
+        "b.sol": {
+            "id": 1
+        }
+    }
 }

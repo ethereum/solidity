@@ -295,6 +295,10 @@ void CompilerStack::setMetadataHash(MetadataHash _metadataHash)
 void CompilerStack::selectDebugInfo(DebugInfoSelection _debugInfoSelection)
 {
 	solAssert(m_stackState < CompilationSuccessful, "Must select debug info components before compilation.");
+	solAssert(
+		!_debugInfoSelection.ethdebug || _debugInfoSelection.astID,
+		"Ethdebug semantic data requires AST ID debug information."
+	);
 	m_debugInfoSelection = _debugInfoSelection;
 }
 

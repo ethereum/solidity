@@ -1,0 +1,2219 @@
+{
+    "contracts": {
+        "a.sol": {
+            "A1": {
+                "evm": {
+                    "bytecode": {
+                        "ethdebug": {
+                            "contract": {
+                                "definition": {
+                                    "source": {
+                                        "id": 0
+                                    }
+                                },
+                                "name": "A1"
+                            },
+                            "environment": "create",
+                            "instructions": [
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 0,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x80"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 2,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x40"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 4,
+                                    "operation": {
+                                        "mnemonic": "MSTORE"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 5,
+                                    "operation": {
+                                        "mnemonic": "CALLVALUE"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 6,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x1a"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 8,
+                                    "operation": {
+                                        "mnemonic": "JUMPI"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 9,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x0e"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 11,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x1e"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 13,
+                                    "operation": {
+                                        "mnemonic": "JUMP"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 14,
+                                    "operation": {
+                                        "mnemonic": "JUMPDEST"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 15,
+                                    "operation": {
+                                        "arguments": [
+                                            "0xf9"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 17,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x0029"
+                                        ],
+                                        "mnemonic": "PUSH2"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 20,
+                                    "operation": {
+                                        "mnemonic": "DUP3"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 21,
+                                    "operation": {
+                                        "mnemonic": "CODECOPY"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 22,
+                                    "operation": {
+                                        "arguments": [
+                                            "0xf9"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 24,
+                                    "operation": {
+                                        "mnemonic": "SWAP1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 25,
+                                    "operation": {
+                                        "mnemonic": "RETURN"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 26,
+                                    "operation": {
+                                        "mnemonic": "JUMPDEST"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 27,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x24"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 29,
+                                    "operation": {
+                                        "mnemonic": "JUMP"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 30,
+                                    "operation": {
+                                        "mnemonic": "JUMPDEST"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 31,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x40"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 33,
+                                    "operation": {
+                                        "mnemonic": "MLOAD"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 34,
+                                    "operation": {
+                                        "mnemonic": "SWAP1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 35,
+                                    "operation": {
+                                        "mnemonic": "JUMP"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 36,
+                                    "operation": {
+                                        "mnemonic": "JUMPDEST"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 37,
+                                    "operation": {
+                                        "mnemonic": "PUSH0"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 38,
+                                    "operation": {
+                                        "mnemonic": "DUP1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 39,
+                                    "operation": {
+                                        "mnemonic": "REVERT"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "A2": {
+                "evm": {
+                    "bytecode": {
+                        "ethdebug": {
+                            "contract": {
+                                "definition": {
+                                    "source": {
+                                        "id": 0
+                                    }
+                                },
+                                "name": "A2"
+                            },
+                            "environment": "create",
+                            "instructions": [
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 0,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x80"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 2,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x40"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 4,
+                                    "operation": {
+                                        "mnemonic": "MSTORE"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 5,
+                                    "operation": {
+                                        "mnemonic": "CALLVALUE"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 6,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x1a"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 8,
+                                    "operation": {
+                                        "mnemonic": "JUMPI"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 9,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x0e"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 11,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x1e"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 13,
+                                    "operation": {
+                                        "mnemonic": "JUMP"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 14,
+                                    "operation": {
+                                        "mnemonic": "JUMPDEST"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 15,
+                                    "operation": {
+                                        "arguments": [
+                                            "0xf9"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 17,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x0029"
+                                        ],
+                                        "mnemonic": "PUSH2"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 20,
+                                    "operation": {
+                                        "mnemonic": "DUP3"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 21,
+                                    "operation": {
+                                        "mnemonic": "CODECOPY"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 22,
+                                    "operation": {
+                                        "arguments": [
+                                            "0xf9"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 24,
+                                    "operation": {
+                                        "mnemonic": "SWAP1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 25,
+                                    "operation": {
+                                        "mnemonic": "RETURN"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 26,
+                                    "operation": {
+                                        "mnemonic": "JUMPDEST"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 27,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x24"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 29,
+                                    "operation": {
+                                        "mnemonic": "JUMP"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 30,
+                                    "operation": {
+                                        "mnemonic": "JUMPDEST"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 31,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x40"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 33,
+                                    "operation": {
+                                        "mnemonic": "MLOAD"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 34,
+                                    "operation": {
+                                        "mnemonic": "SWAP1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 35,
+                                    "operation": {
+                                        "mnemonic": "JUMP"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 36,
+                                    "operation": {
+                                        "mnemonic": "JUMPDEST"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 37,
+                                    "operation": {
+                                        "mnemonic": "PUSH0"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 38,
+                                    "operation": {
+                                        "mnemonic": "DUP1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 0
+                                            }
+                                        }
+                                    },
+                                    "offset": 39,
+                                    "operation": {
+                                        "mnemonic": "REVERT"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "b.sol": {
+            "A1": {
+                "evm": {
+                    "bytecode": {
+                        "ethdebug": {
+                            "contract": {
+                                "definition": {
+                                    "source": {
+                                        "id": 1
+                                    }
+                                },
+                                "name": "A1"
+                            },
+                            "environment": "create",
+                            "instructions": [
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 0,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x80"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 2,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x40"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 4,
+                                    "operation": {
+                                        "mnemonic": "MSTORE"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 5,
+                                    "operation": {
+                                        "mnemonic": "CALLVALUE"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 6,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x1a"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 8,
+                                    "operation": {
+                                        "mnemonic": "JUMPI"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 9,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x0e"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 11,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x1e"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 13,
+                                    "operation": {
+                                        "mnemonic": "JUMP"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 14,
+                                    "operation": {
+                                        "mnemonic": "JUMPDEST"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 15,
+                                    "operation": {
+                                        "arguments": [
+                                            "0xf9"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 17,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x0029"
+                                        ],
+                                        "mnemonic": "PUSH2"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 20,
+                                    "operation": {
+                                        "mnemonic": "DUP3"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 21,
+                                    "operation": {
+                                        "mnemonic": "CODECOPY"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 22,
+                                    "operation": {
+                                        "arguments": [
+                                            "0xf9"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 24,
+                                    "operation": {
+                                        "mnemonic": "SWAP1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 25,
+                                    "operation": {
+                                        "mnemonic": "RETURN"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 26,
+                                    "operation": {
+                                        "mnemonic": "JUMPDEST"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 27,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x24"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 29,
+                                    "operation": {
+                                        "mnemonic": "JUMP"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 30,
+                                    "operation": {
+                                        "mnemonic": "JUMPDEST"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 31,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x40"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 33,
+                                    "operation": {
+                                        "mnemonic": "MLOAD"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 34,
+                                    "operation": {
+                                        "mnemonic": "SWAP1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 35,
+                                    "operation": {
+                                        "mnemonic": "JUMP"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 36,
+                                    "operation": {
+                                        "mnemonic": "JUMPDEST"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 37,
+                                    "operation": {
+                                        "mnemonic": "PUSH0"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 38,
+                                    "operation": {
+                                        "mnemonic": "DUP1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 58
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 39,
+                                    "operation": {
+                                        "mnemonic": "REVERT"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "B2": {
+                "evm": {
+                    "bytecode": {
+                        "ethdebug": {
+                            "contract": {
+                                "definition": {
+                                    "source": {
+                                        "id": 1
+                                    }
+                                },
+                                "name": "B2"
+                            },
+                            "environment": "create",
+                            "instructions": [
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 0,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x80"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 2,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x40"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 4,
+                                    "operation": {
+                                        "mnemonic": "MSTORE"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 5,
+                                    "operation": {
+                                        "mnemonic": "CALLVALUE"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 6,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x1a"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 8,
+                                    "operation": {
+                                        "mnemonic": "JUMPI"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 9,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x0e"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 11,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x1e"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 13,
+                                    "operation": {
+                                        "mnemonic": "JUMP"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 14,
+                                    "operation": {
+                                        "mnemonic": "JUMPDEST"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 15,
+                                    "operation": {
+                                        "arguments": [
+                                            "0xf9"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 17,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x0029"
+                                        ],
+                                        "mnemonic": "PUSH2"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 20,
+                                    "operation": {
+                                        "mnemonic": "DUP3"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 21,
+                                    "operation": {
+                                        "mnemonic": "CODECOPY"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 22,
+                                    "operation": {
+                                        "arguments": [
+                                            "0xf9"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 24,
+                                    "operation": {
+                                        "mnemonic": "SWAP1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 25,
+                                    "operation": {
+                                        "mnemonic": "RETURN"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 26,
+                                    "operation": {
+                                        "mnemonic": "JUMPDEST"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 27,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x24"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 29,
+                                    "operation": {
+                                        "mnemonic": "JUMP"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 30,
+                                    "operation": {
+                                        "mnemonic": "JUMPDEST"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 31,
+                                    "operation": {
+                                        "arguments": [
+                                            "0x40"
+                                        ],
+                                        "mnemonic": "PUSH1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 33,
+                                    "operation": {
+                                        "mnemonic": "MLOAD"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 34,
+                                    "operation": {
+                                        "mnemonic": "SWAP1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 35,
+                                    "operation": {
+                                        "mnemonic": "JUMP"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 36,
+                                    "operation": {
+                                        "mnemonic": "JUMPDEST"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 37,
+                                    "operation": {
+                                        "mnemonic": "PUSH0"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 38,
+                                    "operation": {
+                                        "mnemonic": "DUP1"
+                                    }
+                                },
+                                {
+                                    "context": {
+                                        "code": {
+                                            "range": {
+                                                "length": 65,
+                                                "offset": 124
+                                            },
+                                            "source": {
+                                                "id": 1
+                                            }
+                                        }
+                                    },
+                                    "offset": 39,
+                                    "operation": {
+                                        "mnemonic": "REVERT"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "ethdebug": {
+        "resources": {
+            "compilation": {
+                "compiler": {
+                    "name": "solc",
+                    "version": "<VERSION REMOVED>"
+                },
+                "id": "solc-96b1f4777af966779847c0b89c48a1e2d7b70618d142f7f8b08b20242445de3b",
+                "sources": [
+                    {
+                        "contents": "//SPDX-License-Identifier: GPL-3.0
+pragma solidity >=0.0;
+contract A1 { function a(uint x) public pure { assert(x > 0); } }
+contract A2 { function a(uint x) public pure { assert(x > 0); } }
+",
+                        "id": 0,
+                        "language": "Solidity",
+                        "path": "a.sol"
+                    },
+                    {
+                        "contents": "//SPDX-License-Identifier: GPL-3.0
+pragma solidity >=0.0;
+contract A1 { function b(uint x) public pure { assert(x > 0); } }
+contract B2 { function b(uint x) public pure { assert(x > 0); } }
+",
+                        "id": 1,
+                        "language": "Solidity",
+                        "path": "b.sol"
+                    }
+                ]
+            },
+            "pointers": {},
+            "types": {}
+        }
+    },
+    "sources": {
+        "a.sol": {
+            "id": 0
+        },
+        "b.sol": {
+            "id": 1
+        }
+    }
+}

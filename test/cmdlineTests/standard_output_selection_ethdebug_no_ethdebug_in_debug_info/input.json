@@ -1,0 +1,33 @@
+{
+    "language": "Solidity",
+    "sources": {
+        "a.sol": {
+            "urls": [
+                "a.sol"
+            ]
+        },
+        "b.sol": {
+            "urls": [
+                "b.sol"
+            ]
+        }
+    },
+    "settings": {
+        "experimental": true,
+        "viaIR": true,
+        "metadata": {
+            "appendCBOR": false
+        },
+        "optimizer": {
+            "enabled": false
+        },
+        "outputSelection": {
+            "*": {
+                "*": [
+                    "evm.bytecode.ethdebug",
+                    "ethdebug.resources"
+                ]
+            }
+        }
+    }
+}
