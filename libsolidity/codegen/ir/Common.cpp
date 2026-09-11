@@ -156,6 +156,9 @@ std::string dispenseLocationComment(langutil::SourceLocation const& _location, I
 	solAssert(_location.sourceName, "");
 	_context.markSourceUsed(*_location.sourceName);
 
+	if (!_context.debugInfoSelection().location)
+		return "";
+
 	std::string debugInfo = AsmPrinter::formatSourceLocation(
 		_location,
 		_context.sourceIndices(),

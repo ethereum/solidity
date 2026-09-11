@@ -1,0 +1,13 @@
+{
+	"language": "Solidity",
+	"sources": {
+		"C": {"urls": ["in.sol"]}
+	},
+	"settings": {
+		"debug": {"debugInfo": ["ast-id"]},
+		"optimizer": {"enabled": true},
+		"outputSelection": {
+			"*": {"*": ["ir", "irOptimized", "evm.assembly"]}
+		}
+	}
+}
