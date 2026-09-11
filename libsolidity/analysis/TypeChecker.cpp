@@ -2352,7 +2352,16 @@ void TypeChecker::typeCheckStringConcatFunction(
 {
 	solAssert(_functionType);
 	solAssert(_functionType->kind() == FunctionType::Kind::StringConcat);
-	solAssert(_functionCall.names().empty());
+
+	if (!_functionCall.names().empty())
+	{
+		m_errorReporter.typeError(
+			4903_error,
+			_functionCall.location(),
+			"Named arguments cannot be used with string.concat()."
+		);
+		return;
+	}
 
 	typeCheckFunctionGeneralChecks(_functionCall, _functionType);
 
@@ -2379,7 +2388,16 @@ void TypeChecker::typeCheckBytesConcatFunction(
 {
 	solAssert(_functionType);
 	solAssert(_functionType->kind() == FunctionType::Kind::BytesConcat);
-	solAssert(_functionCall.names().empty());
+
+	if (!_functionCall.names().empty())
+	{
+		m_errorReporter.typeError(
+			8145_error,
+			_functionCall.location(),
+			"Named arguments cannot be used with bytes.concat()."
+		);
+		return;
+	}
 
 	typeCheckFunctionGeneralChecks(_functionCall, _functionType);
 
