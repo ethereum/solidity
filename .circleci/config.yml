@@ -1893,7 +1893,15 @@ jobs:
       - checkout
       - run:
           name: Force install python3.12
-          command: choco install python312 --pre --force
+          # NOTE: community.chocolatey.org occasionally returns transient errors (e.g. 504 Gateway
+          # Timeout) so retry a few times before giving up.
+          command: |
+            for i in $(seq 1 5); do
+                choco install python312 --pre --force && exit 0
+                echo "choco install failed (attempt ${i}/5), retrying in 15s..."
+                sleep 15
+            done
+            exit 1
       - run:
           name: Create a symlink for python3
           command: ln -s /c/ProgramData/chocolatey/bin/python3.12 /c/ProgramData/chocolatey/bin/python3
