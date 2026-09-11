@@ -41,6 +41,7 @@
 #include <concepts>
 #include <functional>
 #include <optional>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -548,6 +549,84 @@ private:
 				_fn(id, inst);
 		}
 	}
+
+#ifdef SLOW_DEBUG
+public:
+	void checkInvariants() const;
+	void checkAllBlocksReachable() const;
+private:
+	class Dominance
+	{
+	public:
+		explicit Dominance(SSACFG const& _cfg):
+			m_reachableFromEntry(reachableAvoiding(_cfg, BlockId{}))
+		{
+			for (BlockId const candidate: _cfg.liveBlocks())
+			{
+				std::set<BlockId> const reachable = reachableAvoiding(_cfg, candidate);
+
+				// Whatever the entry cannot reach while avoiding `candidate` is dominated by it
+				for (BlockId const blockId: _cfg.liveBlocks())
+					if (!reachable.count(blockId))
+						m_dominators[blockId].insert(candidate);
+			}
+		}
+
+		bool dominates(BlockId const _dominator, BlockId const _block) const
+		{
+			auto const it = m_dominators.find(_block);
+			return it != m_dominators.end() && it->second.count(_dominator) > 0;
+		}
+
+		bool isReachableFromEntry(BlockId const _block) const
+		{
+			return m_reachableFromEntry.count(_block) > 0;
+		}
+
+	private:
+		/// Blocks reachable from the entry if _avoid is deleted from the CFG.
+		static std::set<BlockId> reachableAvoiding(SSACFG const& _cfg, BlockId const _avoid)
+		{
+			std::set<BlockId> reachable;
+			std::vector<BlockId> worklist;
+			if (_cfg.entry != _avoid)
+			{
+				reachable.insert(_cfg.entry);
+				worklist.push_back(_cfg.entry);
+			}
+			while (!worklist.empty())
+			{
+				BlockId const blockId = worklist.back();
+				worklist.pop_back();
+				_cfg.block(blockId).forEachExit([&](BlockId const successor) {
+					if (successor != _avoid && reachable.insert(successor).second)
+						worklist.push_back(successor);
+				});
+			}
+			return reachable;
+		}
+
+		std::map<BlockId, std::set<BlockId>> m_dominators; // map: block->its dominators
+		std::set<BlockId> m_reachableFromEntry;
+	};
+
+	std::vector<std::uint32_t> checkScheduling() const;
+	void checkEachInstScheduledOnce(std::vector<std::uint32_t> const& _scheduleCount) const;
+	void checkBlockConstraints() const;
+	void checkEdgeConsistency() const;
+	void checkPhiOperands() const;
+	void checkExitShapes() const;
+	void checkEntry() const;
+	void checkArguments() const;
+	void checkBlockRef(BlockId _id, std::string const& _ctx) const;
+	void checkOperand(InstId _id, std::string const& _ctx) const;
+	void checkDominance() const;
+	void checkProducerProjectionsInBlock() const;
+	void checkProjectionsFollowProducerInBlock() const;
+	void checkBlockSuccPredSymmetry() const;
+	std::string graphName() const;
+	void checkNonContinuingOperations() const;
+#endif
 };
 
 }

@@ -73,6 +73,10 @@ struct ControlFlowGraphs
 		return output.str();
 	}
 
+#ifdef SLOW_DEBUG
+	void checkInvariants() const;
+#endif
+
 	std::string print() const
 	{
 		std::ostringstream output;
