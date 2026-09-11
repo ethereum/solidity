@@ -189,7 +189,7 @@ std::string prefixLines(
 /// @param _trimPrefix If true, the function avoids introducing trailing whitespace on empty lines.
 ///     This is achieved by removing trailing spaces from the prefix on such lines.
 ///     Note that tabs and newlines are not removed, only spaces are.
-/// @param _finalNewline If true, an extra \n will be printed at the end of @a _input if it does
+/// @param _ensureFinalNewline If true, an extra \n will be printed at the end of @a _input if it does
 ///     not already end with one.
 void printPrefixed(
 	std::ostream& _output,

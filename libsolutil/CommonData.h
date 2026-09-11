@@ -597,7 +597,7 @@ void iterateReplacingWindow(std::vector<T>& _vector, F const& _f)
 bool passesAddressChecksum(std::string const& _str, bool _strict);
 
 /// @returns the checksummed version of an address
-/// @param hex strings that look like an address
+/// @param _addr hex string that looks like an address
 std::string getChecksummedAddress(std::string const& _addr);
 
 bool isValidHex(std::string_view _string);
