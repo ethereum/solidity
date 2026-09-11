@@ -38,7 +38,7 @@ namespace solidity::frontend
 class TypeChecker;
 
 /**
- * Small drop-in replacement for TypeChecker to evaluate simple expressions of integer constants.
+ * Small drop-in replacement for TypeChecker to evaluate simple expressions of integer, string and fixed bytes constants.
  *
  * Note: This always use "checked arithmetic" in the sense that any over- or underflow
  * results in "unknown" value.
@@ -46,11 +46,26 @@ class TypeChecker;
 class ConstantEvaluator: private ASTConstVisitor
 {
 public:
-	struct TypedValue
+	class TypedValue
 	{
+	public:
+		using Value = std::variant<std::monostate, rational, std::string, bytes>;
+
+		TypedValue(): m_type(nullptr), m_value(std::monostate()) {}
+		TypedValue(Type const* _type, Value _value);
+		bool empty() const { return std::holds_alternative<std::monostate>(m_value); }
+		bool isString() const { return std::holds_alternative<std::string>(m_value); }
+		bool isRational() const { return std::holds_alternative<rational>(m_value); }
+		bool isBytes() const { return std::holds_alternative<bytes>(m_value); }
+		Type const* type() const { return m_type; }
+		Value const& value() const { return m_value; }
+		std::string const& asString() const;
+		rational const& asRational() const;
+		bytes const& asBytes() const;
+	private:
 		// Type may be RationalType or IntegerType for value rational
-		Type const* type;
-		std::variant<std::monostate, rational, std::string> value;
+		Type const* m_type;
+		Value m_value;
 	};
 
 	static TypedValue evaluate(
@@ -62,13 +77,26 @@ public:
 	/// `TypedValue` containing `std::monostate` instead.
 	static TypedValue tryEvaluate(Expression const& _expr);
 
-	/// Performs arbitrary-precision evaluation of a binary operator. Returns nullopt on cases like
+	/// Performs arbitrary-precision evaluation of a binary operator for numeric types. Returns nullopt on cases like
 	/// division by zero or e.g. bit operators applied to fractional values.
 	static std::optional<rational> evaluateBinaryOperator(Token _operator, rational const& _left, rational const&  _right);
 
-	/// Performs arbitrary-precision evaluation of a unary operator. Returns nullopt on cases like
-	/// bit operators applied to fractional values.
+	/// Performs evaluation of a binary operator of fixed bytes types.
+	/// Returns nullopt if the operator is not allowed. Only supports bytes32.
+	static std::optional<bytes> evaluateBinaryOperator(Token _operator, bytes const& _left, bytes const&  _right);
+
+	/// Performs evaluation of shifts on fixed bytes.
+	/// Only supports bytes32. Returns nullopt for other lengths and invalid shift amounts.
+	static std::optional<bytes> evaluateBinaryOperator(Token _operator, bytes const& _left, rational const&  _right);
+
+	/// Performs arbitrary-precision evaluation of a unary operator for literal and integer type values.
+	/// Returns nullopt on cases like bit operators applied to fractional values.
 	static std::optional<rational> evaluateUnaryOperator(Token _operator, rational const& _input);
+
+	/// Performs evaluation of unary operator of fixed bytes.
+	/// Only supports bitwise negation `~` and fixed bytes of length 32.
+	/// Returns nullopt otherwise.
+	static std::optional<bytes> evaluateUnaryOperator(Token _operator, bytes const& _input);
 
 private:
 	explicit ConstantEvaluator(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}

@@ -339,9 +339,9 @@ void DeclarationTypeChecker::endVisit(ArrayTypeName const& _typeName)
 		if (length->annotation().type && length->annotation().type->category() == Type::Category::RationalNumber)
 			lengthValue = dynamic_cast<RationalNumberType const&>(*length->annotation().type).value();
 		else if (ConstantEvaluator::TypedValue value = ConstantEvaluator::evaluate(m_errorReporter, *length);
-			std::holds_alternative<rational>(value.value)
+			value.isRational()
 		)
-			lengthValue = std::get<rational>(value.value);
+			lengthValue = value.asRational();
 
 		if (!lengthValue)
 			m_errorReporter.typeError(
