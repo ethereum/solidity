@@ -35,11 +35,12 @@ namespace solidity::frontend::test
 class SMTCheckerTest: public SyntaxTest
 {
 public:
+	explicit SMTCheckerTest(std::string const& _filename);
+
 	static std::unique_ptr<TestCase> create(Config const& _config)
 	{
 		return std::make_unique<SMTCheckerTest>(_config.filename);
 	}
-	explicit SMTCheckerTest(std::string const& _filename);
 
 	void setupCompiler(CompilerStack& _compiler) override;
 	void filterObtainedErrors() override;
@@ -66,8 +67,6 @@ protected:
 	BMCLoopIterations: number of loop iterations for BMC engine, the default is 1.
 		Set in m_modelCheckerSettings.
 	*/
-
-	ModelCheckerSettings m_modelCheckerSettings;
 
 	bool m_ignoreCex = false;
 

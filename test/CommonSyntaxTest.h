@@ -18,16 +18,20 @@
 
 #pragma once
 
-#include <test/libsolidity/AnalysisFramework.h>
 #include <test/TestCase.h>
-#include <test/TestCaseReader.h>
 #include <liblangutil/Exceptions.h>
+#include <libsolidity/interface/CompilerStack.h>
+#include <libsolidity/formal/ModelCheckerSettings.h>
 #include <libsolutil/AnsiColorized.h>
 
 #include <iosfwd>
 #include <string>
 #include <vector>
 #include <utility>
+
+using solidity::frontend::CompilerStack;
+using solidity::frontend::ModelCheckerSettings;
+using solidity::frontend::OptimiserSettings;
 
 namespace solidity::test
 {
@@ -51,6 +55,28 @@ struct SyntaxTestError
 	}
 };
 
+/**
+ * Input that the compiler is called with.
+ */
+struct CompilerInput
+{
+	/// Default-constructable, non-copyable.
+	CompilerInput() = default;
+	CompilerInput(CompilerInput const&) = delete;
+	CompilerInput& operator=(CompilerInput const&) = delete;
+	CompilerInput(CompilerInput&&) = default;
+	CompilerInput& operator=(CompilerInput&&) = default;
+
+	std::map<std::string, std::string> sources;
+	langutil::EVMVersion evmVersion;
+	bool experimental = false;
+	bool viaIR = false;
+	bool viaSSACFG = false;
+	OptimiserSettings optimiserSettings;
+	CompilerStack::MetadataFormat metadataFormat = CompilerStack::MetadataFormat::NoMetadata;
+	CompilerStack::MetadataHash metadataHash = CompilerStack::MetadataHash::None;
+	ModelCheckerSettings modelCheckerSettings;
+};
 
 class CommonSyntaxTest: public frontend::test::EVMVersionRestrictedTestCase
 {
@@ -95,10 +121,9 @@ protected:
 
 	static std::vector<SyntaxTestError> parseExpectations(std::istream& _stream);
 
-	frontend::test::SourceMap m_sources;
 	std::vector<SyntaxTestError> m_expectations;
 	std::vector<SyntaxTestError> m_errorList;
-	langutil::EVMVersion const m_evmVersion;
+	CompilerInput m_compilerInput;
 };
 
 }
