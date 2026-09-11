@@ -221,17 +221,18 @@ void CodeTransform::operator()(SSACFG::BlockId const _blockId)
 	yulAssert(static_cast<int>(m_stack.size()) == m_assembly.stackHeight());
 
 	auto const& block = m_cfg.block(_blockId);
+	// Phis can appear after operations in the instruction vector,
+	// but phi spills must happen first.
+	m_cfg.forEachPhi(block, [this](InstId const _instId, SSACFG::Inst const&) {
+		spillStore(_instId);
+	});
 
 	std::size_t operationIndex = 0;
 
-	// Iterate every Inst in the block in scheduled order. Only Operations advance codegen;
-	// Phis are otherwise pure stack assertions (already materialized on the block's stackIn).
+	// Only operations advance codegen. Phis are already materialized on the block's stackIn.
 	for (InstId const instId: block.instructions)
 	{
 		SSACFG::Inst const& inst = m_cfg.inst(instId);
-		if (inst.isPhi())
-			// this is a no-op for not spilled phis
-			spillStore(instId);
 		if (inst.isOperation())
 		{
 			yulAssert(operationIndex < blockLayout->operationShuffles.size());

@@ -43,6 +43,7 @@ EVMCodeTransformTest::EVMCodeTransformTest(std::string const& _filename):
 {
 	m_source = m_reader.source();
 	m_stackOpt = m_reader.boolSetting("stackOptimization", false);
+	m_viaSSACFG = m_reader.boolSetting("viaSSACFG", false);
 	m_expectation = m_reader.simpleExpectations();
 }
 
@@ -70,7 +71,8 @@ TestCase::TestResult EVMCodeTransformTest::run(std::ostream& _stream, std::strin
 	EVMObjectCompiler::compile(
 		*yulStack.parserResult(),
 		adapter,
-		m_stackOpt
+		m_stackOpt,
+		m_viaSSACFG
 	);
 
 	m_obtainedResult = toString(assembly);
