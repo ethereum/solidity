@@ -68,7 +68,7 @@ object "C_2" {
     code {
         {
             /// @src 0:265:278  "contract C {}"
-            let _1 := memoryguard(0x80)
+            let _1 := memoryguard(128)
             mstore(64, _1)
             if callvalue() { revert(0, 0) }
             let _2 := datasize("C_2_deployed")
@@ -415,7 +415,7 @@ object "D_27" {
     code {
         {
             /// @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..."
-            let _1 := memoryguard(0x80)
+            let _1 := memoryguard(128)
             mstore(64, _1)
             if callvalue() { revert(0, 0) }
             let _2 := datasize("D_27_deployed")
@@ -428,7 +428,7 @@ object "D_27" {
         code {
             {
                 /// @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..."
-                let _1 := memoryguard(0x80)
+                let _1 := memoryguard(128)
                 mstore(64, _1)
                 if iszero(lt(calldatasize(), 4))
                 {
@@ -504,7 +504,7 @@ object "D_27" {
             code {
                 {
                     /// @src 0:265:278  "contract C {}"
-                    let _1 := memoryguard(0x80)
+                    let _1 := memoryguard(128)
                     mstore(64, _1)
                     if callvalue() { revert(0, 0) }
                     let _2 := datasize("C_2_deployed")

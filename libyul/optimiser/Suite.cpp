@@ -168,16 +168,19 @@ void OptimiserSuite::run(
 		{
 			if (usesOptimizedCodeGenerator)
 			{
+				bool stackCompressionSuccessful = false;
 				{
 					PROFILER_PROBE("StackCompressor", probe);
 					_object.setCode(std::make_shared<AST>(dialect, std::move(astRoot)));
-					astRoot = std::get<1>(StackCompressor::run(
+					auto stackCompressionResult = StackCompressor::run(
 						_object,
 						_optimizeStackAllocation,
 						stackCompressorMaxIterations
-					));
+					);
+					stackCompressionSuccessful = std::get<0>(stackCompressionResult);
+					astRoot = std::move(std::get<1>(stackCompressionResult));
 				}
-				if (evmDialect->providesObjectAccess())
+				if (evmDialect->providesObjectAccess() && !stackCompressionSuccessful)
 				{
 					PROFILER_PROBE("StackLimitEvader", probe);
 					_object.setCode(std::make_shared<AST>(dialect, std::move(astRoot)));

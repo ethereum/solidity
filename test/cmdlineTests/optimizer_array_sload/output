@@ -4,7 +4,7 @@ object "Arraysum_34" {
     code {
         {
             /// @src 0:80:429  "contract Arraysum {..."
-            let _1 := memoryguard(0x80)
+            let _1 := memoryguard(128)
             mstore(64, _1)
             if callvalue() { revert(0, 0) }
             let _2 := datasize("Arraysum_34_deployed")
@@ -17,7 +17,7 @@ object "Arraysum_34" {
         code {
             {
                 /// @src 0:80:429  "contract Arraysum {..."
-                mstore(64, memoryguard(0x80))
+                mstore(64, memoryguard(128))
                 if iszero(lt(calldatasize(), 4))
                 {
                     if eq(0x81d73423, shr(224, calldataload(0)))

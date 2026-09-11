@@ -614,7 +614,7 @@ object \"C_54\" {
     code {
         {
             /// @src 0:79:510  \"contract C...\"
-            let _1 := memoryguard(0xa0)
+            let _1 := memoryguard(160)
             if callvalue() { revert(0, 0) }
             let programSize := datasize(\"C_54\")
             let argSize := sub(codesize(), programSize)
@@ -650,7 +650,7 @@ object \"C_54\" {
         code {
             {
                 /// @src 0:79:510  \"contract C...\"
-                mstore(64, memoryguard(0x80))
+                mstore(64, memoryguard(128))
                 if iszero(lt(calldatasize(), 4))
                 {
                     switch shr(224, calldataload(0))
@@ -1450,7 +1450,7 @@ object \"D_72\" {
     code {
         {
             /// @src 1:91:181  \"contract D is C(3)...\"
-            let _1 := memoryguard(0xa0)
+            let _1 := memoryguard(160)
             if callvalue() { revert(0, 0) }
             let programSize := datasize(\"D_72\")
             let argSize := sub(codesize(), programSize)
@@ -1493,7 +1493,7 @@ object \"D_72\" {
         code {
             {
                 /// @src 1:91:181  \"contract D is C(3)...\"
-                mstore(64, memoryguard(0x80))
+                mstore(64, memoryguard(128))
                 if iszero(lt(calldatasize(), 4))
                 {
                     switch shr(224, calldataload(0))

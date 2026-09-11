@@ -4,7 +4,7 @@ object "C_59" {
     code {
         {
             /// @src 0:346:625  "contract C {..."
-            let _1 := memoryguard(0x80)
+            let _1 := memoryguard(128)
             mstore(64, _1)
             if callvalue() { revert(0, 0) }
             let _2 := datasize("C_59_deployed")
@@ -17,7 +17,7 @@ object "C_59" {
         code {
             {
                 /// @src 0:346:625  "contract C {..."
-                mstore(64, memoryguard(0x80))
+                mstore(64, memoryguard(128))
                 if iszero(lt(calldatasize(), 4))
                 {
                     if eq(0xf8eddcc6, shr(224, calldataload(0)))

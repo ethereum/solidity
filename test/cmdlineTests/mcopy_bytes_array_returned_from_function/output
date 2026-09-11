@@ -3,7 +3,7 @@ Optimized IR:
 object "C_14" {
     code {
         {
-            let _1 := memoryguard(0x80)
+            let _1 := memoryguard(128)
             mstore(64, _1)
             if callvalue() { revert(0, 0) }
             let _2 := datasize("C_14_deployed")
@@ -15,7 +15,7 @@ object "C_14" {
     object "C_14_deployed" {
         code {
             {
-                let _1 := memoryguard(0x80)
+                let _1 := memoryguard(128)
                 if iszero(lt(calldatasize(), 4))
                 {
                     if eq(0xc2985578, shr(224, calldataload(0)))
