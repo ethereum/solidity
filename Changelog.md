@@ -11,6 +11,7 @@ Bugfixes:
 
 Important Bugfixes:
 * Code Generator: Fix `delete` applied to an element of a `bytes` array in memory zeroing the whole 32-byte word starting at the element's location instead of only the element's byte.
+* Yul IR Code Generation: Encode custom error named parameters in declaration order instead of call-site order when used from a `require` function.
 * Yul Optimizer: Fix too few memory slots being reserved when moving local variables to memory to work around stack-too-deep errors in code containing mutually recursive functions. Variables of two functions that can be active at the same time could be assigned the same slot, silently overwriting one of them while it was still in use.
 
 Language Features:
@@ -39,7 +40,6 @@ Bugfixes:
 * Commandline Interface: Report proper error instead of ICE on non-hex mixed-case address value given via `--libraries`.
 * Standard JSON Interface: Fix the entire output being replaced by a `JSONError` ("Error writing output JSON.") when an error message quotes a long source line and truncating it splits a multi-byte character.
 * Type Checker: Report an unimplemented feature error instead of ICE when a variable of a fixed point type is accessed in inline assembly.
-* Yul IR Code Generation: Encode custom error named parameters in declaration order instead of call-site order when used from a `require` function.
 * Yul Optimizer: Fix incorrect removal of `returndatacopy()` operations referencing a stale result of `returndatasize()`.
 
 Build System:
