@@ -100,6 +100,14 @@ public:
 	/// Append a jump-to-if-immediate operation.
 	virtual void appendJumpToIf(LabelID _labelId, JumpType _jumpType = JumpType::Ordinary) = 0;
 
+	/// Append a subroutine entry label (EIP-7979 CALLDEST). Also a valid jump destination.
+	virtual void appendSubroutineLabel(LabelID _labelId) = 0;
+	/// Append a call of the subroutine at the given label (EIP-7979: PUSH label, CALLSUB).
+	/// @param _stackDiffAfter the stack adjustment after the subroutine returns.
+	virtual void appendCallSubTo(LabelID _labelId, int _stackDiffAfter = 0) = 0;
+	/// Append a return from the current subroutine (EIP-7979 RETURNSUB).
+	virtual void appendReturnSub() = 0;
+
 	/// Append the assembled size as a constant.
 	virtual void appendAssemblySize() = 0;
 	/// Creates a new sub-assembly, which can be referenced using dataSize and dataOffset.

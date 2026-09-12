@@ -62,6 +62,10 @@ bool EVMVersion::hasOpcode(Instruction _opcode) const
 	case Instruction::TSTORE:
 	case Instruction::TLOAD:
 		return supportsTransientStorage();
+	case Instruction::CALLSUB:
+	case Instruction::CALLDEST:
+	case Instruction::RETURNSUB:
+		return hasSubroutines();
 	default:
 		return true;
 	}

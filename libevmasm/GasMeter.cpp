@@ -288,7 +288,7 @@ std::optional<unsigned> gasCostForTier(Tier _tier)
 
 unsigned GasMeter::runGas(Instruction _instruction, langutil::EVMVersion _evmVersion)
 {
-	if (_instruction == Instruction::JUMPDEST)
+	if (_instruction == Instruction::JUMPDEST || _instruction == Instruction::CALLDEST)
 		return 1;
 
 	if (auto gasCost = gasCostForTier(instructionInfo(_instruction, _evmVersion).gasPriceTier))

@@ -286,6 +286,8 @@ bool SemanticInformation::altersControlFlow(AssemblyItem const& _item)
 	// continue on the next instruction
 	case Instruction::JUMP:
 	case Instruction::JUMPI:
+	case Instruction::CALLSUB:
+	case Instruction::RETURNSUB:
 	case Instruction::RETURN:
 	case Instruction::SELFDESTRUCT:
 	case Instruction::STOP:
@@ -313,6 +315,7 @@ bool SemanticInformation::terminatesControlFlow(Instruction _instruction)
 	case Instruction::STOP:
 	case Instruction::INVALID:
 	case Instruction::REVERT:
+	case Instruction::RETURNSUB:
 		return true;
 	default:
 		return false;

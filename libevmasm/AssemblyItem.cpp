@@ -99,7 +99,7 @@ std::pair<std::string, std::string> AssemblyItem::nameAndData(langutil::EVMVersi
 	case AssignImmutable:
 		return {"ASSIGNIMMUTABLE", toString(util::h256(data()))};
 	case Tag:
-		return {"tag", util::toString(data())};
+		return {isSubroutineEntry() ? "calldest" : "tag", util::toString(data())};
 	case PushData:
 		return {"PUSH data", toStringInHex(data())};
 	case VerbatimBytecode:
@@ -297,6 +297,8 @@ std::string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 	case Tag:
 		assertThrow(data() < 0x10000, AssemblyException, "Declaration of sub-assembly tag.");
 		text = std::string("tag_") + std::to_string(static_cast<size_t>(data())) + ":";
+		if (isSubroutineEntry())
+			text += " (calldest)";
 		break;
 	case PushData:
 		text = std::string("data_") + toHex(data());

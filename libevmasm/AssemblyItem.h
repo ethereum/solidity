@@ -239,6 +239,10 @@ public:
 	langutil::DebugData::ConstPtr debugData() const { return m_debugData; }
 
 	void setJumpType(JumpType _jumpType) { m_jumpType = _jumpType; }
+	/// Marks a Tag item as a subroutine entry: it is assembled as CALLDEST instead of JUMPDEST (EIP-7979).
+	void setSubroutineEntry() { solAssert(m_type == Tag); m_subroutineEntry = true; }
+	/// @returns true if this is a Tag item that is assembled as CALLDEST (EIP-7979).
+	bool isSubroutineEntry() const { return m_type == Tag && m_subroutineEntry; }
 	static std::optional<JumpType> parseJumpType(std::string const& _jumpType);
 	JumpType getJumpType() const { return m_jumpType; }
 	std::string getJumpTypeAsString() const;
@@ -257,6 +261,7 @@ private:
 
 	AssemblyItemType m_type;
 	std::optional<Instruction> m_instruction; ///< Only valid for item types that represent a specific opcode
+	bool m_subroutineEntry = false; ///< Only valid for Tag: assemble as CALLDEST (EIP-7979)
 	std::shared_ptr<u256> m_data; ///< Only valid if m_type != Operation
 	/// If m_type == VerbatimBytecode, this holds number of arguments, number of
 	/// return variables and verbatim bytecode.

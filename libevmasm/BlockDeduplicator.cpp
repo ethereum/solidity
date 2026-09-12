@@ -72,11 +72,16 @@ bool BlockDeduplicator::deduplicate()
 
 	auto const hashBlockAt = [&](std::size_t const _i)
 	{
-		return boost::hash_range(blockBodyBegin(_i, m_items[_i].pushTag()), end);
+		std::size_t seed = boost::hash_range(blockBodyBegin(_i, m_items[_i].pushTag()), end);
+		boost::hash_combine(seed, m_items[_i].isSubroutineEntry());
+		return seed;
 	};
+	// EIP-7979: blocks entered by CALLSUB (CALLDEST labels) and blocks entered by
+	// JUMP (JUMPDEST labels) are never merged, so that no CALLSUB is ever redirected
+	// onto a JUMPDEST.
 	auto const blocksAtEqual = [&](std::size_t const _i, std::size_t const _j)
 	{
-		return ranges::equal(
+		return m_items[_i].isSubroutineEntry() == m_items[_j].isSubroutineEntry() && ranges::equal(
 			blockBodyBegin(_i, m_items[_i].pushTag()), end,
 			blockBodyBegin(_j, m_items[_j].pushTag()), end
 		);
@@ -86,14 +91,23 @@ bool BlockDeduplicator::deduplicate()
 	for (; ; ++iterations)
 	{
 		std::unordered_set<std::size_t, decltype(hashBlockAt), decltype(blocksAtEqual)> seen(0, hashBlockAt, blocksAtEqual);
+		std::vector<std::size_t> retained;
 		for (std::size_t i = 0; i < m_items.size(); ++i)
 		{
 			if (m_items[i].type() != Tag)
 				continue;
 			auto const [it, inserted] = seen.insert(i);
 			if (!inserted)
+			{
 				m_replacedTags[m_items[i].data()] = m_items[*it].data();
+				retained.push_back(*it);
+			}
 		}
+		// Marking changes the block's kind, which the set's hash and equality depend
+		// on, so it happens only after the set is no longer used.
+		if (m_sharedBlocksAreSubroutineEntries)
+			for (std::size_t const k: retained)
+				m_items[k].setSubroutineEntry();
 
 		if (!applyTagReplacement(m_items, m_replacedTags))
 			break;

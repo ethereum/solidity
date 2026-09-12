@@ -69,7 +69,10 @@ std::vector<StackTooDeepError> OptimizedEVMCodeTransform::run(
 
 void OptimizedEVMCodeTransform::operator()(CFG::FunctionCall const& _call)
 {
-	bool useReturnLabel = _call.canContinue;
+	// EIP-7979: calls that can continue use CALLSUB and need no return label;
+	// calls that cannot continue keep a plain JUMP, which may land on a CALLDEST.
+	bool const useSubroutine = _call.canContinue && m_dialect.evmVersion().hasSubroutines();
+	bool useReturnLabel = _call.canContinue && !useSubroutine;
 	// Validate stack.
 	{
 		yulAssert(m_assembly.stackHeight() == static_cast<int>(m_stack.size()), "");
@@ -93,13 +96,21 @@ void OptimizedEVMCodeTransform::operator()(CFG::FunctionCall const& _call)
 	// Emit code.
 	{
 		m_assembly.setSourceLocation(originLocationOf(_call));
-		m_assembly.appendJumpTo(
-			getFunctionLabel(_call.function),
-			static_cast<int>(_call.function.get().numReturns) - static_cast<int>(_call.function.get().numArguments) - (_call.canContinue ? 1 : 0),
-			AbstractAssembly::JumpType::IntoFunction
-		);
-		if (useReturnLabel)
-			m_assembly.appendLabel(m_returnLabels.at(&_call.functionCall.get()));
+		if (useSubroutine)
+			m_assembly.appendCallSubTo(
+				getFunctionLabel(_call.function),
+				static_cast<int>(_call.function.get().numReturns) - static_cast<int>(_call.function.get().numArguments)
+			);
+		else
+		{
+			m_assembly.appendJumpTo(
+				getFunctionLabel(_call.function),
+				static_cast<int>(_call.function.get().numReturns) - static_cast<int>(_call.function.get().numArguments) - (useReturnLabel ? 1 : 0),
+				AbstractAssembly::JumpType::IntoFunction
+			);
+			if (useReturnLabel)
+				m_assembly.appendLabel(m_returnLabels.at(&_call.functionCall.get()));
+		}
 	}
 
 	// Update stack.
@@ -515,11 +526,16 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 			Stack exitStack = m_currentFunctionInfo->returnVariables | ranges::views::transform([](auto const& _varSlot){
 				return StackSlot{_varSlot};
 			}) | ranges::to<Stack>;
-			exitStack.emplace_back(FunctionReturnLabelSlot{_functionReturn.info->function});
+			bool const useSubroutine = m_dialect.evmVersion().hasSubroutines();
+			if (!useSubroutine)
+				exitStack.emplace_back(FunctionReturnLabelSlot{_functionReturn.info->function});
 
-			// Create the function return layout and jump.
+			// Create the function return layout and return.
 			createStackLayout(debugDataOf(_functionReturn), exitStack);
-			m_assembly.appendJump(0, AbstractAssembly::JumpType::OutOfFunction);
+			if (useSubroutine)
+				m_assembly.appendReturnSub();
+			else
+				m_assembly.appendJump(0, AbstractAssembly::JumpType::OutOfFunction);
 		},
 		[&](CFG::BasicBlock::Terminated const&)
 		{
@@ -540,7 +556,9 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 
 void OptimizedEVMCodeTransform::operator()(CFG::FunctionInfo const& _functionInfo)
 {
-	bool useReturnLabel = _functionInfo.canContinue;
+	// EIP-7979: the entry of a subroutine is a CALLDEST and holds no return label.
+	bool const useSubroutine = m_dialect.evmVersion().hasSubroutines();
+	bool useReturnLabel = _functionInfo.canContinue && !useSubroutine;
 	yulAssert(!m_currentFunctionInfo, "");
 	ScopedSaveAndRestore currentFunctionInfoRestore(m_currentFunctionInfo, &_functionInfo);
 
@@ -554,7 +572,10 @@ void OptimizedEVMCodeTransform::operator()(CFG::FunctionInfo const& _functionInf
 	m_assembly.setStackHeight(static_cast<int>(m_stack.size()));
 
 	m_assembly.setSourceLocation(originLocationOf(_functionInfo));
-	m_assembly.appendLabel(getFunctionLabel(_functionInfo.function));
+	if (useSubroutine)
+		m_assembly.appendSubroutineLabel(getFunctionLabel(_functionInfo.function));
+	else
+		m_assembly.appendLabel(getFunctionLabel(_functionInfo.function));
 
 	// Create the entry layout of the function body block and visit.
 	createStackLayout(debugDataOf(_functionInfo), m_stackLayout.blockInfos.at(_functionInfo.entry).entryLayout);
