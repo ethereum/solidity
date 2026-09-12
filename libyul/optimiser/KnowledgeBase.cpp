@@ -36,7 +36,8 @@ KnowledgeBase::KnowledgeBase(std::map<YulName, AssignedValue> const& _ssaValues,
 	m_valuesAreSSA(true),
 	m_variableValues([_ssaValues](YulName _var) { return util::valueOrNullptr(_ssaValues, _var); }),
 	m_addBuiltinHandle(_dialect.findBuiltin("add")),
-	m_subBuiltinHandle(_dialect.findBuiltin("sub"))
+	m_subBuiltinHandle(_dialect.findBuiltin("sub")),
+	m_memoryGuardBuiltinHandle(_dialect.findBuiltin("memoryguard"))
 {}
 
 bool KnowledgeBase::knownToBeDifferent(YulName _a, YulName _b)
@@ -138,6 +139,7 @@ std::optional<KnowledgeBase::VariableOffset> KnowledgeBase::explore(Expression c
 				}
 		}
 		else if (std::get<BuiltinName>(f->functionName).handle == m_subBuiltinHandle)
+		{
 			if (std::optional<VariableOffset> a = explore(f->arguments[0]))
 				if (std::optional<VariableOffset> b = explore(f->arguments[1]))
 				{
@@ -148,6 +150,18 @@ std::optional<KnowledgeBase::VariableOffset> KnowledgeBase::explore(Expression c
 						// b is constant
 						return VariableOffset{a->reference, offset};
 				}
+		}
+		else if (
+			m_memoryGuardBuiltinHandle &&
+			std::get<BuiltinName>(f->functionName).handle == m_memoryGuardBuiltinHandle
+		)
+		{
+			// memoryguard(N) compiles to the constant N.
+			// Its sole argument is always a literal (enforced by the builtin's literalArguments metadata).
+			yulAssert(f->arguments.size() == 1, "memoryguard takes exactly one argument");
+			if (Literal const* lit = std::get_if<Literal>(&f->arguments.front()))
+				return VariableOffset{YulName{}, lit->value.value()};
+		}
 	}
 
 	return std::nullopt;

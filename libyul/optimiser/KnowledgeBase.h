@@ -66,7 +66,8 @@ public:
 	explicit KnowledgeBase(std::function<AssignedValue const*(YulName)> _variableValues, Dialect const& _dialect):
 		m_variableValues(std::move(_variableValues)),
 		m_addBuiltinHandle(_dialect.findBuiltin("add")),
-		m_subBuiltinHandle(_dialect.findBuiltin("sub"))
+		m_subBuiltinHandle(_dialect.findBuiltin("sub")),
+		m_memoryGuardBuiltinHandle(_dialect.findBuiltin("memoryguard"))
 	{}
 	/// Constructor to use if source code is in SSA form and values are constant.
 	explicit KnowledgeBase(std::map<YulName, AssignedValue> const& _ssaValues, Dialect const& _dialect);
@@ -120,6 +121,7 @@ private:
 	std::function<AssignedValue const*(YulName)> m_variableValues;
 	std::optional<BuiltinHandle> m_addBuiltinHandle;
 	std::optional<BuiltinHandle> m_subBuiltinHandle;
+	std::optional<BuiltinHandle> m_memoryGuardBuiltinHandle;
 
 	/// Offsets for each variable to one representative per group.
 	/// The empty string is the representative of the constant value zero.
