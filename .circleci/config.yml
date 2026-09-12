@@ -963,6 +963,26 @@ jobs:
       - run:
           name: Check for error codes
           command: scripts/error_codes.py --check
+      - run:
+          name: Check removed error codes
+          command: |
+            # CIRCLE_TAG and CIRCLE_PULL_REQUEST are built-in CircleCI environment variables:
+            # https://circleci.com/docs/reference/variables/#built-in-environment-variables
+            # A tag pipeline has no branch or PR target to compare against.
+            if [[ -n "${CIRCLE_TAG:-}" ]]; then
+              exit 0
+            fi
+
+            # Non-PR branch pipelines compare against the main development branch.
+            ERROR_CODES_TARGET="origin/develop"
+            if [[ -n "${CIRCLE_PULL_REQUEST:-}" ]]; then
+              PR_NUMBER="${CIRCLE_PULL_REQUEST##*/}"
+              # GitHub's synthetic PR merge commit has the exact target commit as its first parent.
+              git fetch --no-tags origin "refs/pull/${PR_NUMBER}/merge"
+              ERROR_CODES_TARGET="$(git rev-parse FETCH_HEAD^1)"
+            fi
+
+            scripts/error_codes.py --check-removed "$ERROR_CODES_TARGET"
       - matrix_notify_failure_unless_pr
 
   chk_pylint:
