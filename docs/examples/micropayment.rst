@@ -36,18 +36,46 @@ Creating the signature
 Alice does not need to interact with the Ethereum network
 to sign the transaction, the process is completely offline.
 In this tutorial, we will sign messages in the browser
-using `web3.js <https://github.com/web3/web3.js>`_ and
+using `ethers.js <https://github.com/ethers-io/ethers.js>`_ and
 `MetaMask <https://metamask.io>`_, using the method described in `EIP-712 <https://github.com/ethereum/EIPs/pull/712>`_,
 as it provides a number of other security benefits.
 
 .. code-block:: javascript
 
-    /// Hashing first makes things easier
-    var hash = web3.utils.sha3("message to sign");
-    web3.eth.personal.sign(hash, web3.eth.defaultAccount, function () { console.log("Signed"); });
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+
+    const message = "message to sign";
+    const hash = ethers.keccak256(ethers.toUtf8Bytes(message));
+
+    // Signs an EIP-191 prefixed personal message.
+    const signature1 = await signer.signMessage(hash);
+    console.log("Signed:", signature1);
+
+
+    const domain = {
+      name: "MyDApp",
+      version: "1",
+      chainId: 1,
+      verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC"
+    };
+
+    const types = {
+      Message: [
+        { name: "content", type: "string" }
+      ]
+    };
+
+    const value = {
+      content: "message to sign"
+    };
+
+    // Signs the EIP-712 typed data.
+    const signature2 = await signer.signTypedData(domain, types, value);
+    console.log("EIP-712 Signature:", signature2);
 
 .. note::
-  The ``web3.eth.personal.sign`` prepends the length of the
+  The ``signer.signMessage`` prepends the length of the
   message to the signed data. Since we hash first, the message
   will always be exactly 32 bytes long, and thus this length
   prefix is always the same.
@@ -100,13 +128,15 @@ Here is a JavaScript function that creates the proper signature for the ``Receiv
     // amount, in wei, specifies how much ether should be sent.
     // nonce can be any unique number to prevent replay attacks
     // contractAddress is used to prevent cross-contract replay attacks
-    function signPayment(recipient, amount, nonce, contractAddress, callback) {
+    async function signPayment(recipient, amount, nonce, contractAddress, callback) {
         var hash = "0x" + abi.soliditySHA3(
             ["address", "uint256", "uint256", "address"],
             [recipient, amount, nonce, contractAddress]
         ).toString("hex");
 
-        web3.eth.personal.sign(hash, web3.eth.defaultAccount, callback);
+        const signature = await signer.signMessage(hash);
+        console.log("Signed:", signature);
+        callback();
     }
 
 Recovering the Message Signer in Solidity
@@ -124,7 +154,7 @@ and returns the address that was used to sign the message.
 Extracting the Signature Parameters
 -----------------------------------
 
-Signatures produced by web3.js are the concatenation of ``r``,
+Signatures produced by ethers.js are the concatenation of ``r``,
 ``s`` and ``v``, so the first step is to split these parameters
 apart. You can do this on the client-side, but doing it inside
 the smart contract means you only need to send one signature
@@ -311,20 +341,18 @@ Here is the modified JavaScript code to cryptographically sign a message from th
         );
     }
 
-    function signMessage(message, callback) {
-        web3.eth.personal.sign(
-            "0x" + message.toString("hex"),
-            web3.eth.defaultAccount,
-            callback
-        );
+    async function signMessage(message, callback) {
+        const signature = await signer.signMessage("0x" + message.toString("hex"));
+        console.log("Signed:", signature);
+        callback();
     }
 
     // contractAddress is used to prevent cross-contract replay attacks.
     // amount, in wei, specifies how much Ether should be sent.
 
-    function signPayment(contractAddress, amount, callback) {
+    async function signPayment(contractAddress, amount, callback) {
         var message = constructPaymentMessage(contractAddress, amount);
-        signMessage(message, callback);
+        await signMessage(message, callback);
     }
 
 

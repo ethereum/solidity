@@ -181,21 +181,23 @@ arguments ``from``, ``to`` and ``amount``, which makes it possible to track
 transactions.
 
 To listen for this event, you could use the following
-JavaScript code, which uses `web3.js <https://github.com/web3/web3.js/>`_ to create the ``Coin`` contract object,
+JavaScript code, which uses `ethers.js <https://github.com/ethers-io/ethers.js>`_ to listen to ``Sent`` events broadcasted from the ``Coin`` contract,
 and any user interface calls the automatically generated ``balances`` function from above:
 
 .. code-block:: javascript
 
-    Coin.Sent().watch({}, '', function(error, result) {
-        if (!error) {
-            console.log("Coin transfer: " + result.args.amount +
-                " coins were sent from " + result.args.from +
-                " to " + result.args.to + ".");
-            console.log("Balances now:\n" +
-                "Sender: " + Coin.balances.call(result.args.from) +
-                "Receiver: " + Coin.balances.call(result.args.to));
-        }
-    })
+    coin.on('Sent', async (from, to, amount, event) => {
+      console.log(`Coin transfer: ${ethers.formatUnits(amount, 18)} coins were sent from ${from} to ${to}.`);
+
+      const senderBalance = await coin.balances(from);
+      const receiverBalance = await coin.balances(to);
+
+      console.log(
+        `Balances now:\n` +
+        `Sender: ${ethers.formatUnits(senderBalance, 18)}\n` +
+        `Receiver: ${ethers.formatUnits(receiverBalance, 18)}`
+      );
+    });
 
 .. index:: coin
 
