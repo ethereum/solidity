@@ -93,7 +93,7 @@ void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
 
 void DataFlowAnalyzer::operator()(Assignment& _assignment)
 {
-	std::set<YulName> names;
+	small_flat_set<YulName, 1> names;
 	for (auto const& var: _assignment.variableNames)
 		names.emplace(var.name);
 	assertThrow(_assignment.value, OptimizerException, "");
@@ -104,10 +104,10 @@ void DataFlowAnalyzer::operator()(Assignment& _assignment)
 
 void DataFlowAnalyzer::operator()(VariableDeclaration& _varDecl)
 {
-	std::set<YulName> names;
+	small_flat_set<YulName, 1> names;
 	for (auto const& var: _varDecl.variables)
 		names.emplace(var.name);
-	m_variableScopes.back().variables += names;
+	m_variableScopes.back().variables.insert(names.begin(), names.end());
 
 	if (_varDecl.value)
 	{
@@ -241,7 +241,7 @@ std::optional<YulName> DataFlowAnalyzer::keccakValue(YulName _start, YulName _le
 		return std::nullopt;
 }
 
-void DataFlowAnalyzer::handleAssignment(std::set<YulName> const& _variables, Expression* _value, bool _isDeclaration)
+void DataFlowAnalyzer::handleAssignment(small_flat_set<YulName, 1> const& _variables, Expression* _value, bool _isDeclaration)
 {
 	if (!_isDeclaration)
 		clearValues(_variables);
@@ -263,7 +263,7 @@ void DataFlowAnalyzer::handleAssignment(std::set<YulName> const& _variables, Exp
 	}
 
 	auto const& referencedVariables = movableChecker.referencedVariables();
-	std::vector const referencedVariablesSorted(referencedVariables.begin(), referencedVariables.end());
+	small_vector<YulName, 2> const referencedVariablesSorted(referencedVariables.begin(), referencedVariables.end());
 	for (auto const& name: _variables)
 	{
 		m_state.sortedReferences[name] = referencedVariablesSorted;
@@ -316,7 +316,8 @@ void DataFlowAnalyzer::popScope()
 	m_variableScopes.pop_back();
 }
 
-void DataFlowAnalyzer::clearValues(std::set<YulName> const& _variablesToClear)
+template <class VariableSet>
+void DataFlowAnalyzer::clearValues(VariableSet const& _variablesToClear)
 {
 	// All variables that reference variables to be cleared also have to be
 	// cleared, but not recursively, since only the value of the original
@@ -347,16 +348,18 @@ void DataFlowAnalyzer::clearValues(std::set<YulName> const& _variablesToClear)
 	});
 
 	// Also clear variables that reference variables to be cleared.
-	std::set<YulName> referencingVariablesToClear;
 	std::vector const sortedVariablesToClear(_variablesToClear.begin(), _variablesToClear.end());
-	for (auto const& [referencingVariable, referencedVariables]: m_state.sortedReferences)
+	boost::unordered::erase_if(m_state.sortedReferences, mapTuple([&](auto&& referencingVariable, auto&& referencedVariables) {
 		// instead of checking each variable in `referencedVariables`, we check if there is any intersection making use of the
 		// sortedness of the vectors, which can increase performance by up to 50% in pathological cases
-		if (hasNonemptyIntersectionSorted(referencedVariables, sortedVariablesToClear))
-			referencingVariablesToClear.emplace(referencingVariable);
+		if (!hasNonemptyIntersectionSorted(referencedVariables, sortedVariablesToClear))
+			return false;
+		m_state.value.erase(referencingVariable);
+		return true;
+	}));
 
 	// Clear the value and update the reference relation.
-	for (auto const& name: _variablesToClear + referencingVariablesToClear)
+	for (auto const& name: _variablesToClear)
 	{
 		m_state.value.erase(name);
 		m_state.sortedReferences.erase(name);
