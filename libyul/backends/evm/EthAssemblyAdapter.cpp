@@ -116,6 +116,25 @@ void EthAssemblyAdapter::appendJumpToIf(LabelID _labelId, JumpType _jumpType)
 	appendJumpInstruction(evmasm::Instruction::JUMPI, _jumpType);
 }
 
+void EthAssemblyAdapter::appendSubroutineLabel(LabelID _labelId)
+{
+	evmasm::AssemblyItem label(evmasm::Tag, _labelId);
+	label.setSubroutineEntry();
+	m_assembly.append(std::move(label));
+}
+
+void EthAssemblyAdapter::appendCallSubTo(LabelID _labelId, int _stackDiffAfter)
+{
+	appendLabelReference(_labelId);
+	m_assembly.append(evmasm::Instruction::CALLSUB);
+	m_assembly.adjustDeposit(_stackDiffAfter);
+}
+
+void EthAssemblyAdapter::appendReturnSub()
+{
+	m_assembly.append(evmasm::Instruction::RETURNSUB);
+}
+
 void EthAssemblyAdapter::appendAssemblySize()
 {
 	m_assembly.appendProgramSize();

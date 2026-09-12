@@ -425,6 +425,9 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::JUMP:
 	case Instruction::JUMPI:
 	case Instruction::JUMPDEST:
+	case Instruction::CALLSUB:
+	case Instruction::CALLDEST:
+	case Instruction::RETURNSUB:
 	case Instruction::PUSH0:
 	case Instruction::PUSH1:
 	case Instruction::PUSH2:

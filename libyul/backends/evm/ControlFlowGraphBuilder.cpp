@@ -261,7 +261,10 @@ ControlFlowGraphBuilder::ControlFlowGraphBuilder(
 	m_info(_analysisInfo),
 	m_functionSideEffects(_functionSideEffects),
 	m_dialect(_dialect)
-{}
+{
+	if (auto const* evmDialect = dynamic_cast<EVMDialect const*>(&_dialect))
+		m_useSubroutines = evmDialect->evmVersion().hasSubroutines();
+}
 
 StackSlot ControlFlowGraphBuilder::operator()(Literal const& _literal)
 {
@@ -562,7 +565,9 @@ Stack const& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _cal
 		Scope::Function const& function = lookupFunction(std::get<Identifier>(_call.functionName).name);
 		canContinue = m_graph.functionInfo.at(&function).canContinue;
 		Stack inputs;
-		if (canContinue)
+		// EIP-7979: with subroutines the return address lives on the return stack,
+		// so the call takes no return label slot.
+		if (canContinue && !m_useSubroutines)
 			inputs.emplace_back(FunctionCallReturnLabelSlot{_call});
 		for (auto const& arg: _call.arguments | ranges::views::reverse)
 			inputs.emplace_back(std::visit(*this, arg));

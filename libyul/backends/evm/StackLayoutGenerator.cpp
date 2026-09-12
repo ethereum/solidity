@@ -491,7 +491,9 @@ std::optional<Stack> StackLayoutGenerator::getExitLayoutOrStageDependencies(
 				return StackSlot{_varSlot};
 			}) | ranges::to<Stack>;
 
-			stack.emplace_back(FunctionReturnLabelSlot{_functionReturn.info->function});
+			// EIP-7979: RETURNSUB takes the return address from the return stack.
+			if (!m_evmDialect.evmVersion().hasSubroutines())
+				stack.emplace_back(FunctionReturnLabelSlot{_functionReturn.info->function});
 			return stack;
 		},
 		[&](CFG::BasicBlock::Terminated const&) -> std::optional<Stack>

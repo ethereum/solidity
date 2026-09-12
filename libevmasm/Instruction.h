@@ -185,6 +185,10 @@ enum class Instruction: uint8_t
 	LOG3,                     ///< Makes a log entry; 3 topics.
 	LOG4,                     ///< Makes a log entry; 4 topics.
 
+	CALLSUB = 0xb0,           ///< EIP-7979: call the subroutine whose CALLDEST position is on the stack
+	CALLDEST,                 ///< EIP-7979: subroutine entry, also a valid jump destination
+	RETURNSUB,                ///< EIP-7979: return from the current subroutine
+
 	CREATE = 0xf0,            ///< create a new account with associated code
 	CALL,                     ///< message-call into an account
 	CALLCODE,                 ///< message-call with another account's code only

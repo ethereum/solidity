@@ -74,6 +74,9 @@ bool isLowLevelControlFlowInstruction(evmasm::Instruction const& _instruction)
 	case evmasm::Instruction::JUMP:
 	case evmasm::Instruction::JUMPI:
 	case evmasm::Instruction::JUMPDEST:
+	case evmasm::Instruction::CALLSUB:
+	case evmasm::Instruction::CALLDEST:
+	case evmasm::Instruction::RETURNSUB:
 		return true;
 	default:
 		return false;

@@ -83,6 +83,8 @@ private:
 	AsmAnalysisInfo const& m_info;
 	util::unordered_flat_map<FunctionDefinition const*, ControlFlowSideEffects> const& m_functionSideEffects;
 	Dialect const& m_dialect;
+	/// EIP-7979: whether function calls use CALLSUB/RETURNSUB instead of return labels.
+	bool m_useSubroutines = false;
 	CFG::BasicBlock* m_currentBlock = nullptr;
 	Scope* m_scope = nullptr;
 	struct ForLoopInfo

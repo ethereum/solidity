@@ -47,7 +47,11 @@ using AssemblyItems = std::vector<AssemblyItem>;
 class BlockDeduplicator
 {
 public:
-	explicit BlockDeduplicator(AssemblyItems& _items): m_items(_items) {}
+	/// @param _sharedBlocksAreSubroutineEntries if true (EIP-7979), a block that survives
+	/// deduplication is marked as a subroutine entry (CALLDEST), since it is then reached
+	/// from several places, possibly from different subroutines, and only a CALLDEST may be.
+	explicit BlockDeduplicator(AssemblyItems& _items, bool _sharedBlocksAreSubroutineEntries = false):
+		m_items(_items), m_sharedBlocksAreSubroutineEntries(_sharedBlocksAreSubroutineEntries) {}
 	/// @returns true if something was changed
 	bool deduplicate();
 	/// @returns the tags that were replaced.
@@ -96,6 +100,7 @@ private:
 
 	std::map<u256, u256> m_replacedTags;
 	AssemblyItems& m_items;
+	bool m_sharedBlocksAreSubroutineEntries = false;
 };
 
 }

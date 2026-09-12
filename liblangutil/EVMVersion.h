@@ -144,6 +144,8 @@ public:
 	bool hasMcopy() const { return *this >= cancun(); }
 	bool supportsTransientStorage() const { return *this >= cancun(); }
 	bool hasSlotNum() const { return *this >= amsterdam(); }
+	/// Has the CALLSUB, CALLDEST and RETURNSUB opcodes of EIP-7979 (experimental, @future only).
+	bool hasSubroutines() const { return *this >= future(); }
 	constexpr size_t reachableStackDepth() const { return 16; }
 
 	bool hasOpcode(evmasm::Instruction _opcode) const;

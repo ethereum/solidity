@@ -110,6 +110,23 @@ void NoOutputAssembly::appendJumpToIf(LabelID _labelId, JumpType)
 	appendInstruction(evmasm::Instruction::JUMPI);
 }
 
+void NoOutputAssembly::appendSubroutineLabel(LabelID)
+{
+	appendInstruction(evmasm::Instruction::CALLDEST);
+}
+
+void NoOutputAssembly::appendCallSubTo(LabelID _labelId, int _stackDiffAfter)
+{
+	appendLabelReference(_labelId);
+	appendInstruction(evmasm::Instruction::CALLSUB);
+	m_stackHeight += _stackDiffAfter;
+}
+
+void NoOutputAssembly::appendReturnSub()
+{
+	appendInstruction(evmasm::Instruction::RETURNSUB);
+}
+
 void NoOutputAssembly::appendAssemblySize()
 {
 	appendInstruction(evmasm::Instruction::PUSH1);
