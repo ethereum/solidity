@@ -107,7 +107,7 @@ void DataFlowAnalyzer::operator()(VariableDeclaration& _varDecl)
 	std::set<YulName> names;
 	for (auto const& var: _varDecl.variables)
 		names.emplace(var.name);
-	m_variableScopes.back().variables += names;
+	m_variableScopes.back().variables.insert(names.begin(), names.end());
 
 	if (_varDecl.value)
 	{

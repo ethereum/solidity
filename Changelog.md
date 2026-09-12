@@ -30,6 +30,7 @@ Compiler Features:
 * Yul Optimizer: `LoopInvariantCodeMotion` can now move expressions depending on function parameters out of loops.
 * Yul Optimizer: `UnusedStoreEliminator` can now recognize redundant memory and storage operations whose start offset or length is a function parameter.
 * Yul Optimizer: Remove the ineffective elimination of unused `returndatacopy()` operations in simple cases from UnusedStoreEliminator.
+* Yul Optimizer: Use a hash-based container instead of an ordered tree for `DataFlowAnalyzer`'s per-variable value and scope maps, speeding up compilation of code with many variables.
 
 Bugfixes:
 * Code Generator: Fix constants read in both checked and `unchecked` contexts within one contract getting the checked/unchecked semantics of whichever read was generated first via IR, which could remove a required overflow panic or introduce a spurious one.
