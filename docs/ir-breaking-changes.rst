@@ -284,6 +284,8 @@ This causes a storage write at construction time for internal function pointers 
     that the assigned value will be included in the internal dispatch.
     The function must also be explicitly referenced elsewhere in the code.
 
+.. _ir-cleanup:
+
 Cleanup
 -------
 

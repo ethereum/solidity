@@ -159,6 +159,7 @@ Contents
 
    security-considerations.rst
    bugs.rst
+   frequently-reported-non-bugs.rst
    050-breaking-changes.rst
    060-breaking-changes.rst
    070-breaking-changes.rst

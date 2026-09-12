@@ -16,6 +16,10 @@ There is another file called `bugs_by_version.json
 <https://github.com/argotorg/solidity/blob/develop/docs/bugs_by_version.json>`_,
 which can be used to check which bugs affect a specific version of the compiler.
 
+When reporting a security-relevant bug, please make sure that the behavior is not intentional/documented
+or an explicitly not supported or guaranteed language feature.
+Some regularly misreported behaviors are collected in :ref:`Frequently Reported Non-Bugs<frequently-reported-non-bugs>`.
+
 Contract source verification tools and also other tools interacting with
 contracts should consult this list according to the following criteria:
 
