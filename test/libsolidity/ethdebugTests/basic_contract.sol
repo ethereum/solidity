@@ -21,7 +21,15 @@ contract C {
 // .resources.compilation.sources[0].language: Solidity
 // .resources.types.t_uint256.kind: uint
 // .resources.types.t_uint256.bits: 256
-// .resources.pointers | length: 1
+// .resources.pointers | keys: ["storage_22_3"]
+// .resources.pointers.storage_22_3: {
+//     "expect": [],
+//     "for": {
+//         "location": "storage",
+//         "name": "x",
+//         "slot": "0x00"
+//     }
+// }
 //
 // C.contract.name: C
 // C.creation.environment: create
