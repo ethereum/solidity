@@ -205,13 +205,13 @@ std::optional<schema::Type> TypeRegistry::document(Type const& _type)
 	}
 	case frontend::Type::Category::Struct:
 	{
+		// The members carry the types they have in the struct's data location,
+		// e.g. a `string` member of a storage struct is a storage string.
 		auto const& structType = dynamic_cast<StructType const&>(_type);
 		schema::Type::Struct document;
-		for (ASTPointer<VariableDeclaration> const& member: structType.structDefinition().members())
+		for (MemberList::Member const& member: structType.members(nullptr))
 		{
-			if (!member->annotation().type)
-				continue;
-			std::optional<schema::Type::Wrapper> field = wrapper(member->name(), *member->annotation().type);
+			std::optional<schema::Type::Wrapper> field = wrapper(member.name, *member.type);
 			if (!field)
 				return std::nullopt;
 			document.contains.emplace_back(std::move(*field));
