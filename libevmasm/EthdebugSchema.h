@@ -26,6 +26,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -132,6 +133,10 @@ struct Type
 	/// ethdebug/format/type/specifier: a full type representation or a reference.
 	struct Specifier
 	{
+		Specifier(Reference _reference): value(std::move(_reference)) {}
+		/// @a _type must not be null.
+		explicit Specifier(std::shared_ptr<Type const> _type);
+
 		std::variant<Reference, std::shared_ptr<Type const>> value;
 	};
 
@@ -143,21 +148,37 @@ struct Type
 		Specifier type;
 	};
 
-	/// ethdebug/format/type/definition. At least one of the fields must be set.
+	/// ethdebug/format/type/definition.
 	struct Definition
 	{
+		/// At least one of @a _name and @a _location must be set.
+		Definition(std::optional<std::string> _name, std::optional<materials::SourceRange> _location);
+
 		std::optional<std::string> name;
 		std::optional<materials::SourceRange> location;
 	};
 
+	/// @returns whether @a _bits is a width the numeric kinds allow: a multiple
+	/// of 8 up to 256.
+	static bool isValidWidth(unsigned _bits) { return _bits >= 8 && _bits <= 256 && _bits % 8 == 0; }
+	/// @returns whether @a _places is a number of decimal places the fixed-point
+	/// kinds allow: between 1 and 80.
+	static bool isValidPlaces(unsigned _places) { return _places >= 1 && _places <= 80; }
+
 	// Elementary kinds
 	struct UInt
 	{
+		/// @a _bits must satisfy isValidWidth().
+		explicit UInt(unsigned _bits);
+
 		unsigned bits;
 	};
 
 	struct Int
 	{
+		/// @a _bits must satisfy isValidWidth().
+		explicit Int(unsigned _bits);
+
 		unsigned bits;
 	};
 
@@ -178,12 +199,18 @@ struct Type
 
 	struct UFixed
 	{
+		/// @a _bits must satisfy isValidWidth() and @a _places isValidPlaces().
+		UFixed(unsigned _bits, unsigned _places);
+
 		unsigned bits;
 		unsigned places;
 	};
 
 	struct Fixed
 	{
+		/// @a _bits must satisfy isValidWidth() and @a _places isValidPlaces().
+		Fixed(unsigned _bits, unsigned _places);
+
 		unsigned bits;
 		unsigned places;
 	};
@@ -261,10 +288,20 @@ struct Type
 /// ethdebug/format/pointer: a region or a collection of pointers. The
 /// expressions and the kinds of pointers are nested here, so that they are
 /// addressed as `Pointer::Region` and do not clash with names in use elsewhere.
+///
+/// The constructors of the parts assert the constraints the schema puts on
+/// them, so that a pointer cannot be assembled in a shape that does not
+/// serialize.
 struct Pointer
 {
 	struct Expression;
 	using Operands = std::vector<Expression>;
+
+	/// @returns whether @a _text follows the identifier grammar of
+	/// ethdebug/format/pointer/identifier: `^[a-zA-Z_\-]+[a-zA-Z0-9$_\-]*$`.
+	static bool isIdentifier(std::string_view _text);
+	/// @returns whether @a _text names a region: an identifier or `$this`.
+	static bool isRegionReference(std::string_view _text);
 
 	/// An unsigned number or `0x`-prefixed hex string.
 	struct Literal
@@ -276,6 +313,9 @@ struct Pointer
 	/// template parameter.
 	struct Variable
 	{
+		/// @a _identifier must satisfy isIdentifier().
+		explicit Variable(std::string _identifier);
+
 		std::string identifier;
 	};
 
@@ -287,6 +327,9 @@ struct Pointer
 	{
 		enum class Property { Slot, Offset, Length };
 
+		/// @a _region must satisfy isRegionReference().
+		Lookup(Property _property, std::string _region);
+
 		Property property;
 		std::string region;
 	};
@@ -294,13 +337,18 @@ struct Pointer
 	/// `{ "$read": <region> }`, the raw bytes in a region.
 	struct Read
 	{
+		/// @a _region must satisfy isRegionReference().
+		explicit Read(std::string _region);
+
 		std::string region;
 	};
 
-	/// Difference, quotient and remainder take exactly two operands.
 	struct Arithmetic
 	{
 		enum class Operator { Sum, Difference, Product, Quotient, Remainder };
+
+		/// Difference, quotient and remainder take exactly two @a _operands.
+		Arithmetic(Operator _op, Operands _operands);
 
 		Operator op;
 		Operands operands;
@@ -319,6 +367,9 @@ struct Pointer
 	/// `{ "$sized<N>": ... }` with @a size N, or `{ "$wordsized": ... }` when unset.
 	struct Resize
 	{
+		/// @a _size, if set, must be positive; @a _operand must not be null.
+		Resize(std::optional<unsigned> _size, std::shared_ptr<Expression const> _operand);
+
 		std::optional<unsigned> size;
 		std::shared_ptr<Expression const> operand;
 	};
@@ -336,6 +387,17 @@ struct Pointer
 	/// byte-oriented locations by @a offset and @a length.
 	struct Region
 	{
+		/// @a _name, if set, must satisfy isIdentifier(). A stack, storage or
+		/// transient region must have a @a _slot; a memory, calldata, returndata or
+		/// code region must have an @a _offset and a @a _length and no slot.
+		Region(
+			std::optional<std::string> _name,
+			Location _location,
+			std::optional<Expression> _slot,
+			std::optional<Expression> _offset = std::nullopt,
+			std::optional<Expression> _length = std::nullopt
+		);
+
 		std::optional<std::string> name;
 		Location location;
 		std::optional<Expression> slot;
@@ -345,11 +407,17 @@ struct Pointer
 
 	struct Group
 	{
+		/// @a _members must not be empty.
+		explicit Group(std::vector<Pointer> _members);
+
 		std::vector<Pointer> members;
 	};
 
 	struct List
 	{
+		/// @a _each must satisfy isIdentifier(); @a _is must not be null.
+		List(Expression _count, std::string _each, std::shared_ptr<Pointer const> _is);
+
 		Expression count;
 		std::string each;
 		std::shared_ptr<Pointer const> is;
@@ -357,6 +425,9 @@ struct Pointer
 
 	struct Conditional
 	{
+		/// @a _then must not be null.
+		Conditional(Expression _condition, std::shared_ptr<Pointer const> _then, std::shared_ptr<Pointer const> _otherwise);
+
 		Expression condition;
 		std::shared_ptr<Pointer const> then;
 		std::shared_ptr<Pointer const> otherwise;
@@ -365,12 +436,19 @@ struct Pointer
 	/// Definitions are ordered: each may reference the earlier ones.
 	struct Scope
 	{
+		/// @a _definitions must not be empty and must define identifiers; @a _in
+		/// must not be null.
+		Scope(std::vector<std::pair<std::string, Expression>> _definitions, std::shared_ptr<Pointer const> _in);
+
 		std::vector<std::pair<std::string, Expression>> definitions;
 		std::shared_ptr<Pointer const> in;
 	};
 
 	struct TemplateReference
 	{
+		/// @a _name and the names in @a _yields must satisfy isIdentifier().
+		explicit TemplateReference(std::string _name, std::vector<std::pair<std::string, std::string>> _yields = {});
+
 		std::string name;
 		std::vector<std::pair<std::string, std::string>> yields;
 	};
@@ -378,12 +456,18 @@ struct Pointer
 	/// ethdebug/format/pointer/template: @a body in terms of the @a expect variables.
 	struct Template
 	{
+		/// @a _expect must list identifiers; @a _body must not be null.
+		Template(std::vector<std::string> _expect, std::shared_ptr<Pointer const> _body);
+
 		std::vector<std::string> expect;
 		std::shared_ptr<Pointer const> body;
 	};
 
 	struct Templates
 	{
+		/// @a _templates must be named by identifiers; @a _in must not be null.
+		Templates(std::vector<std::pair<std::string, Template>> _templates, std::shared_ptr<Pointer const> _in);
+
 		std::vector<std::pair<std::string, Template>> templates;
 		std::shared_ptr<Pointer const> in;
 	};

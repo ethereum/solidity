@@ -85,13 +85,13 @@ std::optional<schema::materials::SourceRange> TypeRegistry::sourceRange(langutil
 
 std::optional<schema::Type::Definition> TypeRegistry::definition(Declaration const& _declaration) const
 {
-	schema::Type::Definition definition;
+	std::optional<std::string> name;
 	if (!_declaration.name().empty())
-		definition.name = _declaration.name();
-	definition.location = sourceRange(_declaration.location());
-	if (!definition.name && !definition.location)
+		name = _declaration.name();
+	std::optional<schema::materials::SourceRange> location = sourceRange(_declaration.location());
+	if (!name && !location)
 		return std::nullopt;
-	return definition;
+	return schema::Type::Definition{std::move(name), std::move(location)};
 }
 
 bool TypeRegistry::registerType(Type const& _type)
@@ -104,7 +104,7 @@ bool TypeRegistry::registerType(Type const& _type)
 	m_documents.emplace(id, schema::Type{schema::Type::Bool{}});
 	if (std::optional<schema::Type> document = this->document(_type))
 	{
-		m_documents[id] = std::move(*document);
+		m_documents.insert_or_assign(id, std::move(*document));
 		return true;
 	}
 	m_documents.erase(id);
@@ -258,11 +258,11 @@ std::optional<schema::Type> TypeRegistry::document(Type const& _type)
 		// The schema describes internal and external functions; the other
 		// kinds, such as builtins, are not values a variable can hold.
 		auto const& functionType = dynamic_cast<FunctionType const&>(_type);
-		schema::Type::Function document;
+		schema::Type::Function::Visibility visibility;
 		if (functionType.kind() == FunctionType::Kind::Internal)
-			document.visibility = schema::Type::Function::Visibility::Internal;
+			visibility = schema::Type::Function::Visibility::Internal;
 		else if (functionType.kind() == FunctionType::Kind::External)
-			document.visibility = schema::Type::Function::Visibility::External;
+			visibility = schema::Type::Function::Visibility::External;
 		else
 			return std::nullopt;
 
@@ -278,7 +278,7 @@ std::optional<schema::Type> TypeRegistry::document(Type const& _type)
 		std::optional<schema::Type::Wrapper> parameters = tupleWrapper(functionType.parameterTypes());
 		if (!parameters)
 			return std::nullopt;
-		document.parameters = std::move(*parameters);
+		schema::Type::Function document{visibility, std::move(*parameters), std::nullopt, std::nullopt};
 		if (!functionType.returnParameterTypes().empty())
 		{
 			document.returns = tupleWrapper(functionType.returnParameterTypes());
@@ -682,9 +682,9 @@ void registerCallableTypes(TypeRegistry& _types, CallableDeclaration const& _cal
 void ethdebug::Resources::merge(Resources _other)
 {
 	for (auto& [id, document]: _other.types)
-		types[id] = std::move(document);
+		types.insert_or_assign(id, std::move(document));
 	for (auto& [name, pointerTemplate]: _other.pointers)
-		pointers[name] = std::move(pointerTemplate);
+		pointers.insert_or_assign(name, std::move(pointerTemplate));
 }
 
 ethdebug::Resources ethdebug::resources(ContractDefinition const& _contract, std::map<std::string, unsigned> const& _sourceIndices)
@@ -703,7 +703,10 @@ ethdebug::Resources ethdebug::resources(ContractDefinition const& _contract, std
 			if (variable->name().empty())
 				continue;
 			types.registerType(*variable->annotation().type);
-			result.pointers[templateName(_contract, *variable, _location)] = stateVariableTemplate(*variable, slot, offset, _location);
+			result.pointers.insert_or_assign(
+				templateName(_contract, *variable, _location),
+				stateVariableTemplate(*variable, slot, offset, _location)
+			);
 		}
 	};
 	addStateVariables(DataLocation::Storage, schema::Pointer::Location::Storage);

@@ -22,15 +22,12 @@
 
 #pragma once
 
+#include <libsolidity/ast/ASTForward.h>
+
 #include <libevmasm/EthdebugSchema.h>
 
 #include <map>
 #include <string>
-
-namespace solidity::frontend
-{
-class ContractDefinition;
-}
 
 namespace solidity::frontend::ethdebug
 {
