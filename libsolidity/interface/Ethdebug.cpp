@@ -672,9 +672,11 @@ void registerCallableTypes(TypeRegistry& _types, CallableDeclaration const& _cal
 	for (ASTPointer<VariableDeclaration> const& parameter: _callable.parameters())
 		if (parameter->annotation().type)
 			_types.registerType(*parameter->annotation().type);
-	for (ASTPointer<VariableDeclaration> const& returnParameter: _callable.returnParameters())
-		if (returnParameter->annotation().type)
-			_types.registerType(*returnParameter->annotation().type);
+	// Modifiers have no return parameter list.
+	if (_callable.returnParameterList())
+		for (ASTPointer<VariableDeclaration> const& returnParameter: _callable.returnParameters())
+			if (returnParameter->annotation().type)
+				_types.registerType(*returnParameter->annotation().type);
 }
 
 }
