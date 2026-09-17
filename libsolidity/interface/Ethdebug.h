@@ -40,11 +40,11 @@ struct Resources
 {
 	/// Type documents keyed by the compiler's type identifier. Composed types
 	/// reference their component types by that identifier.
-	std::map<std::string, evmasm::ethdebug::schema::type::Type> types;
+	std::map<std::string, evmasm::ethdebug::schema::Type> types;
 	/// The pointer of every state variable as a template, keyed by a name
 	/// derived from the AST IDs of the contract and the variable. The
 	/// templates of mappings expect their keys as parameters.
-	std::map<std::string, evmasm::ethdebug::schema::pointer::Template> pointers;
+	std::map<std::string, evmasm::ethdebug::schema::Pointer::Template> pointers;
 
 	/// Adds the tables of @a _other, replacing entries with the same key.
 	void merge(Resources _other);

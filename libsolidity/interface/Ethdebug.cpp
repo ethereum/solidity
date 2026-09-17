@@ -52,18 +52,18 @@ public:
 	/// neither has a type composing one.
 	bool registerType(Type const& _type);
 
-	std::map<std::string, schema::type::Type> takeDocuments() { return std::move(m_documents); }
+	std::map<std::string, schema::Type> takeDocuments() { return std::move(m_documents); }
 
 	std::optional<schema::materials::SourceRange> sourceRange(langutil::SourceLocation const& _location) const;
 
 private:
-	std::optional<schema::type::Type> document(Type const& _type);
-	std::optional<schema::type::Wrapper> wrapper(std::optional<std::string> _name, Type const& _type);
-	std::optional<std::vector<schema::type::Wrapper>> wrappers(std::vector<Type const*> const& _types);
-	std::optional<schema::type::Definition> definition(Declaration const& _declaration) const;
+	std::optional<schema::Type> document(Type const& _type);
+	std::optional<schema::Type::Wrapper> wrapper(std::optional<std::string> _name, Type const& _type);
+	std::optional<std::vector<schema::Type::Wrapper>> wrappers(std::vector<Type const*> const& _types);
+	std::optional<schema::Type::Definition> definition(Declaration const& _declaration) const;
 
 	std::map<std::string, unsigned> const& m_sourceIndices;
-	std::map<std::string, schema::type::Type> m_documents;
+	std::map<std::string, schema::Type> m_documents;
 };
 
 std::optional<schema::materials::SourceRange> TypeRegistry::sourceRange(langutil::SourceLocation const& _location) const
@@ -83,9 +83,9 @@ std::optional<schema::materials::SourceRange> TypeRegistry::sourceRange(langutil
 	return range;
 }
 
-std::optional<schema::type::Definition> TypeRegistry::definition(Declaration const& _declaration) const
+std::optional<schema::Type::Definition> TypeRegistry::definition(Declaration const& _declaration) const
 {
-	schema::type::Definition definition;
+	schema::Type::Definition definition;
 	if (!_declaration.name().empty())
 		definition.name = _declaration.name();
 	definition.location = sourceRange(_declaration.location());
@@ -101,8 +101,8 @@ bool TypeRegistry::registerType(Type const& _type)
 		return true;
 	// Present before descending, so a recursive type terminates. Removed
 	// again if the type turns out to have no document.
-	m_documents.emplace(id, schema::type::Type{schema::type::Bool{}});
-	if (std::optional<schema::type::Type> document = this->document(_type))
+	m_documents.emplace(id, schema::Type{schema::Type::Bool{}});
+	if (std::optional<schema::Type> document = this->document(_type))
 	{
 		m_documents[id] = std::move(*document);
 		return true;
@@ -111,24 +111,24 @@ bool TypeRegistry::registerType(Type const& _type)
 	return false;
 }
 
-std::optional<schema::type::Wrapper> TypeRegistry::wrapper(std::optional<std::string> _name, Type const& _type)
+std::optional<schema::Type::Wrapper> TypeRegistry::wrapper(std::optional<std::string> _name, Type const& _type)
 {
 	if (!registerType(_type))
 		return std::nullopt;
-	return schema::type::Wrapper{
+	return schema::Type::Wrapper{
 		std::move(_name),
-		schema::type::Specifier{schema::type::Reference{schema::materials::ID{_type.identifier()}}}
+		schema::Type::Specifier{schema::Type::Reference{schema::materials::ID{_type.identifier()}}}
 	};
 }
 
-std::optional<std::vector<schema::type::Wrapper>> TypeRegistry::wrappers(std::vector<Type const*> const& _types)
+std::optional<std::vector<schema::Type::Wrapper>> TypeRegistry::wrappers(std::vector<Type const*> const& _types)
 {
-	std::vector<schema::type::Wrapper> result;
+	std::vector<schema::Type::Wrapper> result;
 	for (Type const* type: _types)
 	{
 		if (!type)
 			continue;
-		std::optional<schema::type::Wrapper> wrapper = this->wrapper(std::nullopt, *type);
+		std::optional<schema::Type::Wrapper> wrapper = this->wrapper(std::nullopt, *type);
 		if (!wrapper)
 			return std::nullopt;
 		result.emplace_back(std::move(*wrapper));
@@ -136,146 +136,146 @@ std::optional<std::vector<schema::type::Wrapper>> TypeRegistry::wrappers(std::ve
 	return result;
 }
 
-std::optional<schema::type::Type> TypeRegistry::document(Type const& _type)
+std::optional<schema::Type> TypeRegistry::document(Type const& _type)
 {
 	switch (_type.category())
 	{
 	case frontend::Type::Category::Address:
 	{
 		auto const& addressType = dynamic_cast<AddressType const&>(_type);
-		return schema::type::Type{schema::type::Address{addressType.stateMutability() == StateMutability::Payable}};
+		return schema::Type{schema::Type::Address{addressType.stateMutability() == StateMutability::Payable}};
 	}
 	case frontend::Type::Category::Integer:
 	{
 		auto const& integerType = dynamic_cast<IntegerType const&>(_type);
 		if (integerType.isSigned())
-			return schema::type::Type{schema::type::Int{integerType.numBits()}};
-		return schema::type::Type{schema::type::UInt{integerType.numBits()}};
+			return schema::Type{schema::Type::Int{integerType.numBits()}};
+		return schema::Type{schema::Type::UInt{integerType.numBits()}};
 	}
 	case frontend::Type::Category::FixedPoint:
 	{
 		auto const& fixedPointType = dynamic_cast<FixedPointType const&>(_type);
 		if (fixedPointType.isSigned())
-			return schema::type::Type{schema::type::Fixed{fixedPointType.numBits(), fixedPointType.fractionalDigits()}};
-		return schema::type::Type{schema::type::UFixed{fixedPointType.numBits(), fixedPointType.fractionalDigits()}};
+			return schema::Type{schema::Type::Fixed{fixedPointType.numBits(), fixedPointType.fractionalDigits()}};
+		return schema::Type{schema::Type::UFixed{fixedPointType.numBits(), fixedPointType.fractionalDigits()}};
 	}
 	case frontend::Type::Category::Bool:
-		return schema::type::Type{schema::type::Bool{}};
+		return schema::Type{schema::Type::Bool{}};
 	case frontend::Type::Category::FixedBytes:
 	{
 		auto const& bytesType = dynamic_cast<FixedBytesType const&>(_type);
-		return schema::type::Type{schema::type::Bytes{schema::data::Unsigned{bytesType.numBytes()}}};
+		return schema::Type{schema::Type::Bytes{schema::data::Unsigned{bytesType.numBytes()}}};
 	}
 	case frontend::Type::Category::Array:
 	{
 		auto const& arrayType = dynamic_cast<ArrayType const&>(_type);
 		if (arrayType.isString())
-			return schema::type::Type{schema::type::String{}};
+			return schema::Type{schema::Type::String{}};
 		if (arrayType.isByteArray())
-			return schema::type::Type{schema::type::Bytes{}};
-		std::optional<schema::type::Wrapper> element = wrapper(std::nullopt, *arrayType.baseType());
+			return schema::Type{schema::Type::Bytes{}};
+		std::optional<schema::Type::Wrapper> element = wrapper(std::nullopt, *arrayType.baseType());
 		if (!element)
 			return std::nullopt;
-		schema::type::Array array{std::move(*element), std::nullopt};
+		schema::Type::Array array{std::move(*element), std::nullopt};
 		if (!arrayType.isDynamicallySized())
 			array.count = schema::data::Unsigned{schema::data::HexValue{toCompactBigEndian(arrayType.length(), 1)}};
-		return schema::type::Type{std::move(array)};
+		return schema::Type{std::move(array)};
 	}
 	case frontend::Type::Category::ArraySlice:
 	{
 		// A slice's representation is the dynamic array it views, and no
 		// consumer distinguishes the two, so no separate kind is carried.
 		auto const& sliceType = dynamic_cast<ArraySliceType const&>(_type);
-		std::optional<schema::type::Wrapper> element = wrapper(std::nullopt, *sliceType.arrayType().baseType());
+		std::optional<schema::Type::Wrapper> element = wrapper(std::nullopt, *sliceType.arrayType().baseType());
 		if (!element)
 			return std::nullopt;
-		return schema::type::Type{schema::type::Array{std::move(*element), std::nullopt}};
+		return schema::Type{schema::Type::Array{std::move(*element), std::nullopt}};
 	}
 	case frontend::Type::Category::Contract:
 	{
 		auto const& contractType = dynamic_cast<ContractType const&>(_type);
-		schema::type::Contract contract;
+		schema::Type::Contract contract;
 		if (contractType.contractDefinition().isLibrary())
-			contract.kind = schema::type::Contract::Kind::Library;
+			contract.kind = schema::Type::Contract::Kind::Library;
 		else if (contractType.contractDefinition().isInterface())
-			contract.kind = schema::type::Contract::Kind::Interface;
+			contract.kind = schema::Type::Contract::Kind::Interface;
 		contract.payable = contractType.isPayable();
 		contract.definition = definition(contractType.contractDefinition());
-		return schema::type::Type{std::move(contract)};
+		return schema::Type{std::move(contract)};
 	}
 	case frontend::Type::Category::Struct:
 	{
 		auto const& structType = dynamic_cast<StructType const&>(_type);
-		schema::type::Struct document;
+		schema::Type::Struct document;
 		for (ASTPointer<VariableDeclaration> const& member: structType.structDefinition().members())
 		{
 			if (!member->annotation().type)
 				continue;
-			std::optional<schema::type::Wrapper> field = wrapper(member->name(), *member->annotation().type);
+			std::optional<schema::Type::Wrapper> field = wrapper(member->name(), *member->annotation().type);
 			if (!field)
 				return std::nullopt;
 			document.contains.emplace_back(std::move(*field));
 		}
 		document.definition = definition(structType.structDefinition());
-		return schema::type::Type{std::move(document)};
+		return schema::Type{std::move(document)};
 	}
 	case frontend::Type::Category::Enum:
 	{
 		auto const& enumType = dynamic_cast<EnumType const&>(_type);
-		schema::type::Enum document;
+		schema::Type::Enum document;
 		for (ASTPointer<EnumValue> const& member: enumType.enumDefinition().members())
 			document.values.emplace_back(member->name());
 		document.definition = definition(enumType.enumDefinition());
-		return schema::type::Type{std::move(document)};
+		return schema::Type{std::move(document)};
 	}
 	case frontend::Type::Category::UserDefinedValueType:
 	{
 		auto const& aliasType = dynamic_cast<UserDefinedValueType const&>(_type);
-		std::optional<schema::type::Wrapper> underlying = wrapper(std::nullopt, aliasType.underlyingType());
+		std::optional<schema::Type::Wrapper> underlying = wrapper(std::nullopt, aliasType.underlyingType());
 		if (!underlying)
 			return std::nullopt;
-		return schema::type::Type{schema::type::Alias{std::move(*underlying), definition(aliasType.definition())}};
+		return schema::Type{schema::Type::Alias{std::move(*underlying), definition(aliasType.definition())}};
 	}
 	case frontend::Type::Category::Tuple:
 	{
 		auto const& tupleType = dynamic_cast<TupleType const&>(_type);
-		std::optional<std::vector<schema::type::Wrapper>> components = wrappers(tupleType.components());
+		std::optional<std::vector<schema::Type::Wrapper>> components = wrappers(tupleType.components());
 		if (!components)
 			return std::nullopt;
-		return schema::type::Type{schema::type::Tuple{std::move(*components)}};
+		return schema::Type{schema::Type::Tuple{std::move(*components)}};
 	}
 	case frontend::Type::Category::Mapping:
 	{
 		auto const& mappingType = dynamic_cast<MappingType const&>(_type);
-		std::optional<schema::type::Wrapper> key = wrapper(std::nullopt, *mappingType.keyType());
-		std::optional<schema::type::Wrapper> value = wrapper(std::nullopt, *mappingType.valueType());
+		std::optional<schema::Type::Wrapper> key = wrapper(std::nullopt, *mappingType.keyType());
+		std::optional<schema::Type::Wrapper> value = wrapper(std::nullopt, *mappingType.valueType());
 		if (!key || !value)
 			return std::nullopt;
-		return schema::type::Type{schema::type::Mapping{std::move(*key), std::move(*value)}};
+		return schema::Type{schema::Type::Mapping{std::move(*key), std::move(*value)}};
 	}
 	case frontend::Type::Category::Function:
 	{
 		// The schema describes internal and external functions; the other
 		// kinds, such as builtins, are not values a variable can hold.
 		auto const& functionType = dynamic_cast<FunctionType const&>(_type);
-		schema::type::Function document;
+		schema::Type::Function document;
 		if (functionType.kind() == FunctionType::Kind::Internal)
-			document.visibility = schema::type::Function::Visibility::Internal;
+			document.visibility = schema::Type::Function::Visibility::Internal;
 		else if (functionType.kind() == FunctionType::Kind::External)
-			document.visibility = schema::type::Function::Visibility::External;
+			document.visibility = schema::Type::Function::Visibility::External;
 		else
 			return std::nullopt;
 
-		auto const tupleWrapper = [&](std::vector<Type const*> const& _types) -> std::optional<schema::type::Wrapper> {
-			std::optional<std::vector<schema::type::Wrapper>> components = wrappers(_types);
+		auto const tupleWrapper = [&](std::vector<Type const*> const& _types) -> std::optional<schema::Type::Wrapper> {
+			std::optional<std::vector<schema::Type::Wrapper>> components = wrappers(_types);
 			if (!components)
 				return std::nullopt;
-			return schema::type::Wrapper{
+			return schema::Type::Wrapper{
 				std::nullopt,
-				schema::type::Specifier{std::make_shared<schema::type::Type const>(schema::type::Type{schema::type::Tuple{std::move(*components)}})}
+				schema::Type::Specifier{std::make_shared<schema::Type const>(schema::Type{schema::Type::Tuple{std::move(*components)}})}
 			};
 		};
-		std::optional<schema::type::Wrapper> parameters = tupleWrapper(functionType.parameterTypes());
+		std::optional<schema::Type::Wrapper> parameters = tupleWrapper(functionType.parameterTypes());
 		if (!parameters)
 			return std::nullopt;
 		document.parameters = std::move(*parameters);
@@ -287,7 +287,7 @@ std::optional<schema::type::Type> TypeRegistry::document(Type const& _type)
 		}
 		if (functionType.hasDeclaration())
 			document.definition = definition(functionType.declaration());
-		return schema::type::Type{std::move(document)};
+		return schema::Type{std::move(document)};
 	}
 	case frontend::Type::Category::RationalNumber:
 	case frontend::Type::Category::StringLiteral:
@@ -305,93 +305,93 @@ std::optional<schema::type::Type> TypeRegistry::document(Type const& _type)
 // Pointer expressions and pointers, in the shape ethdebug/format/pointer
 // prescribes.
 
-using schema::pointer::Expression;
-using schema::pointer::Pointer;
+using schema::Pointer;
+using Expression = schema::Pointer::Expression;
 
 Expression literal(u256 const& _value)
 {
-	return {schema::pointer::Literal{schema::data::Unsigned{schema::data::HexValue{toCompactBigEndian(_value, 1)}}}};
+	return {schema::Pointer::Literal{schema::data::Unsigned{schema::data::HexValue{toCompactBigEndian(_value, 1)}}}};
 }
 
 Expression variable(std::string _name)
 {
-	return {schema::pointer::Variable{std::move(_name)}};
+	return {schema::Pointer::Variable{std::move(_name)}};
 }
 
 Expression wordSize()
 {
-	return {schema::pointer::Constant::WordSize};
+	return {schema::Pointer::Constant::WordSize};
 }
 
 Expression read(std::string _region)
 {
-	return {schema::pointer::Read{std::move(_region)}};
+	return {schema::Pointer::Read{std::move(_region)}};
 }
 
-Expression arithmetic(schema::pointer::Arithmetic::Operator _operator, schema::pointer::Operands _operands)
+Expression arithmetic(schema::Pointer::Arithmetic::Operator _operator, schema::Pointer::Operands _operands)
 {
-	return {schema::pointer::Arithmetic{_operator, std::move(_operands)}};
+	return {schema::Pointer::Arithmetic{_operator, std::move(_operands)}};
 }
 
-Expression sum(schema::pointer::Operands _operands)
+Expression sum(schema::Pointer::Operands _operands)
 {
-	return arithmetic(schema::pointer::Arithmetic::Operator::Sum, std::move(_operands));
+	return arithmetic(schema::Pointer::Arithmetic::Operator::Sum, std::move(_operands));
 }
 
-Expression product(schema::pointer::Operands _operands)
+Expression product(schema::Pointer::Operands _operands)
 {
-	return arithmetic(schema::pointer::Arithmetic::Operator::Product, std::move(_operands));
+	return arithmetic(schema::Pointer::Arithmetic::Operator::Product, std::move(_operands));
 }
 
 Expression difference(Expression _minuend, Expression _subtrahend)
 {
-	return arithmetic(schema::pointer::Arithmetic::Operator::Difference, {std::move(_minuend), std::move(_subtrahend)});
+	return arithmetic(schema::Pointer::Arithmetic::Operator::Difference, {std::move(_minuend), std::move(_subtrahend)});
 }
 
 Expression quotient(Expression _dividend, Expression _divisor)
 {
-	return arithmetic(schema::pointer::Arithmetic::Operator::Quotient, {std::move(_dividend), std::move(_divisor)});
+	return arithmetic(schema::Pointer::Arithmetic::Operator::Quotient, {std::move(_dividend), std::move(_divisor)});
 }
 
 Expression remainder(Expression _dividend, Expression _divisor)
 {
-	return arithmetic(schema::pointer::Arithmetic::Operator::Remainder, {std::move(_dividend), std::move(_divisor)});
+	return arithmetic(schema::Pointer::Arithmetic::Operator::Remainder, {std::move(_dividend), std::move(_divisor)});
 }
 
-Expression keccak256(schema::pointer::Operands _operands)
+Expression keccak256(schema::Pointer::Operands _operands)
 {
-	return {schema::pointer::Keccak256{std::move(_operands)}};
+	return {schema::Pointer::Keccak256{std::move(_operands)}};
 }
 
 Expression wordSized(Expression _operand)
 {
-	return {schema::pointer::Resize{std::nullopt, std::make_shared<Expression const>(std::move(_operand))}};
+	return {schema::Pointer::Resize{std::nullopt, std::make_shared<Expression const>(std::move(_operand))}};
 }
 
 Pointer region(
-	schema::pointer::Location _location,
+	schema::Pointer::Location _location,
 	std::optional<std::string> _name,
 	Expression _slot,
 	std::optional<Expression> _offset = std::nullopt,
 	std::optional<Expression> _length = std::nullopt
 )
 {
-	return {schema::pointer::Region{std::move(_name), _location, std::move(_slot), std::move(_offset), std::move(_length)}};
+	return {schema::Pointer::Region{std::move(_name), _location, std::move(_slot), std::move(_offset), std::move(_length)}};
 }
 
 Pointer group(std::vector<Pointer> _members)
 {
-	return {schema::pointer::Group{std::move(_members)}};
+	return {schema::Pointer::Group{std::move(_members)}};
 }
 
 Pointer list(Expression _count, std::string _each, Pointer _element)
 {
-	return {schema::pointer::List{std::move(_count), std::move(_each), std::make_shared<Pointer const>(std::move(_element))}};
+	return {schema::Pointer::List{std::move(_count), std::move(_each), std::make_shared<Pointer const>(std::move(_element))}};
 }
 
 Pointer conditional(Expression _condition, Pointer _then, Pointer _otherwise)
 {
-	return {schema::pointer::Conditional{
+	return {schema::Pointer::Conditional{
 		std::move(_condition),
 		std::make_shared<Pointer const>(std::move(_then)),
 		std::make_shared<Pointer const>(std::move(_otherwise))
@@ -400,7 +400,7 @@ Pointer conditional(Expression _condition, Pointer _then, Pointer _otherwise)
 
 Pointer scope(std::vector<std::pair<std::string, Expression>> _definitions, Pointer _in)
 {
-	return {schema::pointer::Scope{std::move(_definitions), std::make_shared<Pointer const>(std::move(_in))}};
+	return {schema::Pointer::Scope{std::move(_definitions), std::make_shared<Pointer const>(std::move(_in))}};
 }
 
 /// @returns @a _base advanced by @a _slots slots, folding the addition into
@@ -409,7 +409,7 @@ Expression advanceSlots(Expression _base, u256 const& _slots)
 {
 	if (_slots == 0)
 		return _base;
-	if (auto const* literalBase = std::get_if<schema::pointer::Literal>(&_base.value))
+	if (auto const* literalBase = std::get_if<schema::Pointer::Literal>(&_base.value))
 		if (auto const* hex = std::get_if<schema::data::HexValue>(&literalBase->value.value))
 			return literal(u256(fromBigEndian<u256>(hex->value)) + _slots);
 	return sum({std::move(_base), literal(_slots)});
@@ -429,7 +429,7 @@ std::string identifier(std::string const& _name)
 class StateVariablePointerBuilder
 {
 public:
-	explicit StateVariablePointerBuilder(schema::pointer::Location _location): m_location(_location) {}
+	explicit StateVariablePointerBuilder(schema::Pointer::Location _location): m_location(_location) {}
 
 	Pointer build(Type const& _type, Expression _slot, std::optional<Expression> _offset, std::string const& _name)
 	{
@@ -624,7 +624,7 @@ private:
 
 	static constexpr unsigned maxCompositionDepth = 16;
 
-	schema::pointer::Location m_location;
+	schema::Pointer::Location m_location;
 	std::vector<std::string> m_expectedParameters;
 	std::set<std::string> m_structsOnPath;
 	unsigned m_depth = 0;
@@ -637,19 +637,19 @@ private:
 std::string templateName(
 	ContractDefinition const& _contract,
 	VariableDeclaration const& _variable,
-	schema::pointer::Location _location
+	schema::Pointer::Location _location
 )
 {
-	solAssert(_location == schema::pointer::Location::Storage || _location == schema::pointer::Location::Transient);
-	std::string const prefix = _location == schema::pointer::Location::Storage ? "storage_" : "transient_";
+	solAssert(_location == schema::Pointer::Location::Storage || _location == schema::Pointer::Location::Transient);
+	std::string const prefix = _location == schema::Pointer::Location::Storage ? "storage_" : "transient_";
 	return prefix + std::to_string(_contract.id()) + "_" + std::to_string(_variable.id());
 }
 
-schema::pointer::Template stateVariableTemplate(
+schema::Pointer::Template stateVariableTemplate(
 	VariableDeclaration const& _variable,
 	u256 const& _slot,
 	unsigned _offset,
-	schema::pointer::Location _location
+	schema::Pointer::Location _location
 )
 {
 	solAssert(_variable.annotation().type, "State variable type expected.");
@@ -664,7 +664,7 @@ schema::pointer::Template stateVariableTemplate(
 		std::move(offset),
 		identifier(_variable.name())
 	);
-	return schema::pointer::Template{builder.takeExpectedParameters(), std::make_shared<Pointer const>(std::move(pointer))};
+	return schema::Pointer::Template{builder.takeExpectedParameters(), std::make_shared<Pointer const>(std::move(pointer))};
 }
 
 void registerCallableTypes(TypeRegistry& _types, CallableDeclaration const& _callable)
@@ -697,7 +697,7 @@ ethdebug::Resources ethdebug::resources(ContractDefinition const& _contract, std
 	auto const* contractType = dynamic_cast<ContractType const*>(typeType->actualType());
 	solAssert(contractType, "Contract type expected.");
 
-	auto const addStateVariables = [&](DataLocation _dataLocation, schema::pointer::Location _location) {
+	auto const addStateVariables = [&](DataLocation _dataLocation, schema::Pointer::Location _location) {
 		for (auto const& [variable, slot, offset]: contractType->linearizedStateVariables(_dataLocation))
 		{
 			if (variable->name().empty())
@@ -706,8 +706,8 @@ ethdebug::Resources ethdebug::resources(ContractDefinition const& _contract, std
 			result.pointers[templateName(_contract, *variable, _location)] = stateVariableTemplate(*variable, slot, offset, _location);
 		}
 	};
-	addStateVariables(DataLocation::Storage, schema::pointer::Location::Storage);
-	addStateVariables(DataLocation::Transient, schema::pointer::Location::Transient);
+	addStateVariables(DataLocation::Storage, schema::Pointer::Location::Storage);
+	addStateVariables(DataLocation::Transient, schema::Pointer::Location::Transient);
 
 	// Inherited functions and modifiers are compiled into the most derived
 	// contract, so every linearized base contract contributes its types.

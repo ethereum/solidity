@@ -135,17 +135,17 @@ void schema::materials::to_json(Json& _json, Compilation const& _compilation)
 	_json["sources"] = _compilation.sources;
 }
 
-void schema::type::to_json(Json& _json, Reference const& _reference)
+void schema::to_json(Json& _json, Type::Reference const& _reference)
 {
 	_json = Json::object();
 	_json["id"] = _reference.id;
 }
 
-void schema::type::to_json(Json& _json, Specifier const& _specifier)
+void schema::to_json(Json& _json, Type::Specifier const& _specifier)
 {
 	std::visit(util::GenericVisitor{
-		[&](Reference const& _reference) { _json = _reference; },
-		[&](TypePtr const& _type)
+		[&](Type::Reference const& _reference) { _json = _reference; },
+		[&](std::shared_ptr<Type const> const& _type)
 		{
 			solRequire(_type, EthdebugException, "Type specifier without a type.");
 			_json = *_type;
@@ -153,7 +153,7 @@ void schema::type::to_json(Json& _json, Specifier const& _specifier)
 	}, _specifier.value);
 }
 
-void schema::type::to_json(Json& _json, Wrapper const& _wrapper)
+void schema::to_json(Json& _json, Type::Wrapper const& _wrapper)
 {
 	_json = Json::object();
 	if (_wrapper.name)
@@ -161,7 +161,7 @@ void schema::type::to_json(Json& _json, Wrapper const& _wrapper)
 	_json["type"] = _wrapper.type;
 }
 
-void schema::type::to_json(Json& _json, Definition const& _definition)
+void schema::to_json(Json& _json, Type::Definition const& _definition)
 {
 	solRequire(_definition.name || _definition.location, EthdebugException, "Type definition has no properties.");
 	_json = Json::object();
@@ -171,40 +171,40 @@ void schema::type::to_json(Json& _json, Definition const& _definition)
 		_json["location"] = *_definition.location;
 }
 
-void schema::type::to_json(Json& _json, Type const& _type)
+void schema::to_json(Json& _json, Type const& _type)
 {
 	_json = Json::object();
-	auto const definition = [&](std::optional<Definition> const& _definition) {
+	auto const definition = [&](std::optional<Type::Definition> const& _definition) {
 		if (_definition)
 			_json["definition"] = *_definition;
 	};
 	std::visit(util::GenericVisitor{
-		[&](UInt const& _uint)
+		[&](Type::UInt const& _uint)
 		{
 			requireBits(_uint.bits);
 			_json["kind"] = "uint";
 			_json["bits"] = _uint.bits;
 		},
-		[&](Int const& _int)
+		[&](Type::Int const& _int)
 		{
 			requireBits(_int.bits);
 			_json["kind"] = "int";
 			_json["bits"] = _int.bits;
 		},
-		[&](Bool const&) { _json["kind"] = "bool"; },
-		[&](Bytes const& _bytes)
+		[&](Type::Bool const&) { _json["kind"] = "bool"; },
+		[&](Type::Bytes const& _bytes)
 		{
 			_json["kind"] = "bytes";
 			if (_bytes.size)
 				_json["size"] = *_bytes.size;
 		},
-		[&](String const& _string)
+		[&](Type::String const& _string)
 		{
 			_json["kind"] = "string";
 			if (_string.encoding)
 				_json["encoding"] = *_string.encoding;
 		},
-		[&](UFixed const& _ufixed)
+		[&](Type::UFixed const& _ufixed)
 		{
 			requireBits(_ufixed.bits);
 			requirePlaces(_ufixed.places);
@@ -212,7 +212,7 @@ void schema::type::to_json(Json& _json, Type const& _type)
 			_json["bits"] = _ufixed.bits;
 			_json["places"] = _ufixed.places;
 		},
-		[&](Fixed const& _fixed)
+		[&](Type::Fixed const& _fixed)
 		{
 			requireBits(_fixed.bits);
 			requirePlaces(_fixed.places);
@@ -220,62 +220,62 @@ void schema::type::to_json(Json& _json, Type const& _type)
 			_json["bits"] = _fixed.bits;
 			_json["places"] = _fixed.places;
 		},
-		[&](Address const& _address)
+		[&](Type::Address const& _address)
 		{
 			_json["kind"] = "address";
 			if (_address.payable)
 				_json["payable"] = *_address.payable;
 		},
-		[&](Contract const& _contract)
+		[&](Type::Contract const& _contract)
 		{
 			_json["kind"] = "contract";
 			if (_contract.payable)
 				_json["payable"] = *_contract.payable;
-			if (_contract.kind == Contract::Kind::Library)
+			if (_contract.kind == Type::Contract::Kind::Library)
 				_json["library"] = true;
-			else if (_contract.kind == Contract::Kind::Interface)
+			else if (_contract.kind == Type::Contract::Kind::Interface)
 				_json["interface"] = true;
 			definition(_contract.definition);
 		},
-		[&](Enum const& _enum)
+		[&](Type::Enum const& _enum)
 		{
 			_json["kind"] = "enum";
 			_json["values"] = _enum.values;
 			definition(_enum.definition);
 		},
-		[&](Alias const& _alias)
+		[&](Type::Alias const& _alias)
 		{
 			_json["kind"] = "alias";
 			_json["contains"] = _alias.contains;
 			definition(_alias.definition);
 		},
-		[&](Array const& _array)
+		[&](Type::Array const& _array)
 		{
 			_json["kind"] = "array";
 			_json["contains"] = _array.contains;
 			if (_array.count)
 				_json["count"] = *_array.count;
 		},
-		[&](Mapping const& _mapping)
+		[&](Type::Mapping const& _mapping)
 		{
 			_json["kind"] = "mapping";
 			_json["contains"] = Json{{"key", _mapping.key}, {"value", _mapping.value}};
 		},
-		[&](Struct const& _struct)
+		[&](Type::Struct const& _struct)
 		{
 			_json["kind"] = "struct";
 			_json["contains"] = _struct.contains;
 			definition(_struct.definition);
 		},
-		[&](Tuple const& _tuple)
+		[&](Type::Tuple const& _tuple)
 		{
 			_json["kind"] = "tuple";
 			_json["contains"] = _tuple.contains;
 		},
-		[&](Function const& _function)
+		[&](Type::Function const& _function)
 		{
 			_json["kind"] = "function";
-			_json[_function.visibility == Function::Visibility::Internal ? "internal" : "external"] = true;
+			_json[_function.visibility == Type::Function::Visibility::Internal ? "internal" : "external"] = true;
 			Json contains{{"parameters", _function.parameters}};
 			if (_function.returns)
 				contains["returns"] = *_function.returns;
@@ -285,56 +285,56 @@ void schema::type::to_json(Json& _json, Type const& _type)
 	}, _type.value);
 }
 
-void schema::pointer::to_json(Json& _json, Expression const& _expression)
+void schema::to_json(Json& _json, Pointer::Expression const& _expression)
 {
-	auto const operands = [](Operands const& _operands, std::optional<size_t> _arity = std::nullopt) {
+	auto const operands = [](Pointer::Operands const& _operands, std::optional<size_t> _arity = std::nullopt) {
 		if (_arity)
 			solRequire(_operands.size() == *_arity, EthdebugException, "Pointer expression has the wrong number of operands.");
 		return Json(_operands);
 	};
 	std::visit(util::GenericVisitor{
-		[&](Literal const& _literal) { _json = _literal.value; },
-		[&](Variable const& _variable)
+		[&](Pointer::Literal const& _literal) { _json = _literal.value; },
+		[&](Pointer::Variable const& _variable)
 		{
 			requireIdentifier(_variable.identifier, "Pointer expression variable");
 			_json = _variable.identifier;
 		},
-		[&](Constant const _constant)
+		[&](Pointer::Constant const _constant)
 		{
-			solRequire(_constant == Constant::WordSize, EthdebugException, "Unknown pointer expression constant.");
+			solRequire(_constant == Pointer::Constant::WordSize, EthdebugException, "Unknown pointer expression constant.");
 			_json = "$wordsize";
 		},
-		[&](Lookup const& _lookup)
+		[&](Pointer::Lookup const& _lookup)
 		{
 			requireRegionReference(_lookup.region);
 			char const* property = nullptr;
 			switch (_lookup.property)
 			{
-			case Lookup::Property::Slot: property = ".slot"; break;
-			case Lookup::Property::Offset: property = ".offset"; break;
-			case Lookup::Property::Length: property = ".length"; break;
+			case Pointer::Lookup::Property::Slot: property = ".slot"; break;
+			case Pointer::Lookup::Property::Offset: property = ".offset"; break;
+			case Pointer::Lookup::Property::Length: property = ".length"; break;
 			}
 			_json = Json{{property, _lookup.region}};
 		},
-		[&](Read const& _read)
+		[&](Pointer::Read const& _read)
 		{
 			requireRegionReference(_read.region);
 			_json = Json{{"$read", _read.region}};
 		},
-		[&](Arithmetic const& _arithmetic)
+		[&](Pointer::Arithmetic const& _arithmetic)
 		{
 			switch (_arithmetic.op)
 			{
-			case Arithmetic::Operator::Sum: _json = Json{{"$sum", operands(_arithmetic.operands)}}; break;
-			case Arithmetic::Operator::Product: _json = Json{{"$product", operands(_arithmetic.operands)}}; break;
-			case Arithmetic::Operator::Difference: _json = Json{{"$difference", operands(_arithmetic.operands, 2)}}; break;
-			case Arithmetic::Operator::Quotient: _json = Json{{"$quotient", operands(_arithmetic.operands, 2)}}; break;
-			case Arithmetic::Operator::Remainder: _json = Json{{"$remainder", operands(_arithmetic.operands, 2)}}; break;
+			case Pointer::Arithmetic::Operator::Sum: _json = Json{{"$sum", operands(_arithmetic.operands)}}; break;
+			case Pointer::Arithmetic::Operator::Product: _json = Json{{"$product", operands(_arithmetic.operands)}}; break;
+			case Pointer::Arithmetic::Operator::Difference: _json = Json{{"$difference", operands(_arithmetic.operands, 2)}}; break;
+			case Pointer::Arithmetic::Operator::Quotient: _json = Json{{"$quotient", operands(_arithmetic.operands, 2)}}; break;
+			case Pointer::Arithmetic::Operator::Remainder: _json = Json{{"$remainder", operands(_arithmetic.operands, 2)}}; break;
 			}
 		},
-		[&](Keccak256 const& _keccak256) { _json = Json{{"$keccak256", operands(_keccak256.operands)}}; },
-		[&](Concat const& _concat) { _json = Json{{"$concat", operands(_concat.operands)}}; },
-		[&](Resize const& _resize)
+		[&](Pointer::Keccak256 const& _keccak256) { _json = Json{{"$keccak256", operands(_keccak256.operands)}}; },
+		[&](Pointer::Concat const& _concat) { _json = Json{{"$concat", operands(_concat.operands)}}; },
+		[&](Pointer::Resize const& _resize)
 		{
 			solRequire(_resize.operand, EthdebugException, "Resize expression without an operand.");
 			if (_resize.size)
@@ -348,7 +348,7 @@ void schema::pointer::to_json(Json& _json, Expression const& _expression)
 	}, _expression.value);
 }
 
-void schema::pointer::to_json(Json& _json, Region const& _region)
+void schema::to_json(Json& _json, Pointer::Region const& _region)
 {
 	_json = Json::object();
 	if (_region.name)
@@ -360,13 +360,13 @@ void schema::pointer::to_json(Json& _json, Region const& _region)
 	bool wordOriented = false;
 	switch (_region.location)
 	{
-	case Location::Stack: location = "stack"; wordOriented = true; break;
-	case Location::Storage: location = "storage"; wordOriented = true; break;
-	case Location::Transient: location = "transient"; wordOriented = true; break;
-	case Location::Memory: location = "memory"; break;
-	case Location::Calldata: location = "calldata"; break;
-	case Location::Returndata: location = "returndata"; break;
-	case Location::Code: location = "code"; break;
+	case Pointer::Location::Stack: location = "stack"; wordOriented = true; break;
+	case Pointer::Location::Storage: location = "storage"; wordOriented = true; break;
+	case Pointer::Location::Transient: location = "transient"; wordOriented = true; break;
+	case Pointer::Location::Memory: location = "memory"; break;
+	case Pointer::Location::Calldata: location = "calldata"; break;
+	case Pointer::Location::Returndata: location = "returndata"; break;
+	case Pointer::Location::Code: location = "code"; break;
 	}
 	_json["location"] = location;
 	// Word-oriented locations address by slot, byte-oriented ones by offset and length.
@@ -386,20 +386,20 @@ void schema::pointer::to_json(Json& _json, Region const& _region)
 		_json["length"] = *_region.length;
 }
 
-void schema::pointer::to_json(Json& _json, Pointer const& _pointer)
+void schema::to_json(Json& _json, Pointer const& _pointer)
 {
-	auto const subPointer = [](PointerPtr const& _sub, std::string_view _what) -> Pointer const& {
+	auto const subPointer = [](std::shared_ptr<Pointer const> const& _sub, std::string_view _what) -> Pointer const& {
 		solRequire(_sub, EthdebugException, std::string(_what) + " is missing.");
 		return *_sub;
 	};
 	std::visit(util::GenericVisitor{
-		[&](Region const& _region) { _json = _region; },
-		[&](Group const& _group)
+		[&](Pointer::Region const& _region) { _json = _region; },
+		[&](Pointer::Group const& _group)
 		{
 			solRequire(!_group.members.empty(), EthdebugException, "A group pointer must have at least one member.");
 			_json = Json{{"group", _group.members}};
 		},
-		[&](List const& _list)
+		[&](Pointer::List const& _list)
 		{
 			requireIdentifier(_list.each, "List index name");
 			_json = Json{{"list", Json{
@@ -408,13 +408,13 @@ void schema::pointer::to_json(Json& _json, Pointer const& _pointer)
 				{"is", subPointer(_list.is, "List element pointer")}
 			}}};
 		},
-		[&](Conditional const& _conditional)
+		[&](Pointer::Conditional const& _conditional)
 		{
 			_json = Json{{"if", _conditional.condition}, {"then", subPointer(_conditional.then, "Conditional consequent")}};
 			if (_conditional.otherwise)
 				_json["else"] = *_conditional.otherwise;
 		},
-		[&](Scope const& _scope)
+		[&](Pointer::Scope const& _scope)
 		{
 			solRequire(!_scope.definitions.empty(), EthdebugException, "A scope pointer must define at least one variable.");
 			// Definitions are ordered while JSON object members are not, so each
@@ -427,7 +427,7 @@ void schema::pointer::to_json(Json& _json, Pointer const& _pointer)
 			}
 			_json = std::move(inner);
 		},
-		[&](TemplateReference const& _reference)
+		[&](Pointer::TemplateReference const& _reference)
 		{
 			requireIdentifier(_reference.name, "Template name");
 			_json = Json{{"template", _reference.name}};
@@ -443,7 +443,7 @@ void schema::pointer::to_json(Json& _json, Pointer const& _pointer)
 				_json["yields"] = std::move(yields);
 			}
 		},
-		[&](Templates const& _templates)
+		[&](Pointer::Templates const& _templates)
 		{
 			Json templates = Json::object();
 			for (auto const& [templateName, definition]: _templates.templates)
@@ -456,7 +456,7 @@ void schema::pointer::to_json(Json& _json, Pointer const& _pointer)
 	}, _pointer.value);
 }
 
-void schema::pointer::to_json(Json& _json, Template const& _template)
+void schema::to_json(Json& _json, Pointer::Template const& _template)
 {
 	for (std::string const& parameter: _template.expect)
 		requireIdentifier(parameter, "Template parameter");

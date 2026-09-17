@@ -194,8 +194,8 @@ Json ethdebug::program(std::string_view _name, unsigned _sourceID, Assembly cons
 Json ethdebug::resources(
 	std::vector<Source> const& _sources,
 	std::string_view _version,
-	std::map<std::string, schema::type::Type> _types,
-	std::map<std::string, schema::pointer::Template> _pointers
+	std::map<std::string, schema::Type> _types,
+	std::map<std::string, schema::Pointer::Template> _pointers
 )
 {
 	schema::info::Resources result;
