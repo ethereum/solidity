@@ -40,14 +40,24 @@ contract C {
 //                             "location": "storage",
 //                             "name": "packed-item",
 //                             "offset": {
-//                                 "$product": [
+//                                 "$difference": [
+//                                     "$wordsize",
 //                                     {
-//                                         "$remainder": [
-//                                             "packed-index",
-//                                             "0x20"
+//                                         "$product": [
+//                                             {
+//                                                 "$sum": [
+//                                                     {
+//                                                         "$remainder": [
+//                                                             "packed-index",
+//                                                             "0x20"
+//                                                         ]
+//                                                     },
+//                                                     "0x01"
+//                                                 ]
+//                                             },
+//                                             "0x01"
 //                                         ]
-//                                     },
-//                                     "0x01"
+//                                     }
 //                                 ]
 //                             },
 //                             "slot": {
@@ -156,6 +166,7 @@ contract C {
 //                                     "length": "0x01",
 //                                     "location": "storage",
 //                                     "name": "points-item-x",
+//                                     "offset": "0x1f",
 //                                     "slot": {
 //                                         "$sum": [
 //                                             "points-data",
@@ -167,7 +178,7 @@ contract C {
 //                                     "length": "0x01",
 //                                     "location": "storage",
 //                                     "name": "points-item-y",
-//                                     "offset": "0x01",
+//                                     "offset": "0x1e",
 //                                     "slot": {
 //                                         "$sum": [
 //                                             "points-data",

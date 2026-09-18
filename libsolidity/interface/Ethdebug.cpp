@@ -431,7 +431,9 @@ class StateVariablePointerBuilder
 public:
 	explicit StateVariablePointerBuilder(schema::Pointer::Location _location): m_location(_location) {}
 
-	Pointer build(Type const& _type, Expression _slot, std::optional<Expression> _offset, std::string const& _name)
+	/// @a _layoutOffset is the byte offset of the value in its slot as the storage
+	/// layout counts it, from the least significant byte.
+	Pointer build(Type const& _type, Expression _slot, unsigned _layoutOffset, std::string const& _name)
 	{
 		if (auto const* mappingType = dynamic_cast<MappingType const*>(&_type))
 			return buildMapping(*mappingType, std::move(_slot), _name);
@@ -448,7 +450,7 @@ public:
 		if (auto const* structType = dynamic_cast<StructType const*>(&_type))
 			return buildStruct(*structType, std::move(_slot), _name);
 
-		return wholeRegion(_type, std::move(_slot), std::move(_offset), _name);
+		return wholeRegion(_type, std::move(_slot), _layoutOffset, _name);
 	}
 
 	std::vector<std::string> takeExpectedParameters() { return std::move(m_expectedParameters); }
@@ -457,13 +459,25 @@ private:
 	/// A single region covering the value as laid out from its base slot. Used
 	/// for value types and as the fallback for compositions that are not (or
 	/// cannot be) decomposed further.
-	Pointer wholeRegion(Type const& _type, Expression _slot, std::optional<Expression> _offset, std::string const& _name)
+	///
+	/// A region's offset counts from the most significant byte of the slot,
+	/// while the storage layout packs values from the least significant one,
+	/// so a value of @a byteLength bytes at layout offset o starts at byte
+	/// 32 - o - byteLength of its slot.
+	Pointer wholeRegion(Type const& _type, Expression _slot, unsigned _layoutOffset, std::string const& _name)
 	{
 		u256 const byteLength = u256(_type.storageBytes()) * _type.storageSize();
-		std::optional<Expression> length;
-		if (_offset.has_value() || byteLength != 32)
-			length = literal(byteLength);
-		return region(m_location, _name, std::move(_slot), std::move(_offset), std::move(length));
+		if (byteLength >= 32)
+		{
+			solAssert(_layoutOffset == 0, "A value spanning whole slots cannot be packed.");
+			return region(m_location, _name, std::move(_slot));
+		}
+		solAssert(_layoutOffset + byteLength <= 32, "A packed value does not fit its slot.");
+		u256 const offset = 32 - _layoutOffset - byteLength;
+		std::optional<Expression> offsetExpression;
+		if (offset != 0)
+			offsetExpression = literal(offset);
+		return region(m_location, _name, std::move(_slot), std::move(offsetExpression), literal(byteLength));
 	}
 
 	/// The mapping value lives at `keccak256(pad(key) . slot)`. The key is not
@@ -482,7 +496,7 @@ private:
 			keyExpression = wordSized(std::move(keyExpression));
 
 		Expression valueSlot = keccak256({std::move(keyExpression), wordSized(std::move(_slot))});
-		return build(*_mappingType.valueType(), std::move(valueSlot), std::nullopt, _name);
+		return build(*_mappingType.valueType(), std::move(valueSlot), 0, _name);
 	}
 
 	/// Dynamic arrays store their element count in the base slot and their data
@@ -516,6 +530,8 @@ private:
 		Pointer element = [&]() {
 			if (elementType.storageBytes() < 32)
 			{
+				// Packed k to a slot from the least significant byte: element i is
+				// in slot i / k, starting at byte 32 - (i % k + 1) * size.
 				solAssert(elementType.isValueType(), "Only value types can be packed.");
 				u256 const elementBytes = elementType.storageBytes();
 				u256 const elementsPerSlot = 32 / elementBytes;
@@ -523,7 +539,10 @@ private:
 					m_location,
 					elementName,
 					sum({std::move(_dataStart), quotient(variable(indexName), literal(elementsPerSlot))}),
-					product({remainder(variable(indexName), literal(elementsPerSlot)), literal(elementBytes)}),
+					difference(
+						wordSize(),
+						product({sum({remainder(variable(indexName), literal(elementsPerSlot)), literal(1)}), literal(elementBytes)})
+					),
 					literal(elementBytes)
 				);
 			}
@@ -531,7 +550,7 @@ private:
 			Expression stride = slotsPerElement == 1
 				? variable(indexName)
 				: product({variable(indexName), literal(slotsPerElement)});
-			return build(elementType, sum({std::move(_dataStart), std::move(stride)}), std::nullopt, elementName);
+			return build(elementType, sum({std::move(_dataStart), std::move(stride)}), 0, elementName);
 		}();
 
 		return list(std::move(_count), indexName, std::move(element));
@@ -592,7 +611,7 @@ private:
 		// Recursive structs and pathological nesting fall back to a region
 		// covering the struct's slots.
 		if (m_depth >= maxCompositionDepth || m_structsOnPath.count(_structType.identifier()))
-			return wholeRegion(_structType, std::move(_slot), std::nullopt, _name);
+			return wholeRegion(_structType, std::move(_slot), 0, _name);
 
 		m_structsOnPath.insert(_structType.identifier());
 		++m_depth;
@@ -603,13 +622,10 @@ private:
 			if (!member->annotation().type)
 				continue;
 			auto const& [slotOffset, byteOffset] = _structType.storageOffsetsOfMember(member->name());
-			std::optional<Expression> offset;
-			if (byteOffset != 0)
-				offset = literal(byteOffset);
 			members.emplace_back(build(
 				*member->annotation().type,
 				advanceSlots(_slot, slotOffset),
-				std::move(offset),
+				byteOffset,
 				_name + "-" + member->name()
 			));
 		}
@@ -618,7 +634,7 @@ private:
 		m_structsOnPath.erase(_structType.identifier());
 
 		if (members.empty())
-			return wholeRegion(_structType, std::move(_slot), std::nullopt, _name);
+			return wholeRegion(_structType, std::move(_slot), 0, _name);
 		return group(std::move(members));
 	}
 
@@ -655,13 +671,10 @@ schema::Pointer::Template stateVariableTemplate(
 	solAssert(_variable.annotation().type, "State variable type expected.");
 
 	StateVariablePointerBuilder builder{_location};
-	std::optional<Expression> offset;
-	if (_offset != 0)
-		offset = literal(_offset);
 	Pointer pointer = builder.build(
 		*_variable.annotation().type,
 		literal(_slot),
-		std::move(offset),
+		_offset,
 		identifier(_variable.name())
 	);
 	return schema::Pointer::Template{builder.takeExpectedParameters(), std::make_shared<Pointer const>(std::move(pointer))};

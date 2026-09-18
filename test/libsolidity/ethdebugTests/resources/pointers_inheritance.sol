@@ -22,7 +22,7 @@ contract D is Base {
 //         "length": "0x01",
 //         "location": "storage",
 //         "name": "packedOwn",
-//         "offset": "0x01",
+//         "offset": "0x1e",
 //         "slot": "0x01"
 //     }
 // }
@@ -48,6 +48,7 @@ contract D is Base {
 //         "length": "0x01",
 //         "location": "storage",
 //         "name": "packedBase",
+//         "offset": "0x1f",
 //         "slot": "0x01"
 //     }
 // }
@@ -160,6 +161,7 @@ contract D is Base {
 //         "length": "0x01",
 //         "location": "storage",
 //         "name": "packedBase",
+//         "offset": "0x1f",
 //         "slot": "0x01"
 //     }
 // }
@@ -177,6 +179,7 @@ contract D is Base {
 //         "length": "0x01",
 //         "location": "storage",
 //         "name": "packedBase",
+//         "offset": "0x1f",
 //         "slot": "0x01"
 //     }
 // }

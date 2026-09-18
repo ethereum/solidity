@@ -18,20 +18,21 @@ contract C {
 //                 "length": "0x01",
 //                 "location": "storage",
 //                 "name": "point-x",
+//                 "offset": "0x1f",
 //                 "slot": "0x00"
 //             },
 //             {
 //                 "length": "0x01",
 //                 "location": "storage",
 //                 "name": "point-y",
-//                 "offset": "0x01",
+//                 "offset": "0x1e",
 //                 "slot": "0x00"
 //             },
 //             {
 //                 "length": "0x04",
 //                 "location": "storage",
 //                 "name": "point-salt",
-//                 "offset": "0x02",
+//                 "offset": "0x1a",
 //                 "slot": "0x00"
 //             }
 //         ]
@@ -47,20 +48,21 @@ contract C {
 //                         "length": "0x01",
 //                         "location": "storage",
 //                         "name": "line-from-x",
+//                         "offset": "0x1f",
 //                         "slot": "0x01"
 //                     },
 //                     {
 //                         "length": "0x01",
 //                         "location": "storage",
 //                         "name": "line-from-y",
-//                         "offset": "0x01",
+//                         "offset": "0x1e",
 //                         "slot": "0x01"
 //                     },
 //                     {
 //                         "length": "0x04",
 //                         "location": "storage",
 //                         "name": "line-from-salt",
-//                         "offset": "0x02",
+//                         "offset": "0x1a",
 //                         "slot": "0x01"
 //                     }
 //                 ]
@@ -71,20 +73,21 @@ contract C {
 //                         "length": "0x01",
 //                         "location": "storage",
 //                         "name": "line-to-x",
+//                         "offset": "0x1f",
 //                         "slot": "0x02"
 //                     },
 //                     {
 //                         "length": "0x01",
 //                         "location": "storage",
 //                         "name": "line-to-y",
-//                         "offset": "0x01",
+//                         "offset": "0x1e",
 //                         "slot": "0x02"
 //                     },
 //                     {
 //                         "length": "0x04",
 //                         "location": "storage",
 //                         "name": "line-to-salt",
-//                         "offset": "0x02",
+//                         "offset": "0x1a",
 //                         "slot": "0x02"
 //                     }
 //                 ]

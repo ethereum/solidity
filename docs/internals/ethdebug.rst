@@ -133,12 +133,14 @@ The kinds of types are laid out as follows, where ``slot`` stands for the expres
 
 Value types
     A single region ``{"location": ..., "name": <name>, "slot": slot}``.
-    A value packed with others carries its ``offset`` in the slot and its ``length`` in bytes; a value narrower than a word at offset zero carries only the ``length``.
+    A value narrower than a word carries its ``length`` in bytes and its ``offset`` in the slot.
+    The offset counts from the most significant byte of the slot, as the pointer format's segment addressing does, while the storage layout packs values from the least significant byte: a value of *n* bytes at layout offset *o* starts at byte 32 - *o* - *n*, so a ``uint8`` alone in its slot is at offset 31 and an ``address`` packed after two bytes is at offset 10.
+    An offset of zero is omitted.
 
 Static arrays ``T[N]``
     A ``list`` with ``count`` ``N`` and the index variable ``<name>-index``, whose element ``<name>-item`` is:
 
-    - for a value type narrower than a word, packed *k* to a slot, the region at slot ``slot + index / k``, offset ``(index % k) * size`` and length ``size``,
+    - for a value type narrower than a word, packed *k* to a slot from the least significant byte, the region at slot ``slot + index / k``, offset ``$wordsize - (index % k + 1) * size`` and length ``size``,
     - otherwise the pointer of the element type at ``slot + index * slots``, with ``slots`` being the storage size of the element type, omitted when it is one.
 
 Dynamic arrays ``T[]``

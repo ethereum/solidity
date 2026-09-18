@@ -114,7 +114,8 @@ Since ethdebug identifiers must not start with ``$`` but Solidity identifiers ma
         mapping(address => uint256) balances;
     }
 
-The resources of this contract contain these pointer templates, keyed by the AST IDs of ``C`` and of the three variables:
+The resources of this contract contain these pointer templates, keyed by the AST IDs of ``C`` and of the three variables.
+The two members of ``origin`` share slot 1: a region's ``offset`` counts from the most significant byte of the slot, so the ``uint8`` in the least significant byte is at offset 31 and the one before it at offset 30.
 
 .. code-block:: json
 
@@ -127,8 +128,8 @@ The resources of this contract contain these pointer templates, keyed by the AST
             "expect": [],
             "for": {
                 "group": [
-                    {"location": "storage", "name": "origin-x", "slot": "0x01", "length": "0x01"},
-                    {"location": "storage", "name": "origin-y", "slot": "0x01", "offset": "0x01", "length": "0x01"}
+                    {"location": "storage", "name": "origin-x", "slot": "0x01", "offset": "0x1f", "length": "0x01"},
+                    {"location": "storage", "name": "origin-y", "slot": "0x01", "offset": "0x1e", "length": "0x01"}
                 ]
             }
         },

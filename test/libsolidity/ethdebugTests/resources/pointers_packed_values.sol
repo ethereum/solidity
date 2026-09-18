@@ -34,6 +34,7 @@ contract C {
 //         "length": "0x10",
 //         "location": "storage",
 //         "name": "g",
+//         "offset": "0x10",
 //         "slot": "0x03"
 //     }
 // }
@@ -43,7 +44,6 @@ contract C {
 //         "length": "0x10",
 //         "location": "storage",
 //         "name": "h",
-//         "offset": "0x10",
 //         "slot": "0x03"
 //     }
 // }
@@ -53,6 +53,7 @@ contract C {
 //         "length": "0x08",
 //         "location": "storage",
 //         "name": "i",
+//         "offset": "0x18",
 //         "slot": "0x04"
 //     }
 // }
@@ -62,6 +63,7 @@ contract C {
 //         "length": "0x01",
 //         "location": "storage",
 //         "name": "a",
+//         "offset": "0x1f",
 //         "slot": "0x00"
 //     }
 // }
@@ -71,7 +73,7 @@ contract C {
 //         "length": "0x02",
 //         "location": "storage",
 //         "name": "b",
-//         "offset": "0x01",
+//         "offset": "0x1d",
 //         "slot": "0x00"
 //     }
 // }
@@ -81,7 +83,7 @@ contract C {
 //         "length": "0x01",
 //         "location": "storage",
 //         "name": "c",
-//         "offset": "0x03",
+//         "offset": "0x1c",
 //         "slot": "0x00"
 //     }
 // }
@@ -91,7 +93,7 @@ contract C {
 //         "length": "0x14",
 //         "location": "storage",
 //         "name": "d",
-//         "offset": "0x04",
+//         "offset": "0x08",
 //         "slot": "0x00"
 //     }
 // }

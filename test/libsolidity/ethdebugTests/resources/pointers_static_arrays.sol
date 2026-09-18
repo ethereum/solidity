@@ -21,14 +21,24 @@ contract C {
 //                 "location": "storage",
 //                 "name": "packed-item",
 //                 "offset": {
-//                     "$product": [
+//                     "$difference": [
+//                         "$wordsize",
 //                         {
-//                             "$remainder": [
-//                                 "packed-index",
-//                                 "0x10"
+//                             "$product": [
+//                                 {
+//                                     "$sum": [
+//                                         {
+//                                             "$remainder": [
+//                                                 "packed-index",
+//                                                 "0x10"
+//                                             ]
+//                                         },
+//                                         "0x01"
+//                                     ]
+//                                 },
+//                                 "0x02"
 //                             ]
-//                         },
-//                         "0x02"
+//                         }
 //                     ]
 //                 },
 //                 "slot": {
@@ -76,14 +86,24 @@ contract C {
 //                 "location": "storage",
 //                 "name": "halves-item",
 //                 "offset": {
-//                     "$product": [
+//                     "$difference": [
+//                         "$wordsize",
 //                         {
-//                             "$remainder": [
-//                                 "halves-index",
-//                                 "0x02"
+//                             "$product": [
+//                                 {
+//                                     "$sum": [
+//                                         {
+//                                             "$remainder": [
+//                                                 "halves-index",
+//                                                 "0x02"
+//                                             ]
+//                                         },
+//                                         "0x01"
+//                                     ]
+//                                 },
+//                                 "0x10"
 //                             ]
-//                         },
-//                         "0x10"
+//                         }
 //                     ]
 //                 },
 //                 "slot": {
@@ -148,6 +168,7 @@ contract C {
 //                         "length": "0x01",
 //                         "location": "storage",
 //                         "name": "points-item-x",
+//                         "offset": "0x1f",
 //                         "slot": {
 //                             "$sum": [
 //                                 "0x0a",
@@ -159,7 +180,7 @@ contract C {
 //                         "length": "0x01",
 //                         "location": "storage",
 //                         "name": "points-item-y",
-//                         "offset": "0x01",
+//                         "offset": "0x1e",
 //                         "slot": {
 //                             "$sum": [
 //                                 "0x0a",

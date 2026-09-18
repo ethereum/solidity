@@ -219,6 +219,17 @@ class EthdebugTestCase(unittest.TestCase):
         else:
             self.assertIn("template", pointer, f"Unknown pointer shape: {pointer}")
 
+    def assertRegionCoversLayoutOffset(self, region, layout_offset):
+        """A region's offset counts from the most significant byte of the slot, the storage
+        layout's from the least significant one; a value of `length` bytes at layout offset
+        `o` therefore starts at byte `32 - o - length`, and a whole word has neither."""
+        if "length" in region:
+            offset = int(region.get("offset", "0x00"), 16)
+            self.assertEqual(offset + int(region["length"], 16) + layout_offset, 32)
+        else:
+            self.assertNotIn("offset", region)
+            self.assertEqual(layout_offset, 0)
+
     def assertTemplateIsClosed(self, template):
         self.assertEqual(len(template["expect"]), len(set(template["expect"])))
         self.assertPointerIsClosed(template["for"], set(template["expect"]), region_names(template["for"]))
@@ -395,7 +406,7 @@ class EthdebugSchemaConformityTest(EthdebugTestCase):
                             # A mapping value's slot is computed from the keys; anything else is at the layout's slot.
                             if not template["expect"]:
                                 self.assertEqual(int(pointer["slot"], 16), int(variable["slot"]))
-                                self.assertEqual(int(pointer.get("offset", "0x00"), 16), variable["offset"])
+                                self.assertRegionCoversLayoutOffset(pointer, variable["offset"])
                         else:
                             self.assertTrue(
                                 any(name.startswith(variable["label"]) for name in region_names(pointer)),

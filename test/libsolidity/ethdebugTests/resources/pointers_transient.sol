@@ -32,6 +32,7 @@ contract C {
 //         "length": "0x01",
 //         "location": "transient",
 //         "name": "a",
+//         "offset": "0x1f",
 //         "slot": "0x01"
 //     }
 // }
@@ -41,7 +42,7 @@ contract C {
 //         "length": "0x01",
 //         "location": "transient",
 //         "name": "b",
-//         "offset": "0x01",
+//         "offset": "0x1e",
 //         "slot": "0x01"
 //     }
 // }
@@ -51,7 +52,7 @@ contract C {
 //         "length": "0x14",
 //         "location": "transient",
 //         "name": "c",
-//         "offset": "0x02",
+//         "offset": "0x0a",
 //         "slot": "0x01"
 //     }
 // }

@@ -40,6 +40,7 @@ contract C {
 //         "length": "0x01",
 //         "location": "storage",
 //         "name": "nested",
+//         "offset": "0x1f",
 //         "slot": {
 //             "$keccak256": [
 //                 {
@@ -105,6 +106,7 @@ contract C {
 //                 "length": "0x01",
 //                 "location": "storage",
 //                 "name": "points-x",
+//                 "offset": "0x1f",
 //                 "slot": {
 //                     "$keccak256": [
 //                         {
@@ -120,7 +122,7 @@ contract C {
 //                 "length": "0x01",
 //                 "location": "storage",
 //                 "name": "points-y",
-//                 "offset": "0x01",
+//                 "offset": "0x1e",
 //                 "slot": {
 //                     "$keccak256": [
 //                         {
@@ -206,6 +208,7 @@ contract C {
 //         "length": "0x01",
 //         "location": "storage",
 //         "name": "deep",
+//         "offset": "0x1f",
 //         "slot": {
 //             "$keccak256": [
 //                 {
