@@ -222,13 +222,20 @@ class EthdebugTestCase(unittest.TestCase):
     def assertRegionCoversLayoutOffset(self, region, layout_offset):
         """A region's offset counts from the most significant byte of the slot, the storage
         layout's from the least significant one; a value of `length` bytes at layout offset
-        `o` therefore starts at byte `32 - o - length`, and a whole word has neither."""
-        if "length" in region:
-            offset = int(region.get("offset", "0x00"), 16)
-            self.assertEqual(offset + int(region["length"], 16) + layout_offset, 32)
-        else:
+        `o` therefore starts at byte `32 - o - length`. A region without a length covers
+        the rest of its slot, and one whose length exceeds a slot starts at the beginning
+        of the first one."""
+        if "length" not in region:
             self.assertNotIn("offset", region)
             self.assertEqual(layout_offset, 0)
+            return
+        offset = int(region.get("offset", "0x00"), 16)
+        length = int(region["length"], 16)
+        if length >= 32:
+            self.assertEqual(offset, 0)
+            self.assertEqual(layout_offset, 0)
+        else:
+            self.assertEqual(offset + length + layout_offset, 32)
 
     def assertTemplateIsClosed(self, template):
         self.assertEqual(len(template["expect"]), len(set(template["expect"])))

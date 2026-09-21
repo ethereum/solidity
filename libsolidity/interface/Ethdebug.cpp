@@ -470,7 +470,13 @@ private:
 		if (byteLength >= 32)
 		{
 			solAssert(_layoutOffset == 0, "A value spanning whole slots cannot be packed.");
-			return region(m_location, _name, std::move(_slot));
+			// A region without a length covers the rest of its slot. A value spanning
+			// several slots states its length, which the segment addressing of
+			// ethdebug/format continues into the slots following the one addressed.
+			std::optional<Expression> length;
+			if (byteLength != 32)
+				length = literal(byteLength);
+			return region(m_location, _name, std::move(_slot), std::nullopt, std::move(length));
 		}
 		solAssert(_layoutOffset + byteLength <= 32, "A packed value does not fit its slot.");
 		u256 const offset = 32 - _layoutOffset - byteLength;

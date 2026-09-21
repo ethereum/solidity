@@ -135,7 +135,8 @@ Value types
     A single region ``{"location": ..., "name": <name>, "slot": slot}``.
     A value narrower than a word carries its ``length`` in bytes and its ``offset`` in the slot.
     The offset counts from the most significant byte of the slot, as the pointer format's segment addressing does, while the storage layout packs values from the least significant byte: a value of *n* bytes at layout offset *o* starts at byte 32 - *o* - *n*, so a ``uint8`` alone in its slot is at offset 31 and an ``address`` packed after two bytes is at offset 10.
-    An offset of zero is omitted.
+    An offset of zero is omitted, and so is a ``length`` of a whole word, since a region without one covers the rest of its slot.
+    A value occupying several slots states its ``length``, which the segment addressing continues into the slots following the one addressed.
 
 Static arrays ``T[N]``
     A ``list`` with ``count`` ``N`` and the index variable ``<name>-index``, whose element ``<name>-item`` is:
@@ -155,7 +156,7 @@ Dynamic arrays ``T[]``
 
 Structs
     A ``group`` of the pointers of the members, named ``<name>-<member>``, each built from its type at ``slot`` advanced by the member's slot offset and, when packed, at its byte offset.
-    A struct nested in itself, which is possible through arrays and mappings, or nested deeper than 16 levels is not decomposed further; it becomes a single region covering its slots.
+    A struct nested in itself, which is possible through arrays and mappings, or nested deeper than 16 levels is not decomposed further; it becomes a single region over all of its slots, whose ``length`` is the number of bytes they hold.
 
 Mappings ``mapping(K => V)``
     The pointer of the value type ``V`` at ``keccak256(wordsized(key), wordsized(slot))``.
