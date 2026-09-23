@@ -1173,7 +1173,9 @@ Json CompilerStack::ethdebug() const
 
 Json CompilerStack::ethdebugCompilation() const
 {
-	solAssert(m_stackState >= AnalysisSuccessful, "Analysis was not successful.");
+	// The compilation record lists the sources as given; nothing in it depends
+	// on parsing or analysis.
+	solAssert(m_stackState >= SourcesSet, "No sources set.");
 	return evmasm::ethdebug::compilation(ethdebugSources(), VersionString);
 }
 
