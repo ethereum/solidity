@@ -147,4 +147,4 @@ contract C {
 // }
 // .resources.types.t_uint256: {"bits":256,"kind":"uint"}
 // .resources.types.t_uint8: {"bits":8,"kind":"uint"}
-// .resources.pointers | keys: ["storage_39_20","storage_39_23","storage_39_27","storage_39_34","storage_39_38"]
+// .resources.pointers | keys: ["t_mapping$_t_address_$_t_mapping$_t_uint256_$_t_struct$_Line_$17_storage_$_$","t_mapping$_t_address_$_t_uint256_$","t_mapping$_t_string_memory_ptr_$_t_bool_$","t_mapping$_t_uint256_$_t_struct$_Line_$17_storage_$","t_string_storage","t_struct$_Line_$17_storage","t_struct$_Point_$8_storage"]

@@ -4,39 +4,41 @@ contract C {
 }
 // ----
 // .resources.types | keys: ["t_bytes_storage","t_string_storage"]
-// .resources.pointers | keys: ["storage_6_3","storage_6_5"]
-// .resources.pointers.storage_6_3: {
-//     "expect": [],
+// .resources.pointers | keys: ["t_bytes_storage","t_string_storage"]
+// .resources.pointers.t_bytes_storage: {
+//     "expect": [
+//         "slot"
+//     ],
 //     "for": {
 //         "group": [
 //             {
 //                 "length": "0x01",
 //                 "location": "storage",
-//                 "name": "blob-length-flag",
+//                 "name": "length-flag",
 //                 "offset": {
 //                     "$difference": [
 //                         "$wordsize",
 //                         "0x01"
 //                     ]
 //                 },
-//                 "slot": "0x00"
+//                 "slot": "slot"
 //             },
 //             {
 //                 "else": {
 //                     "group": [
 //                         {
 //                             "location": "storage",
-//                             "name": "blob-long-length",
-//                             "slot": "0x00"
+//                             "name": "long-length",
+//                             "slot": "slot"
 //                         },
 //                         {
 //                             "define": {
-//                                 "blob-length": {
+//                                 "length": {
 //                                     "$quotient": [
 //                                         {
 //                                             "$difference": [
 //                                                 {
-//                                                     "$read": "blob-long-length"
+//                                                     "$read": "long-length"
 //                                                 },
 //                                                 "0x01"
 //                                             ]
@@ -47,19 +49,19 @@ contract C {
 //                             },
 //                             "in": {
 //                                 "define": {
-//                                     "blob-data": {
+//                                     "start": {
 //                                         "$keccak256": [
 //                                             {
-//                                                 "$wordsized": "0x00"
+//                                                 "$wordsized": "slot"
 //                                             }
 //                                         ]
 //                                     }
 //                                 },
 //                                 "in": {
-//                                     "length": "blob-length",
+//                                     "length": "length",
 //                                     "location": "storage",
-//                                     "name": "blob",
-//                                     "slot": "blob-data"
+//                                     "name": "data",
+//                                     "slot": "start"
 //                                 }
 //                             }
 //                         }
@@ -70,7 +72,7 @@ contract C {
 //                         {
 //                             "$sum": [
 //                                 {
-//                                     "$read": "blob-length-flag"
+//                                     "$read": "length-flag"
 //                                 },
 //                                 "0x01"
 //                             ]
@@ -80,58 +82,60 @@ contract C {
 //                 },
 //                 "then": {
 //                     "define": {
-//                         "blob-length": {
+//                         "length": {
 //                             "$quotient": [
 //                                 {
-//                                     "$read": "blob-length-flag"
+//                                     "$read": "length-flag"
 //                                 },
 //                                 "0x02"
 //                             ]
 //                         }
 //                     },
 //                     "in": {
-//                         "length": "blob-length",
+//                         "length": "length",
 //                         "location": "storage",
-//                         "name": "blob",
-//                         "slot": "0x00"
+//                         "name": "data",
+//                         "slot": "slot"
 //                     }
 //                 }
 //             }
 //         ]
 //     }
 // }
-// .resources.pointers.storage_6_5: {
-//     "expect": [],
+// .resources.pointers.t_string_storage: {
+//     "expect": [
+//         "slot"
+//     ],
 //     "for": {
 //         "group": [
 //             {
 //                 "length": "0x01",
 //                 "location": "storage",
-//                 "name": "text-length-flag",
+//                 "name": "length-flag",
 //                 "offset": {
 //                     "$difference": [
 //                         "$wordsize",
 //                         "0x01"
 //                     ]
 //                 },
-//                 "slot": "0x01"
+//                 "slot": "slot"
 //             },
 //             {
 //                 "else": {
 //                     "group": [
 //                         {
 //                             "location": "storage",
-//                             "name": "text-long-length",
-//                             "slot": "0x01"
+//                             "name": "long-length",
+//                             "slot": "slot"
 //                         },
 //                         {
 //                             "define": {
-//                                 "text-length": {
+//                                 "length": {
 //                                     "$quotient": [
 //                                         {
 //                                             "$difference": [
 //                                                 {
-//                                                     "$read": "text-long-length"
+//                                                     "$read": "long-length"
 //                                                 },
 //                                                 "0x01"
 //                                             ]
@@ -142,19 +146,19 @@ contract C {
 //                             },
 //                             "in": {
 //                                 "define": {
-//                                     "text-data": {
+//                                     "start": {
 //                                         "$keccak256": [
 //                                             {
-//                                                 "$wordsized": "0x01"
+//                                                 "$wordsized": "slot"
 //                                             }
 //                                         ]
 //                                     }
 //                                 },
 //                                 "in": {
-//                                     "length": "text-length",
+//                                     "length": "length",
 //                                     "location": "storage",
-//                                     "name": "text",
-//                                     "slot": "text-data"
+//                                     "name": "data",
+//                                     "slot": "start"
 //                                 }
 //                             }
 //                         }
@@ -165,7 +169,7 @@ contract C {
 //                         {
 //                             "$sum": [
 //                                 {
-//                                     "$read": "text-length-flag"
+//                                     "$read": "length-flag"
 //                                 },
 //                                 "0x01"
 //                             ]
@@ -175,20 +179,20 @@ contract C {
 //                 },
 //                 "then": {
 //                     "define": {
-//                         "text-length": {
+//                         "length": {
 //                             "$quotient": [
 //                                 {
-//                                     "$read": "text-length-flag"
+//                                     "$read": "length-flag"
 //                                 },
 //                                 "0x02"
 //                             ]
 //                         }
 //                     },
 //                     "in": {
-//                         "length": "text-length",
+//                         "length": "length",
 //                         "location": "storage",
-//                         "name": "text",
-//                         "slot": "0x01"
+//                         "name": "data",
+//                         "slot": "slot"
 //                     }
 //                 }
 //             }

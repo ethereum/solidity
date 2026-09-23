@@ -9,22 +9,24 @@ contract C {
 }
 // ----
 // .resources.types | keys: ["t_array$_t_array$_t_uint256_$2_storage_$dyn_storage","t_array$_t_string_storage_$dyn_storage","t_array$_t_struct$_Point_$6_storage_$dyn_storage","t_array$_t_uint256_$2_storage","t_array$_t_uint256_$dyn_storage","t_array$_t_uint8_$dyn_storage","t_string_storage","t_struct$_Point_$6_storage","t_uint256","t_uint8"]
-// .resources.pointers | keys: ["storage_25_12","storage_25_17","storage_25_21","storage_25_24","storage_25_9"]
-// .resources.pointers.storage_25_12: {
-//     "expect": [],
+// .resources.pointers | keys: ["t_array$_t_array$_t_uint256_$2_storage_$dyn_storage","t_array$_t_string_storage_$dyn_storage","t_array$_t_struct$_Point_$6_storage_$dyn_storage","t_array$_t_uint256_$2_storage","t_array$_t_uint256_$dyn_storage","t_array$_t_uint8_$dyn_storage","t_string_storage","t_struct$_Point_$6_storage"]
+// .resources.pointers.t_array$_t_array$_t_uint256_$2_storage_$dyn_storage: {
+//     "expect": [
+//         "slot"
+//     ],
 //     "for": {
 //         "group": [
 //             {
 //                 "location": "storage",
-//                 "name": "packed-length",
-//                 "slot": "0x01"
+//                 "name": "length",
+//                 "slot": "slot"
 //             },
 //             {
 //                 "define": {
-//                     "packed-data": {
+//                     "data": {
 //                         "$keccak256": [
 //                             {
-//                                 "$wordsized": "0x01"
+//                                 "$wordsized": "slot"
 //                             }
 //                         ]
 //                     }
@@ -32,27 +34,241 @@ contract C {
 //                 "in": {
 //                     "list": {
 //                         "count": {
-//                             "$read": "packed-length"
+//                             "$read": "length"
 //                         },
-//                         "each": "packed-index",
+//                         "each": "index",
+//                         "is": {
+//                             "define": {
+//                                 "slot": {
+//                                     "$sum": [
+//                                         "data",
+//                                         {
+//                                             "$product": [
+//                                                 "index",
+//                                                 "0x02"
+//                                             ]
+//                                         }
+//                                     ]
+//                                 }
+//                             },
+//                             "in": {
+//                                 "template": "t_array$_t_uint256_$2_storage",
+//                                 "yields": {
+//                                     "item": "item-item"
+//                                 }
+//                             }
+//                         }
+//                     }
+//                 }
+//             }
+//         ]
+//     }
+// }
+// .resources.pointers.t_array$_t_string_storage_$dyn_storage: {
+//     "expect": [
+//         "slot"
+//     ],
+//     "for": {
+//         "group": [
+//             {
+//                 "location": "storage",
+//                 "name": "length",
+//                 "slot": "slot"
+//             },
+//             {
+//                 "define": {
+//                     "data": {
+//                         "$keccak256": [
+//                             {
+//                                 "$wordsized": "slot"
+//                             }
+//                         ]
+//                     }
+//                 },
+//                 "in": {
+//                     "list": {
+//                         "count": {
+//                             "$read": "length"
+//                         },
+//                         "each": "index",
+//                         "is": {
+//                             "define": {
+//                                 "slot": {
+//                                     "$sum": [
+//                                         "data",
+//                                         "index"
+//                                     ]
+//                                 }
+//                             },
+//                             "in": {
+//                                 "template": "t_string_storage",
+//                                 "yields": {
+//                                     "data": "item-data",
+//                                     "length-flag": "item-length-flag",
+//                                     "long-length": "item-long-length"
+//                                 }
+//                             }
+//                         }
+//                     }
+//                 }
+//             }
+//         ]
+//     }
+// }
+// .resources.pointers.t_array$_t_struct$_Point_$6_storage_$dyn_storage: {
+//     "expect": [
+//         "slot"
+//     ],
+//     "for": {
+//         "group": [
+//             {
+//                 "location": "storage",
+//                 "name": "length",
+//                 "slot": "slot"
+//             },
+//             {
+//                 "define": {
+//                     "data": {
+//                         "$keccak256": [
+//                             {
+//                                 "$wordsized": "slot"
+//                             }
+//                         ]
+//                     }
+//                 },
+//                 "in": {
+//                     "list": {
+//                         "count": {
+//                             "$read": "length"
+//                         },
+//                         "each": "index",
+//                         "is": {
+//                             "define": {
+//                                 "slot": {
+//                                     "$sum": [
+//                                         "data",
+//                                         "index"
+//                                     ]
+//                                 }
+//                             },
+//                             "in": {
+//                                 "template": "t_struct$_Point_$6_storage",
+//                                 "yields": {
+//                                     "x": "item-x",
+//                                     "y": "item-y"
+//                                 }
+//                             }
+//                         }
+//                     }
+//                 }
+//             }
+//         ]
+//     }
+// }
+// .resources.pointers.t_array$_t_uint256_$2_storage: {
+//     "expect": [
+//         "slot"
+//     ],
+//     "for": {
+//         "list": {
+//             "count": "0x02",
+//             "each": "index",
+//             "is": {
+//                 "location": "storage",
+//                 "name": "item",
+//                 "slot": {
+//                     "$sum": [
+//                         "slot",
+//                         "index"
+//                     ]
+//                 }
+//             }
+//         }
+//     }
+// }
+// .resources.pointers.t_array$_t_uint256_$dyn_storage: {
+//     "expect": [
+//         "slot"
+//     ],
+//     "for": {
+//         "group": [
+//             {
+//                 "location": "storage",
+//                 "name": "length",
+//                 "slot": "slot"
+//             },
+//             {
+//                 "define": {
+//                     "data": {
+//                         "$keccak256": [
+//                             {
+//                                 "$wordsized": "slot"
+//                             }
+//                         ]
+//                     }
+//                 },
+//                 "in": {
+//                     "list": {
+//                         "count": {
+//                             "$read": "length"
+//                         },
+//                         "each": "index",
+//                         "is": {
+//                             "location": "storage",
+//                             "name": "item",
+//                             "slot": {
+//                                 "$sum": [
+//                                     "data",
+//                                     "index"
+//                                 ]
+//                             }
+//                         }
+//                     }
+//                 }
+//             }
+//         ]
+//     }
+// }
+// .resources.pointers.t_array$_t_uint8_$dyn_storage: {
+//     "expect": [
+//         "slot"
+//     ],
+//     "for": {
+//         "group": [
+//             {
+//                 "location": "storage",
+//                 "name": "length",
+//                 "slot": "slot"
+//             },
+//             {
+//                 "define": {
+//                     "data": {
+//                         "$keccak256": [
+//                             {
+//                                 "$wordsized": "slot"
+//                             }
+//                         ]
+//                     }
+//                 },
+//                 "in": {
+//                     "list": {
+//                         "count": {
+//                             "$read": "length"
+//                         },
+//                         "each": "index",
 //                         "is": {
 //                             "length": "0x01",
 //                             "location": "storage",
-//                             "name": "packed-item",
+//                             "name": "item",
 //                             "offset": {
 //                                 "$difference": [
 //                                     "$wordsize",
 //                                     {
-//                                         "$product": [
+//                                         "$sum": [
 //                                             {
-//                                                 "$sum": [
-//                                                     {
-//                                                         "$remainder": [
-//                                                             "packed-index",
-//                                                             "0x20"
-//                                                         ]
-//                                                     },
-//                                                     "0x01"
+//                                                 "$remainder": [
+//                                                     "index",
+//                                                     "0x20"
 //                                                 ]
 //                                             },
 //                                             "0x01"
@@ -62,10 +278,10 @@ contract C {
 //                             },
 //                             "slot": {
 //                                 "$sum": [
-//                                     "packed-data",
+//                                     "data",
 //                                     {
 //                                         "$quotient": [
-//                                             "packed-index",
+//                                             "index",
 //                                             "0x20"
 //                                         ]
 //                                     }
@@ -78,302 +294,122 @@ contract C {
 //         ]
 //     }
 // }
-// .resources.pointers.storage_25_17: {
-//     "expect": [],
+// .resources.pointers.t_string_storage: {
+//     "expect": [
+//         "slot"
+//     ],
 //     "for": {
 //         "group": [
 //             {
+//                 "length": "0x01",
 //                 "location": "storage",
-//                 "name": "grid-length",
-//                 "slot": "0x02"
+//                 "name": "length-flag",
+//                 "offset": {
+//                     "$difference": [
+//                         "$wordsize",
+//                         "0x01"
+//                     ]
+//                 },
+//                 "slot": "slot"
 //             },
 //             {
-//                 "define": {
-//                     "grid-data": {
-//                         "$keccak256": [
-//                             {
-//                                 "$wordsized": "0x02"
-//                             }
-//                         ]
-//                     }
-//                 },
-//                 "in": {
-//                     "list": {
-//                         "count": {
-//                             "$read": "grid-length"
-//                         },
-//                         "each": "grid-index",
-//                         "is": {
-//                             "list": {
-//                                 "count": "0x02",
-//                                 "each": "grid-item-index",
-//                                 "is": {
-//                                     "location": "storage",
-//                                     "name": "grid-item-item",
-//                                     "slot": {
-//                                         "$sum": [
-//                                             {
-//                                                 "$sum": [
-//                                                     "grid-data",
-//                                                     {
-//                                                         "$product": [
-//                                                             "grid-index",
-//                                                             "0x02"
-//                                                         ]
-//                                                     }
-//                                                 ]
-//                                             },
-//                                             "grid-item-index"
-//                                         ]
-//                                     }
-//                                 }
-//                             }
-//                         }
-//                     }
-//                 }
-//             }
-//         ]
-//     }
-// }
-// .resources.pointers.storage_25_21: {
-//     "expect": [],
-//     "for": {
-//         "group": [
-//             {
-//                 "location": "storage",
-//                 "name": "points-length",
-//                 "slot": "0x03"
-//             },
-//             {
-//                 "define": {
-//                     "points-data": {
-//                         "$keccak256": [
-//                             {
-//                                 "$wordsized": "0x03"
-//                             }
-//                         ]
-//                     }
-//                 },
-//                 "in": {
-//                     "list": {
-//                         "count": {
-//                             "$read": "points-length"
-//                         },
-//                         "each": "points-index",
-//                         "is": {
-//                             "group": [
-//                                 {
-//                                     "length": "0x01",
-//                                     "location": "storage",
-//                                     "name": "points-item-x",
-//                                     "offset": "0x1f",
-//                                     "slot": {
-//                                         "$sum": [
-//                                             "points-data",
-//                                             "points-index"
-//                                         ]
-//                                     }
-//                                 },
-//                                 {
-//                                     "length": "0x01",
-//                                     "location": "storage",
-//                                     "name": "points-item-y",
-//                                     "offset": "0x1e",
-//                                     "slot": {
-//                                         "$sum": [
-//                                             "points-data",
-//                                             "points-index"
-//                                         ]
-//                                     }
-//                                 }
-//                             ]
-//                         }
-//                     }
-//                 }
-//             }
-//         ]
-//     }
-// }
-// .resources.pointers.storage_25_24: {
-//     "expect": [],
-//     "for": {
-//         "group": [
-//             {
-//                 "location": "storage",
-//                 "name": "texts-length",
-//                 "slot": "0x04"
-//             },
-//             {
-//                 "define": {
-//                     "texts-data": {
-//                         "$keccak256": [
-//                             {
-//                                 "$wordsized": "0x04"
-//                             }
-//                         ]
-//                     }
-//                 },
-//                 "in": {
-//                     "list": {
-//                         "count": {
-//                             "$read": "texts-length"
-//                         },
-//                         "each": "texts-index",
-//                         "is": {
-//                             "group": [
-//                                 {
-//                                     "length": "0x01",
-//                                     "location": "storage",
-//                                     "name": "texts-item-length-flag",
-//                                     "offset": {
-//                                         "$difference": [
-//                                             "$wordsize",
-//                                             "0x01"
-//                                         ]
-//                                     },
-//                                     "slot": {
-//                                         "$sum": [
-//                                             "texts-data",
-//                                             "texts-index"
-//                                         ]
-//                                     }
-//                                 },
-//                                 {
-//                                     "else": {
-//                                         "group": [
-//                                             {
-//                                                 "location": "storage",
-//                                                 "name": "texts-item-long-length",
-//                                                 "slot": {
-//                                                     "$sum": [
-//                                                         "texts-data",
-//                                                         "texts-index"
-//                                                     ]
-//                                                 }
-//                                             },
-//                                             {
-//                                                 "define": {
-//                                                     "texts-item-length": {
-//                                                         "$quotient": [
-//                                                             {
-//                                                                 "$difference": [
-//                                                                     {
-//                                                                         "$read": "texts-item-long-length"
-//                                                                     },
-//                                                                     "0x01"
-//                                                                 ]
-//                                                             },
-//                                                             "0x02"
-//                                                         ]
-//                                                     }
-//                                                 },
-//                                                 "in": {
-//                                                     "define": {
-//                                                         "texts-item-data": {
-//                                                             "$keccak256": [
-//                                                                 {
-//                                                                     "$wordsized": {
-//                                                                         "$sum": [
-//                                                                             "texts-data",
-//                                                                             "texts-index"
-//                                                                         ]
-//                                                                     }
-//                                                                 }
-//                                                             ]
-//                                                         }
-//                                                     },
-//                                                     "in": {
-//                                                         "length": "texts-item-length",
-//                                                         "location": "storage",
-//                                                         "name": "texts-item",
-//                                                         "slot": "texts-item-data"
-//                                                     }
-//                                                 }
-//                                             }
-//                                         ]
-//                                     },
-//                                     "if": {
-//                                         "$remainder": [
-//                                             {
-//                                                 "$sum": [
-//                                                     {
-//                                                         "$read": "texts-item-length-flag"
-//                                                     },
-//                                                     "0x01"
-//                                                 ]
-//                                             },
-//                                             "0x02"
-//                                         ]
-//                                     },
-//                                     "then": {
-//                                         "define": {
-//                                             "texts-item-length": {
-//                                                 "$quotient": [
-//                                                     {
-//                                                         "$read": "texts-item-length-flag"
-//                                                     },
-//                                                     "0x02"
-//                                                 ]
-//                                             }
-//                                         },
-//                                         "in": {
-//                                             "length": "texts-item-length",
-//                                             "location": "storage",
-//                                             "name": "texts-item",
-//                                             "slot": {
-//                                                 "$sum": [
-//                                                     "texts-data",
-//                                                     "texts-index"
-//                                                 ]
-//                                             }
-//                                         }
-//                                     }
-//                                 }
-//                             ]
-//                         }
-//                     }
-//                 }
-//             }
-//         ]
-//     }
-// }
-// .resources.pointers.storage_25_9: {
-//     "expect": [],
-//     "for": {
-//         "group": [
-//             {
-//                 "location": "storage",
-//                 "name": "words-length",
-//                 "slot": "0x00"
-//             },
-//             {
-//                 "define": {
-//                     "words-data": {
-//                         "$keccak256": [
-//                             {
-//                                 "$wordsized": "0x00"
-//                             }
-//                         ]
-//                     }
-//                 },
-//                 "in": {
-//                     "list": {
-//                         "count": {
-//                             "$read": "words-length"
-//                         },
-//                         "each": "words-index",
-//                         "is": {
+//                 "else": {
+//                     "group": [
+//                         {
 //                             "location": "storage",
-//                             "name": "words-item",
-//                             "slot": {
-//                                 "$sum": [
-//                                     "words-data",
-//                                     "words-index"
-//                                 ]
+//                             "name": "long-length",
+//                             "slot": "slot"
+//                         },
+//                         {
+//                             "define": {
+//                                 "length": {
+//                                     "$quotient": [
+//                                         {
+//                                             "$difference": [
+//                                                 {
+//                                                     "$read": "long-length"
+//                                                 },
+//                                                 "0x01"
+//                                             ]
+//                                         },
+//                                         "0x02"
+//                                     ]
+//                                 }
+//                             },
+//                             "in": {
+//                                 "define": {
+//                                     "start": {
+//                                         "$keccak256": [
+//                                             {
+//                                                 "$wordsized": "slot"
+//                                             }
+//                                         ]
+//                                     }
+//                                 },
+//                                 "in": {
+//                                     "length": "length",
+//                                     "location": "storage",
+//                                     "name": "data",
+//                                     "slot": "start"
+//                                 }
 //                             }
 //                         }
+//                     ]
+//                 },
+//                 "if": {
+//                     "$remainder": [
+//                         {
+//                             "$sum": [
+//                                 {
+//                                     "$read": "length-flag"
+//                                 },
+//                                 "0x01"
+//                             ]
+//                         },
+//                         "0x02"
+//                     ]
+//                 },
+//                 "then": {
+//                     "define": {
+//                         "length": {
+//                             "$quotient": [
+//                                 {
+//                                     "$read": "length-flag"
+//                                 },
+//                                 "0x02"
+//                             ]
+//                         }
+//                     },
+//                     "in": {
+//                         "length": "length",
+//                         "location": "storage",
+//                         "name": "data",
+//                         "slot": "slot"
 //                     }
 //                 }
+//             }
+//         ]
+//     }
+// }
+// .resources.pointers.t_struct$_Point_$6_storage: {
+//     "expect": [
+//         "slot"
+//     ],
+//     "for": {
+//         "group": [
+//             {
+//                 "length": "0x01",
+//                 "location": "storage",
+//                 "name": "x",
+//                 "offset": "0x1f",
+//                 "slot": "slot"
+//             },
+//             {
+//                 "length": "0x01",
+//                 "location": "storage",
+//                 "name": "y",
+//                 "offset": "0x1e",
+//                 "slot": "slot"
 //             }
 //         ]
 //     }

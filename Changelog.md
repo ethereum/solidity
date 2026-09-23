@@ -3,7 +3,7 @@
 Language Features:
 
 Compiler Features:
-* ethdebug: Populate the type and pointer tables of `ethdebug/format/info/resources` with the type documents of every type a contract's state variables, functions and modifiers reference and with the pointer templates of its state variables in storage and transient storage (experimental).
+* ethdebug: Populate the type and pointer tables of `ethdebug/format/info/resources` with the type documents of every type a contract's state variables, functions and modifiers reference and with a pointer template for every struct, array and mapping type of its state variables (experimental).
 
 Bugfixes:
 

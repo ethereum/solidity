@@ -123,6 +123,12 @@ TYPE_ID_PATTERNS = {
 }
 
 
+def escaped_type_id(rich_identifier):
+    """The ethdebug type identifier of a type the storage layout names by its rich identifier,
+    e.g. `t_enum$_Color_$7` for `t_enum(Color)7` (Type::escapeIdentifier())."""
+    return rich_identifier.replace("(", "$_").replace(")", "_$").replace(",", "_$_")
+
+
 def classify_type_id(type_id):
     for (kind, pattern) in TYPE_ID_PATTERNS.items():
         match = pattern.match(type_id)
@@ -174,6 +180,8 @@ def ethdebug_schema_repository():
 class EthdebugTestCase(unittest.TestCase):
     # Set by test/ethdebugSchemaTests.py.
     config = None
+    #: The pointer table the templates under test reference, set by the test.
+    templates = {}
 
     @classmethod
     def setUpClass(cls):
@@ -218,6 +226,9 @@ class EthdebugTestCase(unittest.TestCase):
             self.assertPointerIsClosed(pointer["in"], bound_variables, regions)
         else:
             self.assertIn("template", pointer, f"Unknown pointer shape: {pointer}")
+            # The referenced template's parameters are bound where it is referenced.
+            self.assertIn(pointer["template"], self.templates, f"Unknown template {pointer['template']}")
+            self.assertLessEqual(set(self.templates[pointer["template"]]["expect"]), bound_variables)
 
     def assertRegionCoversLayoutOffset(self, region, layout_offset):
         """A region's offset counts from the most significant byte of the slot, the storage
@@ -383,42 +394,34 @@ class EthdebugSchemaConformityTest(EthdebugTestCase):
                     self.assertIn(location["source"]["id"], source_ids)
 
     def test_pointer_templates_are_closed(self):
-        for (name, template) in self.resources["pointers"].items():
+        self.templates = self.resources["pointers"]
+        for (name, template) in self.templates.items():
             with self.subTest(pointer=name):
                 self.assertTemplateIsClosed(template)
 
-    def test_every_storage_variable_has_a_pointer_template(self):
-        """The templates are named `<location>_<contract AST ID>_<variable AST ID>` and
-        describe the variables the storage layouts list, at their slots."""
-        contract_ids = {}
-        for (source_name, source_output) in self.solc_output["sources"].items():
-            for node in source_output["ast"]["nodes"]:
-                if node["nodeType"] == "ContractDefinition":
-                    contract_ids[f"{source_name}:{node['name']}"] = node["id"]
-
+    def test_pointer_templates_describe_the_storage_types(self):
+        """A template is keyed by the identifier of a struct, array or mapping type and
+        expects the base slot of a value, a mapping's the key of the entry as well; the
+        types the storage layouts list have one unless they are value types, which are
+        single regions wherever they occur."""
+        types = self.resources["types"]
+        pointers = self.resources["pointers"]
+        for (name, template) in pointers.items():
+            with self.subTest(pointer=name):
+                self.assertIn(name, types)
+                kind = types[name]["kind"]
+                self.assertIn(kind, ("struct", "array", "mapping", "bytes", "string"))
+                self.assertEqual(template["expect"], ["slot", "key"] if kind == "mapping" else ["slot"])
         layouts = {"storage": "storageLayout", "transient": "transientStorageLayout"}
         for (_, contract_name, contract_output) in contract_outputs(self.solc_output):
-            for (location, layout_output) in layouts.items():
+            for layout_output in layouts.values():
                 for variable in contract_output[layout_output]["storage"]:
-                    template_name = f"{location}_{contract_ids[variable['contract']]}_{variable['astId']}"
+                    type_id = escaped_type_id(variable["type"])
                     with self.subTest(contract=contract_name, variable=variable["label"]):
-                        self.assertIn(template_name, self.resources["pointers"])
-                        template = self.resources["pointers"][template_name]
-                        # A mapping's keys are the template's parameters; everything else is closed.
-                        self.assertEqual(len(template["expect"]) > 0, variable["type"].startswith("t_mapping"))
-                        pointer = template["for"]
-                        if "location" in pointer:
-                            self.assertEqual(pointer["name"], variable["label"])
-                            self.assertEqual(pointer["location"], location)
-                            # A mapping value's slot is computed from the keys; anything else is at the layout's slot.
-                            if not template["expect"]:
-                                self.assertEqual(int(pointer["slot"], 16), int(variable["slot"]))
-                                self.assertRegionCoversLayoutOffset(pointer, variable["offset"])
-                        else:
-                            self.assertTrue(
-                                any(name.startswith(variable["label"]) for name in region_names(pointer)),
-                                f"No region of {template_name} is named after {variable['label']}",
-                            )
+                        kind = types[type_id]["kind"]
+                        dynamic = kind in ("bytes", "string") and "size" not in types[type_id]
+                        composed = kind in ("struct", "array", "mapping") or dynamic
+                        self.assertEqual(type_id in pointers, composed)
 
 
 class ResourcesTestSourcesTest(EthdebugTestCase):
@@ -441,6 +444,7 @@ class ResourcesTestSourcesTest(EthdebugTestCase):
 
     def test_pointer_templates_are_closed(self):
         for source_path in RESOURCES_TEST_SOURCES:
-            for (name, template) in resources_of_source(self.config.solc_path, source_path)["pointers"].items():
+            self.templates = resources_of_source(self.config.solc_path, source_path)["pointers"]
+            for (name, template) in self.templates.items():
                 with self.subTest(source=source_path.name, pointer=name):
                     self.assertTemplateIsClosed(template)

@@ -123,48 +123,49 @@ Definitions without a name and a known location are omitted.
 State Variable Pointers
 =======================
 
-Every state variable in storage and transient storage of a contract gets a pointer template.
-The slot and the byte offset of the variable come from ``ContractType::linearizedStateVariables()``, so that inherited variables are described at the slots they occupy in the contract at hand.
-The template is named after the AST IDs of the contract and the variable, ``storage_<contract>_<variable>`` or ``transient_<contract>_<variable>``, and its regions are named after the variable, ``<variable>``, ``<variable>-<member>`` and so on, as described in :ref:`ethdebug`.
-A variable name starting with ``$`` is prefixed with ``_`` since it would not be an ethdebug identifier otherwise.
+The pointer table describes the storage types of the state variables, one template per struct, array and mapping type that a state variable has or is composed of, keyed by the type identifier and expecting the base slot of a value as ``slot``.
+Value types have no template; a value of value type is a single region wherever it occurs.
+Where a state variable's value starts comes from ``ContractType::linearizedStateVariables()``, which is what the storage layout output reports as well, and is not part of the resources.
 
-``StateVariablePointerBuilder`` builds the pointer of a variable recursively from its type, starting at the variable's slot.
-The kinds of types are laid out as follows, where ``slot`` stands for the expression addressing the base slot of the value at hand, a literal for the variable itself and a computed expression inside arrays and mappings.
+``PointerTemplateRegistry`` builds the templates from the types, registering the template of a type when it is first needed and of every struct, array and mapping type it composes.
+A type nested in itself, through an array or a mapping, references its own template, which is resolved lazily by the consumer; there is no depth limit and nothing is left undecomposed.
+The kinds of types are laid out as follows, where ``slot`` stands for the expression addressing the base slot of the value at hand: the expected variable for the template's own value and a computed expression for a part of it.
 
 Value types
-    A single region ``{"location": ..., "name": <name>, "slot": slot}``.
+    A single region ``{"location": "storage", "name": <name>, "slot": slot}``.
     A value narrower than a word carries its ``length`` in bytes and its ``offset`` in the slot.
-    The offset counts from the most significant byte of the slot, as the pointer format's segment addressing does, while the storage layout packs values from the least significant byte: a value of *n* bytes at layout offset *o* starts at byte 32 - *o* - *n*, so a ``uint8`` alone in its slot is at offset 31 and an ``address`` packed after two bytes is at offset 10.
+    The offset counts from the most significant byte of the slot, as the pointer format's segment addressing does and the reference implementation reads it, while the storage layout packs values from the least significant byte: a value of *n* bytes at layout offset *o* starts at byte 32 - *o* - *n*, so a ``uint8`` alone in its slot is at offset 31 and an ``address`` packed after two bytes is at offset 10.
     An offset of zero is omitted, and so is a ``length`` of a whole word, since a region without one covers the rest of its slot.
-    A value occupying several slots states its ``length``, which the segment addressing continues into the slots following the one addressed.
+
+Structs
+    A ``group`` of the pointers of the members, each built from the type the member has in storage at ``slot`` advanced by the member's slot offset and, when packed, at its byte offset.
+    A member of value type is a region named after the member; a member of a type that has a template references that template with the member's slot bound, renaming the regions it produces with the member's name as a prefix.
 
 Static arrays ``T[N]``
-    A ``list`` with ``count`` ``N`` and the index variable ``<name>-index``, whose element ``<name>-item`` is:
+    A ``list`` with ``count`` ``N`` and the index variable ``index``, whose element ``item`` is:
 
     - for a value type narrower than a word, packed *k* to a slot from the least significant byte, the region at slot ``slot + index / k``, offset ``$wordsize - (index % k + 1) * size`` and length ``size``,
-    - otherwise the pointer of the element type at ``slot + index * slots``, with ``slots`` being the storage size of the element type, omitted when it is one.
+    - for another value type the region at ``slot + index * slots``, with ``slots`` being the storage size of the element type, omitted when it is one,
+    - for a type with a template a reference to it with that slot bound, its regions prefixed with ``item``.
 
 Dynamic arrays ``T[]``
-    A ``group`` of the region ``<name>-length`` at ``slot`` and a scope defining ``<name>-data`` as ``keccak256(wordsized(slot))``, in which the elements are the list of a static array with ``count`` ``$read(<name>-length)`` starting at ``<name>-data``.
+    A ``group`` of the region ``length`` at ``slot`` and a scope defining ``data`` as ``keccak256(wordsized(slot))``, in which the elements are the list of a static array with ``count`` ``$read(length)`` starting at ``data``.
 
 ``bytes`` and ``string``
     The compact encoding keeps values shorter than 32 bytes in the slot itself, with twice the length in the lowest byte, and longer values at ``keccak256(slot)``, with twice the length plus one in the slot.
-    The pointer is a ``group`` of the region ``<name>-length-flag``, the lowest byte of the slot, and a conditional on ``($read(<name>-length-flag) + 1) % 2``:
+    The pointer is a ``group`` of the region ``length-flag``, the lowest byte of the slot, and a conditional on ``($read(length-flag) + 1) % 2``:
 
-    - the short case defines ``<name>-length`` as ``$read(<name>-length-flag) / 2`` for the region ``<name>`` in the slot with that length,
-    - the long case is a ``group`` of the region ``<name>-long-length`` at the slot and a scope defining ``<name>-length`` as ``($read(<name>-long-length) - 1) / 2`` and ``<name>-data`` as ``keccak256(wordsized(slot))`` for the region ``<name>`` at ``<name>-data`` with that length.
-
-Structs
-    A ``group`` of the pointers of the members, named ``<name>-<member>``, each built from its type at ``slot`` advanced by the member's slot offset and, when packed, at its byte offset.
-    A struct nested in itself, which is possible through arrays and mappings, or nested deeper than 16 levels is not decomposed further; it becomes a single region over all of its slots, whose ``length`` is the number of bytes they hold.
+    - the short case defines ``length`` as ``$read(length-flag) / 2`` for the region ``data`` in the slot with that length,
+    - the long case is a ``group`` of the region ``long-length`` at the slot and a scope defining ``length`` as ``($read(long-length) - 1) / 2`` and ``start`` as ``keccak256(wordsized(slot))`` for the region ``data`` at ``start`` with that length.
 
 Mappings ``mapping(K => V)``
-    The pointer of the value type ``V`` at ``keccak256(wordsized(key), wordsized(slot))``.
-    The key is not stored anywhere; it becomes a parameter of the template, named ``key`` for the outermost mapping of the variable and ``key1``, ``key2`` and so on for mappings nested in its values.
+    The template expects ``key`` besides ``slot``; the entry's value lives at ``keccak256(wordsized(key), wordsized(slot))`` and is described like a member called ``value``: a region for a value type, a reference to the value type's template otherwise.
     Keys of value type are hashed as full words; ``bytes`` and ``string`` keys are hashed unpadded.
+    A mapping that is the member of a struct, the element of an array or the value of another mapping is the region of its base slot, named after the member, ``item`` or ``value``, since its entries are not at any fixed place: a consumer instantiates the mapping's template with that slot and the next key.
+    This is also how a type nested in itself through a mapping is described, one key per level, rather than by a template expecting a fixed list of keys.
 
 Transient storage
-    The same layouts with the region location ``transient``.
+    Only value types can be declared ``transient``, so transient storage adds no templates; a transient state variable is a single region with the location ``transient``.
 
 Slot arithmetic on literal slots is folded into the literals, so that the members of a struct at slot 3 are addressed as ``0x03``, ``0x04`` and so on rather than as sums.
 The test cases under ``test/libsolidity/ethdebugTests/resources/`` show the complete type and pointer tables for each of these layouts and are the reference for their exact shape.

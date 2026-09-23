@@ -15,92 +15,140 @@ contract C {
 }
 // ----
 // .resources.types | keys: ["t_array$_t_struct$_Node_$10_storage_$dyn_storage","t_mapping$_t_uint256_$_t_struct$_Leaf_$18_storage_$","t_struct$_Leaf_$18_storage","t_struct$_Node_$10_storage","t_uint256"]
-// .resources.pointers | keys: ["storage_25_21","storage_25_24"]
-// .resources.pointers.storage_25_21: {
-//     "expect": [],
-//     "for": {
-//         "group": [
-//             {
-//                 "location": "storage",
-//                 "name": "tree-value",
-//                 "slot": "0x00"
-//             },
-//             {
-//                 "location": "storage",
-//                 "name": "tree-extra",
-//                 "slot": "0x01"
-//             },
-//             {
-//                 "group": [
-//                     {
-//                         "location": "storage",
-//                         "name": "tree-children-length",
-//                         "slot": "0x02"
-//                     },
-//                     {
-//                         "define": {
-//                             "tree-children-data": {
-//                                 "$keccak256": [
-//                                     {
-//                                         "$wordsized": "0x02"
-//                                     }
-//                                 ]
-//                             }
-//                         },
-//                         "in": {
-//                             "list": {
-//                                 "count": {
-//                                     "$read": "tree-children-length"
-//                                 },
-//                                 "each": "tree-children-index",
-//                                 "is": {
-//                                     "length": "0x60",
-//                                     "location": "storage",
-//                                     "name": "tree-children-item",
-//                                     "slot": {
-//                                         "$sum": [
-//                                             "tree-children-data",
-//                                             {
-//                                                 "$product": [
-//                                                     "tree-children-index",
-//                                                     "0x03"
-//                                                 ]
-//                                             }
-//                                         ]
-//                                     }
-//                                 }
-//                             }
-//                         }
-//                     }
-//                 ]
-//             }
-//         ]
-//     }
-// }
-// .resources.pointers.storage_25_24: {
+// .resources.pointers | keys: ["t_array$_t_struct$_Node_$10_storage_$dyn_storage","t_mapping$_t_uint256_$_t_struct$_Leaf_$18_storage_$","t_struct$_Leaf_$18_storage","t_struct$_Node_$10_storage"]
+// .resources.pointers.t_array$_t_struct$_Node_$10_storage_$dyn_storage: {
 //     "expect": [
-//         "key"
+//         "slot"
 //     ],
 //     "for": {
 //         "group": [
 //             {
 //                 "location": "storage",
-//                 "name": "leaf-value",
-//                 "slot": "0x03"
+//                 "name": "length",
+//                 "slot": "slot"
 //             },
 //             {
-//                 "length": "0x40",
-//                 "location": "storage",
-//                 "name": "leaf-byKey",
-//                 "slot": {
-//                     "$keccak256": [
-//                         {
-//                             "$wordsized": "key"
+//                 "define": {
+//                     "data": {
+//                         "$keccak256": [
+//                             {
+//                                 "$wordsized": "slot"
+//                             }
+//                         ]
+//                     }
+//                 },
+//                 "in": {
+//                     "list": {
+//                         "count": {
+//                             "$read": "length"
 //                         },
-//                         {
-//                             "$wordsized": "0x04"
+//                         "each": "index",
+//                         "is": {
+//                             "define": {
+//                                 "slot": {
+//                                     "$sum": [
+//                                         "data",
+//                                         {
+//                                             "$product": [
+//                                                 "index",
+//                                                 "0x03"
+//                                             ]
+//                                         }
+//                                     ]
+//                                 }
+//                             },
+//                             "in": {
+//                                 "template": "t_struct$_Node_$10_storage"
+//                             }
 //                         }
+//                     }
+//                 }
+//             }
+//         ]
+//     }
+// }
+// .resources.pointers.t_mapping$_t_uint256_$_t_struct$_Leaf_$18_storage_$: {
+//     "expect": [
+//         "slot",
+//         "key"
+//     ],
+//     "for": {
+//         "define": {
+//             "slot": {
+//                 "$keccak256": [
+//                     {
+//                         "$wordsized": "key"
+//                     },
+//                     {
+//                         "$wordsized": "slot"
+//                     }
+//                 ]
+//             }
+//         },
+//         "in": {
+//             "template": "t_struct$_Leaf_$18_storage"
+//         }
+//     }
+// }
+// .resources.pointers.t_struct$_Leaf_$18_storage: {
+//     "expect": [
+//         "slot"
+//     ],
+//     "for": {
+//         "group": [
+//             {
+//                 "location": "storage",
+//                 "name": "value",
+//                 "slot": "slot"
+//             },
+//             {
+//                 "location": "storage",
+//                 "name": "byKey",
+//                 "slot": {
+//                     "$sum": [
+//                         "slot",
+//                         "0x01"
 //                     ]
+//                 }
+//             }
+//         ]
+//     }
+// }
+// .resources.pointers.t_struct$_Node_$10_storage: {
+//     "expect": [
+//         "slot"
+//     ],
+//     "for": {
+//         "group": [
+//             {
+//                 "location": "storage",
+//                 "name": "value",
+//                 "slot": "slot"
+//             },
+//             {
+//                 "location": "storage",
+//                 "name": "extra",
+//                 "slot": {
+//                     "$sum": [
+//                         "slot",
+//                         "0x01"
+//                     ]
+//                 }
+//             },
+//             {
+//                 "define": {
+//                     "slot": {
+//                         "$sum": [
+//                             "slot",
+//                             "0x02"
+//                         ]
+//                     }
+//                 },
+//                 "in": {
+//                     "template": "t_array$_t_struct$_Node_$10_storage_$dyn_storage",
+//                     "yields": {
+//                         "length": "children-length"
+//                     }
 //                 }
 //             }
 //         ]

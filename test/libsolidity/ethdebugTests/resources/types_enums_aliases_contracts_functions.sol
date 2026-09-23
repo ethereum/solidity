@@ -150,4 +150,4 @@ contract C {
 //     },
 //     "kind": "alias"
 // }
-// .resources.pointers | keys: ["storage_64_25","storage_64_28","storage_64_31","storage_64_34","storage_64_42","storage_64_50"]
+// .resources.pointers | keys: []

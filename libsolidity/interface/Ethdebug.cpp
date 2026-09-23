@@ -23,6 +23,7 @@
 
 #include <libsolutil/Numeric.h>
 
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <set>
@@ -423,99 +424,223 @@ std::string identifier(std::string const& _name)
 	return _name.front() == '$' ? "_" + _name : _name;
 }
 
-/// Builds the pointer of a state variable in storage or transient storage. One
-/// builder instance describes one root pointer; mapping keys encountered
-/// anywhere in it become template parameters.
-class StateVariablePointerBuilder
+/// A single region covering a value of value type as laid out in its slot,
+/// in storage or transient storage.
+///
+/// A region's offset counts from the most significant byte of the slot,
+/// while the storage layout packs values from the least significant one,
+/// so a value of @a byteLength bytes at layout offset @a _layoutOffset starts
+/// at byte 32 - _layoutOffset - byteLength of its slot. A region without an
+/// offset and a length covers the whole slot.
+Pointer valueRegion(
+	Type const& _type,
+	schema::Pointer::Location _location,
+	Expression _slot,
+	unsigned _layoutOffset,
+	std::optional<std::string> _name
+)
+{
+	solAssert(_type.storageSize() == 1, "A value type fits one slot.");
+	u256 const byteLength = _type.storageBytes();
+	if (byteLength == 32)
+	{
+		solAssert(_layoutOffset == 0, "A whole word cannot be packed.");
+		return region(_location, std::move(_name), std::move(_slot));
+	}
+	solAssert(_layoutOffset + byteLength <= 32, "A packed value does not fit its slot.");
+	u256 const offset = 32 - _layoutOffset - byteLength;
+	std::optional<Expression> offsetExpression;
+	if (offset != 0)
+		offsetExpression = literal(offset);
+	return region(_location, std::move(_name), std::move(_slot), std::move(offsetExpression), literal(byteLength));
+}
+
+/// The pointer templates of the storage types state variables have and are
+/// composed of, one per type, keyed by the type identifier: how a value of the
+/// type is laid out from a base slot. Every template expects `slot`, the base
+/// slot of the value; a mapping's expects `key` as well, the key of the entry
+/// it locates. Value types need no template, they are one region wherever they
+/// occur. A mapping nested in another type is the region of its base slot,
+/// from which the mapping's own template locates the entries, so that a type
+/// nested in itself through a mapping expects one key per level a consumer
+/// descends, rather than a list of keys the template would have to fix.
+///
+/// The region names a template produces are relative to the value it
+/// describes: a struct's members by their names, an array's elements `item`,
+/// the parts of a `bytes` or `string` `length-flag`, `long-length` and `data`.
+/// A template referencing another prefixes the names that one produces with
+/// the member or element it describes, so that `from-x` and `to-x` tell the
+/// two `Point` members of a `Line` apart.
+class PointerTemplateRegistry
 {
 public:
-	explicit StateVariablePointerBuilder(schema::Pointer::Location _location): m_location(_location) {}
-
-	/// @a _layoutOffset is the byte offset of the value in its slot as the storage
-	/// layout counts it, from the least significant byte.
-	Pointer build(Type const& _type, Expression _slot, unsigned _layoutOffset, std::string const& _name)
+	/// Registers the template of @a _type if it is a struct, an array or a
+	/// mapping, and of every such type it composes.
+	void registerType(Type const& _type)
 	{
-		if (auto const* mappingType = dynamic_cast<MappingType const*>(&_type))
-			return buildMapping(*mappingType, std::move(_slot), _name);
-
-		if (auto const* arrayType = dynamic_cast<ArrayType const*>(&_type))
-		{
-			if (arrayType->isByteArrayOrString())
-				return buildBytesOrString(std::move(_slot), _name);
-			if (arrayType->isDynamicallySized())
-				return buildDynamicArray(*arrayType, std::move(_slot), _name);
-			return elementList(*arrayType, std::move(_slot), literal(arrayType->length()), _name);
-		}
-
-		if (auto const* structType = dynamic_cast<StructType const*>(&_type))
-			return buildStruct(*structType, std::move(_slot), _name);
-
-		return wholeRegion(_type, std::move(_slot), _layoutOffset, _name);
+		if (!needsTemplate(_type))
+			return;
+		std::string const id = _type.identifier();
+		// A type nested in itself references its own template, which is being
+		// built; the reference is resolved lazily by the consumer.
+		if (m_templates.count(id) || m_building.count(id))
+			return;
+		m_building.insert(id);
+		Built built = build(_type);
+		m_building.erase(id);
+		m_templates.emplace(id, std::move(built));
 	}
 
-	std::vector<std::string> takeExpectedParameters() { return std::move(m_expectedParameters); }
+	std::map<std::string, schema::Pointer::Template> takeTemplates()
+	{
+		std::map<std::string, schema::Pointer::Template> result;
+		for (auto& [id, built]: m_templates)
+			result.emplace(id, schema::Pointer::Template{
+				std::move(built.expect),
+				std::make_shared<Pointer const>(std::move(built.body))
+			});
+		m_templates.clear();
+		return result;
+	}
+
+	/// Whether values of @a _type are described by a template rather than by a
+	/// single region.
+	static bool needsTemplate(Type const& _type)
+	{
+		return
+			dynamic_cast<StructType const*>(&_type) ||
+			dynamic_cast<ArrayType const*>(&_type) ||
+			dynamic_cast<MappingType const*>(&_type);
+	}
 
 private:
-	/// A single region covering the value as laid out from its base slot. Used
-	/// for value types and as the fallback for compositions that are not (or
-	/// cannot be) decomposed further.
-	///
-	/// A region's offset counts from the most significant byte of the slot,
-	/// while the storage layout packs values from the least significant one,
-	/// so a value of @a byteLength bytes at layout offset o starts at byte
-	/// 32 - o - byteLength of its slot.
-	Pointer wholeRegion(Type const& _type, Expression _slot, unsigned _layoutOffset, std::string const& _name)
+	struct Built
 	{
-		u256 const byteLength = u256(_type.storageBytes()) * _type.storageSize();
-		if (byteLength >= 32)
-		{
-			solAssert(_layoutOffset == 0, "A value spanning whole slots cannot be packed.");
-			// A region without a length covers the rest of its slot. A value spanning
-			// several slots states its length, which the segment addressing of
-			// ethdebug/format continues into the slots following the one addressed.
-			std::optional<Expression> length;
-			if (byteLength != 32)
-				length = literal(byteLength);
-			return region(m_location, _name, std::move(_slot), std::nullopt, std::move(length));
-		}
-		solAssert(_layoutOffset + byteLength <= 32, "A packed value does not fit its slot.");
-		u256 const offset = 32 - _layoutOffset - byteLength;
-		std::optional<Expression> offsetExpression;
-		if (offset != 0)
-			offsetExpression = literal(offset);
-		return region(m_location, _name, std::move(_slot), std::move(offsetExpression), literal(byteLength));
+		std::vector<std::string> expect;
+		Pointer body;
+		/// The region names the body produces, for the references to prefix.
+		std::vector<std::string> produced;
+	};
+
+	static void produce(std::vector<std::string>& _produced, std::string const& _name)
+	{
+		if (std::find(_produced.begin(), _produced.end(), _name) == _produced.end())
+			_produced.emplace_back(_name);
 	}
 
-	/// The mapping value lives at `keccak256(pad(key) . slot)`. The key is not
-	/// stored anywhere; it becomes a template parameter the debugger must bind.
-	Pointer buildMapping(MappingType const& _mappingType, Expression _slot, std::string const& _name)
+	Built build(Type const& _type)
 	{
-		std::string const keyParameter = m_expectedParameters.empty()
-			? "key"
-			: "key" + std::to_string(m_expectedParameters.size());
-		m_expectedParameters.emplace_back(keyParameter);
+		if (auto const* mappingType = dynamic_cast<MappingType const*>(&_type))
+			return buildMapping(*mappingType);
+		if (auto const* arrayType = dynamic_cast<ArrayType const*>(&_type))
+			return buildArray(*arrayType);
+		auto const* structType = dynamic_cast<StructType const*>(&_type);
+		solAssert(structType, "Only structs, arrays and mappings have templates.");
+		return buildStruct(*structType);
+	}
 
-		Expression keyExpression = variable(keyParameter);
+	/// The pointer of a value of @a _type at @a _slot that is part of another
+	/// value: the member of a struct, the element of an array or the value of a
+	/// mapping, called @a _name. @a _layoutOffset is the byte offset of the
+	/// value in its slot as the storage layout counts it, from the least
+	/// significant byte. The region names it produces are added to @a _produced.
+	Pointer component(
+		Type const& _type,
+		Expression _slot,
+		unsigned _layoutOffset,
+		std::string const& _name,
+		std::vector<std::string>& _produced
+	)
+	{
+		if (dynamic_cast<MappingType const*>(&_type))
+		{
+			// The entries of a mapping are at hashed slots; its base slot is what
+			// its template expects to locate them.
+			registerType(_type);
+			produce(_produced, _name);
+			return region(schema::Pointer::Location::Storage, _name, std::move(_slot));
+		}
+		if (needsTemplate(_type))
+		{
+			registerType(_type);
+			std::string const id = _type.identifier();
+			std::vector<std::pair<std::string, std::string>> yields;
+			// A template still being built produces names not known yet; the
+			// names of such a self-reference pass through unprefixed.
+			if (auto const it = m_templates.find(id); it != m_templates.end())
+				for (std::string const& produced: it->second.produced)
+				{
+					yields.emplace_back(produced, _name + "-" + produced);
+					produce(_produced, _name + "-" + produced);
+				}
+			Pointer reference{schema::Pointer::TemplateReference{id, std::move(yields)}};
+			// The referenced template expects the base slot as `slot`; a value at
+			// the enclosing base slot passes it through as it is.
+			if (auto const* slot = std::get_if<schema::Pointer::Variable>(&_slot.value); slot && slot->identifier == "slot")
+				return reference;
+			return scope({{"slot", std::move(_slot)}}, std::move(reference));
+		}
+		produce(_produced, _name);
+		return valueRegion(_type, schema::Pointer::Location::Storage, std::move(_slot), _layoutOffset, _name);
+	}
+
+	/// The members of a struct at their slot and byte offsets from the base
+	/// slot, with the types they have in storage, which key their templates.
+	Built buildStruct(StructType const& _structType)
+	{
+		std::vector<std::string> produced;
+		std::vector<Pointer> members;
+		for (MemberList::Member const& member: _structType.members(nullptr))
+		{
+			auto const& [slotOffset, byteOffset] = _structType.storageOffsetsOfMember(member.name);
+			members.emplace_back(component(
+				*member.type,
+				advanceSlots(variable("slot"), slotOffset),
+				byteOffset,
+				identifier(member.name),
+				produced
+			));
+		}
+		solAssert(!members.empty(), "A struct has members.");
+		return Built{{"slot"}, group(std::move(members)), std::move(produced)};
+	}
+
+	Built buildArray(ArrayType const& _arrayType)
+	{
+		std::vector<std::string> produced;
+		Pointer body = [&]() {
+			if (_arrayType.isByteArrayOrString())
+				return bytesOrString(produced);
+			if (_arrayType.isDynamicallySized())
+				return dynamicArray(_arrayType, produced);
+			return elementList(_arrayType, variable("slot"), literal(_arrayType.length()), produced);
+		}();
+		return Built{{"slot"}, std::move(body), std::move(produced)};
+	}
+
+	/// The value of the entry for `key` lives at `keccak256(pad(key) . slot)`.
+	Built buildMapping(MappingType const& _mappingType)
+	{
+		std::vector<std::string> produced;
+		Expression keyExpression = variable("key");
 		// Value-type keys are hashed as full words; bytes and string keys are
 		// hashed as their raw bytes.
 		if (_mappingType.keyType()->isValueType())
 			keyExpression = wordSized(std::move(keyExpression));
-
-		Expression valueSlot = keccak256({std::move(keyExpression), wordSized(std::move(_slot))});
-		return build(*_mappingType.valueType(), std::move(valueSlot), 0, _name);
+		Expression valueSlot = keccak256({std::move(keyExpression), wordSized(variable("slot"))});
+		Pointer body = component(*_mappingType.valueType(), std::move(valueSlot), 0, "value", produced);
+		return Built{{"slot", "key"}, std::move(body), std::move(produced)};
 	}
 
 	/// Dynamic arrays store their element count in the base slot and their data
 	/// starting at `keccak256(slot)`.
-	Pointer buildDynamicArray(ArrayType const& _arrayType, Expression _slot, std::string const& _name)
+	Pointer dynamicArray(ArrayType const& _arrayType, std::vector<std::string>& _produced)
 	{
-		std::string const lengthName = _name + "-length";
-		std::string const dataVariable = _name + "-data";
-
-		Pointer lengthRegion = region(m_location, lengthName, _slot);
+		Pointer lengthRegion = region(schema::Pointer::Location::Storage, "length", variable("slot"));
+		produce(_produced, "length");
 		Pointer elements = scope(
-			{{dataVariable, keccak256({wordSized(std::move(_slot))})}},
-			elementList(_arrayType, variable(dataVariable), read(lengthName), _name)
+			{{"data", keccak256({wordSized(variable("slot"))})}},
+			elementList(_arrayType, variable("data"), read("length"), _produced)
 		);
 
 		std::vector<Pointer> members;
@@ -524,15 +649,13 @@ private:
 		return group(std::move(members));
 	}
 
-	/// A list of element pointers laid out from @a _dataStart. Value-type
-	/// elements narrower than a word are packed multiple to a slot; everything
-	/// else advances in whole slots.
-	Pointer elementList(ArrayType const& _arrayType, Expression _dataStart, Expression _count, std::string const& _name)
+	/// A list of element pointers laid out from @a _dataStart, each called
+	/// `item`. Value-type elements narrower than a word are packed multiple to
+	/// a slot from its least significant byte; everything else advances in
+	/// whole slots.
+	Pointer elementList(ArrayType const& _arrayType, Expression _dataStart, Expression _count, std::vector<std::string>& _produced)
 	{
 		Type const& elementType = *_arrayType.baseType();
-		std::string const indexName = _name + "-index";
-		std::string const elementName = _name + "-item";
-
 		Pointer element = [&]() {
 			if (elementType.storageBytes() < 32)
 			{
@@ -541,58 +664,54 @@ private:
 				solAssert(elementType.isValueType(), "Only value types can be packed.");
 				u256 const elementBytes = elementType.storageBytes();
 				u256 const elementsPerSlot = 32 / elementBytes;
+				Expression position = sum({remainder(variable("index"), literal(elementsPerSlot)), literal(1)});
+				if (elementBytes != 1)
+					position = product({std::move(position), literal(elementBytes)});
+				produce(_produced, "item");
 				return region(
-					m_location,
-					elementName,
-					sum({std::move(_dataStart), quotient(variable(indexName), literal(elementsPerSlot))}),
-					difference(
-						wordSize(),
-						product({sum({remainder(variable(indexName), literal(elementsPerSlot)), literal(1)}), literal(elementBytes)})
-					),
+					schema::Pointer::Location::Storage,
+					"item",
+					sum({std::move(_dataStart), quotient(variable("index"), literal(elementsPerSlot))}),
+					difference(wordSize(), std::move(position)),
 					literal(elementBytes)
 				);
 			}
 			u256 const slotsPerElement = elementType.storageSize();
 			Expression stride = slotsPerElement == 1
-				? variable(indexName)
-				: product({variable(indexName), literal(slotsPerElement)});
-			return build(elementType, sum({std::move(_dataStart), std::move(stride)}), 0, elementName);
+				? variable("index")
+				: product({variable("index"), literal(slotsPerElement)});
+			return component(elementType, sum({std::move(_dataStart), std::move(stride)}), 0, "item", _produced);
 		}();
 
-		return list(std::move(_count), indexName, std::move(element));
+		return list(std::move(_count), "index", std::move(element));
 	}
 
 	/// `bytes` and `string` use the compact encoding: short values keep their
 	/// data in the base slot with the doubled length in the last byte; long
 	/// values keep `2 * length + 1` in the base slot and their data starting at
-	/// `keccak256(slot)`.
-	Pointer buildBytesOrString(Expression _slot, std::string const& _name)
+	/// `keccak256(slot)`. Either way the data is the region `data`.
+	Pointer bytesOrString(std::vector<std::string>& _produced)
 	{
-		std::string const lengthFlagName = _name + "-length-flag";
-		std::string const longLengthName = _name + "-long-length";
-		std::string const lengthVariable = _name + "-length";
-		std::string const dataVariable = _name + "-data";
-
 		Pointer lengthFlagRegion = region(
-			m_location,
-			lengthFlagName,
-			_slot,
+			schema::Pointer::Location::Storage,
+			"length-flag",
+			variable("slot"),
 			difference(wordSize(), literal(1)),
 			literal(1)
 		);
 
 		Pointer shortValue = scope(
-			{{lengthVariable, quotient(read(lengthFlagName), literal(2))}},
-			region(m_location, _name, _slot, std::nullopt, variable(lengthVariable))
+			{{"length", quotient(read("length-flag"), literal(2))}},
+			region(schema::Pointer::Location::Storage, "data", variable("slot"), std::nullopt, variable("length"))
 		);
 
-		Pointer longLengthRegion = region(m_location, longLengthName, _slot);
+		Pointer longLengthRegion = region(schema::Pointer::Location::Storage, "long-length", variable("slot"));
 		Pointer longData = scope(
 			{
-				{lengthVariable, quotient(difference(read(longLengthName), literal(1)), literal(2))},
-				{dataVariable, keccak256({wordSized(std::move(_slot))})}
+				{"length", quotient(difference(read("long-length"), literal(1)), literal(2))},
+				{"start", keccak256({wordSized(variable("slot"))})}
 			},
-			region(m_location, _name, variable(dataVariable), std::nullopt, variable(lengthVariable))
+			region(schema::Pointer::Location::Storage, "data", variable("start"), std::nullopt, variable("length"))
 		);
 		std::vector<Pointer> longMembers;
 		longMembers.emplace_back(std::move(longLengthRegion));
@@ -601,90 +720,22 @@ private:
 		// The flag byte is even (2 * length) for short values and odd
 		// (2 * length + 1) for long ones, so `(flag + 1) % 2` selects short.
 		Pointer value = conditional(
-			remainder(sum({read(lengthFlagName), literal(1)}), literal(2)),
+			remainder(sum({read("length-flag"), literal(1)}), literal(2)),
 			std::move(shortValue),
 			group(std::move(longMembers))
 		);
 
+		for (char const* name: {"length-flag", "data", "long-length"})
+			produce(_produced, name);
 		std::vector<Pointer> members;
 		members.emplace_back(std::move(lengthFlagRegion));
 		members.emplace_back(std::move(value));
 		return group(std::move(members));
 	}
 
-	Pointer buildStruct(StructType const& _structType, Expression _slot, std::string const& _name)
-	{
-		// Recursive structs and pathological nesting fall back to a region
-		// covering the struct's slots.
-		if (m_depth >= maxCompositionDepth || m_structsOnPath.count(_structType.identifier()))
-			return wholeRegion(_structType, std::move(_slot), 0, _name);
-
-		m_structsOnPath.insert(_structType.identifier());
-		++m_depth;
-
-		std::vector<Pointer> members;
-		for (ASTPointer<VariableDeclaration> const& member: _structType.structDefinition().members())
-		{
-			if (!member->annotation().type)
-				continue;
-			auto const& [slotOffset, byteOffset] = _structType.storageOffsetsOfMember(member->name());
-			members.emplace_back(build(
-				*member->annotation().type,
-				advanceSlots(_slot, slotOffset),
-				byteOffset,
-				_name + "-" + member->name()
-			));
-		}
-
-		--m_depth;
-		m_structsOnPath.erase(_structType.identifier());
-
-		if (members.empty())
-			return wholeRegion(_structType, std::move(_slot), 0, _name);
-		return group(std::move(members));
-	}
-
-	static constexpr unsigned maxCompositionDepth = 16;
-
-	schema::Pointer::Location m_location;
-	std::vector<std::string> m_expectedParameters;
-	std::set<std::string> m_structsOnPath;
-	unsigned m_depth = 0;
+	std::map<std::string, Built> m_templates;
+	std::set<std::string> m_building;
 };
-
-/// The name the state variable's pointer template is published under: the
-/// location and the AST IDs of the most derived contract and the variable, so
-/// that an inherited variable at a different slot in another contract of the
-/// same compilation does not clash.
-std::string templateName(
-	ContractDefinition const& _contract,
-	VariableDeclaration const& _variable,
-	schema::Pointer::Location _location
-)
-{
-	solAssert(_location == schema::Pointer::Location::Storage || _location == schema::Pointer::Location::Transient);
-	std::string const prefix = _location == schema::Pointer::Location::Storage ? "storage_" : "transient_";
-	return prefix + std::to_string(_contract.id()) + "_" + std::to_string(_variable.id());
-}
-
-schema::Pointer::Template stateVariableTemplate(
-	VariableDeclaration const& _variable,
-	u256 const& _slot,
-	unsigned _offset,
-	schema::Pointer::Location _location
-)
-{
-	solAssert(_variable.annotation().type, "State variable type expected.");
-
-	StateVariablePointerBuilder builder{_location};
-	Pointer pointer = builder.build(
-		*_variable.annotation().type,
-		literal(_slot),
-		_offset,
-		identifier(_variable.name())
-	);
-	return schema::Pointer::Template{builder.takeExpectedParameters(), std::make_shared<Pointer const>(std::move(pointer))};
-}
 
 void registerCallableTypes(TypeRegistry& _types, CallableDeclaration const& _callable)
 {
@@ -718,20 +769,21 @@ ethdebug::Resources ethdebug::resources(ContractDefinition const& _contract, std
 	auto const* contractType = dynamic_cast<ContractType const*>(typeType->actualType());
 	solAssert(contractType, "Contract type expected.");
 
-	auto const addStateVariables = [&](DataLocation _dataLocation, schema::Pointer::Location _location) {
-		for (auto const& [variable, slot, offset]: contractType->linearizedStateVariables(_dataLocation))
+	// The pointer templates describe the storage types of the state variables;
+	// where each variable's value starts is the storage layout's to say.
+	PointerTemplateRegistry templates;
+	auto const addStateVariables = [&](DataLocation _dataLocation) {
+		for (auto const& entry: contractType->linearizedStateVariables(_dataLocation))
 		{
+			VariableDeclaration const* variable = std::get<0>(entry);
 			if (variable->name().empty())
 				continue;
 			types.registerType(*variable->annotation().type);
-			result.pointers.insert_or_assign(
-				templateName(_contract, *variable, _location),
-				stateVariableTemplate(*variable, slot, offset, _location)
-			);
+			templates.registerType(*variable->annotation().type);
 		}
 	};
-	addStateVariables(DataLocation::Storage, schema::Pointer::Location::Storage);
-	addStateVariables(DataLocation::Transient, schema::Pointer::Location::Transient);
+	addStateVariables(DataLocation::Storage);
+	addStateVariables(DataLocation::Transient);
 
 	// Inherited functions and modifiers are compiled into the most derived
 	// contract, so every linearized base contract contributes its types.
@@ -760,5 +812,6 @@ ethdebug::Resources ethdebug::resources(ContractDefinition const& _contract, std
 		}
 
 	result.types = types.takeDocuments();
+	result.pointers = templates.takeTemplates();
 	return result;
 }

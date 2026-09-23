@@ -45,4 +45,4 @@ contract C {
 // .resources.types.t_string_storage: {"kind":"string"}
 // .resources.types.t_uint16: {"bits":16,"kind":"uint"}
 // .resources.types.t_uint256: {"bits":256,"kind":"uint"}
-// .resources.pointers | keys: ["storage_18_13","storage_18_15","storage_18_17","storage_18_5","storage_18_8"]
+// .resources.pointers | keys: ["t_array$_t_array$_t_uint256_$2_storage_$dyn_storage","t_array$_t_uint16_$8_storage","t_array$_t_uint256_$2_storage","t_array$_t_uint256_$dyn_storage","t_bytes_storage","t_string_storage"]

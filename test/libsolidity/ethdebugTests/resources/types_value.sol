@@ -21,4 +21,4 @@ contract C {
 // .resources.types.t_string_storage: {"kind":"string"}
 // .resources.types.t_uint16: {"bits":16,"kind":"uint"}
 // .resources.types.t_uint8: {"bits":8,"kind":"uint"}
-// .resources.pointers | keys: ["storage_36_11","storage_36_13","storage_36_15","storage_36_17","storage_36_3","storage_36_5","storage_36_7","storage_36_9"]
+// .resources.pointers | keys: ["t_bytes_storage","t_string_storage"]

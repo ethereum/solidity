@@ -9,206 +9,225 @@ contract C {
 }
 // ----
 // .resources.types | keys: ["t_address","t_bytes4","t_mapping$_t_address_$_t_uint256_$","t_string_storage","t_struct$_Line_$17_storage","t_struct$_Point_$8_storage","t_struct$_Registry_$24_storage","t_uint256","t_uint8"]
-// .resources.pointers | keys: ["storage_34_27","storage_34_30","storage_34_33"]
-// .resources.pointers.storage_34_27: {
-//     "expect": [],
+// .resources.pointers | keys: ["t_mapping$_t_address_$_t_uint256_$","t_string_storage","t_struct$_Line_$17_storage","t_struct$_Point_$8_storage","t_struct$_Registry_$24_storage"]
+// .resources.pointers.t_mapping$_t_address_$_t_uint256_$: {
+//     "expect": [
+//         "slot",
+//         "key"
+//     ],
 //     "for": {
-//         "group": [
-//             {
-//                 "length": "0x01",
-//                 "location": "storage",
-//                 "name": "point-x",
-//                 "offset": "0x1f",
-//                 "slot": "0x00"
-//             },
-//             {
-//                 "length": "0x01",
-//                 "location": "storage",
-//                 "name": "point-y",
-//                 "offset": "0x1e",
-//                 "slot": "0x00"
-//             },
-//             {
-//                 "length": "0x04",
-//                 "location": "storage",
-//                 "name": "point-salt",
-//                 "offset": "0x1a",
-//                 "slot": "0x00"
-//             }
-//         ]
+//         "location": "storage",
+//         "name": "value",
+//         "slot": {
+//             "$keccak256": [
+//                 {
+//                     "$wordsized": "key"
+//                 },
+//                 {
+//                     "$wordsized": "slot"
+//                 }
+//             ]
+//         }
 //     }
 // }
-// .resources.pointers.storage_34_30: {
-//     "expect": [],
+// .resources.pointers.t_string_storage: {
+//     "expect": [
+//         "slot"
+//     ],
 //     "for": {
 //         "group": [
 //             {
-//                 "group": [
-//                     {
-//                         "length": "0x01",
-//                         "location": "storage",
-//                         "name": "line-from-x",
-//                         "offset": "0x1f",
-//                         "slot": "0x01"
-//                     },
-//                     {
-//                         "length": "0x01",
-//                         "location": "storage",
-//                         "name": "line-from-y",
-//                         "offset": "0x1e",
-//                         "slot": "0x01"
-//                     },
-//                     {
-//                         "length": "0x04",
-//                         "location": "storage",
-//                         "name": "line-from-salt",
-//                         "offset": "0x1a",
-//                         "slot": "0x01"
-//                     }
-//                 ]
+//                 "length": "0x01",
+//                 "location": "storage",
+//                 "name": "length-flag",
+//                 "offset": {
+//                     "$difference": [
+//                         "$wordsize",
+//                         "0x01"
+//                     ]
+//                 },
+//                 "slot": "slot"
 //             },
 //             {
-//                 "group": [
-//                     {
-//                         "length": "0x01",
-//                         "location": "storage",
-//                         "name": "line-to-x",
-//                         "offset": "0x1f",
-//                         "slot": "0x02"
-//                     },
-//                     {
-//                         "length": "0x01",
-//                         "location": "storage",
-//                         "name": "line-to-y",
-//                         "offset": "0x1e",
-//                         "slot": "0x02"
-//                     },
-//                     {
-//                         "length": "0x04",
-//                         "location": "storage",
-//                         "name": "line-to-salt",
-//                         "offset": "0x1a",
-//                         "slot": "0x02"
-//                     }
-//                 ]
-//             },
-//             {
-//                 "group": [
-//                     {
-//                         "length": "0x01",
-//                         "location": "storage",
-//                         "name": "line-label-length-flag",
-//                         "offset": {
-//                             "$difference": [
-//                                 "$wordsize",
-//                                 "0x01"
-//                             ]
+//                 "else": {
+//                     "group": [
+//                         {
+//                             "location": "storage",
+//                             "name": "long-length",
+//                             "slot": "slot"
 //                         },
-//                         "slot": "0x03"
-//                     },
-//                     {
-//                         "else": {
-//                             "group": [
-//                                 {
-//                                     "location": "storage",
-//                                     "name": "line-label-long-length",
-//                                     "slot": "0x03"
-//                                 },
-//                                 {
-//                                     "define": {
-//                                         "line-label-length": {
-//                                             "$quotient": [
-//                                                 {
-//                                                     "$difference": [
-//                                                         {
-//                                                             "$read": "line-label-long-length"
-//                                                         },
-//                                                         "0x01"
-//                                                     ]
-//                                                 },
-//                                                 "0x02"
-//                                             ]
-//                                         }
-//                                     },
-//                                     "in": {
-//                                         "define": {
-//                                             "line-label-data": {
-//                                                 "$keccak256": [
-//                                                     {
-//                                                         "$wordsized": "0x03"
-//                                                     }
-//                                                 ]
-//                                             }
-//                                         },
-//                                         "in": {
-//                                             "length": "line-label-length",
-//                                             "location": "storage",
-//                                             "name": "line-label",
-//                                             "slot": "line-label-data"
-//                                         }
-//                                     }
-//                                 }
-//                             ]
-//                         },
-//                         "if": {
-//                             "$remainder": [
-//                                 {
-//                                     "$sum": [
-//                                         {
-//                                             "$read": "line-label-length-flag"
-//                                         },
-//                                         "0x01"
-//                                     ]
-//                                 },
-//                                 "0x02"
-//                             ]
-//                         },
-//                         "then": {
+//                         {
 //                             "define": {
-//                                 "line-label-length": {
+//                                 "length": {
 //                                     "$quotient": [
 //                                         {
-//                                             "$read": "line-label-length-flag"
+//                                             "$difference": [
+//                                                 {
+//                                                     "$read": "long-length"
+//                                                 },
+//                                                 "0x01"
+//                                             ]
 //                                         },
 //                                         "0x02"
 //                                     ]
 //                                 }
 //                             },
 //                             "in": {
-//                                 "length": "line-label-length",
-//                                 "location": "storage",
-//                                 "name": "line-label",
-//                                 "slot": "0x03"
+//                                 "define": {
+//                                     "start": {
+//                                         "$keccak256": [
+//                                             {
+//                                                 "$wordsized": "slot"
+//                                             }
+//                                         ]
+//                                     }
+//                                 },
+//                                 "in": {
+//                                     "length": "length",
+//                                     "location": "storage",
+//                                     "name": "data",
+//                                     "slot": "start"
+//                                 }
 //                             }
 //                         }
+//                     ]
+//                 },
+//                 "if": {
+//                     "$remainder": [
+//                         {
+//                             "$sum": [
+//                                 {
+//                                     "$read": "length-flag"
+//                                 },
+//                                 "0x01"
+//                             ]
+//                         },
+//                         "0x02"
+//                     ]
+//                 },
+//                 "then": {
+//                     "define": {
+//                         "length": {
+//                             "$quotient": [
+//                                 {
+//                                     "$read": "length-flag"
+//                                 },
+//                                 "0x02"
+//                             ]
+//                         }
+//                     },
+//                     "in": {
+//                         "length": "length",
+//                         "location": "storage",
+//                         "name": "data",
+//                         "slot": "slot"
 //                     }
-//                 ]
+//                 }
 //             }
 //         ]
 //     }
 // }
-// .resources.pointers.storage_34_33: {
+// .resources.pointers.t_struct$_Line_$17_storage: {
 //     "expect": [
-//         "key"
+//         "slot"
+//     ],
+//     "for": {
+//         "group": [
+//             {
+//                 "template": "t_struct$_Point_$8_storage",
+//                 "yields": {
+//                     "salt": "from-salt",
+//                     "x": "from-x",
+//                     "y": "from-y"
+//                 }
+//             },
+//             {
+//                 "define": {
+//                     "slot": {
+//                         "$sum": [
+//                             "slot",
+//                             "0x01"
+//                         ]
+//                     }
+//                 },
+//                 "in": {
+//                     "template": "t_struct$_Point_$8_storage",
+//                     "yields": {
+//                         "salt": "to-salt",
+//                         "x": "to-x",
+//                         "y": "to-y"
+//                     }
+//                 }
+//             },
+//             {
+//                 "define": {
+//                     "slot": {
+//                         "$sum": [
+//                             "slot",
+//                             "0x02"
+//                         ]
+//                     }
+//                 },
+//                 "in": {
+//                     "template": "t_string_storage",
+//                     "yields": {
+//                         "data": "label-data",
+//                         "length-flag": "label-length-flag",
+//                         "long-length": "label-long-length"
+//                     }
+//                 }
+//             }
+//         ]
+//     }
+// }
+// .resources.pointers.t_struct$_Point_$8_storage: {
+//     "expect": [
+//         "slot"
+//     ],
+//     "for": {
+//         "group": [
+//             {
+//                 "length": "0x01",
+//                 "location": "storage",
+//                 "name": "x",
+//                 "offset": "0x1f",
+//                 "slot": "slot"
+//             },
+//             {
+//                 "length": "0x01",
+//                 "location": "storage",
+//                 "name": "y",
+//                 "offset": "0x1e",
+//                 "slot": "slot"
+//             },
+//             {
+//                 "length": "0x04",
+//                 "location": "storage",
+//                 "name": "salt",
+//                 "offset": "0x1a",
+//                 "slot": "slot"
+//             }
+//         ]
+//     }
+// }
+// .resources.pointers.t_struct$_Registry_$24_storage: {
+//     "expect": [
+//         "slot"
 //     ],
 //     "for": {
 //         "group": [
 //             {
 //                 "location": "storage",
-//                 "name": "registry-count",
-//                 "slot": "0x04"
+//                 "name": "count",
+//                 "slot": "slot"
 //             },
 //             {
 //                 "location": "storage",
-//                 "name": "registry-index",
+//                 "name": "index",
 //                 "slot": {
-//                     "$keccak256": [
-//                         {
-//                             "$wordsized": "key"
-//                         },
-//                         {
-//                             "$wordsized": "0x05"
-//                         }
+//                     "$sum": [
+//                         "slot",
+//                         "0x01"
 //                     ]
 //                 }
 //             }

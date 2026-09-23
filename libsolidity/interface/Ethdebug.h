@@ -38,9 +38,11 @@ struct Resources
 	/// Type documents keyed by the compiler's type identifier. Composed types
 	/// reference their component types by that identifier.
 	std::map<std::string, evmasm::ethdebug::schema::Type> types;
-	/// The pointer of every state variable as a template, keyed by a name
-	/// derived from the AST IDs of the contract and the variable. The
-	/// templates of mappings expect their keys as parameters.
+	/// The pointer template of every struct, array and mapping type the state
+	/// variables have or are composed of, keyed by the compiler's type
+	/// identifier: the layout of a value of the type from a base slot, which
+	/// the template expects as `slot`. A mapping's template expects `key` as
+	/// well. Value types have no template; they are single regions.
 	std::map<std::string, evmasm::ethdebug::schema::Pointer::Template> pointers;
 
 	/// Adds the tables of @a _other, replacing entries with the same key.
@@ -49,7 +51,7 @@ struct Resources
 
 /// The resources of @a _contract: the types of its state variables and of the
 /// parameters and return variables of every function and modifier compiled
-/// into it, and the storage and transient storage pointers of its state
+/// into it, and the pointer templates of the storage types of its state
 /// variables. @a _sourceIndices maps source unit names to the source IDs of
 /// the ethdebug compilation record, which definition locations refer to.
 Resources resources(ContractDefinition const& _contract, std::map<std::string, unsigned> const& _sourceIndices);

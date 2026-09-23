@@ -68,4 +68,4 @@ contract C {
 //     "kind": "struct"
 // }
 // .resources.types.t_uint256: {"bits":256,"kind":"uint"}
-// .resources.pointers | keys: ["storage_17_16"]
+// .resources.pointers | keys: ["t_array$_t_struct$_Node_$13_storage_$dyn_storage","t_mapping$_t_uint256_$_t_struct$_Node_$13_storage_$","t_struct$_Node_$13_storage"]

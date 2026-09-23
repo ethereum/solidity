@@ -15,75 +15,41 @@ contract D is Base {
 }
 // ----
 // .resources.types | keys: ["t_string_storage","t_uint256","t_uint8"]
-// .resources.pointers | keys: ["storage_19_10","storage_19_12","storage_19_3","storage_19_5","storage_24_23","storage_24_3","storage_24_5","storage_6_3","storage_6_5"]
-// .resources.pointers.storage_19_10: {
-//     "expect": [],
-//     "for": {
-//         "length": "0x01",
-//         "location": "storage",
-//         "name": "packedOwn",
-//         "offset": "0x1e",
-//         "slot": "0x01"
-//     }
-// }
-// .resources.pointers.storage_19_12: {
-//     "expect": [],
-//     "for": {
-//         "location": "storage",
-//         "name": "own",
-//         "slot": "0x02"
-//     }
-// }
-// .resources.pointers.storage_19_3: {
-//     "expect": [],
-//     "for": {
-//         "location": "storage",
-//         "name": "inherited",
-//         "slot": "0x00"
-//     }
-// }
-// .resources.pointers.storage_19_5: {
-//     "expect": [],
-//     "for": {
-//         "length": "0x01",
-//         "location": "storage",
-//         "name": "packedBase",
-//         "offset": "0x1f",
-//         "slot": "0x01"
-//     }
-// }
-// .resources.pointers.storage_24_23: {
-//     "expect": [],
+// .resources.pointers | keys: ["t_string_storage"]
+// .resources.pointers.t_string_storage: {
+//     "expect": [
+//         "slot"
+//     ],
 //     "for": {
 //         "group": [
 //             {
 //                 "length": "0x01",
 //                 "location": "storage",
-//                 "name": "own-length-flag",
+//                 "name": "length-flag",
 //                 "offset": {
 //                     "$difference": [
 //                         "$wordsize",
 //                         "0x01"
 //                     ]
 //                 },
-//                 "slot": "0x02"
+//                 "slot": "slot"
 //             },
 //             {
 //                 "else": {
 //                     "group": [
 //                         {
 //                             "location": "storage",
-//                             "name": "own-long-length",
-//                             "slot": "0x02"
+//                             "name": "long-length",
+//                             "slot": "slot"
 //                         },
 //                         {
 //                             "define": {
-//                                 "own-length": {
+//                                 "length": {
 //                                     "$quotient": [
 //                                         {
 //                                             "$difference": [
 //                                                 {
-//                                                     "$read": "own-long-length"
+//                                                     "$read": "long-length"
 //                                                 },
 //                                                 "0x01"
 //                                             ]
@@ -94,19 +60,19 @@ contract D is Base {
 //                             },
 //                             "in": {
 //                                 "define": {
-//                                     "own-data": {
+//                                     "start": {
 //                                         "$keccak256": [
 //                                             {
-//                                                 "$wordsized": "0x02"
+//                                                 "$wordsized": "slot"
 //                                             }
 //                                         ]
 //                                     }
 //                                 },
 //                                 "in": {
-//                                     "length": "own-length",
+//                                     "length": "length",
 //                                     "location": "storage",
-//                                     "name": "own",
-//                                     "slot": "own-data"
+//                                     "name": "data",
+//                                     "slot": "start"
 //                                 }
 //                             }
 //                         }
@@ -117,7 +83,7 @@ contract D is Base {
 //                         {
 //                             "$sum": [
 //                                 {
-//                                     "$read": "own-length-flag"
+//                                     "$read": "length-flag"
 //                                 },
 //                                 "0x01"
 //                             ]
@@ -127,59 +93,23 @@ contract D is Base {
 //                 },
 //                 "then": {
 //                     "define": {
-//                         "own-length": {
+//                         "length": {
 //                             "$quotient": [
 //                                 {
-//                                     "$read": "own-length-flag"
+//                                     "$read": "length-flag"
 //                                 },
 //                                 "0x02"
 //                             ]
 //                         }
 //                     },
 //                     "in": {
-//                         "length": "own-length",
+//                         "length": "length",
 //                         "location": "storage",
-//                         "name": "own",
-//                         "slot": "0x02"
+//                         "name": "data",
+//                         "slot": "slot"
 //                     }
 //                 }
 //             }
 //         ]
-//     }
-// }
-// .resources.pointers.storage_24_3: {
-//     "expect": [],
-//     "for": {
-//         "location": "storage",
-//         "name": "inherited",
-//         "slot": "0x00"
-//     }
-// }
-// .resources.pointers.storage_24_5: {
-//     "expect": [],
-//     "for": {
-//         "length": "0x01",
-//         "location": "storage",
-//         "name": "packedBase",
-//         "offset": "0x1f",
-//         "slot": "0x01"
-//     }
-// }
-// .resources.pointers.storage_6_3: {
-//     "expect": [],
-//     "for": {
-//         "location": "storage",
-//         "name": "inherited",
-//         "slot": "0x00"
-//     }
-// }
-// .resources.pointers.storage_6_5: {
-//     "expect": [],
-//     "for": {
-//         "length": "0x01",
-//         "location": "storage",
-//         "name": "packedBase",
-//         "offset": "0x1f",
-//         "slot": "0x01"
 //     }
 // }
