@@ -23,13 +23,12 @@
 //         { i := add(i, 1) }
 //         let _3 := 0
 //         let k := add(i, 2)
-//         let _8 := add(sload(k), calldataload(64))
-//         sstore(k, _8)
+//         sstore(k, add(sload(k), calldataload(64)))
 //         let j_1 := _3
 //         for { } lt(j_1, calldataload(32)) { j_1 := add(j_1, 1) }
 //         { i := add(i, 1) }
 //         sstore(i, calldataload(96))
-//         mstore(_3, _8)
+//         mstore(_3, sload(k))
 //         return(_3, 32)
 //     }
 // }

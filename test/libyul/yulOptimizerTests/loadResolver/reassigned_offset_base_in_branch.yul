@@ -25,9 +25,8 @@
 //         let c := add(t, 2)
 //         sstore(c, calldataload(64))
 //         if calldataload(128) { t := calldataload(32) }
-//         let x := sload(t)
 //         sstore(c, calldataload(96))
-//         mstore(_1, x)
+//         mstore(_1, sload(t))
 //         return(_1, 32)
 //     }
 // }

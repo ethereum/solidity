@@ -26,5 +26,5 @@
 //     case 0 { v := 0x20 }
 //     let y := 7
 //     mstore(v, y)
-//     sstore(0, x)
+//     sstore(0, mload(a))
 // }

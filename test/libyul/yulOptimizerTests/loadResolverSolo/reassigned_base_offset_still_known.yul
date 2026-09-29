@@ -28,5 +28,5 @@
 //     let c := add(a1, 0x20)
 //     let y := 7
 //     mstore(c, y)
-//     sstore(0, mload(a))
+//     sstore(0, x)
 // }

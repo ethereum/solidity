@@ -27,4 +27,5 @@
 //     sstore(c, v)
 //     if calldataload(96) { t := sload(6) }
 //     sstore(t, w)
+//     sstore(c, v)
 // }

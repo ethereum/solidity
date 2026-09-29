@@ -37,6 +37,6 @@
 //     let newValue := 7
 //     mstore(b, newValue)
 //     let len := 32
-//     let hash := 68102551414429512688341748121557973433911027091682754417602991941003491944339
+//     let hash := keccak256(a, len)
 //     sstore(0, hash)
 // }

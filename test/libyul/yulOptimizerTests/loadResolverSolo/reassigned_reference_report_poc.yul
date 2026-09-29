@@ -42,7 +42,7 @@
 //     let b := add(add(v, 0x200), 0x10)
 //     let newValue := 7
 //     mstore(b, newValue)
-//     let result := oldValue
+//     let result := mload(a)
 //     mstore(0, result)
 //     return(0, 0x20)
 // }

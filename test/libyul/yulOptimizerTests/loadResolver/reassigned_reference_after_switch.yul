@@ -24,13 +24,12 @@
 //         let i1 := i
 //         let _5 := 2
 //         let k := add(i1, _5)
-//         let _9 := add(sload(k), calldataload(64))
-//         sstore(k, _9)
+//         sstore(k, add(sload(k), calldataload(64)))
 //         let _10 := 32
 //         switch calldataload(_10)
 //         case 0 { i := add(i, _5) }
 //         sstore(i, calldataload(96))
-//         mstore(_4, _9)
+//         mstore(_4, sload(k))
 //         return(_4, _10)
 //     }
 // }

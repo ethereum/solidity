@@ -21,10 +21,9 @@
 //         let v := sload(_1)
 //         if calldataload(_1) { v := sload(1) }
 //         let a := add(v, 0x100)
-//         let _9 := add(mload(a), 67)
-//         mstore(a, _9)
+//         mstore(a, add(mload(a), 67))
 //         if calldataload(32) { v := sload(2) }
 //         mstore(add(v, 0x200), 7)
-//         sstore(_1, _9)
+//         sstore(_1, mload(a))
 //     }
 // }

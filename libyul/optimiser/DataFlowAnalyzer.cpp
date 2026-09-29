@@ -349,6 +349,12 @@ void DataFlowAnalyzer::clearValues(VariableSet const& _variablesToClear)
 		m_state.value.erase(name);
 		m_state.sortedReferences.erase(name);
 	}
+
+	// Only the variables to clear changed. The values of the referencing variables did not
+	// change, we just forgot their expressions because we can no longer evaluate them.
+	// What the knowledge base computed for them is still valid though.
+	for (auto const& name: _variablesToClear)
+		m_knowledgeBase.variableChanged(name);
 }
 
 void DataFlowAnalyzer::assignValue(YulName _variable, Expression const* _value)

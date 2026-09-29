@@ -26,9 +26,8 @@
 //         sstore(c, calldataload(64))
 //         let _5 := 32
 //         t := calldataload(_5)
-//         let x := sload(t)
 //         sstore(c, calldataload(96))
-//         mstore(_1, x)
+//         mstore(_1, sload(t))
 //         return(_1, _5)
 //     }
 // }

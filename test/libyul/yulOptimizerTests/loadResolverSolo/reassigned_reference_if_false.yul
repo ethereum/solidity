@@ -31,5 +31,5 @@
 //     let b := add(v, 32)
 //     let newValue := 7
 //     mstore(b, newValue)
-//     let result := oldValue
+//     let result := mload(a)
 // }
