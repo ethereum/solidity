@@ -20,9 +20,9 @@ contract C is Base {
     }
 }
 // ----
-// .resources.types | keys: ["t_address","t_array$_t_uint256_$2_memory_ptr","t_array$_t_uint32_$dyn_memory_ptr","t_array$_t_uint8_$dyn_calldata_ptr","t_bool","t_bytes_memory_ptr","t_int64","t_string_memory_ptr","t_struct$_S_$4_calldata_ptr","t_struct$_S_$4_memory_ptr","t_uint256","t_uint32","t_uint8"]
+// .resources.types | keys: ["t_address","t_array$_t_uint256_$2_storage","t_array$_t_uint32_$dyn_storage","t_array$_t_uint8_$dyn_storage","t_bool","t_bytes_storage","t_int64","t_string_storage","t_struct$_S_$4_storage","t_uint256","t_uint32","t_uint8"]
 // .resources.types.t_address: {"kind":"address","payable":false}
-// .resources.types.t_array$_t_uint256_$2_memory_ptr: {
+// .resources.types.t_array$_t_uint256_$2_storage: {
 //     "contains": {
 //         "type": {
 //             "id": "t_uint256"
@@ -31,7 +31,7 @@ contract C is Base {
 //     "count": "0x02",
 //     "kind": "array"
 // }
-// .resources.types.t_array$_t_uint32_$dyn_memory_ptr: {
+// .resources.types.t_array$_t_uint32_$dyn_storage: {
 //     "contains": {
 //         "type": {
 //             "id": "t_uint32"
@@ -39,7 +39,7 @@ contract C is Base {
 //     },
 //     "kind": "array"
 // }
-// .resources.types.t_array$_t_uint8_$dyn_calldata_ptr: {
+// .resources.types.t_array$_t_uint8_$dyn_storage: {
 //     "contains": {
 //         "type": {
 //             "id": "t_uint8"
@@ -48,33 +48,10 @@ contract C is Base {
 //     "kind": "array"
 // }
 // .resources.types.t_bool: {"kind":"bool"}
-// .resources.types.t_bytes_memory_ptr: {"kind":"bytes"}
+// .resources.types.t_bytes_storage: {"kind":"bytes"}
 // .resources.types.t_int64: {"bits":64,"kind":"int"}
-// .resources.types.t_string_memory_ptr: {"kind":"string"}
-// .resources.types.t_struct$_S_$4_calldata_ptr: {
-//     "contains": [
-//         {
-//             "name": "a",
-//             "type": {
-//                 "id": "t_uint256"
-//             }
-//         }
-//     ],
-//     "definition": {
-//         "location": {
-//             "range": {
-//                 "length": 23,
-//                 "offset": 59
-//             },
-//             "source": {
-//                 "id": 0
-//             }
-//         },
-//         "name": "S"
-//     },
-//     "kind": "struct"
-// }
-// .resources.types.t_struct$_S_$4_memory_ptr: {
+// .resources.types.t_string_storage: {"kind":"string"}
+// .resources.types.t_struct$_S_$4_storage: {
 //     "contains": [
 //         {
 //             "name": "a",

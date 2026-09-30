@@ -27,7 +27,8 @@ The resources of a contract contain a document for
 - and, transitively, every type these types are composed of.
 
 The resources of a compilation are the union of the resources of its contracts.
-Types are keyed by ``Type::identifier()``, so a type shared between contracts has one document.
+Types are keyed by ``Type::identifier()`` of the type as documented, so a type shared between contracts has one document.
+A reference type is documented as its variant in storage, ``TypeProvider::withLocationIfReference(DataLocation::Storage, ...)``, and an array slice as the array it views, so that every data location of a type shares one document; the location is the pointer's to describe.
 
 A type that only exists at compile time has no document, and neither has a type composed of one.
 This concerns literals, type names, modifiers, magic types, modules, inaccessible dynamic types and function types other than internal and external ones.
@@ -112,12 +113,11 @@ The Mapping
      - function
      - ``internal`` or ``external``, ``contains.parameters`` and ``contains.returns`` as inline tuples (no ``returns`` without return values), ``definition`` when declared
 
-References to component types are ``{"type": {"id": <identifier>}}``.
-The data location of a reference type is not represented; the located variants of a type are separate entries with the same document.
-The members of a struct are taken from ``StructType::members()`` and therefore carry the types they have in the struct's data location, e.g. a ``string`` member of a storage struct references ``t_string_storage``.
+References to component types are ``{"type": {"id": <identifier>}}``, except for the tuples of a function type, which ``ethdebug/format/type/complex/function`` requires to be written inline.
+The members of a struct are taken from ``StructType::members()``.
 
 A ``definition`` carries the ``name`` of the declaration, unless it is empty, and its source range as the ``location``.
-The source ``id`` of the location is the index of the source unit in ``CompilerStack::sourceIndices()``, which is also what the compilation record and the source mappings use.
+The source ``id`` of the location is the index of the source unit in ``CompilerStack::sourceIndices()``, which is also what the compilation record and the source mappings use; the offset and length are byte positions in the UTF-8 source, as ``SourceLocation`` holds them.
 Definitions without a name and a known location are omitted.
 
 State Variable Pointers

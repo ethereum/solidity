@@ -123,6 +123,12 @@ TYPE_ID_PATTERNS = {
 }
 
 
+def storage_located(type_id):
+    """The identifier of the variant of a reference type laid out in storage, which is
+    what the type table keys a type by whatever its data location."""
+    return re.sub(r"_(storage|memory|calldata)_ptr", "_storage", type_id)
+
+
 def escaped_type_id(rich_identifier):
     """The ethdebug type identifier of a type the storage layout names by its rich identifier,
     e.g. `t_enum$_Color_$7` for `t_enum(Color)7` (Type::escapeIdentifier())."""
@@ -269,15 +275,15 @@ class EthdebugTestCase(unittest.TestCase):
             self.assertEqual(document, {"kind": match.group(1), "bits": int(match.group(2)), "places": int(match.group(3))})
         elif kind == "array":
             self.assertEqual(document["kind"], "array")
-            self.assertEqual(document["contains"], {"type": {"id": match.group(1)}})
+            self.assertEqual(document["contains"], {"type": {"id": storage_located(match.group(1))}})
             if match.group(2) == "dyn":
                 self.assertNotIn("count", document)
             else:
                 self.assertEqual(int(document["count"], 16), int(match.group(2)))
         elif kind == "mapping":
             self.assertEqual(document["kind"], "mapping")
-            self.assertEqual(document["contains"]["key"], {"type": {"id": match.group(1)}})
-            self.assertEqual(document["contains"]["value"], {"type": {"id": match.group(2)}})
+            self.assertEqual(document["contains"]["key"], {"type": {"id": storage_located(match.group(1))}})
+            self.assertEqual(document["contains"]["value"], {"type": {"id": storage_located(match.group(2))}})
         elif kind == "struct":
             self.assertEqual(document["kind"], "struct")
             self.assertEqual(document["definition"]["name"], match.group(1))

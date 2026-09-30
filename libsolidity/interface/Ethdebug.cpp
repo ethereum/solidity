@@ -19,6 +19,7 @@
 #include <libsolidity/interface/Ethdebug.h>
 
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/ast/Types.h>
 
 #include <libsolutil/Numeric.h>
@@ -51,7 +52,15 @@ public:
 	/// by the compiler's type identifier, and @returns whether @a _type has a
 	/// document. Compile-time-only types, such as literals, have none, and
 	/// neither has a type composing one.
+	///
+	/// A type document does not depend on where a value is stored, so the
+	/// located variants of a reference type share one document, keyed by the
+	/// identifier of the type as it is laid out in storage.
 	bool registerType(Type const& _type);
+
+	/// The type @a _type is documented as: reference types in storage, an
+	/// array slice as the array it views.
+	static Type const& canonical(Type const& _type);
 
 	std::map<std::string, schema::Type> takeDocuments() { return std::move(m_documents); }
 
@@ -95,15 +104,23 @@ std::optional<schema::Type::Definition> TypeRegistry::definition(Declaration con
 	return schema::Type::Definition{std::move(name), std::move(location)};
 }
 
+Type const& TypeRegistry::canonical(Type const& _type)
+{
+	if (auto const* slice = dynamic_cast<ArraySliceType const*>(&_type))
+		return canonical(slice->arrayType());
+	return *TypeProvider::withLocationIfReference(DataLocation::Storage, &_type);
+}
+
 bool TypeRegistry::registerType(Type const& _type)
 {
-	std::string const id = _type.identifier();
+	Type const& type = canonical(_type);
+	std::string const id = type.identifier();
 	if (m_documents.count(id))
 		return true;
 	// Present before descending, so a recursive type terminates. Removed
 	// again if the type turns out to have no document.
 	m_documents.emplace(id, schema::Type{schema::Type::Bool{}});
-	if (std::optional<schema::Type> document = this->document(_type))
+	if (std::optional<schema::Type> document = this->document(type))
 	{
 		m_documents.insert_or_assign(id, std::move(*document));
 		return true;
@@ -118,7 +135,7 @@ std::optional<schema::Type::Wrapper> TypeRegistry::wrapper(std::optional<std::st
 		return std::nullopt;
 	return schema::Type::Wrapper{
 		std::move(_name),
-		schema::Type::Specifier{schema::Type::Reference{schema::materials::ID{_type.identifier()}}}
+		schema::Type::Specifier{schema::Type::Reference{schema::materials::ID{canonical(_type).identifier()}}}
 	};
 }
 
@@ -183,15 +200,7 @@ std::optional<schema::Type> TypeRegistry::document(Type const& _type)
 		return schema::Type{std::move(array)};
 	}
 	case frontend::Type::Category::ArraySlice:
-	{
-		// A slice's representation is the dynamic array it views, and no
-		// consumer distinguishes the two, so no separate kind is carried.
-		auto const& sliceType = dynamic_cast<ArraySliceType const&>(_type);
-		std::optional<schema::Type::Wrapper> element = wrapper(std::nullopt, *sliceType.arrayType().baseType());
-		if (!element)
-			return std::nullopt;
-		return schema::Type{schema::Type::Array{std::move(*element), std::nullopt}};
-	}
+		solAssert(false, "Array slices are documented as the arrays they view.");
 	case frontend::Type::Category::Contract:
 	{
 		auto const& contractType = dynamic_cast<ContractType const&>(_type);
@@ -267,6 +276,10 @@ std::optional<schema::Type> TypeRegistry::document(Type const& _type)
 		else
 			return std::nullopt;
 
+		// ethdebug/format/type/complex/function requires the parameters to wrap
+		// a tuple type itself, not a reference to one; the tuple's components
+		// are references like everywhere else. The returns are written the same
+		// way for consistency.
 		auto const tupleWrapper = [&](std::vector<Type const*> const& _types) -> std::optional<schema::Type::Wrapper> {
 			std::optional<std::vector<schema::Type::Wrapper>> components = wrappers(_types);
 			if (!components)

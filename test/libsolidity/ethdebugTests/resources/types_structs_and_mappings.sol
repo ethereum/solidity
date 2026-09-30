@@ -9,7 +9,7 @@ contract C {
     mapping(string => bool) named;
 }
 // ----
-// .resources.types | keys: ["t_address","t_bool","t_bytes4","t_mapping$_t_address_$_t_mapping$_t_uint256_$_t_struct$_Line_$17_storage_$_$","t_mapping$_t_address_$_t_uint256_$","t_mapping$_t_string_memory_ptr_$_t_bool_$","t_mapping$_t_uint256_$_t_struct$_Line_$17_storage_$","t_string_memory_ptr","t_string_storage","t_struct$_Line_$17_storage","t_struct$_Point_$8_storage","t_uint256","t_uint8"]
+// .resources.types | keys: ["t_address","t_bool","t_bytes4","t_mapping$_t_address_$_t_mapping$_t_uint256_$_t_struct$_Line_$17_storage_$_$","t_mapping$_t_address_$_t_uint256_$","t_mapping$_t_string_memory_ptr_$_t_bool_$","t_mapping$_t_uint256_$_t_struct$_Line_$17_storage_$","t_string_storage","t_struct$_Line_$17_storage","t_struct$_Point_$8_storage","t_uint256","t_uint8"]
 // .resources.types.t_address: {"kind":"address","payable":false}
 // .resources.types.t_bool: {"kind":"bool"}
 // .resources.types.t_bytes4: {"kind":"bytes","size":4}
@@ -47,7 +47,7 @@ contract C {
 //     "contains": {
 //         "key": {
 //             "type": {
-//                 "id": "t_string_memory_ptr"
+//                 "id": "t_string_storage"
 //             }
 //         },
 //         "value": {
@@ -73,7 +73,6 @@ contract C {
 //     },
 //     "kind": "mapping"
 // }
-// .resources.types.t_string_memory_ptr: {"kind":"string"}
 // .resources.types.t_string_storage: {"kind":"string"}
 // .resources.types.t_struct$_Line_$17_storage: {
 //     "contains": [
