@@ -120,6 +120,7 @@ TYPE_ID_PATTERNS = {
     "contract": re.compile(r"^t_contract\$_(\w+)_\$\d+$"),
     "alias": re.compile(r"^t_userDefinedValueType\$_(\w+)_\$\d+$"),
     "function": re.compile(r"^t_function_(internal|external)_\w+\$_.*$"),
+    "tuple": re.compile(r"^t_tuple\$_.*_\$$"),
 }
 
 
@@ -299,7 +300,11 @@ class EthdebugTestCase(unittest.TestCase):
         elif kind == "function":
             self.assertEqual(document["kind"], "function")
             self.assertIs(document.get(match.group(1)), True)
-            self.assertEqual(document["contains"]["parameters"]["type"]["kind"], "tuple")
+            parameters = document["contains"]["parameters"]["type"]
+            self.assertEqual(set(parameters), {"id"})
+            self.assertEqual(types[parameters["id"]]["kind"], "tuple")
+        elif kind == "tuple":
+            self.assertEqual(document["kind"], "tuple")
         for referenced_id in referenced_type_ids(document):
             self.assertIn(referenced_id, types, f"{type_id} references unknown type {referenced_id}")
 

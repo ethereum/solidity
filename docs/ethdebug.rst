@@ -75,8 +75,7 @@ Types that only exist at compile time, such as literals, type names or the ``msg
 
 Composite types reference their components by identifier, so that the table is closed:
 an array, a mapping or a user-defined value type refers to its element, key, value or underlying type as ``{"type": {"id": "t_uint256"}}`` and a struct lists its members with their ``name`` and such a reference.
-Function types are the exception, since the function type schema requires their parameters to be a tuple type written inline, not a reference; the return values are written the same way.
-The components of those tuples are references again.
+The parameters and the return values of a function type are tuple types, referenced in the same way.
 
 Types defined in the source, that is structs, enums, contracts, user-defined value types and functions with a declaration, carry a ``definition`` with the ``name`` of the definition and its ``location`` in the source: the source ``id`` and the ``offset`` and ``length`` of the definition.
 Like in source mappings, and as the schema of source ranges specifies, the offset and the length count bytes of the UTF-8 encoded source, not characters.

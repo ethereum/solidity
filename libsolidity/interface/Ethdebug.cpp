@@ -276,18 +276,10 @@ std::optional<schema::Type> TypeRegistry::document(Type const& _type)
 		else
 			return std::nullopt;
 
-		// ethdebug/format/type/complex/function requires the parameters to wrap
-		// a tuple type itself, not a reference to one; the tuple's components
-		// are references like everywhere else. The returns are written the same
-		// way for consistency.
-		auto const tupleWrapper = [&](std::vector<Type const*> const& _types) -> std::optional<schema::Type::Wrapper> {
-			std::optional<std::vector<schema::Type::Wrapper>> components = wrappers(_types);
-			if (!components)
-				return std::nullopt;
-			return schema::Type::Wrapper{
-				std::nullopt,
-				schema::Type::Specifier{std::make_shared<schema::Type const>(schema::Type{schema::Type::Tuple{std::move(*components)}})}
-			};
+		// The parameter and return lists are tuple types, documented and
+		// referenced like any other type.
+		auto const tupleWrapper = [&](std::vector<Type const*> const& _types) {
+			return wrapper(std::nullopt, *TypeProvider::tuple(_types));
 		};
 		std::optional<schema::Type::Wrapper> parameters = tupleWrapper(functionType.parameterTypes());
 		if (!parameters)

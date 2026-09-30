@@ -13,7 +13,7 @@ contract C {
     function g(uint256 a) public pure returns (uint256) { return L.id(a); }
 }
 // ----
-// .resources.types | keys: ["t_bool","t_contract$_C_$64","t_contract$_I_$11","t_enum$_Color_$7","t_function_external_nonpayable$_t_uint256_$returns$_t_bool_$","t_function_internal_pure$_t_uint256_$returns$_t_uint256_$","t_uint128","t_uint256","t_userDefinedValueType$_Price_$3"]
+// .resources.types | keys: ["t_bool","t_contract$_C_$64","t_contract$_I_$11","t_enum$_Color_$7","t_function_external_nonpayable$_t_uint256_$returns$_t_bool_$","t_function_internal_pure$_t_uint256_$returns$_t_uint256_$","t_tuple$_t_bool_$","t_tuple$_t_uint256_$","t_uint128","t_uint256","t_userDefinedValueType$_Price_$3"]
 // .resources.types.t_bool: {"kind":"bool"}
 // .resources.types.t_contract$_C_$64: {
 //     "definition": {
@@ -72,26 +72,12 @@ contract C {
 //     "contains": {
 //         "parameters": {
 //             "type": {
-//                 "contains": [
-//                     {
-//                         "type": {
-//                             "id": "t_uint256"
-//                         }
-//                     }
-//                 ],
-//                 "kind": "tuple"
+//                 "id": "t_tuple$_t_uint256_$"
 //             }
 //         },
 //         "returns": {
 //             "type": {
-//                 "contains": [
-//                     {
-//                         "type": {
-//                             "id": "t_bool"
-//                         }
-//                     }
-//                 ],
-//                 "kind": "tuple"
+//                 "id": "t_tuple$_t_bool_$"
 //             }
 //         }
 //     },
@@ -102,31 +88,37 @@ contract C {
 //     "contains": {
 //         "parameters": {
 //             "type": {
-//                 "contains": [
-//                     {
-//                         "type": {
-//                             "id": "t_uint256"
-//                         }
-//                     }
-//                 ],
-//                 "kind": "tuple"
+//                 "id": "t_tuple$_t_uint256_$"
 //             }
 //         },
 //         "returns": {
 //             "type": {
-//                 "contains": [
-//                     {
-//                         "type": {
-//                             "id": "t_uint256"
-//                         }
-//                     }
-//                 ],
-//                 "kind": "tuple"
+//                 "id": "t_tuple$_t_uint256_$"
 //             }
 //         }
 //     },
 //     "internal": true,
 //     "kind": "function"
+// }
+// .resources.types.t_tuple$_t_bool_$: {
+//     "contains": [
+//         {
+//             "type": {
+//                 "id": "t_bool"
+//             }
+//         }
+//     ],
+//     "kind": "tuple"
+// }
+// .resources.types.t_tuple$_t_uint256_$: {
+//     "contains": [
+//         {
+//             "type": {
+//                 "id": "t_uint256"
+//             }
+//         }
+//     ],
+//     "kind": "tuple"
 // }
 // .resources.types.t_uint128: {"bits":128,"kind":"uint"}
 // .resources.types.t_uint256: {"bits":256,"kind":"uint"}

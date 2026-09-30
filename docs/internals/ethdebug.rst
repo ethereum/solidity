@@ -107,13 +107,13 @@ The Mapping
    * - tuple
      - Tuple
      - tuple
-     - ``contains``: the components; only inline, as the parameters of function types
+     - ``contains``: the components; the parameter and return lists of function types
    * - internal or external function type
      - Function
      - function
-     - ``internal`` or ``external``, ``contains.parameters`` and ``contains.returns`` as inline tuples (no ``returns`` without return values), ``definition`` when declared
+     - ``internal`` or ``external``, ``contains.parameters`` and ``contains.returns`` referencing tuples (no ``returns`` without return values), ``definition`` when declared
 
-References to component types are ``{"type": {"id": <identifier>}}``, except for the tuples of a function type, which ``ethdebug/format/type/complex/function`` requires to be written inline.
+References to component types are ``{"type": {"id": <identifier>}}``, the parameter and return tuples of a function type included.
 The members of a struct are taken from ``StructType::members()``.
 
 A ``definition`` carries the ``name`` of the declaration, unless it is empty, and its source range as the ``location``.
