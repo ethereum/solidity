@@ -8,8 +8,7 @@ ethdebug Output
 
 .. warning::
 
-   ethdebug support is experimental.
-   The outputs described here can only be requested together with the ``experimental`` setting and may change before they are stabilized.
+   ethdebug support is :ref:`experimental <experimental-mode>`.
 
 The compiler can describe its output in the `ethdebug format <https://ethdebug.github.io/format/>`_, a JSON format for debugging information shared between compilers and debuggers.
 The format defines a `schema <https://github.com/ethdebug/format/tree/main/schemas>`_ for each kind of document.
@@ -19,18 +18,22 @@ The options to request the outputs are documented in :ref:`compiler-api` and :re
 Outputs
 =======
 
-+-------------------+-------------------------------------------+---------------------------------+-------------------------------------------+
-| Document          | Standard JSON output                      | Command line                    | Schema                                    |
-+===================+===========================================+=================================+===========================================+
-| compilation       | ``ethdebug.compilation`` (global)         | ``--ethdebug-compilation``      | ``ethdebug/format/materials/compilation`` |
-+-------------------+-------------------------------------------+---------------------------------+-------------------------------------------+
-| resources         | ``ethdebug.resources`` (global)           | ``--ethdebug-resources``        | ``ethdebug/format/info/resources``        |
-+-------------------+-------------------------------------------+---------------------------------+-------------------------------------------+
-| creation program  | ``evm.bytecode.ethdebug`` (per contract)  | ``--ethdebug-program``          | ``ethdebug/format/program``               |
-+-------------------+-------------------------------------------+---------------------------------+-------------------------------------------+
-| runtime program   | ``evm.deployedBytecode.ethdebug``         | ``--ethdebug-program-runtime``  | ``ethdebug/format/program``               |
-|                   | (per contract)                            |                                 |                                           |
-+-------------------+-------------------------------------------+---------------------------------+-------------------------------------------+
++-------------------+-------------------------------------------+---------------------------------+---------------------------------------------+
+| Document          | Standard JSON output                      | Command line                    | Schema                                      |
++===================+===========================================+=================================+=============================================+
+| compilation       | ``ethdebug.compilation`` (global)         | ``--ethdebug-compilation``      | `ethdebug/format/materials/compilation`_    |
++-------------------+-------------------------------------------+---------------------------------+---------------------------------------------+
+| resources         | ``ethdebug.resources`` (global)           | ``--ethdebug-resources``        | `ethdebug/format/info/resources`_           |
++-------------------+-------------------------------------------+---------------------------------+---------------------------------------------+
+| creation program  | ``evm.bytecode.ethdebug`` (per contract)  | ``--ethdebug-program``          | `ethdebug/format/program`_                  |
++-------------------+-------------------------------------------+---------------------------------+---------------------------------------------+
+| runtime program   | ``evm.deployedBytecode.ethdebug``         | ``--ethdebug-program-runtime``  | `ethdebug/format/program`_                  |
+|                   | (per contract)                            |                                 |                                             |
++-------------------+-------------------------------------------+---------------------------------+---------------------------------------------+
+
+.. _ethdebug/format/materials/compilation: https://github.com/ethdebug/format/blob/main/schemas/materials/compilation.schema.yaml
+.. _ethdebug/format/info/resources: https://github.com/ethdebug/format/blob/main/schemas/info/resources.schema.yaml
+.. _ethdebug/format/program: https://github.com/ethdebug/format/blob/main/schemas/program.schema.yaml
 
 The compilation needs nothing but the sources.
 The resources are derived from the analysis of the sources and the programs describe bytecode, so the latter can only be produced when compiling via IR.
@@ -38,10 +41,10 @@ The resources are derived from the analysis of the sources and the programs desc
 The Compilation
 ===============
 
-The compilation document identifies one run of the compiler: an ``id`` derived from the sources, the ``compiler`` name and version and the list of ``sources``.
+The compilation document identifies one run of the compiler and has an ``id`` derived from the sources, the ``compiler`` name and version and the list of ``sources``.
 Every source carries its ``id``, ``path``, ``contents`` and ``language``.
-The source ``id`` is the index of the source unit in the compilation, the same number the ``id`` of a source in the Standard JSON output and the source mappings use.
-All source references in the other documents refer to sources by that ``id``.
+A source ``id`` is a number unique within the compilation, and all source references in the other documents refer to sources by it.
+The compiler currently uses the same number as the ``id`` of the source in the Standard JSON output and in :doc:`source mappings <internals/source_mappings>`.
 
 The Resources
 =============
@@ -52,30 +55,34 @@ Both tables cover all contracts of the compilation.
 .. code-block:: json
 
     {
-        "compilation": { "id": "...", "compiler": { "name": "solc", "version": "..." }, "sources": [ "..." ] },
-        "types": { "t_uint256": { "kind": "uint", "bits": 256 }, "...": "..." },
-        "pointers": { "t_struct$_Point_$6_storage": { "expect": ["slot"], "for": { "group": [ "..." ] } }, "...": "..." }
+        "compilation": {"id": "...", "compiler": {"name": "solc", "version": "..."}, "sources": ["..."]},
+        "types": {"t_uint256": {"kind": "uint", "bits": 256}, "...": "..."},
+        "pointers": {"t_struct$_Point_$6_storage": {"expect": ["slot"], "for": {"group": ["..."]}}, "...": "..."}
     }
 
 Type Documents
 --------------
 
 The ``types`` table maps type identifiers to type documents (schema ``ethdebug/format/type``).
-The identifiers are the compiler's canonical type identifiers, which the ``storageLayout`` output uses as well: ``t_uint256``, ``t_address_payable``, ``t_array$_t_uint8_$dyn_storage``, ``t_mapping$_t_address_$_t_uint256_$`` or ``t_struct$_Point_$6_storage``, where the number in the identifier of a user-defined type is the ID of its definition in the AST.
+The compiler currently uses the identifiers its :ref:`storage layout <storage-layout-top-level>` output uses as well, such as ``t_uint256``, ``t_array$_t_uint8_$dyn_storage`` or ``t_struct$_Point_$6_storage``.
+The only guarantee about the identifier is that it is a string that is unique within the table.
+Its exact form is an implementation detail, but it is generally based on the name used in type definition.
+When that name is not unique within the compilation, it may be disambiguated with additional information, such as the AST ID of the definition.
 
 The table contains a document for the types of the state variables of every contract and of the parameters and return variables of every function and modifier compiled into it, including the ones inherited from base contracts, free functions and the internal functions of libraries.
 Every type such a type is composed of has a document as well.
 Types that only exist at compile time, such as literals, type names or the ``msg`` and ``abi`` objects, have no document.
 
-Composed types reference their components by identifier, so that the table is closed:
+Composite types reference their components by identifier, so that the table is closed:
 an array, a mapping or a user-defined value type refers to its element, key, value or underlying type as ``{"type": {"id": "t_uint256"}}`` and a struct lists its members with their ``name`` and such a reference.
-Function types are the exception: their parameters and return values are described as tuples inline.
+Function types are the exception, since the function type schema requires their parameters to be a tuple type written inline, not a reference; the return values are written the same way.
+The components of those tuples are references again.
 
-Types defined in the source, that is structs, enums, contracts, user-defined value types and functions with a declaration, carry a ``definition`` with the ``name`` of the definition and its ``location`` in the source: the source ``id`` and the byte ``offset`` and ``length`` of the definition.
+Types defined in the source, that is structs, enums, contracts, user-defined value types and functions with a declaration, carry a ``definition`` with the ``name`` of the definition and its ``location`` in the source: the source ``id`` and the ``offset`` and ``length`` of the definition.
+Like in source mappings, and as the schema of source ranges specifies, the offset and the length count bytes of the UTF-8 encoded source, not characters.
 
-The data location of a reference type is part of its identifier but not of its document, since the schema describes types independently of where their values are stored.
-``t_string_storage`` and ``t_string_memory_ptr`` are therefore separate entries with the same document.
-The members of a struct carry the types they have in the struct's data location.
+A type document does not depend on where a value is stored; that is what the pointer describes.
+The variants of a reference type in different data locations therefore share one document: a ``string memory`` parameter and a ``string`` state variable both refer to the same entry.
 
 Pointer Templates
 -----------------
