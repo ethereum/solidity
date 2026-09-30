@@ -23,7 +23,12 @@
           "evm.bytecode.ethdebug",
           "evm.deployedBytecode.ethdebug",
           "ethdebug.resources",
-          "ethdebug.compilation"
+          "ethdebug.compilation",
+          "storageLayout",
+          "transientStorageLayout"
+        ],
+        "": [
+          "ast"
         ]
       }
     }
