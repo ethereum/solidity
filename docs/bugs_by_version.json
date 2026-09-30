@@ -2062,6 +2062,7 @@
     },
     "0.8.19": {
         "bugs": [
+            "YulOptimizerKnowledgeBaseStaleBookkeeping",
             "MemoryByteArrayElementDeleteClearsWholeWord",
             "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
@@ -2092,6 +2093,7 @@
     },
     "0.8.20": {
         "bugs": [
+            "YulOptimizerKnowledgeBaseStaleBookkeeping",
             "MemoryByteArrayElementDeleteClearsWholeWord",
             "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
@@ -2104,6 +2106,7 @@
     },
     "0.8.21": {
         "bugs": [
+            "YulOptimizerKnowledgeBaseStaleBookkeeping",
             "MemoryByteArrayElementDeleteClearsWholeWord",
             "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
@@ -2114,6 +2117,7 @@
     },
     "0.8.22": {
         "bugs": [
+            "YulOptimizerKnowledgeBaseStaleBookkeeping",
             "MemoryByteArrayElementDeleteClearsWholeWord",
             "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
@@ -2124,6 +2128,7 @@
     },
     "0.8.23": {
         "bugs": [
+            "YulOptimizerKnowledgeBaseStaleBookkeeping",
             "MemoryByteArrayElementDeleteClearsWholeWord",
             "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
@@ -2133,6 +2138,7 @@
     },
     "0.8.24": {
         "bugs": [
+            "YulOptimizerKnowledgeBaseStaleBookkeeping",
             "MemoryByteArrayElementDeleteClearsWholeWord",
             "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
@@ -2142,6 +2148,7 @@
     },
     "0.8.25": {
         "bugs": [
+            "YulOptimizerKnowledgeBaseStaleBookkeeping",
             "MemoryByteArrayElementDeleteClearsWholeWord",
             "SpillSlotCollisionAcrossMutualRecursion",
             "UnsoundSpillInMutualRecursion",
@@ -2151,6 +2158,7 @@
     },
     "0.8.26": {
         "bugs": [
+            "YulOptimizerKnowledgeBaseStaleBookkeeping",
             "MisorderedNamedParametersInRequireWithCustomErrors",
             "MemoryByteArrayElementDeleteClearsWholeWord",
             "SpillSlotCollisionAcrossMutualRecursion",
@@ -2161,6 +2169,7 @@
     },
     "0.8.27": {
         "bugs": [
+            "YulOptimizerKnowledgeBaseStaleBookkeeping",
             "MisorderedNamedParametersInRequireWithCustomErrors",
             "MemoryByteArrayElementDeleteClearsWholeWord",
             "SpillSlotCollisionAcrossMutualRecursion",
@@ -2171,6 +2180,7 @@
     },
     "0.8.28": {
         "bugs": [
+            "YulOptimizerKnowledgeBaseStaleBookkeeping",
             "MisorderedNamedParametersInRequireWithCustomErrors",
             "MemoryByteArrayElementDeleteClearsWholeWord",
             "SpillSlotCollisionAcrossMutualRecursion",
@@ -2182,6 +2192,7 @@
     },
     "0.8.29": {
         "bugs": [
+            "YulOptimizerKnowledgeBaseStaleBookkeeping",
             "MisorderedNamedParametersInRequireWithCustomErrors",
             "MemoryByteArrayElementDeleteClearsWholeWord",
             "SpillSlotCollisionAcrossMutualRecursion",
@@ -2211,6 +2222,7 @@
     },
     "0.8.30": {
         "bugs": [
+            "YulOptimizerKnowledgeBaseStaleBookkeeping",
             "MisorderedNamedParametersInRequireWithCustomErrors",
             "MemoryByteArrayElementDeleteClearsWholeWord",
             "SpillSlotCollisionAcrossMutualRecursion",
@@ -2223,6 +2235,7 @@
     },
     "0.8.31": {
         "bugs": [
+            "YulOptimizerKnowledgeBaseStaleBookkeeping",
             "MisorderedNamedParametersInRequireWithCustomErrors",
             "MemoryByteArrayElementDeleteClearsWholeWord",
             "SpillSlotCollisionAcrossMutualRecursion",
@@ -2235,6 +2248,7 @@
     },
     "0.8.32": {
         "bugs": [
+            "YulOptimizerKnowledgeBaseStaleBookkeeping",
             "MisorderedNamedParametersInRequireWithCustomErrors",
             "MemoryByteArrayElementDeleteClearsWholeWord",
             "SpillSlotCollisionAcrossMutualRecursion",
@@ -2246,6 +2260,7 @@
     },
     "0.8.33": {
         "bugs": [
+            "YulOptimizerKnowledgeBaseStaleBookkeeping",
             "MisorderedNamedParametersInRequireWithCustomErrors",
             "MemoryByteArrayElementDeleteClearsWholeWord",
             "SpillSlotCollisionAcrossMutualRecursion",
@@ -2257,6 +2272,7 @@
     },
     "0.8.34": {
         "bugs": [
+            "YulOptimizerKnowledgeBaseStaleBookkeeping",
             "MisorderedNamedParametersInRequireWithCustomErrors",
             "MemoryByteArrayElementDeleteClearsWholeWord",
             "SpillSlotCollisionAcrossMutualRecursion",
@@ -2267,6 +2283,7 @@
     },
     "0.8.35": {
         "bugs": [
+            "YulOptimizerKnowledgeBaseStaleBookkeeping",
             "MisorderedNamedParametersInRequireWithCustomErrors",
             "MemoryByteArrayElementDeleteClearsWholeWord",
             "SpillSlotCollisionAcrossMutualRecursion",
@@ -2277,6 +2294,7 @@
     },
     "0.8.36": {
         "bugs": [
+            "YulOptimizerKnowledgeBaseStaleBookkeeping",
             "MisorderedNamedParametersInRequireWithCustomErrors",
             "MemoryByteArrayElementDeleteClearsWholeWord",
             "SpillSlotCollisionAcrossMutualRecursion"
@@ -2284,7 +2302,9 @@
         "released": "2026-07-09"
     },
     "0.8.37": {
-        "bugs": [],
+        "bugs": [
+            "YulOptimizerKnowledgeBaseStaleBookkeeping"
+        ],
         "released": "2026-09-10"
     },
     "0.8.4": {
