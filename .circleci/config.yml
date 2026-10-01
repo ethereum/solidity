@@ -948,7 +948,7 @@ jobs:
     <<: *base_ubuntu2404_small
     steps:
       - install_python3:
-          packages: pyyaml jsonschema pytest
+          packages: pyyaml jsonschema
       - checkout
       - run: pylint --version
       - run:
@@ -1639,7 +1639,7 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - install_python3:
-            packages: pyyaml jsonschema pytest
+            packages: pyyaml jsonschema
       - run:
           name: Initialize ethdebug/format schemas
           command: |
@@ -1647,7 +1647,7 @@ jobs:
       - run:
           name: ETHDebug schema validation
           command: |
-            pytest test/ethdebugSchemaTests --solc-binary-path=/tmp/workspace/solc/solc-static-linux -v
+            python3 test/ethdebugSchemaTests.py --solc-binary-path /tmp/workspace/solc/solc-static-linux
 
   c_ext_benchmarks:
     <<: *base_node_small
