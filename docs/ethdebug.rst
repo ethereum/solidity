@@ -11,7 +11,8 @@ ethdebug Output
    ethdebug support is :ref:`experimental <experimental-mode>`.
 
 The compiler can describe its output in the `ethdebug format <https://ethdebug.github.io/format/>`_, a JSON format for debugging information shared between compilers and debuggers.
-The format defines a `schema <https://github.com/ethdebug/format/tree/main/schemas>`_ for each kind of document.
+The compiler targets version `0.1.0-preview.0 <https://github.com/ethdebug/format/tree/@ethdebug/format-web@0.1.0-preview.0>`_ of the format, which is still in development.
+The format defines a `schema <https://github.com/ethdebug/format/tree/@ethdebug/format-web@0.1.0-preview.0/schemas>`_ for each kind of document.
 This page lists the documents the compiler produces and describes the structure the compiler adds on top of the schemas, in particular how the type and pointer tables of the resources are keyed and named.
 The options to request the outputs are documented in :ref:`compiler-api` and :ref:`commandline-compiler`.
 
@@ -31,9 +32,9 @@ Outputs
 |                   | (per contract)                            |                                 |                                             |
 +-------------------+-------------------------------------------+---------------------------------+---------------------------------------------+
 
-.. _ethdebug/format/materials/compilation: https://github.com/ethdebug/format/blob/main/schemas/materials/compilation.schema.yaml
-.. _ethdebug/format/info/resources: https://github.com/ethdebug/format/blob/main/schemas/info/resources.schema.yaml
-.. _ethdebug/format/program: https://github.com/ethdebug/format/blob/main/schemas/program.schema.yaml
+.. _ethdebug/format/materials/compilation: https://github.com/ethdebug/format/blob/@ethdebug/format-web@0.1.0-preview.0/schemas/materials/compilation.schema.yaml
+.. _ethdebug/format/info/resources: https://github.com/ethdebug/format/blob/@ethdebug/format-web@0.1.0-preview.0/schemas/info/resources.schema.yaml
+.. _ethdebug/format/program: https://github.com/ethdebug/format/blob/@ethdebug/format-web@0.1.0-preview.0/schemas/program.schema.yaml
 
 The compilation needs nothing but the sources.
 The resources are derived from the analysis of the sources and the programs describe bytecode, so the latter can only be produced when compiling via IR.

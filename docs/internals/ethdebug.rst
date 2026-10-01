@@ -134,7 +134,7 @@ The kinds of types are laid out as follows, where ``slot`` stands for the expres
 Value types
     A single region ``{"location": "storage", "name": <name>, "slot": slot}``.
     A value narrower than a word carries its ``length`` in bytes and its ``offset`` in the slot.
-    The offset counts from the most significant byte of the slot, as the pointer format's segment addressing does and the reference implementation reads it, while the storage layout packs values from the least significant byte: a value of *n* bytes at layout offset *o* starts at byte 32 - *o* - *n*, so a ``uint8`` alone in its slot is at offset 31 and an ``address`` packed after two bytes is at offset 10.
+    The offset counts from the most significant byte of the slot, while the storage layout packs values from the least significant byte: a value of *n* bytes at layout offset *o* starts at byte 32 - *o* - *n*, so a ``uint8`` alone in its slot is at offset 31 and an ``address`` packed after two bytes is at offset 10.
     An offset of zero is omitted, and so is a ``length`` of a whole word, since a region without one covers the rest of its slot.
 
 Structs
