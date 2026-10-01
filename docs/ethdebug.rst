@@ -146,6 +146,11 @@ A debugger instantiates the ``Point`` template with ``slot`` bound to 1, where t
         }
     }
 
+.. warning::
+
+   A region's ``offset`` counts from the most significant byte of the slot, while the ``offset`` in the :ref:`storage layout <storage-layout-top-level>` counts from the least significant one.
+   A value of *n* bytes at layout offset *o* is at region offset 32 - *o* - *n*.
+
 The shapes of the templates for the different kinds of types and the rules by which types become type documents are described in :ref:`ethdebug-internals`.
 
 The Programs
