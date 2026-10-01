@@ -28,7 +28,7 @@ Outputs
 +-------------------+-------------------------------------------+---------------------------------+---------------------------------------------+
 | creation program  | ``evm.bytecode.ethdebug`` (per contract)  | ``--ethdebug-program``          | `ethdebug/format/program`_                  |
 +-------------------+-------------------------------------------+---------------------------------+---------------------------------------------+
-| runtime program   | ``evm.deployedBytecode.ethdebug``         | ``--ethdebug-program-runtime``  | `ethdebug/format/program`_                  |
+| deployed program  | ``evm.deployedBytecode.ethdebug``         | ``--ethdebug-program-runtime``  | `ethdebug/format/program`_                  |
 |                   | (per contract)                            |                                 |                                             |
 +-------------------+-------------------------------------------+---------------------------------+---------------------------------------------+
 
@@ -151,6 +151,6 @@ The shapes of the templates for the different kinds of types and the rules by wh
 The Programs
 ============
 
-A program (schema ``ethdebug/format/program``) describes one bytecode: the creation bytecode or the runtime bytecode of a contract.
+A program (schema ``ethdebug/format/program``) describes one bytecode: the creation bytecode or the deployed bytecode of a contract.
 It names the ``contract`` and the source range of its definition, states the ``environment`` the bytecode runs in, ``create`` or ``call``, and lists its ``instructions``.
 Every instruction carries its byte ``offset`` in the bytecode, the ``operation`` with the ``mnemonic`` of the opcode and the ``arguments`` of a push, and, where the compiler knows it, a ``context`` with the source range of the code the instruction was generated from.
