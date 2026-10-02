@@ -3,6 +3,7 @@
 import json
 import subprocess
 import unittest
+from functools import cache
 from pathlib import Path
 
 import jsonschema
@@ -57,24 +58,39 @@ def compile_standard_json(solc_path, standard_json_input):
     return json.loads(process.stdout)
 
 
+@cache
+def ethdebug_schema_repository():
+    return schema_helpers.ethdebug_schema_repository(schema_helpers.ethdebug_schema_dir())
+
+
 class EthdebugSchemaConformityTest(unittest.TestCase):
     # Set by test/ethdebugSchemaTests.py.
     config = None
 
-    def setUp(self):
-        assert self.config is not None, "Run the tests through test/ethdebugSchemaTests.py."
-        self.standard_json_input = load_standard_json_input(Path(__file__).parent / "input_file.json")
-        self.solc_output = compile_standard_json(self.config.solc_path, self.standard_json_input)
-        self.ethdebug_schema_repository = schema_helpers.ethdebug_schema_repository(
-            schema_helpers.ethdebug_schema_dir()
-        )
+    @classmethod
+    def setUpClass(cls):
+        """
+        Compiles the input once for the whole class, since every test reads the same output.
+        """
+        if cls.config is None:
+            raise RuntimeError("No configuration. Run the tests through test/ethdebugSchemaTests.py.")
+        cls.standard_json_input = load_standard_json_input(Path(__file__).parent / "input_file.json")
+        cls.solc_output = compile_standard_json(cls.config.solc_path, cls.standard_json_input)
 
-    def test_program_schema(self):
+    def setUp(self):
+        self.ethdebug_schema_repository = ethdebug_schema_repository()
+
+    def check_program_schema(self, output_selection):
         program_validator = validator("schema:ethdebug/format/program", self.ethdebug_schema_repository)
-        for output_selection in ("evm.bytecode.ethdebug", "evm.deployedBytecode.ethdebug"):
-            for (_, contract_name, ethdebug_data) in ethdebug_programs(self.solc_output, output_selection):
-                with self.subTest(output_selection=output_selection, contract=contract_name):
-                    program_validator.validate(ethdebug_data)
+        for (_, contract_name, ethdebug_data) in ethdebug_programs(self.solc_output, output_selection):
+            with self.subTest(contract=contract_name):
+                program_validator.validate(ethdebug_data)
+
+    def test_creation_program_schema(self):
+        self.check_program_schema("evm.bytecode.ethdebug")
+
+    def test_deployed_program_schema(self):
+        self.check_program_schema("evm.deployedBytecode.ethdebug")
 
     def test_resources_schema(self):
         resources_validator = validator("schema:ethdebug/format/info/resources", self.ethdebug_schema_repository)
@@ -84,26 +100,28 @@ class EthdebugSchemaConformityTest(unittest.TestCase):
         compilation_validator = validator("schema:ethdebug/format/materials/compilation", self.ethdebug_schema_repository)
         compilation_validator.validate(self.solc_output["ethdebug"]["compilation"])
 
-    def test_program_sanity(self):
+    def check_program_sanity(self, output_selection, environment):
         source_ids = {source_name: source["id"] for (source_name, source) in self.solc_output["sources"].items()}
 
-        for (output_selection, environment) in (
-            ("evm.bytecode.ethdebug", "create"),
-            ("evm.deployedBytecode.ethdebug", "call"),
-        ):
-            for (source_name, contract_name, ethdebug_data) in ethdebug_programs(self.solc_output, output_selection):
-                with self.subTest(output_selection=output_selection, contract=contract_name):
-                    self.assertEqual(ethdebug_data["environment"], environment)
-                    self.assertEqual(ethdebug_data["contract"]["name"], contract_name)
-                    self.assertEqual(ethdebug_data["contract"]["definition"]["source"]["id"], source_ids[source_name])
+        for (source_name, contract_name, ethdebug_data) in ethdebug_programs(self.solc_output, output_selection):
+            with self.subTest(contract=contract_name):
+                self.assertEqual(ethdebug_data["environment"], environment)
+                self.assertEqual(ethdebug_data["contract"]["name"], contract_name)
+                self.assertEqual(ethdebug_data["contract"]["definition"]["source"]["id"], source_ids[source_name])
 
-                    instructions = ethdebug_data["instructions"]
-                    self.assertGreater(len(instructions), 0)
-                    self.assertEqual(
-                        [instruction["offset"] for instruction in instructions],
-                        sorted(instruction["offset"] for instruction in instructions),
-                    )
-                    self.assertTrue(all(instruction["operation"]["mnemonic"] for instruction in instructions))
+                instructions = ethdebug_data["instructions"]
+                self.assertGreater(len(instructions), 0)
+                self.assertEqual(
+                    [instruction["offset"] for instruction in instructions],
+                    sorted(instruction["offset"] for instruction in instructions),
+                )
+                self.assertTrue(all(instruction["operation"]["mnemonic"] for instruction in instructions))
+
+    def test_creation_program_sanity(self):
+        self.check_program_sanity("evm.bytecode.ethdebug", "create")
+
+    def test_deployed_program_sanity(self):
+        self.check_program_sanity("evm.deployedBytecode.ethdebug", "call")
 
     def test_resources_match_standard_json_sources(self):
         standard_json_sources = {

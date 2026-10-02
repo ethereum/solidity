@@ -26,5 +26,5 @@ if __name__ == '__main__':
     test_suite = TestLoader().discover(start_dir=TEST_DIR)
     result = TextTestRunner().run(test_suite)
 
-    if len(result.errors) > 0 or len(result.failures) > 0:
+    if not result.wasSuccessful():
         sys.exit(1)

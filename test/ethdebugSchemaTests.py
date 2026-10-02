@@ -28,17 +28,33 @@ def test_cases(test_suite):
 if __name__ == '__main__':
     parser = ArgumentParser(description="Validate the compiler's ethdebug output against the ethdebug/format schemas.")
     parser.add_argument("--solc-binary-path", type=Path, required=True, help="Path to the solidity compiler binary.")
+    parser.add_argument(
+        "-k",
+        dest="patterns",
+        action="append",
+        default=[],
+        help="Only run the tests whose name matches the pattern, as with `python -m unittest -k`. Can be repeated.",
+    )
     options = parser.parse_args()
     assert options.solc_binary_path.is_file(), f"Not a file: {options.solc_binary_path}"
 
     config = Config(solc_path=options.solc_binary_path)
 
-    # This is equivalent to `python -m unittest discover --start-directory $TEST_DIR`, with
-    # every test case given the configuration.
-    test_suite = TestLoader().discover(start_dir=TEST_DIR)
+    # This is equivalent to `python -m unittest discover --start-directory $TEST_DIR -k ...`,
+    # with every test case class given the configuration.
+    test_loader = TestLoader()
+    assert test_loader.testNamePatterns is None
+    if len(options.patterns) > 0:
+        # Unlike `-k`, testNamePatterns matches a pattern without wildcards against the whole
+        # test name, so wrap such a pattern in wildcards to match it as a substring like `-k` does.
+        test_loader.testNamePatterns = [
+            pattern if "*" in pattern else f"*{pattern}*"
+            for pattern in options.patterns
+        ]
+    test_suite = test_loader.discover(start_dir=TEST_DIR)
     for test_case in test_cases(test_suite):
-        test_case.config = config
-    result = TextTestRunner(verbosity=2).run(test_suite)
+        type(test_case).config = config
+    result = TextTestRunner().run(test_suite)
 
-    if len(result.errors) > 0 or len(result.failures) > 0:
+    if not result.wasSuccessful():
         sys.exit(1)
