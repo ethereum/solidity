@@ -164,6 +164,7 @@ Contents
    060-breaking-changes.rst
    070-breaking-changes.rst
    080-breaking-changes.rst
+   090-breaking-changes.rst
 
 .. toctree::
    :maxdepth: 2
