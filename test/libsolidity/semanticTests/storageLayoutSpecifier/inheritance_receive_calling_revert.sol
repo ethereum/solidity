@@ -21,8 +21,6 @@ contract F {
         return decode(data);
     }
 }
-// ====
-// EVMVersion: >homestead
 // ----
 // withSpecifier() -> 0x20, 1, "C"
 // withoutSpecifier() -> 0x20, 1, "C"

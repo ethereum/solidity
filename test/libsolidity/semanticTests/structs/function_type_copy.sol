@@ -37,7 +37,5 @@ contract Test {
     function random3() external {
     }
 }
-// ====
-// EVMVersion: >homestead
 // ----
 // test() -> true

@@ -108,9 +108,7 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 		solRequire(false, Exception, "");
 	}
 
-	if (_evmVersion == langutil::EVMVersion::homestead())
-		m_evmRevision = EVMC_HOMESTEAD;
-	else if (_evmVersion == langutil::EVMVersion::tangerineWhistle())
+	if (_evmVersion == langutil::EVMVersion::tangerineWhistle())
 		m_evmRevision = EVMC_TANGERINE_WHISTLE;
 	else if (_evmVersion == langutil::EVMVersion::spuriousDragon())
 		m_evmRevision = EVMC_SPURIOUS_DRAGON;

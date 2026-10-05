@@ -13,6 +13,8 @@ contract Test {
             freeMemoryBefore := mload(0x40)
         }
 
+        // This reverts. The external call succeeds but ABI decoding fails due to the returned
+        // `bytes32` being much shorter than the expected `uint[20]`.
         LongReturn(address(shortReturn)).f();
 
         uint freeMemoryAfter;
@@ -25,8 +27,7 @@ contract Test {
     }
 }
 // ====
-// EVMVersion: <=homestead
 // compileViaYul: true
 // ----
-// test() -> 0x0500
+// test() -> FAILURE
 // gas legacy: 131966

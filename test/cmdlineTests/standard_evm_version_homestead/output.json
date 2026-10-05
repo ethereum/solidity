@@ -1,0 +1,11 @@
+{
+    "errors": [
+        {
+            "component": "general",
+            "formattedMessage": "Invalid EVM version requested.",
+            "message": "Invalid EVM version requested.",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}

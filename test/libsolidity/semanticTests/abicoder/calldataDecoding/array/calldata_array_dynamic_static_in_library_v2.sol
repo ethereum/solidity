@@ -10,8 +10,6 @@ contract C {
         return L.g(a, b);
     }
 }
-// ====
-// EVMVersion: >homestead
 // ----
 // library: L
 // f(uint256[],uint256[1]): 0x40, 0xff, 1, 0xffff -> 0x40, 0xff, 0x01, 0xffff

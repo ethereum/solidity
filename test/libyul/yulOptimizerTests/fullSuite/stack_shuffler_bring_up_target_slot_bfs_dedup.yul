@@ -54,8 +54,6 @@
         foo_n_0(0x3ffffffffffffffffff, 0x3fffffffffffffffffff)
     }
 }
-// ====
-// EVMVersion: >homestead
 // ----
 // step: fullSuite
 //

@@ -385,7 +385,7 @@ BOOST_AUTO_TEST_CASE(dynamic_return_types_not_possible)
 			}
 		}
 	)";
-	if (solidity::test::CommonOptions::get().evmVersion() == EVMVersion::homestead())
+	if (solidity::test::CommonOptions::get().evmVersion() < EVMVersion::byzantium())
 		CHECK_ERROR(sourceCode, TypeError, "Type inaccessible dynamic type is not implicitly convertible to expected type string memory.");
 	else
 		CHECK_SUCCESS_NO_WARNINGS(sourceCode);

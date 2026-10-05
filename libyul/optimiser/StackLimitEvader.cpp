@@ -26,7 +26,6 @@
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AST.h>
-#include <libyul/CompilabilityChecker.h>
 #include <libyul/Exceptions.h>
 #include <libyul/Object.h>
 #include <libyul/Utilities.h>
@@ -159,23 +158,13 @@ Block StackLimitEvader::run(
 		"StackLimitEvader can only be run on objects using the EVMDialect with object access."
 	);
 	auto astRoot = std::get<Block>(ASTCopier{}(_object.code()->root()));
-	if (evmDialect && evmDialect->evmVersion().canOverchargeGasForCall())
-	{
-		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(
-			*evmDialect,
-			astRoot,
-			_object.summarizeStructure()
-		);
-		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, *evmDialect, astRoot);
-		run(_context, astRoot, StackLayoutGenerator::reportStackTooDeep(*cfg, *evmDialect));
-	}
-	else
-	{
-		run(_context, astRoot, CompilabilityChecker{
-			_object,
-			true,
-		}.unreachableVariables);
-	}
+	yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(
+		*evmDialect,
+		astRoot,
+		_object.summarizeStructure()
+	);
+	std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, *evmDialect, astRoot);
+	run(_context, astRoot, StackLayoutGenerator::reportStackTooDeep(*cfg, *evmDialect));
 	return astRoot;
 }
 

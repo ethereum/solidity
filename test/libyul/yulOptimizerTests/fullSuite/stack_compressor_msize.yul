@@ -33,8 +33,6 @@
 	sstore(0,0)
 	sstore(3,1)
 }
-// ====
-// EVMVersion: >homestead
 // ----
 // step: fullSuite
 //

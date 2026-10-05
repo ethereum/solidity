@@ -55,8 +55,6 @@ contract C {
 			}
 	}
 }
-// ====
-// EVMVersion: >homestead
 // ----
 // test_bytes() ->
 // gas irOptimized: 314773

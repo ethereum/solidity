@@ -1,6 +1,8 @@
 ## 0.9.0 (unreleased)
 
 Breaking Changes:
+* EVM: Drop support for EVM version `homestead`.
+
 
 ### 0.8.38 (unreleased)
 

@@ -31,7 +31,5 @@ contract Test {
         return true;
     }
 }
-// ====
-// EVMVersion: >homestead
 // ----
 // test() -> true

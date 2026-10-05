@@ -95,8 +95,6 @@ EVMVersion ProtoConverter::evmVersionMapping(Program_Version const& _ver)
 {
 	switch (_ver)
 	{
-	case Program::HOMESTEAD:
-		return EVMVersion::homestead();
 	case Program::TANGERINE:
 		return EVMVersion::tangerineWhistle();
 	case Program::SPURIOUS:
