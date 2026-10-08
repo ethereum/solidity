@@ -30,9 +30,9 @@ contract C {
 //             {
 //                 "define": {
 //                     "data": {
-//                         "$keccak256": [
+//                         "~keccak256": [
 //                             {
-//                                 "$wordsized": "slot"
+//                                 "~wordsized": "slot"
 //                             }
 //                         ]
 //                     }
@@ -40,16 +40,16 @@ contract C {
 //                 "in": {
 //                     "list": {
 //                         "count": {
-//                             "$read": "length"
+//                             "~read": "length"
 //                         },
 //                         "each": "index",
 //                         "is": {
 //                             "define": {
 //                                 "slot": {
-//                                     "$sum": [
+//                                     "~sum": [
 //                                         "data",
 //                                         {
-//                                             "$product": [
+//                                             "~product": [
 //                                                 "index",
 //                                                 "0x03"
 //                                             ]
@@ -75,12 +75,12 @@ contract C {
 //     "for": {
 //         "define": {
 //             "slot": {
-//                 "$keccak256": [
+//                 "~keccak256": [
 //                     {
-//                         "$wordsized": "key"
+//                         "~wordsized": "key"
 //                     },
 //                     {
-//                         "$wordsized": "slot"
+//                         "~wordsized": "slot"
 //                     }
 //                 ]
 //             }
@@ -105,7 +105,7 @@ contract C {
 //                 "location": "storage",
 //                 "name": "byKey",
 //                 "slot": {
-//                     "$sum": [
+//                     "~sum": [
 //                         "slot",
 //                         "0x01"
 //                     ]
@@ -129,7 +129,7 @@ contract C {
 //                 "location": "storage",
 //                 "name": "extra",
 //                 "slot": {
-//                     "$sum": [
+//                     "~sum": [
 //                         "slot",
 //                         "0x01"
 //                     ]
@@ -138,7 +138,7 @@ contract C {
 //             {
 //                 "define": {
 //                     "slot": {
-//                         "$sum": [
+//                         "~sum": [
 //                             "slot",
 //                             "0x02"
 //                         ]

@@ -26,9 +26,9 @@ contract C {
 //             {
 //                 "define": {
 //                     "data": {
-//                         "$keccak256": [
+//                         "~keccak256": [
 //                             {
-//                                 "$wordsized": "slot"
+//                                 "~wordsized": "slot"
 //                             }
 //                         ]
 //                     }
@@ -36,14 +36,14 @@ contract C {
 //                 "in": {
 //                     "list": {
 //                         "count": {
-//                             "$read": "length"
+//                             "~read": "length"
 //                         },
 //                         "each": "index",
 //                         "is": {
 //                             "location": "storage",
 //                             "name": "item",
 //                             "slot": {
-//                                 "$sum": [
+//                                 "~sum": [
 //                                     "data",
 //                                     "index"
 //                                 ]
@@ -64,12 +64,12 @@ contract C {
 //         "location": "storage",
 //         "name": "value",
 //         "slot": {
-//             "$keccak256": [
+//             "~keccak256": [
 //                 {
-//                     "$wordsized": "key"
+//                     "~wordsized": "key"
 //                 },
 //                 {
-//                     "$wordsized": "slot"
+//                     "~wordsized": "slot"
 //                 }
 //             ]
 //         }
@@ -84,12 +84,12 @@ contract C {
 //         "location": "storage",
 //         "name": "value",
 //         "slot": {
-//             "$keccak256": [
+//             "~keccak256": [
 //                 {
-//                     "$wordsized": "key"
+//                     "~wordsized": "key"
 //                 },
 //                 {
-//                     "$wordsized": "slot"
+//                     "~wordsized": "slot"
 //                 }
 //             ]
 //         }
@@ -104,12 +104,12 @@ contract C {
 //         "location": "storage",
 //         "name": "value",
 //         "slot": {
-//             "$keccak256": [
+//             "~keccak256": [
 //                 {
-//                     "$wordsized": "key"
+//                     "~wordsized": "key"
 //                 },
 //                 {
-//                     "$wordsized": "slot"
+//                     "~wordsized": "slot"
 //                 }
 //             ]
 //         }
@@ -124,12 +124,12 @@ contract C {
 //         "location": "storage",
 //         "name": "value",
 //         "slot": {
-//             "$keccak256": [
+//             "~keccak256": [
 //                 {
-//                     "$wordsized": "key"
+//                     "~wordsized": "key"
 //                 },
 //                 {
-//                     "$wordsized": "slot"
+//                     "~wordsized": "slot"
 //                 }
 //             ]
 //         }
@@ -146,12 +146,12 @@ contract C {
 //         "name": "value",
 //         "offset": "0x1f",
 //         "slot": {
-//             "$keccak256": [
+//             "~keccak256": [
 //                 {
-//                     "$wordsized": "key"
+//                     "~wordsized": "key"
 //                 },
 //                 {
-//                     "$wordsized": "slot"
+//                     "~wordsized": "slot"
 //                 }
 //             ]
 //         }
@@ -166,10 +166,10 @@ contract C {
 //         "location": "storage",
 //         "name": "value",
 //         "slot": {
-//             "$keccak256": [
+//             "~keccak256": [
 //                 "key",
 //                 {
-//                     "$wordsized": "slot"
+//                     "~wordsized": "slot"
 //                 }
 //             ]
 //         }
@@ -184,10 +184,10 @@ contract C {
 //         "location": "storage",
 //         "name": "value",
 //         "slot": {
-//             "$keccak256": [
+//             "~keccak256": [
 //                 "key",
 //                 {
-//                     "$wordsized": "slot"
+//                     "~wordsized": "slot"
 //                 }
 //             ]
 //         }
@@ -201,12 +201,12 @@ contract C {
 //     "for": {
 //         "define": {
 //             "slot": {
-//                 "$keccak256": [
+//                 "~keccak256": [
 //                     {
-//                         "$wordsized": "key"
+//                         "~wordsized": "key"
 //                     },
 //                     {
-//                         "$wordsized": "slot"
+//                         "~wordsized": "slot"
 //                     }
 //                 ]
 //             }
@@ -231,12 +231,12 @@ contract C {
 //         "name": "value",
 //         "offset": "0x1f",
 //         "slot": {
-//             "$keccak256": [
+//             "~keccak256": [
 //                 {
-//                     "$wordsized": "key"
+//                     "~wordsized": "key"
 //                 },
 //                 {
-//                     "$wordsized": "slot"
+//                     "~wordsized": "slot"
 //                 }
 //             ]
 //         }
@@ -250,12 +250,12 @@ contract C {
 //     "for": {
 //         "define": {
 //             "slot": {
-//                 "$keccak256": [
+//                 "~keccak256": [
 //                     {
-//                         "$wordsized": "key"
+//                         "~wordsized": "key"
 //                     },
 //                     {
-//                         "$wordsized": "slot"
+//                         "~wordsized": "slot"
 //                     }
 //                 ]
 //             }

@@ -15,7 +15,7 @@ contract C {
 // .compilation.sources[0].path: <IGNORE>
 // .compilation.sources[0].contents: <IGNORE>
 // .compilation.sources[0].language: Solidity
-// .resources.ethdebug: {"schema":"ethdebug/format/info/resources","version":"0.1.0-draft.1"}
+// .resources.ethdebug: {"schema":"ethdebug/format/info/resources","version":"0.1.0-draft.2"}
 // .resources.compilation.id: <IGNORE>
 // .resources.compilation.sources | length: 1
 // .resources.compilation.sources[0].id: 0
@@ -25,7 +25,7 @@ contract C {
 // .resources.pointers | keys: []
 //
 // C.contract.name: C
-// C.creation.ethdebug: {"schema":"ethdebug/format/program","version":"0.1.0-draft.1"}
+// C.creation.ethdebug: {"schema":"ethdebug/format/program","version":"0.1.0-draft.2"}
 // C.creation.environment: create
 // C.contract.definition.source.id: 0
 // C.creation.instructions[0].offset: 0

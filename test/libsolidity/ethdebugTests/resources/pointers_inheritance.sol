@@ -27,8 +27,8 @@ contract D is Base {
 //                 "location": "storage",
 //                 "name": "length-flag",
 //                 "offset": {
-//                     "$difference": [
-//                         "$wordsize",
+//                     "~difference": [
+//                         "~wordsize",
 //                         "0x01"
 //                     ]
 //                 },
@@ -45,11 +45,11 @@ contract D is Base {
 //                         {
 //                             "define": {
 //                                 "length": {
-//                                     "$quotient": [
+//                                     "~quotient": [
 //                                         {
-//                                             "$difference": [
+//                                             "~difference": [
 //                                                 {
-//                                                     "$read": "long-length"
+//                                                     "~read": "long-length"
 //                                                 },
 //                                                 "0x01"
 //                                             ]
@@ -61,9 +61,9 @@ contract D is Base {
 //                             "in": {
 //                                 "define": {
 //                                     "start": {
-//                                         "$keccak256": [
+//                                         "~keccak256": [
 //                                             {
-//                                                 "$wordsized": "slot"
+//                                                 "~wordsized": "slot"
 //                                             }
 //                                         ]
 //                                     }
@@ -79,11 +79,11 @@ contract D is Base {
 //                     ]
 //                 },
 //                 "if": {
-//                     "$remainder": [
+//                     "~remainder": [
 //                         {
-//                             "$sum": [
+//                             "~sum": [
 //                                 {
-//                                     "$read": "length-flag"
+//                                     "~read": "length-flag"
 //                                 },
 //                                 "0x01"
 //                             ]
@@ -94,9 +94,9 @@ contract D is Base {
 //                 "then": {
 //                     "define": {
 //                         "length": {
-//                             "$quotient": [
+//                             "~quotient": [
 //                                 {
-//                                     "$read": "length-flag"
+//                                     "~read": "length-flag"
 //                                 },
 //                                 "0x02"
 //                             ]

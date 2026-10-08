@@ -142,19 +142,19 @@ Structs
 Static arrays ``T[N]``
     A ``list`` with ``count`` ``N`` and the index variable ``index``, whose element ``item`` is:
 
-    - for a value type narrower than a word, packed *k* to a slot from the least significant byte, the region at slot ``slot + index / k``, offset ``$wordsize - (index % k + 1) * size`` and length ``size``,
+    - for a value type narrower than a word, packed *k* to a slot from the least significant byte, the region at slot ``slot + index / k``, offset ``~wordsize - (index % k + 1) * size`` and length ``size``,
     - for another value type the region at ``slot + index * slots``, with ``slots`` being the storage size of the element type, omitted when it is one,
     - for a type with a template a reference to it with that slot bound, its regions prefixed with ``item``.
 
 Dynamic arrays ``T[]``
-    A ``group`` of the region ``length`` at ``slot`` and a scope defining ``data`` as ``keccak256(wordsized(slot))``, in which the elements are the list of a static array with ``count`` ``$read(length)`` starting at ``data``.
+    A ``group`` of the region ``length`` at ``slot`` and a scope defining ``data`` as ``keccak256(wordsized(slot))``, in which the elements are the list of a static array with ``count`` ``~read(length)`` starting at ``data``.
 
 ``bytes`` and ``string``
     The compact encoding keeps values shorter than 32 bytes in the slot itself, with twice the length in the lowest byte, and longer values at ``keccak256(slot)``, with twice the length plus one in the slot.
-    The pointer is a ``group`` of the region ``length-flag``, the lowest byte of the slot, and a conditional on ``($read(length-flag) + 1) % 2``:
+    The pointer is a ``group`` of the region ``length-flag``, the lowest byte of the slot, and a conditional on ``(~read(length-flag) + 1) % 2``:
 
-    - the short case defines ``length`` as ``$read(length-flag) / 2`` for the region ``data`` in the slot with that length,
-    - the long case is a ``group`` of the region ``long-length`` at the slot and a scope defining ``length`` as ``($read(long-length) - 1) / 2`` and ``start`` as ``keccak256(wordsized(slot))`` for the region ``data`` at ``start`` with that length.
+    - the short case defines ``length`` as ``~read(length-flag) / 2`` for the region ``data`` in the slot with that length,
+    - the long case is a ``group`` of the region ``long-length`` at the slot and a scope defining ``length`` as ``(~read(long-length) - 1) / 2`` and ``start`` as ``keccak256(wordsized(slot))`` for the region ``data`` at ``start`` with that length.
 
 Mappings ``mapping(K => V)``
     The template expects ``key`` besides ``slot``; the entry's value lives at ``keccak256(wordsized(key), wordsized(slot))`` and is described like a member called ``value``: a region for a value type, a reference to the value type's template otherwise.

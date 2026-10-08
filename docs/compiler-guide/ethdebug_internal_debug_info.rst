@@ -229,9 +229,9 @@ A root pointer with externally bound parameters, such as mapping keys, uses the 
 
 Expressions use the `ethdebug pointer-expression grammar <https://ethdebug.github.io/format/docs/core-schemas/pointers/expressions/>`_.
 Literals are non-negative JSON numbers or ``0x``-prefixed strings; bound variables are identifier strings.
-The remaining forms are ``"$wordsize"`` and the schema's single-key objects for lookups, reads, arithmetic, hashing, concatenation, and resizing.
+The remaining forms are ``"~wordsize"`` and the schema's single-key objects for lookups, reads, arithmetic, hashing, concatenation, and resizing.
 
-Expressions internal to the compiler use a ``$$`` prefix, which cannot clash with the schema's own ``$`` forms.
+Expressions internal to the compiler are single-key objects whose key starts with ``$$``, which no schema form uses: the schema's own forms start with ``~``.
 The internal expression ``{"$$yulLocal": ...}`` names a generated Yul local whose stack depth has not yet been assigned.
 It has no public schema form and must be resolved or removed before emission; emission rejects any expression still carrying the ``$$`` prefix.
 

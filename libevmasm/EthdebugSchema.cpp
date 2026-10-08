@@ -65,8 +65,8 @@ schema::Type::Fixed::Fixed(unsigned _bits, unsigned _places): bits(_bits), place
 
 bool schema::Pointer::isIdentifier(std::string_view _text)
 {
-	auto const isStart = [](char _c) { return std::isalpha(static_cast<unsigned char>(_c)) || _c == '_' || _c == '-'; };
-	auto const isRest = [&](char _c) { return isStart(_c) || std::isdigit(static_cast<unsigned char>(_c)) || _c == '$'; };
+	auto const isStart = [](char _c) { return std::isalpha(static_cast<unsigned char>(_c)) || _c == '_' || _c == '-' || _c == '$'; };
+	auto const isRest = [&](char _c) { return isStart(_c) || std::isdigit(static_cast<unsigned char>(_c)); };
 	if (_text.empty() || !isStart(_text.front()))
 		return false;
 	for (char const c: _text)
@@ -77,7 +77,7 @@ bool schema::Pointer::isIdentifier(std::string_view _text)
 
 bool schema::Pointer::isRegionReference(std::string_view _text)
 {
-	return _text == "$this" || isIdentifier(_text);
+	return _text == "~this" || isIdentifier(_text);
 }
 
 schema::Pointer::Variable::Variable(std::string _identifier): identifier(std::move(_identifier))
@@ -429,7 +429,7 @@ void schema::to_json(Json& _json, Pointer::Expression const& _expression)
 		[&](Pointer::Constant const _constant)
 		{
 			solAssert(_constant == Pointer::Constant::WordSize, "Unknown pointer expression constant.");
-			_json = "$wordsize";
+			_json = "~wordsize";
 		},
 		[&](Pointer::Lookup const& _lookup)
 		{
@@ -442,26 +442,26 @@ void schema::to_json(Json& _json, Pointer::Expression const& _expression)
 			}
 			_json = Json{{property, _lookup.region}};
 		},
-		[&](Pointer::Read const& _read) { _json = Json{{"$read", _read.region}}; },
+		[&](Pointer::Read const& _read) { _json = Json{{"~read", _read.region}}; },
 		[&](Pointer::Arithmetic const& _arithmetic)
 		{
 			switch (_arithmetic.op)
 			{
-			case Pointer::Arithmetic::Operator::Sum: _json = Json{{"$sum", _arithmetic.operands}}; break;
-			case Pointer::Arithmetic::Operator::Product: _json = Json{{"$product", _arithmetic.operands}}; break;
-			case Pointer::Arithmetic::Operator::Difference: _json = Json{{"$difference", _arithmetic.operands}}; break;
-			case Pointer::Arithmetic::Operator::Quotient: _json = Json{{"$quotient", _arithmetic.operands}}; break;
-			case Pointer::Arithmetic::Operator::Remainder: _json = Json{{"$remainder", _arithmetic.operands}}; break;
+			case Pointer::Arithmetic::Operator::Sum: _json = Json{{"~sum", _arithmetic.operands}}; break;
+			case Pointer::Arithmetic::Operator::Product: _json = Json{{"~product", _arithmetic.operands}}; break;
+			case Pointer::Arithmetic::Operator::Difference: _json = Json{{"~difference", _arithmetic.operands}}; break;
+			case Pointer::Arithmetic::Operator::Quotient: _json = Json{{"~quotient", _arithmetic.operands}}; break;
+			case Pointer::Arithmetic::Operator::Remainder: _json = Json{{"~remainder", _arithmetic.operands}}; break;
 			}
 		},
-		[&](Pointer::Keccak256 const& _keccak256) { _json = Json{{"$keccak256", _keccak256.operands}}; },
-		[&](Pointer::Concat const& _concat) { _json = Json{{"$concat", _concat.operands}}; },
+		[&](Pointer::Keccak256 const& _keccak256) { _json = Json{{"~keccak256", _keccak256.operands}}; },
+		[&](Pointer::Concat const& _concat) { _json = Json{{"~concat", _concat.operands}}; },
 		[&](Pointer::Resize const& _resize)
 		{
 			if (_resize.size)
-				_json = Json{{"$sized" + std::to_string(*_resize.size), *_resize.operand}};
+				_json = Json{{"~sized" + std::to_string(*_resize.size), *_resize.operand}};
 			else
-				_json = Json{{"$wordsized", *_resize.operand}};
+				_json = Json{{"~wordsized", *_resize.operand}};
 		}
 	}, _expression.value);
 }

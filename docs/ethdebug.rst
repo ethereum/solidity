@@ -11,8 +11,8 @@ ethdebug Output
    ethdebug support is :ref:`experimental <experimental-mode>`.
 
 The compiler can describe its output in the `ethdebug format <https://ethdebug.github.io/format/>`_, a JSON format for debugging information shared between compilers and debuggers.
-The compiler targets version `0.1.0-draft.1 <https://github.com/ethdebug/format/tree/@ethdebug/format@0.1.0-draft.1>`_ of the format, which is still in development, and names it in the ``ethdebug`` stamp of the program and resources outputs.
-The format defines a `schema <https://github.com/ethdebug/format/tree/@ethdebug/format@0.1.0-draft.1/schemas>`_ for each kind of document.
+The compiler targets version `0.1.0-draft.2 <https://github.com/ethdebug/format/tree/@ethdebug/format@0.1.0-draft.2>`_ of the format, which is still in development, and names it in the ``ethdebug`` stamp of the program and resources outputs.
+The format defines a `schema <https://github.com/ethdebug/format/tree/@ethdebug/format@0.1.0-draft.2/schemas>`_ for each kind of document.
 This page lists the documents the compiler produces and describes the structure the compiler adds on top of the schemas, in particular how the type and pointer tables of the resources are keyed and named.
 The options to request the outputs are documented in :ref:`compiler-api` and :ref:`commandline-compiler`.
 
@@ -32,9 +32,9 @@ Outputs
 |                   | (per contract)                            |                                 |                                             |
 +-------------------+-------------------------------------------+---------------------------------+---------------------------------------------+
 
-.. _ethdebug/format/materials/compilation: https://github.com/ethdebug/format/blob/@ethdebug/format@0.1.0-draft.1/schemas/materials/compilation.schema.yaml
-.. _ethdebug/format/info/resources: https://github.com/ethdebug/format/blob/@ethdebug/format@0.1.0-draft.1/schemas/info/resources.schema.yaml
-.. _ethdebug/format/program: https://github.com/ethdebug/format/blob/@ethdebug/format@0.1.0-draft.1/schemas/program.schema.yaml
+.. _ethdebug/format/materials/compilation: https://github.com/ethdebug/format/blob/@ethdebug/format@0.1.0-draft.2/schemas/materials/compilation.schema.yaml
+.. _ethdebug/format/info/resources: https://github.com/ethdebug/format/blob/@ethdebug/format@0.1.0-draft.2/schemas/info/resources.schema.yaml
+.. _ethdebug/format/program: https://github.com/ethdebug/format/blob/@ethdebug/format@0.1.0-draft.2/schemas/program.schema.yaml
 
 The compilation needs nothing but the sources.
 The resources are derived from the analysis of the sources and the programs describe bytecode, so the latter can only be produced when compiling via IR.
@@ -104,7 +104,6 @@ The regions a template produces are named relative to the value it describes:
 - the parts of a ``bytes`` or ``string`` ``length-flag``, ``long-length`` and ``data``.
 
 A template referencing the template of a member's or element's type prefixes the names that one produces with the member's name or ``item``, so that the ``x`` of the ``from`` member of a ``Line`` is ``from-x`` and that of an element of a ``Point[]`` is ``item-x``.
-Since ethdebug identifiers must not start with ``$`` but Solidity identifiers may, a member name starting with ``$`` is prefixed with ``_``.
 
 .. code-block:: solidity
 
@@ -141,7 +140,7 @@ A debugger instantiates the ``Point`` template with ``slot`` bound to 1, where t
             "for": {
                 "location": "storage",
                 "name": "value",
-                "slot": {"$keccak256": [{"$wordsized": "key"}, {"$wordsized": "slot"}]}
+                "slot": {"~keccak256": [{"~wordsized": "key"}, {"~wordsized": "slot"}]}
             }
         }
     }

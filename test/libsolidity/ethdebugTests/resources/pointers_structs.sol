@@ -19,12 +19,12 @@ contract C {
 //         "location": "storage",
 //         "name": "value",
 //         "slot": {
-//             "$keccak256": [
+//             "~keccak256": [
 //                 {
-//                     "$wordsized": "key"
+//                     "~wordsized": "key"
 //                 },
 //                 {
-//                     "$wordsized": "slot"
+//                     "~wordsized": "slot"
 //                 }
 //             ]
 //         }
@@ -41,8 +41,8 @@ contract C {
 //                 "location": "storage",
 //                 "name": "length-flag",
 //                 "offset": {
-//                     "$difference": [
-//                         "$wordsize",
+//                     "~difference": [
+//                         "~wordsize",
 //                         "0x01"
 //                     ]
 //                 },
@@ -59,11 +59,11 @@ contract C {
 //                         {
 //                             "define": {
 //                                 "length": {
-//                                     "$quotient": [
+//                                     "~quotient": [
 //                                         {
-//                                             "$difference": [
+//                                             "~difference": [
 //                                                 {
-//                                                     "$read": "long-length"
+//                                                     "~read": "long-length"
 //                                                 },
 //                                                 "0x01"
 //                                             ]
@@ -75,9 +75,9 @@ contract C {
 //                             "in": {
 //                                 "define": {
 //                                     "start": {
-//                                         "$keccak256": [
+//                                         "~keccak256": [
 //                                             {
-//                                                 "$wordsized": "slot"
+//                                                 "~wordsized": "slot"
 //                                             }
 //                                         ]
 //                                     }
@@ -93,11 +93,11 @@ contract C {
 //                     ]
 //                 },
 //                 "if": {
-//                     "$remainder": [
+//                     "~remainder": [
 //                         {
-//                             "$sum": [
+//                             "~sum": [
 //                                 {
-//                                     "$read": "length-flag"
+//                                     "~read": "length-flag"
 //                                 },
 //                                 "0x01"
 //                             ]
@@ -108,9 +108,9 @@ contract C {
 //                 "then": {
 //                     "define": {
 //                         "length": {
-//                             "$quotient": [
+//                             "~quotient": [
 //                                 {
-//                                     "$read": "length-flag"
+//                                     "~read": "length-flag"
 //                                 },
 //                                 "0x02"
 //                             ]
@@ -144,7 +144,7 @@ contract C {
 //             {
 //                 "define": {
 //                     "slot": {
-//                         "$sum": [
+//                         "~sum": [
 //                             "slot",
 //                             "0x01"
 //                         ]
@@ -162,7 +162,7 @@ contract C {
 //             {
 //                 "define": {
 //                     "slot": {
-//                         "$sum": [
+//                         "~sum": [
 //                             "slot",
 //                             "0x02"
 //                         ]
@@ -225,7 +225,7 @@ contract C {
 //                 "location": "storage",
 //                 "name": "index",
 //                 "slot": {
-//                     "$sum": [
+//                     "~sum": [
 //                         "slot",
 //                         "0x01"
 //                     ]

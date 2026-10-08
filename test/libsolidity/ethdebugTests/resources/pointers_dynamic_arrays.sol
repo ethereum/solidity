@@ -24,9 +24,9 @@ contract C {
 //             {
 //                 "define": {
 //                     "data": {
-//                         "$keccak256": [
+//                         "~keccak256": [
 //                             {
-//                                 "$wordsized": "slot"
+//                                 "~wordsized": "slot"
 //                             }
 //                         ]
 //                     }
@@ -34,16 +34,16 @@ contract C {
 //                 "in": {
 //                     "list": {
 //                         "count": {
-//                             "$read": "length"
+//                             "~read": "length"
 //                         },
 //                         "each": "index",
 //                         "is": {
 //                             "define": {
 //                                 "slot": {
-//                                     "$sum": [
+//                                     "~sum": [
 //                                         "data",
 //                                         {
-//                                             "$product": [
+//                                             "~product": [
 //                                                 "index",
 //                                                 "0x02"
 //                                             ]
@@ -78,9 +78,9 @@ contract C {
 //             {
 //                 "define": {
 //                     "data": {
-//                         "$keccak256": [
+//                         "~keccak256": [
 //                             {
-//                                 "$wordsized": "slot"
+//                                 "~wordsized": "slot"
 //                             }
 //                         ]
 //                     }
@@ -88,13 +88,13 @@ contract C {
 //                 "in": {
 //                     "list": {
 //                         "count": {
-//                             "$read": "length"
+//                             "~read": "length"
 //                         },
 //                         "each": "index",
 //                         "is": {
 //                             "define": {
 //                                 "slot": {
-//                                     "$sum": [
+//                                     "~sum": [
 //                                         "data",
 //                                         "index"
 //                                     ]
@@ -129,9 +129,9 @@ contract C {
 //             {
 //                 "define": {
 //                     "data": {
-//                         "$keccak256": [
+//                         "~keccak256": [
 //                             {
-//                                 "$wordsized": "slot"
+//                                 "~wordsized": "slot"
 //                             }
 //                         ]
 //                     }
@@ -139,13 +139,13 @@ contract C {
 //                 "in": {
 //                     "list": {
 //                         "count": {
-//                             "$read": "length"
+//                             "~read": "length"
 //                         },
 //                         "each": "index",
 //                         "is": {
 //                             "define": {
 //                                 "slot": {
-//                                     "$sum": [
+//                                     "~sum": [
 //                                         "data",
 //                                         "index"
 //                                     ]
@@ -177,7 +177,7 @@ contract C {
 //                 "location": "storage",
 //                 "name": "item",
 //                 "slot": {
-//                     "$sum": [
+//                     "~sum": [
 //                         "slot",
 //                         "index"
 //                     ]
@@ -200,9 +200,9 @@ contract C {
 //             {
 //                 "define": {
 //                     "data": {
-//                         "$keccak256": [
+//                         "~keccak256": [
 //                             {
-//                                 "$wordsized": "slot"
+//                                 "~wordsized": "slot"
 //                             }
 //                         ]
 //                     }
@@ -210,14 +210,14 @@ contract C {
 //                 "in": {
 //                     "list": {
 //                         "count": {
-//                             "$read": "length"
+//                             "~read": "length"
 //                         },
 //                         "each": "index",
 //                         "is": {
 //                             "location": "storage",
 //                             "name": "item",
 //                             "slot": {
-//                                 "$sum": [
+//                                 "~sum": [
 //                                     "data",
 //                                     "index"
 //                                 ]
@@ -243,9 +243,9 @@ contract C {
 //             {
 //                 "define": {
 //                     "data": {
-//                         "$keccak256": [
+//                         "~keccak256": [
 //                             {
-//                                 "$wordsized": "slot"
+//                                 "~wordsized": "slot"
 //                             }
 //                         ]
 //                     }
@@ -253,7 +253,7 @@ contract C {
 //                 "in": {
 //                     "list": {
 //                         "count": {
-//                             "$read": "length"
+//                             "~read": "length"
 //                         },
 //                         "each": "index",
 //                         "is": {
@@ -261,12 +261,12 @@ contract C {
 //                             "location": "storage",
 //                             "name": "item",
 //                             "offset": {
-//                                 "$difference": [
-//                                     "$wordsize",
+//                                 "~difference": [
+//                                     "~wordsize",
 //                                     {
-//                                         "$sum": [
+//                                         "~sum": [
 //                                             {
-//                                                 "$remainder": [
+//                                                 "~remainder": [
 //                                                     "index",
 //                                                     "0x20"
 //                                                 ]
@@ -277,10 +277,10 @@ contract C {
 //                                 ]
 //                             },
 //                             "slot": {
-//                                 "$sum": [
+//                                 "~sum": [
 //                                     "data",
 //                                     {
-//                                         "$quotient": [
+//                                         "~quotient": [
 //                                             "index",
 //                                             "0x20"
 //                                         ]
@@ -305,8 +305,8 @@ contract C {
 //                 "location": "storage",
 //                 "name": "length-flag",
 //                 "offset": {
-//                     "$difference": [
-//                         "$wordsize",
+//                     "~difference": [
+//                         "~wordsize",
 //                         "0x01"
 //                     ]
 //                 },
@@ -323,11 +323,11 @@ contract C {
 //                         {
 //                             "define": {
 //                                 "length": {
-//                                     "$quotient": [
+//                                     "~quotient": [
 //                                         {
-//                                             "$difference": [
+//                                             "~difference": [
 //                                                 {
-//                                                     "$read": "long-length"
+//                                                     "~read": "long-length"
 //                                                 },
 //                                                 "0x01"
 //                                             ]
@@ -339,9 +339,9 @@ contract C {
 //                             "in": {
 //                                 "define": {
 //                                     "start": {
-//                                         "$keccak256": [
+//                                         "~keccak256": [
 //                                             {
-//                                                 "$wordsized": "slot"
+//                                                 "~wordsized": "slot"
 //                                             }
 //                                         ]
 //                                     }
@@ -357,11 +357,11 @@ contract C {
 //                     ]
 //                 },
 //                 "if": {
-//                     "$remainder": [
+//                     "~remainder": [
 //                         {
-//                             "$sum": [
+//                             "~sum": [
 //                                 {
-//                                     "$read": "length-flag"
+//                                     "~read": "length-flag"
 //                                 },
 //                                 "0x01"
 //                             ]
@@ -372,9 +372,9 @@ contract C {
 //                 "then": {
 //                     "define": {
 //                         "length": {
-//                             "$quotient": [
+//                             "~quotient": [
 //                                 {
-//                                     "$read": "length-flag"
+//                                     "~read": "length-flag"
 //                                 },
 //                                 "0x02"
 //                             ]

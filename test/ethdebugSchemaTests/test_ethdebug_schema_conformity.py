@@ -148,11 +148,11 @@ def pointer_expression_names(expression):
     """The variable and region names an expression refers to: (variables, regions)."""
     (variables, regions) = (set(), set())
     if isinstance(expression, str):
-        if not expression.startswith("0x") and not expression.isdigit() and expression != "$wordsize":
+        if not expression.startswith("0x") and not expression.isdigit() and expression != "~wordsize":
             variables.add(expression)
     elif isinstance(expression, dict):
         for (key, operand) in expression.items():
-            if key in (".slot", ".offset", ".length", "$read"):
+            if key in (".slot", ".offset", ".length", "~read"):
                 regions.add(operand)
             elif isinstance(operand, list):
                 for element in operand:
@@ -203,12 +203,12 @@ class EthdebugTestCase(unittest.TestCase):
 
     def assertPointerIsClosed(self, pointer, bound_variables, regions):
         """Every variable in the pointer is bound by a template parameter, a `define` or a
-        `list`, and every region a lookup or `$read` refers to is named in the pointer."""
+        `list`, and every region a lookup or `~read` refers to is named in the pointer."""
 
         def check_expression(expression):
             (variables, referenced_regions) = pointer_expression_names(expression)
             self.assertLessEqual(variables, bound_variables, f"Unbound variable in {expression}")
-            self.assertLessEqual(referenced_regions, regions | {"$this"}, f"Unknown region in {expression}")
+            self.assertLessEqual(referenced_regions, regions | {"~this"}, f"Unknown region in {expression}")
 
         if "location" in pointer:
             for key in ("slot", "offset", "length"):

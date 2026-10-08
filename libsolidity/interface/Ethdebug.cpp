@@ -421,14 +421,6 @@ Expression advanceSlots(Expression _base, u256 const& _slots)
 	return sum({std::move(_base), literal(_slots)});
 }
 
-/// An ethdebug identifier must not start with `$`, which a Solidity identifier
-/// may. Every name the producer publishes passes through here.
-std::string identifier(std::string const& _name)
-{
-	solAssert(!_name.empty());
-	return _name.front() == '$' ? "_" + _name : _name;
-}
-
 /// A single region covering a value of value type as laid out in its slot,
 /// in storage or transient storage.
 ///
@@ -602,7 +594,7 @@ private:
 				*member.type,
 				advanceSlots(variable("slot"), slotOffset),
 				byteOffset,
-				identifier(member.name),
+				member.name,
 				produced
 			));
 		}

@@ -22,9 +22,9 @@ contract C {
 //             {
 //                 "define": {
 //                     "data": {
-//                         "$keccak256": [
+//                         "~keccak256": [
 //                             {
-//                                 "$wordsized": "slot"
+//                                 "~wordsized": "slot"
 //                             }
 //                         ]
 //                     }
@@ -32,14 +32,14 @@ contract C {
 //                 "in": {
 //                     "list": {
 //                         "count": {
-//                             "$read": "length"
+//                             "~read": "length"
 //                         },
 //                         "each": "index",
 //                         "is": {
 //                             "location": "storage",
 //                             "name": "item",
 //                             "slot": {
-//                                 "$sum": [
+//                                 "~sum": [
 //                                     "data",
 //                                     "index"
 //                                 ]
@@ -59,7 +59,7 @@ contract C {
 //         "group": [
 //             {
 //                 "location": "storage",
-//                 "name": "_$member",
+//                 "name": "$member",
 //                 "slot": "slot"
 //             }
 //         ]

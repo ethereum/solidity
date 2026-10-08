@@ -21,10 +21,10 @@ contract C {
 //             "is": {
 //                 "define": {
 //                     "slot": {
-//                         "$sum": [
+//                         "~sum": [
 //                             "slot",
 //                             {
-//                                 "$product": [
+//                                 "~product": [
 //                                     "index",
 //                                     "0x02"
 //                                 ]
@@ -54,7 +54,7 @@ contract C {
 //                 "location": "storage",
 //                 "name": "item",
 //                 "slot": {
-//                     "$sum": [
+//                     "~sum": [
 //                         "slot",
 //                         "index"
 //                     ]
@@ -74,7 +74,7 @@ contract C {
 //             "is": {
 //                 "define": {
 //                     "slot": {
-//                         "$sum": [
+//                         "~sum": [
 //                             "slot",
 //                             "index"
 //                         ]
@@ -104,14 +104,14 @@ contract C {
 //                 "location": "storage",
 //                 "name": "item",
 //                 "offset": {
-//                     "$difference": [
-//                         "$wordsize",
+//                     "~difference": [
+//                         "~wordsize",
 //                         {
-//                             "$product": [
+//                             "~product": [
 //                                 {
-//                                     "$sum": [
+//                                     "~sum": [
 //                                         {
-//                                             "$remainder": [
+//                                             "~remainder": [
 //                                                 "index",
 //                                                 "0x02"
 //                                             ]
@@ -125,10 +125,10 @@ contract C {
 //                     ]
 //                 },
 //                 "slot": {
-//                     "$sum": [
+//                     "~sum": [
 //                         "slot",
 //                         {
-//                             "$quotient": [
+//                             "~quotient": [
 //                                 "index",
 //                                 "0x02"
 //                             ]
@@ -152,14 +152,14 @@ contract C {
 //                 "location": "storage",
 //                 "name": "item",
 //                 "offset": {
-//                     "$difference": [
-//                         "$wordsize",
+//                     "~difference": [
+//                         "~wordsize",
 //                         {
-//                             "$product": [
+//                             "~product": [
 //                                 {
-//                                     "$sum": [
+//                                     "~sum": [
 //                                         {
-//                                             "$remainder": [
+//                                             "~remainder": [
 //                                                 "index",
 //                                                 "0x10"
 //                                             ]
@@ -173,10 +173,10 @@ contract C {
 //                     ]
 //                 },
 //                 "slot": {
-//                     "$sum": [
+//                     "~sum": [
 //                         "slot",
 //                         {
-//                             "$quotient": [
+//                             "~quotient": [
 //                                 "index",
 //                                 "0x10"
 //                             ]
@@ -199,7 +199,7 @@ contract C {
 //                 "location": "storage",
 //                 "name": "item",
 //                 "slot": {
-//                     "$sum": [
+//                     "~sum": [
 //                         "slot",
 //                         "index"
 //                     ]

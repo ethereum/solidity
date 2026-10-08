@@ -62,7 +62,7 @@ interface C {
             },
             "ethdebug": {
                 "schema": "ethdebug/format/info/resources",
-                "version": "0.1.0-draft.1"
+                "version": "0.1.0-draft.2"
             },
             "pointers": {},
             "types": {

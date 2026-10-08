@@ -306,9 +306,10 @@ struct Pointer
 	using Operands = std::vector<Expression>;
 
 	/// @returns whether @a _text follows the identifier grammar of
-	/// ethdebug/format/pointer/identifier: `^[a-zA-Z_\-]+[a-zA-Z0-9$_\-]*$`.
+	/// ethdebug/format/pointer/identifier: `^[a-zA-Z$_\-]+[a-zA-Z0-9$_\-]*$`,
+	/// which admits every Solidity identifier as it is.
 	static bool isIdentifier(std::string_view _text);
-	/// @returns whether @a _text names a region: an identifier or `$this`.
+	/// @returns whether @a _text names a region: an identifier or `~this`.
 	static bool isRegionReference(std::string_view _text);
 
 	/// An unsigned number or `0x`-prefixed hex string.
@@ -330,7 +331,7 @@ struct Pointer
 	enum class Constant { WordSize };
 
 	/// `{ ".slot" | ".offset" | ".length": <region> }`, a property of a named
-	/// region or of `$this`.
+	/// region or of `~this`.
 	struct Lookup
 	{
 		enum class Property { Slot, Offset, Length };
@@ -342,7 +343,7 @@ struct Pointer
 		std::string region;
 	};
 
-	/// `{ "$read": <region> }`, the raw bytes in a region.
+	/// `{ "~read": <region> }`, the raw bytes in a region.
 	struct Read
 	{
 		/// @a _region must satisfy isRegionReference().
@@ -372,7 +373,7 @@ struct Pointer
 		Operands operands;
 	};
 
-	/// `{ "$sized<N>": ... }` with @a size N, or `{ "$wordsized": ... }` when unset.
+	/// `{ "~sized<N>": ... }` with @a size N, or `{ "~wordsized": ... }` when unset.
 	struct Resize
 	{
 		/// @a _size, if set, must be positive; @a _operand must not be null.
