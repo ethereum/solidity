@@ -1310,7 +1310,7 @@ void CompilerUtils::convertType(
 			solAssert(
 				typeOnStack.isImplicitlyConvertibleTo(targetType) &&
 				typeOnStack.sizeOnStack() == targetType.sizeOnStack() &&
-				(typeOnStack.kind() == FunctionType::Kind::Internal || typeOnStack.kind() == FunctionType::Kind::External) &&
+				(typeOnStack.kind() == FunctionType::Kind::Internal || typeOnStack.kind() == FunctionType::Kind::External || typeOnStack.kind() == FunctionType::Kind::DelegateCall) &&
 				typeOnStack.kind() == targetType.kind(),
 				"Invalid function type conversion requested."
 			);
