@@ -3,6 +3,7 @@
 Language Features:
 
 Compiler Features:
+* ethdebug: Stamp the `ethdebug/format/program` and `ethdebug/format/info/resources` outputs with their schema and the version of the ethdebug/format specification they follow (experimental).
 * ethdebug: Populate the type and pointer tables of `ethdebug/format/info/resources` with the type documents of every type a contract's state variables, functions and modifiers reference and with a pointer template for every struct, array and mapping type of its state variables (experimental).
 
 Bugfixes:

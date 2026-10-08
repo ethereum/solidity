@@ -60,6 +60,10 @@ interface C {
                     }
                 ]
             },
+            "ethdebug": {
+                "schema": "ethdebug/format/info/resources",
+                "version": "0.1.0-draft.1"
+            },
             "pointers": {},
             "types": {
                 "t_bytes32": {

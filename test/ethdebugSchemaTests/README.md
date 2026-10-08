@@ -27,5 +27,5 @@ The tests expand those entries to Standard JSON `content` before invoking `solc`
 The suite only checks properties that hold for the output of any input.
 The expected output for specific inputs is pinned down by the isoltest cases under `test/libsolidity/ethdebugTests/`; the resources of the cases in its `resources/` subdirectory are validated against the schemas here as well.
 
-The submodule is pinned to the `0.1.0-preview.0` release of ethdebug/format, the version the compiler targets.
+The submodule is pinned to the `0.1.0-draft.1` release of ethdebug/format, the version the compiler targets.
 To update the schema version, bump the submodule commit, update the version and the links in `docs/ethdebug.rst` and rerun this suite.

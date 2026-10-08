@@ -459,8 +459,8 @@ Input Description
         //   transientStorageLayout - Slots, offsets and types of the contract's state variables in transient storage
         //   evm.assembly - New assembly format
         //   evm.legacyAssembly - Old-style assembly format in JSON
-        //   evm.bytecode.ethdebug - Debug information in ethdebug format (ethdebug/format/program schema for creation bytecode). Can only be requested when compiling via IR. Carries semantic debug info only when the `ethdebug` component is present in `settings.debug.debugInfo`. (experimental)
-        //   evm.deployedBytecode.ethdebug - Debug information in ethdebug format (ethdebug/format/program schema for deployed bytecode). Can only be requested when compiling via IR. Carries semantic debug info only when the `ethdebug` component is present in `settings.debug.debugInfo`. (experimental)
+        //   evm.bytecode.ethdebug - Debug information in ethdebug format (ethdebug/format/program schema for creation bytecode), stamped with the schema and the version of the ethdebug/format specification it follows. Can only be requested when compiling via IR. Carries semantic debug info only when the `ethdebug` component is present in `settings.debug.debugInfo`. (experimental)
+        //   evm.deployedBytecode.ethdebug - Debug information in ethdebug format (ethdebug/format/program schema for deployed bytecode), stamped with the schema and the version of the ethdebug/format specification it follows. Can only be requested when compiling via IR. Carries semantic debug info only when the `ethdebug` component is present in `settings.debug.debugInfo`. (experimental)
         //   evm.bytecode.functionDebugData - Debugging information at function level
         //   evm.bytecode.object - Bytecode object
         //   evm.bytecode.opcodes - Opcodes list
@@ -473,7 +473,7 @@ Input Description
         //   evm.gasEstimates - Function gas estimates
         //
         // Global level (needs "*" as file name and "*" as contract name):
-        //   ethdebug.resources - Global ethdebug output (ethdebug/format/info/resources schema) containing source list and compiler info, the type documents of the types referenced by state variables, functions and modifiers, and the pointer templates of the state variables in storage and transient storage (experimental)
+        //   ethdebug.resources - Global ethdebug output (ethdebug/format/info/resources schema) containing source list and compiler info, the type documents of the types referenced by state variables, functions and modifiers, and the pointer templates of the state variables in storage and transient storage, stamped with the schema and the version of the ethdebug/format specification it follows (experimental)
         //   ethdebug.compilation - Global ethdebug compilation output (the 'compilation' key from ethdebug/format/info/resources schema) (experimental)
         //
         // Note that using `evm`, `evm.bytecode`, etc. will select every

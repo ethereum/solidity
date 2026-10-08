@@ -29,6 +29,10 @@ Debug Data (ethdebug/format/program):
         "name": "C"
     },
     "environment": "create",
+    "ethdebug": {
+        "schema": "ethdebug/format/program",
+        "version": "<VERSION REMOVED>"
+    },
     "instructions": [
         {
             "context": {
