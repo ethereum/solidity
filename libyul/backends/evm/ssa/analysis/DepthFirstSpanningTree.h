@@ -73,7 +73,7 @@ public:
 		return m_explored[_block.value];
 	}
 
-	/// Checks if block1 is an ancestor of block2, ie there's a path from block1 to block2 in the dfs tree
+	/// Checks if `_ancestor` is an ancestor of `_block`, ie there's a path from `_ancestor` to `_block` in the dfs tree
 	bool ancestor(SSACFG::BlockId _ancestor, SSACFG::BlockId _block) const;
 
 private:
