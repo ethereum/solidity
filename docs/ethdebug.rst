@@ -79,7 +79,8 @@ Composite types reference their components by identifier, so that the table is c
 an array, a mapping or a user-defined value type refers to its element, key, value or underlying type as ``{"type": {"id": "t_uint256"}}`` and a struct lists its members with their ``name`` and such a reference.
 The parameters and the return values of a function type are tuple types, referenced in the same way.
 
-Types defined in the source, that is structs, enums, contracts, user-defined value types and functions with a declaration, carry a ``definition`` with the ``name`` of the definition and its ``location`` in the source: the source ``id`` and the ``offset`` and ``length`` of the definition.
+Types defined in the source, that is structs, enums, contracts, user-defined value types and the types of declared functions, carry a ``definition`` with the ``name`` of the definition and its ``location`` in the source: the source ``id`` and the ``offset`` and ``length`` of the definition.
+A function type written as a type name, such as that of a variable ``function (uint256) external returns (bool) f``, has no declaration and therefore no ``definition``.
 Like in source mappings, and as the schema of source ranges specifies, the offset and the length count bytes of the UTF-8 encoded source, not characters.
 
 A type document does not depend on where a value is stored; that is what the pointer describes.

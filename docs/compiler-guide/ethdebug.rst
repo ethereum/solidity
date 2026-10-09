@@ -109,7 +109,7 @@ The Mapping
    * - internal or external function type
      - Function
      - function
-     - ``internal`` or ``external``, ``contains.parameters`` and ``contains.returns`` referencing tuples (no ``returns`` without return values), ``definition`` when declared
+     - ``internal`` or ``external``, ``contains.parameters`` and ``contains.returns`` referencing tuples (no ``returns`` without return values), ``definition`` only for the type of a declared function, not for one written as a type name
 
 References to component types are ``{"type": {"id": <identifier>}}``, the parameter and return tuples of a function type included.
 The members of a struct are taken from ``StructType::members()``.
