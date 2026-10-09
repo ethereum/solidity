@@ -50,12 +50,13 @@ The compiler currently uses the same number as the ``id`` of the source in the S
 The Resources
 =============
 
-The resources document carries two tables that the programs refer to, ``types`` and ``pointers``, and repeats the compilation, which ``ethdebug.compilation`` also provides on its own.
+The resources document carries its ``ethdebug`` stamp, two tables that the programs refer to, ``types`` and ``pointers``, and repeats the compilation, which ``ethdebug.compilation`` also provides on its own.
 Both tables cover all contracts of the compilation.
 
 .. code-block:: json
 
     {
+        "ethdebug": {"schema": "ethdebug/format/info/resources", "version": "0.1.0-draft.2"},
         "compilation": {"id": "...", "compiler": {"name": "solc", "version": "..."}, "sources": ["..."]},
         "types": {"t_uint256": {"kind": "uint", "bits": 256}, "...": "..."},
         "pointers": {"t_struct$_Point_$6_storage": {"expect": ["slot"], "for": {"group": ["..."]}}, "...": "..."}
@@ -94,6 +95,9 @@ Their values are single regions wherever they occur, and where a state variable'
 
 Every template expects ``slot``, the base slot of the value it describes.
 The template of a mapping expects ``key`` as well, the key of the entry it locates: the value of a mapping is not at a fixed place, and a mapping nested in another type is represented by the region of its base slot, from which the mapping's template locates an entry once a key is bound.
+A key of value type is bound to the word it is hashed as, which is the word Solidity holds it in on the stack: a signed integer sign-extended, a ``bytesN`` in the high-order bytes followed by zeros, and any other value type in the low-order bytes.
+The template widens a shorter value with zeros on the left, which gives the same word only for the types held in the low-order bytes, so a ``bytes4`` or a negative ``int8`` key has to be bound as the whole word.
+A ``bytes`` or ``string`` key is bound to its bytes, which are hashed as they are.
 A type nested in itself, through an array or through a mapping, references its own template, which a debugger follows as far as the data reaches: one element per list entry, one key per mapping level.
 
 The regions a template produces are named relative to the value it describes:
