@@ -181,6 +181,9 @@ public:
 		return m_flBitmap == 0;
 	}
 
+	/// Number of free (coalesced) blocks
+	std::size_t numFreeBlocks() const noexcept { return m_numFreeBlocks; }
+
 private:
 	/// Sentinel for an empty/unset index
 	static constexpr Index EMPTY = std::numeric_limits<Index>::max();
@@ -301,6 +304,7 @@ private:
 			m_headers[oldHead].prevFreeInBin = _start;
 		head = _start;
 		setBinBitmap(bin, true);
+		++m_numFreeBlocks;
 	}
 
 	/// Paper §8 `remove(found_block)`: splice the block out of its segregated double-linked list and clear
@@ -327,6 +331,8 @@ private:
 		self.isFree = false;
 		if (head == EMPTY)
 			setBinBitmap(bin, false);
+		yulAssert(m_numFreeBlocks > 0);
+		--m_numFreeBlocks;
 	}
 
 	/// Paper §7.4 "Bitmaps are used to track non-empty lists": each FL class has a 32-bit `m_slBitmap[fl]` indicating
@@ -420,6 +426,9 @@ private:
 
 	/// For first level bin `fl`, `m_slBitmap[fl]` bit `sl` is set iff bin `(fl, sl)` is non-empty
 	std::array<std::uint32_t, FL_COUNT> m_slBitmap{};
+
+	/// Number of blocks linked into the bins, i.e., of free blocks
+	std::size_t m_numFreeBlocks{0};
 };
 
 }
