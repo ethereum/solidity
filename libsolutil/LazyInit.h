@@ -59,11 +59,7 @@ public:
 		_other.m_value.reset();
 	}
 
-	LazyInit& operator=(LazyInit&& _other) noexcept
-	{
-		this->m_value.swap(_other.m_value);
-		_other.m_value.reset();
-	}
+	LazyInit& operator=(LazyInit&&) = delete;
 
 	template<typename F>
 	value_type& init(F&& _fun)
