@@ -27,15 +27,15 @@ contract C {
 // y() -> 42
 // x() -> 0, 0, 0, 0, 0, 42, 0, 0, 0, 0
 // fillArray()
-// gas irOptimized: 203627
+// gas irOptimized: 203624
 // gas legacy: 204356
 // gas legacyOptimized: 203793
-// gas ssaCFGOptimized: 203626
+// gas ssaCFGOptimized: 203623
 // y() -> 5
 // x() -> 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
 // clearArray()
 // y() -> 0
 // x() -> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-// gas irOptimized: 44183
+// gas irOptimized: 44180
 // gas legacy: 46012
 // gas legacyOptimized: 43907

@@ -49,15 +49,15 @@ contract C {
 }
 // ----
 // test_f() -> true
-// gas irOptimized: 122114
+// gas irOptimized: 122108
 // gas legacy: 126159
 // gas legacyOptimized: 122742
-// gas ssaCFGOptimized: 122133
+// gas ssaCFGOptimized: 122127
 // test_g() -> true
-// gas irOptimized: 106248
+// gas irOptimized: 106242
 // gas legacy: 111821
 // gas legacyOptimized: 106591
-// gas ssaCFGOptimized: 106235
+// gas ssaCFGOptimized: 106229
 // addresses(uint256): 0 -> 0x18
 // addresses(uint256): 1 -> 0x19
 // addresses(uint256): 3 -> 0x1b

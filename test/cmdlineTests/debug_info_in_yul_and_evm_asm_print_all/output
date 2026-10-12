@@ -86,7 +86,7 @@ object "C_6" {
             /// @src 0:60:101  "contract C {..."
             mstore(64, memoryguard(128))
 
-            if iszero(lt(calldatasize(), 4))
+            if gt(calldatasize(), 3)
             {
                 let selector := shift_right_224_unsigned(calldataload(0))
                 switch selector
@@ -181,7 +181,7 @@ object "C_6" {
         code {
             {
                 /// @src 0:60:101  "contract C {..."
-                if iszero(lt(calldatasize(), 4))
+                if gt(calldatasize(), 3)
                 {
                     if eq(0x26121ff0, shr(224, calldataload(0)))
                     {

@@ -123,7 +123,7 @@ object \"D_16\" {
             /// @src 0:93:146  \"contract D { function f() public { C c = new C(); } }\"
             mstore(64, memoryguard(128))
 
-            if iszero(lt(calldatasize(), 4))
+            if gt(calldatasize(), 3)
             {
                 let selector := shift_right_224_unsigned(calldataload(0))
                 switch selector
