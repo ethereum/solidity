@@ -119,7 +119,7 @@ public:
 	/// left-aligns it, usually for use in non-padded encoding.
 	std::string leftAlignFunction(Type const& _type);
 
-	std::string shiftLeftFunction(size_t _numBits);
+	std::string shiftLeftFunction(size_t _numBits) const;
 	std::string shiftLeftFunctionDynamic();
 	std::string shiftRightFunction(size_t _numBits);
 	std::string shiftRightFunctionDynamic();

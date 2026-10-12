@@ -427,29 +427,29 @@ std::string YulUtilFunctions::leftAlignFunction(Type const& _type)
 	});
 }
 
-std::string YulUtilFunctions::shiftLeftFunction(size_t _numBits)
+std::string YulUtilFunctions::shiftLeftFunction(size_t _numBits) const
 {
-	solAssert(_numBits < 256, "");
-
-	std::string functionName = "shift_left_" + std::to_string(_numBits);
-	return m_functionCollector.createFunction(functionName, [&]() {
-		return
-			Whiskers(R"(
-			function <functionName>(value) -> newValue {
-				newValue :=
-				<?hasShifts>
-					shl(<numBits>, value)
-				<!hasShifts>
-					mul(value, <multiplier>)
-				</hasShifts>
-			}
-			)")
-			("functionName", functionName)
-			("numBits", std::to_string(_numBits))
-			("hasShifts", m_evmVersion.hasBitwiseShifting())
-			("multiplier", toCompactHexWithPrefix(u256(1) << _numBits))
-			.render();
-	});
+	solAssert(_numBits < 256);
+	static yulcache::FunctionKind<size_t> constexpr shiftLeftKind{
+		.name = [](size_t const& _numBits) { return "shift_left_" + std::to_string(_numBits); },
+		.define = [](yulcache::FunctionEnv const& _env, size_t const& _numBits) {
+			return
+				Whiskers(R"(
+				function <functionName>(value) -> newValue {
+					newValue :=
+					<?hasShifts>
+						shl(<numBits>, value)
+					<!hasShifts>
+						mul(value, <multiplier>)
+					</hasShifts>
+				}
+				)")
+				("numBits", std::to_string(_numBits))
+				("hasShifts", _env.evmVersion().hasBitwiseShifting())
+				("multiplier", toCompactHexWithPrefix(u256(1) << _numBits));
+		},
+	};
+	return m_functionCollector.request<shiftLeftKind>(_numBits);
 }
 
 std::string YulUtilFunctions::shiftLeftFunctionDynamic()
