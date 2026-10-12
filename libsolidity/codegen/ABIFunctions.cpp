@@ -1533,9 +1533,13 @@ std::string ABIFunctions::arrayStoreLengthForEncodingFunction(ArrayType const& _
 	});
 }
 
-std::string ABIFunctions::createFunction(std::string const& _name, std::function<std::string ()> const& _creator)
+std::string ABIFunctions::createFunction(
+	std::string const& _name,
+	std::function<std::string ()> const& _creator,
+	std::source_location const _site
+)
 {
-	return m_functionCollector.createFunction(_name, _creator);
+	return m_functionCollector.createFunction(_name, _creator, _site);
 }
 
 size_t ABIFunctions::headSize(TypePointers const& _targetTypes)

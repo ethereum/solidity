@@ -26,9 +26,38 @@
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/StringUtils.h>
 
+#include <boost/core/demangle.hpp>
+
+#include <fmt/format.h>
+
 using namespace solidity;
 using namespace solidity::frontend;
 using namespace solidity::util;
+
+void MultiUseYulFunctionCollector::assertSameCreationSite(
+	std::string const& _name,
+	CreationSite const& _generatedAt,
+	CreationSite const& _requestedAt
+)
+{
+	static auto constexpr siteDescription = [](CreationSite const& _site) {
+		return fmt::format(
+			"{}:{} ({})",
+			_site.file,
+			_site.line,
+			boost::core::demangle(_site.creator.name())
+		);
+	};
+	solAssert(
+		_generatedAt == _requestedAt,
+		fmt::format(
+			"Helper function {} requested from {} but generated from {}.",
+			_name,
+			siteDescription(_requestedAt),
+			siteDescription(_generatedAt)
+		)
+	);
+}
 
 std::string MultiUseYulFunctionCollector::requestedFunctions()
 {
@@ -38,34 +67,30 @@ std::string MultiUseYulFunctionCollector::requestedFunctions()
 	return result;
 }
 
-std::string MultiUseYulFunctionCollector::createFunction(std::string const& _name, std::function<std::string()> const& _creator)
+std::string MultiUseYulFunctionCollector::createFunction(
+	std::string const& _name,
+	std::function<std::string()> const& _creator,
+	std::source_location const _site
+)
 {
-	if (!m_requestedFunctions.count(_name))
-	{
-		m_requestedFunctions.insert(_name);
-		std::string fun = _creator();
-		solAssert(!fun.empty(), "");
-		solAssert(fun.find("function " + _name + "(") != std::string::npos, "Function not properly named.");
-		m_code += std::move(fun);
-	}
-	return _name;
+	return createFunctionImpl(_name, _site, _creator.target_type(), _creator);
 }
 
 std::string MultiUseYulFunctionCollector::createFunction(
 	std::string const& _name,
-	std::function<std::string(std::vector<std::string>&, std::vector<std::string>&)> const& _creator
+	std::function<std::string(std::vector<std::string>&, std::vector<std::string>&)> const& _creator,
+	std::source_location const _site
 )
 {
 	solAssert(!_name.empty(), "");
-	if (!m_requestedFunctions.count(_name))
-	{
-		m_requestedFunctions.insert(_name);
+	// The site is taken from the original creator, not from the adapter below.
+	return createFunctionImpl(_name, _site, _creator.target_type(), [&] {
 		std::vector<std::string> arguments;
 		std::vector<std::string> returnParameters;
 		std::string body = _creator(arguments, returnParameters);
 		solAssert(!body.empty(), "");
 
-		m_code += Whiskers(R"(
+		return Whiskers(R"(
 			function <functionName>(<args>)<?+retParams> -> <retParams></+retParams> {
 				<body>
 			}
@@ -75,6 +100,31 @@ std::string MultiUseYulFunctionCollector::createFunction(
 		("retParams", joinHumanReadable(returnParameters))
 		("body", body)
 		.render();
+	});
+}
+
+std::string MultiUseYulFunctionCollector::createFunctionImpl(
+	std::string const& _name,
+	std::source_location const& _location,
+	std::type_index const _creatorType,
+	std::function<std::string()> const& _creator
+)
+{
+	CreationSite const site{
+		.file = _location.file_name(),
+		.line = _location.line(),
+		.column = _location.column(),
+		.creator = _creatorType,
+	};
+	auto const [it, inserted] = m_requestedFunctions.try_emplace(_name, site);
+	if (inserted)
+	{
+		std::string fun = _creator();
+		solAssert(!fun.empty(), "");
+		solAssert(fun.find("function " + _name + "(") != std::string::npos, "Function not properly named.");
+		m_code += std::move(fun);
 	}
+	else
+		assertSameCreationSite(_name, it->second, site);
 	return _name;
 }
