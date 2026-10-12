@@ -141,11 +141,13 @@ key in the ``"settings"`` field:
       }
     }
 
-Target Options
---------------
+EVM Versions
+------------
 
 Below is a list of target EVM versions and the compiler-relevant changes introduced
 at each version. Backward compatibility is not guaranteed between each version.
+See also the `Timeline of all Ethereum forks <https://ethereum.org/ethereum-forks/>`__ for more details.
+Note that the compiler introduces a new option only for forks that actually change the EVM.
 
 - ``homestead`` (*support deprecated*)
    - (oldest version)
