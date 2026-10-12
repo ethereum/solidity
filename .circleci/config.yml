@@ -77,7 +77,7 @@ commands:
       skip_branches_regex:
         description: "Regex of branches that should skip restoring the cache."
         type: string
-        default: "^(develop|breaking)$"
+        default: "^(develop|breaking(-.+)?)$"
     steps:
       # Tags always skip ccache. Selected branches intentionally start from scratch.
       - when:
