@@ -32,6 +32,7 @@
 
 #include <functional>
 #include <map>
+#include <source_location>
 #include <vector>
 
 namespace solidity::frontend
@@ -262,7 +263,11 @@ private:
 	/// Helper function that uses @a _creator to create a function and add it to
 	/// @a m_requestedFunctions if it has not been created yet and returns @a _name in both
 	/// cases.
-	std::string createFunction(std::string const& _name, std::function<std::string()> const& _creator);
+	std::string createFunction(
+		std::string const& _name,
+		std::function<std::string()> const& _creator,
+		std::source_location _site = std::source_location::current()
+	);
 
 	/// @returns the size of the static part of the encoding of the given types.
 	static size_t headSize(TypePointers const& _targetTypes);
