@@ -169,6 +169,7 @@ public:
 	T& operator[](Index const _i) { return m_data[_i]; }
 	T const& operator[](Index const _i) const { return m_data[_i]; }
 
+	/// Number of slots owned by the pool, allocated or free. Every index below it is valid for `operator[]`.
 	std::size_t size() const noexcept { return m_data.size(); }
 
 	std::vector<T> const& data() const noexcept { return m_data; }
