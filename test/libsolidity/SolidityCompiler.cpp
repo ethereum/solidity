@@ -22,8 +22,13 @@
 #include <test/Metadata.h>
 #include <test/Common.h>
 
+#include <liblangutil/DebugInfoSelection.h>
+#include <libsolutil/JSON.h>
+
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/test/unit_test.hpp>
 
+using namespace solidity::langutil;
 using namespace solidity::test;
 
 namespace solidity::frontend::test
@@ -67,6 +72,52 @@ BOOST_AUTO_TEST_CASE(does_not_include_creation_time_only_internal_functions)
 	unsigned threshold = evmVersion.hasPush0() ? 9 : 10;
 	BOOST_CHECK(runtimeBytecode.size() >= threshold);
 	BOOST_CHECK(runtimeBytecode.size() <= 30);
+}
+
+BOOST_AUTO_TEST_CASE(reset_restores_experimental_mode)
+{
+	char const* sourceCode = "pragma solidity >=0.0; contract C {}";
+
+	auto compileAndCheckExperimentalMetadata = [&](CompilerStack& _compilerStack, bool _expected)
+	{
+		_compilerStack.setSources({{"A.sol", sourceCode}});
+		BOOST_REQUIRE(_compilerStack.compile());
+		Json metadata;
+		BOOST_REQUIRE(util::jsonParseStrict(_compilerStack.metadata("C"), metadata));
+		BOOST_CHECK_EQUAL(metadata["settings"].contains("experimental"), _expected);
+	};
+
+	CompilerStack compilerStack;
+	compilerStack.setExperimental(true);
+	compileAndCheckExperimentalMetadata(compilerStack, true);
+
+	compilerStack.reset(true /* _keepSettings */);
+	compileAndCheckExperimentalMetadata(compilerStack, true);
+
+	compilerStack.reset(false /* _keepSettings */);
+	compileAndCheckExperimentalMetadata(compilerStack, false);
+}
+
+BOOST_AUTO_TEST_CASE(reset_restores_debug_info_selection)
+{
+	StringMap sources{{"A.sol", "pragma solidity >=0.0; contract C { function f() public pure returns (uint) { return 1; } }"}};
+
+	auto compileAndCheckSourceLocations = [&](CompilerStack& _compilerStack, bool _expected)
+	{
+		_compilerStack.setSources(sources);
+		BOOST_REQUIRE(_compilerStack.compile());
+		BOOST_CHECK_EQUAL(boost::algorithm::contains(_compilerStack.assemblyString("C", sources), "/* \"A.sol\":"), _expected);
+	};
+
+	CompilerStack compilerStack;
+	compilerStack.selectDebugInfo(DebugInfoSelection::None());
+	compileAndCheckSourceLocations(compilerStack, false);
+
+	compilerStack.reset(true /* _keepSettings */);
+	compileAndCheckSourceLocations(compilerStack, false);
+
+	compilerStack.reset(false /* _keepSettings */);
+	compileAndCheckSourceLocations(compilerStack, true);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

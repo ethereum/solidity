@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <libyul/backends/evm/ssa/traversal/ForwardTopologicalSort.h>
+#include <libyul/backends/evm/ssa/analysis/DepthFirstSpanningTree.h>
 #include <libyul/backends/evm/ssa/SSACFG.h>
 
 #include <cstdint>
@@ -37,7 +37,7 @@ namespace solidity::yul::ssa
 class JunkAdmittingBlocksFinder
 {
 public:
-	explicit JunkAdmittingBlocksFinder(SSACFG const& _cfg, traversal::ForwardTopologicalSort const& _topologicalSort);
+	explicit JunkAdmittingBlocksFinder(SSACFG const& _cfg, analysis::DepthFirstSpanningTree const& _dfsTree);
 	bool allowsAdditionOfJunk(SSACFG::BlockId const& _blockId) const;
 private:
 	std::vector<std::uint8_t> m_blockAllowsJunk;

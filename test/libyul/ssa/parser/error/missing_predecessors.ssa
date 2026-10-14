@@ -1,0 +1,6 @@
+#0:
+    jump #1
+#1:
+    main_exit
+// ----
+// ParseError at line 3, "#1:": #1 is jumped to from #0, but declares no predecessors.

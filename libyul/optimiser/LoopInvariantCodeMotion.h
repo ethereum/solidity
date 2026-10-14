@@ -21,6 +21,8 @@
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/OptimiserStep.h>
 
+#include <libsolutil/UnorderedContainers.h>
+
 namespace solidity::yul
 {
 
@@ -48,7 +50,7 @@ public:
 private:
 	explicit LoopInvariantCodeMotion(
 		Dialect const& _dialect,
-		std::set<YulName> const& _ssaVariables,
+		util::unordered_flat_set<YulName> const& _ssaVariables,
 		std::map<FunctionHandle, SideEffects> const& _functionSideEffects,
 		bool _containsMSize
 	):
@@ -61,14 +63,14 @@ private:
 	/// @returns true if the given variable declaration can be moved to in front of the loop.
 	bool canBePromoted(
 		VariableDeclaration const& _varDecl,
-		std::set<YulName> const& _varsDefinedInCurrentScope,
+		util::unordered_flat_set<YulName> const& _varsDefinedInCurrentScope,
 		SideEffects const& _forLoopSideEffects
 	) const;
 	std::optional<std::vector<Statement>> rewriteLoop(ForLoop& _for);
 
 	bool m_containsMSize = true;
 	Dialect const& m_dialect;
-	std::set<YulName> const& m_ssaVariables;
+	util::unordered_flat_set<YulName> const& m_ssaVariables;
 	std::map<FunctionHandle, SideEffects> const& m_functionSideEffects;
 };
 

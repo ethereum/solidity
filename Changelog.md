@@ -1,12 +1,30 @@
 ### 0.8.38 (unreleased)
 
+Important Bugfixes:
+* Yul Optimizer: Fix knowledge about storage/memory address relations going stale in the `DataFlowAnalyzer` after a variable is reassigned in Yul, which could cause `LoadResolver` to replace loads with outdated values and `EqualStoreEliminator` to remove needed stores.
+
 Language Features:
 
 Compiler Features:
+* Commandline Interface: Remove the experimental `--yul-cfg-json` output.
+* Commandline Interface: Selecting an ethdebug output no longer implicitly enables the `ethdebug` and `ast-id` components of `--debug-info`; without `ethdebug` in the selection the `--ethdebug-program` and `--ethdebug-program-runtime` outputs carry no semantic debug info.
+* Standard JSON Interface: Remove the experimental `yulCFGJson` output.
+* Standard JSON Interface: Selecting an ethdebug output no longer implicitly enables the `ethdebug` and `ast-id` components of `settings.debug.debugInfo`; without `ethdebug` in the selection the `evm.bytecode.ethdebug` and `evm.deployedBytecode.ethdebug` outputs carry no semantic debug info.
+* Yul Optimizer: Improve performance of `DataFlowAnalyzer` using flat hash containers.
 
 Bugfixes:
 * Type Checker: Disallow `super` calls that would resolve to an implemented `external` function in the linearization of the most derived contract.
   Such calls previously caused an ICE via IR and jumped into the external function's body with the legacy pipeline.
+* Parser: Fix inverted version pragma range comparison for components in the range [2**31, 2**32).
+* Yul Parser: Fix `@use-src` source indices that are not decimal numbers being silently truncated instead of rejected.
+
+Build System:
+* Switch from C++20 to C++23 as the target standard.
+* Update emscripten to version 3.1.54.
+* Update minimum version requirement of Clang to 19.1.1.
+
+Solc-Js:
+ * The wrapper now requires at least nodejs v16.
 
 
 ### 0.8.37 (2026-09-10)
@@ -22,6 +40,7 @@ Language Features:
 * Yul: Introduce builtin `slotnum()` for the `SLOTNUM` opcode, available since the Amsterdam EVM version ([EIP-7843](https://eips.ethereum.org/EIPS/eip-7843)).
 
 Compiler Features:
+* Code Generator: Use `gt(calldatasize(), 3)` instead of `iszero(lt(calldatasize(), 4))` in the external dispatch routine of IR codegen, saving one instruction per external call.
 * Commandline Interface: Remove support for the experimental Language Server Protocol (LSP) mode.
 * EVM: Deprecate support for "constantinople", "petersburg", "istanbul" and "berlin" EVM versions.
 * Evmasm Optimizer: Improve performance of block deduplicator.

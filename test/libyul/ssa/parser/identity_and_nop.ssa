@@ -1,0 +1,16 @@
+#0:
+    v0 = const 0x00
+    v1 = builtin @calldataload v0
+    v2 = identity v1
+    v3 = nop
+    builtin @sstore v0, v2
+    main_exit
+// ----
+// #0:
+//     v0 = const 0x00
+//     v1 = builtin @calldataload v0
+//     v2 = identity v1
+//     v3 = nop
+//     builtin @sstore v0, v2
+//     main_exit
+//

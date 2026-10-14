@@ -271,6 +271,57 @@ BOOST_AUTO_TEST_CASE(negative_range)
 	}
 }
 
+BOOST_AUTO_TEST_CASE(unsigned_components_above_signed_int_max)
+{
+	// Version components in [2^31, 2^32) must compare as unsigned.
+	// Casting them to signed int overflows and used to invert the range check.
+	std::vector<std::pair<std::string, std::string>> matching = {
+		{"<3000000000.0.0", "0.8.35"},
+		{"<=3000000000.0.0", "0.8.35"},
+		{"<=3000000000.0.0", "3000000000.0.0"},
+		{">=3000000000.0.0", "3000000000.0.0"},
+		{">2147483647.0.0", "2147483648.0.0"},
+		{"<2147483648.0.0", "2147483647.0.0"},
+		{">=2147483648.0.0", "2147483648.0.0"},
+		{"<=2147483648.0.0", "2147483648.0.0"},
+		{">2147483648.0.0", "3000000000.0.0"},
+		{"<3000000000.0.0", "2147483648.0.0"},
+		// Control pair below 2^31: comparison already had the correct sign.
+		{"<999999999.0.0", "0.8.35"},
+		{">999999999.0.0", "1000000000.0.0"},
+	};
+	for (auto const& t: matching)
+	{
+		SemVerVersion version(t.second);
+		SemVerMatchExpression matchExpression = parseExpression(t.first);
+		BOOST_CHECK_MESSAGE(
+			matchExpression.matches(version),
+			"Version \"" + t.second + "\" did not satisfy expression \"" + t.first + "\""
+		);
+	}
+
+	std::vector<std::pair<std::string, std::string>> notMatching = {
+		{">3000000000.0.0", "0.8.35"},
+		{">=3000000000.0.0", "0.8.35"},
+		{"<3000000000.0.0", "3000000001.0.0"},
+		{">2147483648.0.0", "2147483647.0.0"},
+		{"<2147483648.0.0", "2147483648.0.0"},
+		{">=3000000000.0.0", "2147483647.0.0"},
+		{">999999999.0.0", "0.8.35"},
+		{"<999999999.0.0", "1000000000.0.0"},
+	};
+	for (auto const& t: notMatching)
+	{
+		SemVerVersion version(t.second);
+		SemVerMatchExpression matchExpression = parseExpression(t.first);
+		BOOST_CHECK_MESSAGE(
+			!matchExpression.matches(version),
+			"Version \"" + t.second + "\" did satisfy expression \"" + t.first + "\" " +
+			"(although it should not)"
+		);
+	}
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // end namespaces

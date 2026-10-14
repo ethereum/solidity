@@ -10,13 +10,12 @@
                         "ethdebug": "<ETHDEBUG DEBUG DATA REMOVED>"
                     }
                 },
-                "irOptimized": "/// ethdebug: enabled
-/// @use-src 0:\"a.sol\"
+                "irOptimized": "/// @use-src 0:\"a.sol\"
 object \"A1_14\" {
     code {
         {
             /// @src 0:58:123  \"contract A1 { function a(uint x) public pure { assert(x > 0); } }\"
-            mstore(64, memoryguard(0x80))
+            mstore(64, memoryguard(128))
             if callvalue()
             {
                 revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb()
@@ -35,8 +34,8 @@ object \"A1_14\" {
         code {
             {
                 /// @src 0:58:123  \"contract A1 { function a(uint x) public pure { assert(x > 0); } }\"
-                mstore(64, memoryguard(0x80))
-                if iszero(lt(calldatasize(), 4))
+                mstore(64, memoryguard(128))
+                if gt(calldatasize(), 3)
                 {
                     let selector := shift_right_unsigned(calldataload(0))
                     switch selector
@@ -135,13 +134,12 @@ object \"A1_14\" {
                         "ethdebug": "<ETHDEBUG DEBUG DATA REMOVED>"
                     }
                 },
-                "irOptimized": "/// ethdebug: enabled
-/// @use-src 0:\"a.sol\"
+                "irOptimized": "/// @use-src 0:\"a.sol\"
 object \"A2_27\" {
     code {
         {
             /// @src 0:124:189  \"contract A2 { function a(uint x) public pure { assert(x > 0); } }\"
-            mstore(64, memoryguard(0x80))
+            mstore(64, memoryguard(128))
             if callvalue()
             {
                 revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb()
@@ -160,8 +158,8 @@ object \"A2_27\" {
         code {
             {
                 /// @src 0:124:189  \"contract A2 { function a(uint x) public pure { assert(x > 0); } }\"
-                mstore(64, memoryguard(0x80))
-                if iszero(lt(calldatasize(), 4))
+                mstore(64, memoryguard(128))
+                if gt(calldatasize(), 3)
                 {
                     let selector := shift_right_unsigned(calldataload(0))
                     switch selector
@@ -262,13 +260,12 @@ object \"A2_27\" {
                         "ethdebug": "<ETHDEBUG DEBUG DATA REMOVED>"
                     }
                 },
-                "irOptimized": "/// ethdebug: enabled
-/// @use-src 1:\"b.sol\"
+                "irOptimized": "/// @use-src 1:\"b.sol\"
 object \"A1_42\" {
     code {
         {
             /// @src 1:58:123  \"contract A1 { function b(uint x) public pure { assert(x > 0); } }\"
-            mstore(64, memoryguard(0x80))
+            mstore(64, memoryguard(128))
             if callvalue()
             {
                 revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb()
@@ -287,8 +284,8 @@ object \"A1_42\" {
         code {
             {
                 /// @src 1:58:123  \"contract A1 { function b(uint x) public pure { assert(x > 0); } }\"
-                mstore(64, memoryguard(0x80))
-                if iszero(lt(calldatasize(), 4))
+                mstore(64, memoryguard(128))
+                if gt(calldatasize(), 3)
                 {
                     let selector := shift_right_unsigned(calldataload(0))
                     switch selector
@@ -387,13 +384,12 @@ object \"A1_42\" {
                         "ethdebug": "<ETHDEBUG DEBUG DATA REMOVED>"
                     }
                 },
-                "irOptimized": "/// ethdebug: enabled
-/// @use-src 1:\"b.sol\"
+                "irOptimized": "/// @use-src 1:\"b.sol\"
 object \"B2_55\" {
     code {
         {
             /// @src 1:124:189  \"contract B2 { function b(uint x) public pure { assert(x > 0); } }\"
-            mstore(64, memoryguard(0x80))
+            mstore(64, memoryguard(128))
             if callvalue()
             {
                 revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb()
@@ -412,8 +408,8 @@ object \"B2_55\" {
         code {
             {
                 /// @src 1:124:189  \"contract B2 { function b(uint x) public pure { assert(x > 0); } }\"
-                mstore(64, memoryguard(0x80))
-                if iszero(lt(calldatasize(), 4))
+                mstore(64, memoryguard(128))
+                if gt(calldatasize(), 3)
                 {
                     let selector := shift_right_unsigned(calldataload(0))
                     switch selector

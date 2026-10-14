@@ -34,6 +34,7 @@
 #include <fmt/ranges.h>
 
 #include <range/v3/view/split.hpp>
+#include <range/v3/view/zip.hpp>
 
 #ifdef ISOLTEST
 #include <boost/version.hpp>
@@ -90,36 +91,38 @@ protected:
 		// Reconstruct the per-operation input layouts and the exit state by replaying the recorded
 		// shuffle traces and operation effects from the block's stackIn.
 		StackData operationStack = blockLayout->stackIn;
-		std::size_t i = 0;
-		m_cfg.forEachOperation(block, [&](InstId const _instId, SSACFG::Inst const& _inst) {
-			yulAssert(i < blockLayout->operationShuffles.size());
-			replay(operationStack, blockLayout->operationShuffles[i]);
+		yulAssert(blockLayout->operationShuffles.size() == block.instructions.size());
+		for (auto const& [instId, trace]: ranges::views::zip(block.instructions, blockLayout->operationShuffles))
+		{
+			SSACFG::Inst const& inst = m_cfg.inst(instId);
+			if (!inst.isOperation())
+				continue;
+			replay(operationStack, trace);
 
 			_out << "\\l\\\n";
 			_out << stackToString(operationStack) << "\\l\\\n";
 
-			if (_inst.opcode == InstOpcode::Call)
-				_out << escapeLabel(m_controlFlow.functionGraph(m_cfg.callPayload(_instId).graphID)->name);
+			if (inst.opcode == InstOpcode::Call)
+				_out << escapeLabel(m_controlFlow.functionGraph(m_cfg.callPayload(instId).graphID)->name);
 			else
-				_out << escapeLabel(m_cfg.evmDialect.builtin(m_cfg.builtinPayload(_instId).builtin).name);
+				_out << escapeLabel(m_cfg.evmDialect.builtin(m_cfg.builtinPayload(instId).builtin).name);
 			_out << "\\l\\\n";
 
-			yulAssert(_inst.inputs.size() <= operationStack.size());
-			for (std::size_t j = 0; j < _inst.inputs.size(); ++j)
+			yulAssert(inst.inputs.size() <= operationStack.size());
+			for (std::size_t j = 0; j < inst.inputs.size(); ++j)
 				operationStack.pop_back();
 			// A continuing function call's return label is not an SSA input but is consumed by the
 			// callee's return jump, so drop it to reflect the actual post-call stack.
-			if (_inst.opcode == InstOpcode::Call && m_cfg.callPayload(_instId).canContinue)
+			if (inst.opcode == InstOpcode::Call && m_cfg.callPayload(instId).canContinue)
 			{
 				yulAssert(!operationStack.empty() && operationStack.back().isFunctionCallReturnLabel());
 				operationStack.pop_back();
 			}
-			m_cfg.forEachOutput(_instId, [&](InstId const output) {
+			m_cfg.forEachOutput(instId, [&](InstId const output) {
 				operationStack.push_back(StackSlot::makeValue(m_cfg, output));
 			});
 			_out << stackToString(operationStack) << "\\l\\\n";
-			++i;
-		});
+		}
 
 		replay(operationStack, blockLayout->exitShuffle);
 		_out << "\\l\\\n";

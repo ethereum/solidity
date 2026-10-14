@@ -334,8 +334,6 @@ public:
 	/// @returns the optimized IR representation of a contract AST in JSON format.
 	std::optional<Json> yulIROptimizedAst(std::string const& _contractName) const;
 
-	std::optional<Json> yulCFGJson(std::string const& _contractName) const;
-
 	/// @returns the assembled object for a contract.
 	virtual evmasm::LinkerObject const& object(std::string const& _contractName) const override;
 

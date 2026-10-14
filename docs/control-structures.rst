@@ -318,6 +318,8 @@ which only need to be created if there is a dispute.
     and incorporate that into the deployed bytecode before it is stored.
 
 
+.. _order-of-evaluation:
+
 Order of Evaluation of Expressions
 ==================================
 
@@ -333,6 +335,8 @@ Assignment
 ==========
 
 .. index:: ! assignment;destructuring
+
+.. _destructuring-assignments:
 
 Destructuring Assignments and Returning Multiple Values
 -------------------------------------------------------

@@ -2,8 +2,8 @@
     "errors": [
         {
             "component": "general",
-            "formattedMessage": "'irAst', 'irOptimizedAst', 'yulCFGJson', and 'ethdebug' outputs are experimental and can only be used with the 'settings.experimental' option enabled.",
-            "message": "'irAst', 'irOptimizedAst', 'yulCFGJson', and 'ethdebug' outputs are experimental and can only be used with the 'settings.experimental' option enabled.",
+            "formattedMessage": "'irAst', 'irOptimizedAst', and 'ethdebug' outputs are experimental and can only be used with the 'settings.experimental' option enabled.",
+            "message": "'irAst', 'irOptimizedAst', and 'ethdebug' outputs are experimental and can only be used with the 'settings.experimental' option enabled.",
             "severity": "error",
             "type": "FatalError"
         }

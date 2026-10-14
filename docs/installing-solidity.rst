@@ -323,8 +323,7 @@ The following are dependencies for all builds of Solidity:
 +-----------------------------------+-------------------------------------------------------+
 | Software                          | Notes                                                 |
 +===================================+=======================================================+
-| `CMake`_ (version 3.21.3+ on      | Cross-platform build file generator.                  |
-| Windows, 3.13+ otherwise)         |                                                       |
+| `CMake`_ (version 3.21.3+)        | Cross-platform build file generator.                  |
 +-----------------------------------+-------------------------------------------------------+
 | `Boost`_ (version 1.83+)          | C++ libraries.                                        |
 +-----------------------------------+-------------------------------------------------------+
@@ -374,8 +373,8 @@ The following C++ compilers and their minimum versions can build the Solidity co
 .. Note: Minimum versions for GCC and Clang are based on availability in Ubuntu 24.04.
 
 - `GCC <https://gcc.gnu.org>`_, version 13.3+
-- `Clang <https://clang.llvm.org/>`_, version 18.1.3+
-- `MSVC <https://visualstudio.microsoft.com/vs/>`_, version 2019+
+- `Clang <https://clang.llvm.org/>`_, version 19.1.1+
+- `MSVC <https://visualstudio.microsoft.com/vs/>`_, version 2022+
 
 Prerequisites - macOS
 ---------------------
@@ -407,31 +406,31 @@ You need to install the following dependencies for Windows builds of Solidity:
 +-----------------------------------+-------------------------------------------------------+
 | Software                          | Notes                                                 |
 +===================================+=======================================================+
-| `Visual Studio 2019 Build Tools`_ | C++ compiler                                          |
+| `Visual Studio 2022 Build Tools`_ | C++ compiler                                          |
 +-----------------------------------+-------------------------------------------------------+
-| `Visual Studio 2019`_  (Optional) | C++ compiler and dev environment.                     |
+| `Visual Studio 2022`_  (Optional) | C++ compiler and dev environment.                     |
 +-----------------------------------+-------------------------------------------------------+
 | `Boost`_ (version 1.77+)          | C++ libraries.                                        |
 +-----------------------------------+-------------------------------------------------------+
 
 If you already have one IDE and only need the compiler and libraries,
-you could install Visual Studio 2019 Build Tools.
+you could install Visual Studio 2022 Build Tools.
 
-Visual Studio 2019 provides both IDE and necessary compiler and libraries.
-So if you have not got an IDE and prefer to develop Solidity, Visual Studio 2019
+Visual Studio 2022 provides both IDE and necessary compiler and libraries.
+So if you have not got an IDE and prefer to develop Solidity, Visual Studio 2022
 may be a choice for you to get everything setup easily.
 
 Here is the list of components that should be installed
-in Visual Studio 2019 Build Tools or Visual Studio 2019:
+in Visual Studio 2022 Build Tools or Visual Studio 2022:
 
 * Visual Studio C++ core features
-* VC++ 2019 v141 toolset (x86,x64)
+* VC++ 2022 v143 toolset (x86,x64)
 * Windows Universal CRT SDK
-* Windows 8.1 SDK
+* Windows 10 or 11 SDK
 * C++/CLI support
 
-.. _Visual Studio 2019: https://www.visualstudio.com/vs/
-.. _Visual Studio 2019 Build Tools: https://visualstudio.microsoft.com/vs/older-downloads/#visual-studio-2019-and-other-products
+.. _Visual Studio 2022: https://visualstudio.microsoft.com/vs/older-downloads/#visual-studio-2022-and-other-products
+.. _Visual Studio 2022 Build Tools: https://visualstudio.microsoft.com/vs/older-downloads/#visual-studio-2022-and-other-products
 
 We have a helper script which you can use to install all required external dependencies:
 
@@ -503,7 +502,7 @@ And for Windows:
 
     mkdir build
     cd build
-    cmake -G "Visual Studio 16 2019" ..
+    cmake -G "Visual Studio 17 2022" ..
 
 In case you want to use the version of boost installed by ``scripts\install_deps.ps1``, you will
 additionally need to pass ``-DBoost_ROOT="deps/boost" -DBoost_INCLUDE_DIR="deps/boost/include"`` and ``-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded``

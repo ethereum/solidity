@@ -10,7 +10,7 @@
                         "ethdebug": "<ETHDEBUG DEBUG DATA REMOVED>"
                     }
                 },
-                "ir": "/// ethdebug: enabled
+                "ir": "
 /// @use-src 0:\"a.sol\"
 object \"A1_14\" {
     code {
@@ -48,7 +48,7 @@ object \"A1_14\" {
             /// @src 0:58:123  \"contract A1 { function a(uint x) public pure { assert(x > 0); } }\"
             mstore(64, memoryguard(128))
 
-            if iszero(lt(calldatasize(), 4))
+            if gt(calldatasize(), 3)
             {
                 let selector := shift_right_224_unsigned(calldataload(0))
                 switch selector
@@ -190,7 +190,7 @@ object \"A1_14\" {
                         "ethdebug": "<ETHDEBUG DEBUG DATA REMOVED>"
                     }
                 },
-                "ir": "/// ethdebug: enabled
+                "ir": "
 /// @use-src 0:\"a.sol\"
 object \"A2_27\" {
     code {
@@ -228,7 +228,7 @@ object \"A2_27\" {
             /// @src 0:124:189  \"contract A2 { function a(uint x) public pure { assert(x > 0); } }\"
             mstore(64, memoryguard(128))
 
-            if iszero(lt(calldatasize(), 4))
+            if gt(calldatasize(), 3)
             {
                 let selector := shift_right_224_unsigned(calldataload(0))
                 switch selector
@@ -372,7 +372,7 @@ object \"A2_27\" {
                         "ethdebug": "<ETHDEBUG DEBUG DATA REMOVED>"
                     }
                 },
-                "ir": "/// ethdebug: enabled
+                "ir": "
 /// @use-src 1:\"b.sol\"
 object \"A1_42\" {
     code {
@@ -410,7 +410,7 @@ object \"A1_42\" {
             /// @src 1:58:123  \"contract A1 { function b(uint x) public pure { assert(x > 0); } }\"
             mstore(64, memoryguard(128))
 
-            if iszero(lt(calldatasize(), 4))
+            if gt(calldatasize(), 3)
             {
                 let selector := shift_right_224_unsigned(calldataload(0))
                 switch selector
@@ -552,7 +552,7 @@ object \"A1_42\" {
                         "ethdebug": "<ETHDEBUG DEBUG DATA REMOVED>"
                     }
                 },
-                "ir": "/// ethdebug: enabled
+                "ir": "
 /// @use-src 1:\"b.sol\"
 object \"B2_55\" {
     code {
@@ -590,7 +590,7 @@ object \"B2_55\" {
             /// @src 1:124:189  \"contract B2 { function b(uint x) public pure { assert(x > 0); } }\"
             mstore(64, memoryguard(128))
 
-            if iszero(lt(calldatasize(), 4))
+            if gt(calldatasize(), 3)
             {
                 let selector := shift_right_224_unsigned(calldataload(0))
                 switch selector

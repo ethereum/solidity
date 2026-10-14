@@ -222,24 +222,20 @@ void CodeTransform::operator()(SSACFG::BlockId const _blockId)
 
 	auto const& block = m_cfg.block(_blockId);
 
-	std::size_t operationIndex = 0;
-
-	// Iterate every Inst in the block in scheduled order. Only Operations advance codegen;
+	// Iterate every Inst in the block in scheduled order with its recorded trace. Only Operations advance codegen;
 	// Phis are otherwise pure stack assertions (already materialized on the block's stackIn).
-	for (InstId const instId: block.instructions)
+	yulAssert(blockLayout->operationShuffles.size() == block.instructions.size());
+	for (auto const& [instId, trace]: ranges::views::zip(block.instructions, blockLayout->operationShuffles))
 	{
 		SSACFG::Inst const& inst = m_cfg.inst(instId);
 		if (inst.isPhi())
 			// this is a no-op for not spilled phis
 			spillStore(instId);
 		if (inst.isOperation())
-		{
-			yulAssert(operationIndex < blockLayout->operationShuffles.size());
-			(*this)(instId, blockLayout->operationShuffles[operationIndex]);
-			++operationIndex;
-		}
+			(*this)(instId, trace);
+		else
+			yulAssert(trace.empty());
 	}
-	yulAssert(operationIndex == blockLayout->operationShuffles.size());
 
 	// Play back the recorded shuffle to the block's exit state before dispatching the exit.
 	// This ensures the condition is on top for ConditionalJump, phi pre-images are
@@ -383,7 +379,7 @@ void CodeTransform::operator()(InstId _instId, ShuffleTrace const& _operationShu
 
 void CodeTransform::spillStore(InstId const _value)
 {
-	if (!m_spillEmitter || !m_spillSet.isSpilled(_value))
+	if (!m_spillEmitter || !m_spillSet.isSpilled(StackSlot::makeValue(m_cfg, _value)))
 		return;
 
 	// Play back the recorded def-site trace: it brings `_value` to the stack top and concludes with the
@@ -547,25 +543,19 @@ void CodeTransform::emit(ShuffleOp const& _op)
 		}
 		solidity::util::unreachable();
 	case ShuffleOp::Kind::Load:
-	{
-		InstId const id = _op.slot.value();
 		yulAssert(
-			m_spillEmitter && m_spillEmitter->hasAddress(id),
-			fmt::format("Tried bringing up non-spilled non-const {}", id)
+			m_spillEmitter && m_spillEmitter->hasAddress(_op.slot),
+			fmt::format("Tried bringing up non-spilled non-const {}", _op.slot)
 		);
-		m_spillEmitter->emitLoad(id);
+		m_spillEmitter->emitLoad(_op.slot);
 		return;
-	}
 	case ShuffleOp::Kind::Store:
-	{
-		InstId const id = _op.slot.value();
 		yulAssert(
-			m_spillEmitter && m_spillEmitter->hasAddress(id),
-			fmt::format("Tried storing value {} without a spill slot", id)
+			m_spillEmitter && m_spillEmitter->hasAddress(_op.slot),
+			fmt::format("Tried storing variable {} without a spill slot", _op.slot)
 		);
-		m_spillEmitter->emitStore(id);
+		m_spillEmitter->emitStore(_op.slot);
 		return;
-	}
 	}
 	solidity::util::unreachable();
 }

@@ -1,0 +1,14 @@
+#0:
+    v0 = call @f
+    v1 = proj v0, 0
+    v2 = proj v0, 1
+    builtin @sstore v0, v1
+    main_exit
+
+func @f(args: ()) -> 2 {
+#0:
+    v0 = const 0x00
+    return v0, v0
+}
+// ----
+// ParseError at line 5, "builtin @sstore v0, v1": v0 has multiple returns and must be referenced through 'proj'.

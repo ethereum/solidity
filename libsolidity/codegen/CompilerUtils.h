@@ -302,7 +302,7 @@ public:
 	/// Appends code that copies the code of the given contract to memory.
 	/// Stack pre: Memory position
 	/// Stack post: Updated memory position
-	/// @param creation if true, copies creation code, if false copies runtime code.
+	/// @param _creationCode if true, copies creation code, if false copies runtime code.
 	/// @note the contract has to be compiled already, so beware of cyclic dependencies!
 	void copyContractCodeToMemory(ContractDefinition const& contract, bool _creationCode);
 

@@ -50,7 +50,7 @@ namespace
 std::string describeCFG(
 	SSACFG const& _cfg,
 	ControlFlowGraphs::FunctionGraphID const _graphID,
-	std::vector<std::pair<InstId, u256>> const& _spilled
+	std::vector<std::pair<SpillKey, u256>> const& _spilled
 )
 {
 	std::string label = _cfg.isMainGraph() ? "<main>" : _cfg.name;
@@ -63,22 +63,21 @@ std::string describeCFG(
 	}
 
 	out += "  spilled:\n";
-	for (auto const& [value, address]: _spilled)
+	for (auto const& [key, address]: _spilled)
 		out += fmt::format(
-			"    {} ({}) -> mem {}\n",
-			value,
-			_cfg.isPhi(value) ? "phi" : "value",
+			"    {} -> mem {}\n",
+			key,
 			toCompactHexWithPrefix(address)
 		);
 
 	out += "  mstore schedule:\n";
-	for (const auto& value: _spilled | std::views::keys)
+	for (const auto& key: _spilled | std::views::keys)
 	{
-		SSACFG::BlockId const block = _cfg.inst(value).block;
+		SSACFG::BlockId const block = _cfg.inst(key.value()).block;
 		out += fmt::format(
 			"    mstore addr({}) <- {} (B#{})\n",
-			value,
-			value,
+			key,
+			key,
 			block.value
 		);
 	}
@@ -177,9 +176,9 @@ frontend::test::TestCase::TestResult SpillTest::run(std::ostream& _stream, std::
 		{
 			SSACFG const& cfg = *controlFlowGraphs->functionGraphs[functionIndex];
 			auto const graphID = static_cast<ControlFlowGraphs::FunctionGraphID>(functionIndex);
-			std::vector<std::pair<InstId, u256>> spilled;
-			for (InstId const value: spillSetsPerCFG[functionIndex].spilledValues())
-				spilled.emplace_back(value, addressing.addressOf(graphID, value));
+			std::vector<std::pair<SpillKey, u256>> spilled;
+			for (SpillKey const key: spillSetsPerCFG[functionIndex].spilledValues())
+				spilled.emplace_back(key, addressing.addressOf(graphID, key));
 			m_obtainedResult += describeCFG(cfg, graphID, spilled);
 		}
 

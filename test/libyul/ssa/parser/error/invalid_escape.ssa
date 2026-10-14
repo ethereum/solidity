@@ -1,0 +1,5 @@
+#0:
+    v0 = builtin @datasize "a\qb"
+    main_exit
+// ----
+// ParseError at line 2, "\"a\\qb\"": Invalid escape sequence.

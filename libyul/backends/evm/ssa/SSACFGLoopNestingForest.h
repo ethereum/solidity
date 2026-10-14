@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <libyul/backends/evm/ssa/traversal/ForwardTopologicalSort.h>
+#include <libyul/backends/evm/ssa/analysis/DepthFirstSpanningTree.h>
 #include <libyul/backends/evm/ssa/SSACFG.h>
 
 #include <libsolutil/DisjointSet.h>
@@ -36,28 +36,26 @@ namespace solidity::yul::ssa
 ///     ACM Transactions on Programming Languages and Systems (TOPLAS) 21.2 (1999): 175-188.
 class SSACFGLoopNestingForest
 {
-	using BlockIdValue = SSACFG::BlockId::ValueType;
-
 public:
-	explicit SSACFGLoopNestingForest(traversal::ForwardTopologicalSort const& _sort);
+	explicit SSACFGLoopNestingForest(analysis::DepthFirstSpanningTree const& _dfsTree);
 
-	/// blocks which are not contained in a loop get assigned the loop parent numeric_limit<size_t>::max()
-	std::vector<BlockIdValue> const& loopParents() const { return m_loopParents; }
+	/// parent of `_block` in the loop nesting forest, empty if `_block` is not contained in a loop
+	BlockId loopParent(BlockId _block) const { return m_loopParents[_block.value]; }
 	/// all loop nodes (entry blocks for loops), also nested ones
-	std::set<BlockIdValue> const& loopNodes() const { return m_loopNodes; }
+	std::set<BlockId> const& loopNodes() const { return m_loopNodes; }
 	/// root loop nodes in the forest for outer-most loops
-	std::set<BlockIdValue> const& loopRootNodes() const { return m_loopRootNodes; }
+	std::set<BlockId> const& loopRootNodes() const { return m_loopRootNodes; }
 private:
-	void findLoop(BlockIdValue _potentialHeader);
-	void collapse(std::set<BlockIdValue> const& _loopBody, BlockIdValue _loopHeader);
+	void findLoop(BlockId _potentialHeader);
+	void collapse(std::set<BlockId::ValueType> const& _loopBody, BlockId::ValueType _loopHeader);
 
-	traversal::ForwardTopologicalSort const& m_sort;
+	analysis::DepthFirstSpanningTree const& m_dfsTree;
 	SSACFG const& m_cfg;
 
-	solidity::util::ContiguousDisjointSet<BlockIdValue> m_vertexPartition;
-	std::vector<BlockIdValue> m_loopParents;
-	std::set<BlockIdValue> m_loopNodes;
-	std::set<BlockIdValue> m_loopRootNodes;
+	solidity::util::ContiguousDisjointSet<BlockId::ValueType> m_vertexPartition;
+	std::vector<BlockId> m_loopParents;
+	std::set<BlockId> m_loopNodes;
+	std::set<BlockId> m_loopRootNodes;
 };
 
 }

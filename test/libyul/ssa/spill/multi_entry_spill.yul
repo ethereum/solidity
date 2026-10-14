@@ -236,9 +236,9 @@
 // ===== spill info =====
 // CFG[0] <main>
 //   spilled:
-//     v34 (value) -> mem 0x80
-//     v55 (value) -> mem 0xa0
-//     v74 (value) -> mem 0xc0
+//     v34 -> mem 0x80
+//     v55 -> mem 0xa0
+//     v74 -> mem 0xc0
 //   mstore schedule:
 //     mstore addr(v34) <- v34 (B#0)
 //     mstore addr(v55) <- v55 (B#2)

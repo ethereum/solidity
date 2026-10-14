@@ -88,7 +88,18 @@ struct ExpressionStatement { langutil::DebugData::ConstPtr debugData; Expression
 /// Block-scope variable declaration ("let x:u256 := mload(20:u256)"), non-hoisted
 struct VariableDeclaration { langutil::DebugData::ConstPtr debugData; NameWithDebugDataList variables; std::unique_ptr<Expression> value; };
 /// Block that creates a scope (frees declared stack variables)
-struct Block { langutil::DebugData::ConstPtr debugData; std::vector<Statement> statements; };
+struct Block
+{
+	Block() = default;
+	Block(langutil::DebugData::ConstPtr _debugData, std::vector<Statement> _statements);
+	Block(Block const&) = delete;
+	Block& operator=(Block const&) = delete;
+	Block(Block&&) = default;
+	Block& operator=(Block&&) = default;
+
+	langutil::DebugData::ConstPtr debugData;
+	std::vector<Statement> statements;
+};
 /// Function definition ("function f(a, b) -> (d, e) { ... }")
 struct FunctionDefinition { langutil::DebugData::ConstPtr debugData; YulName name; NameWithDebugDataList parameters; NameWithDebugDataList returnVariables; Block body; };
 /// Conditional execution without "else" part.
@@ -104,6 +115,11 @@ struct Break { langutil::DebugData::ConstPtr debugData; };
 struct Continue { langutil::DebugData::ConstPtr debugData; };
 /// Leave statement (valid within function)
 struct Leave { langutil::DebugData::ConstPtr debugData; };
+
+/// Defined here rather than in Block because it needs all Statement alternatives to be complete.
+inline Block::Block(langutil::DebugData::ConstPtr _debugData, std::vector<Statement> _statements):
+	debugData(std::move(_debugData)), statements(std::move(_statements))
+{}
 
 /// Immutable AST comprised of its top-level block
 class AST

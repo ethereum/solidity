@@ -1,0 +1,6 @@
+#0:
+    v0 = const 0x00
+#1:
+    main_exit
+// ----
+// ParseError at line 3, "#1": Expected an instruction or a block exit. Found block reference '#1'.

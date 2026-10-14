@@ -22,7 +22,7 @@
 # (c) 2016-2024 solidity contributors.
 #------------------------------------------------------------------------------
 FROM buildpack-deps:noble AS base
-LABEL version="9"
+LABEL version="10"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -30,60 +30,68 @@ ARG DEBIAN_FRONTEND=noninteractive
 # Since we're building this image from scratch, it's perfectly fine to use the below flag.
 ENV PIP_BREAK_SYSTEM_PACKAGES=1
 
-RUN set -ex; \
-	z3_version="4.13.3"; \
-	dist=$(grep DISTRIB_CODENAME /etc/lsb-release | cut -d= -f2); \
-	echo "deb http://ppa.launchpad.net/ethereum/cpp-build-deps/ubuntu $dist main" >> /etc/apt/sources.list ; \
-	apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1c52189c923f6ca9 ; \
-	apt-get update; \
-	apt-get install -qqy --no-install-recommends \
-		build-essential \
-		clang \
-		cmake \
-		ccache \
-		jq \
-		libboost-filesystem-dev \
-		libboost-program-options-dev \
-		libboost-system-dev \
-		libboost-test-dev \
-		libclang-rt-dev \
-		libcln-dev \
-		lsof \
-		ninja-build \
-		python3-pip \
-		software-properties-common \
-		sudo; \
-	pip3 install \
-		codecov \
-		colorama \
-		deepdiff \
-		parsec \
-		pygments-lexer-solidity \
-		pylint \
-		requests \
-		tabulate \
-		z3-solver=="${z3_version}";
+RUN <<-EOF
+    set -ex
+    z3_version="4.13.3"
+    dist=$(grep DISTRIB_CODENAME /etc/lsb-release | cut -d= -f2)
+    echo "deb http://ppa.launchpad.net/ethereum/cpp-build-deps/ubuntu $dist main" >> /etc/apt/sources.list
+    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1c52189c923f6ca9
+    apt-get update
+    apt-get install -qqy --no-install-recommends \
+        build-essential \
+        clang-19 \
+        cmake \
+        ccache \
+        jq \
+        libboost-filesystem-dev \
+        libboost-program-options-dev \
+        libboost-system-dev \
+        libboost-test-dev \
+        libclang-rt-19-dev \
+        libcln-dev \
+        lsof \
+        ninja-build \
+        python3-pip \
+        software-properties-common \
+        sudo
+    update-alternatives --install /usr/bin/clang clang /usr/bin/clang-19 100
+    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-19 100
+    pip3 install \
+        codecov \
+        colorama \
+        deepdiff \
+        parsec \
+        pygments-lexer-solidity \
+        pylint \
+        requests \
+        tabulate \
+        z3-solver=="${z3_version}"
+EOF
 
 # Eldarica
-RUN set -ex; \
-	apt-get update; \
-	apt-get install -qy \
-		openjdk-11-jre \
-		unzip; \
-	eldarica_version="2.1"; \
-	wget "https://github.com/uuverifiers/eldarica/releases/download/v${eldarica_version}/eldarica-bin-${eldarica_version}.zip" -O /opt/eld_binaries.zip; \
-	test "$(sha256sum /opt/eld_binaries.zip)" = "0ac43f45c0925383c9d2077f62bbb515fd792375f3b2b101b30c9e81dcd7785c  /opt/eld_binaries.zip"; \
-	unzip /opt/eld_binaries.zip -d /opt; \
-	rm -f /opt/eld_binaries.zip;
+RUN <<-EOF
+    set -ex
+    apt-get update
+    apt-get install -qy \
+        openjdk-11-jre \
+        unzip
+    eldarica_version="2.1"
+    wget "https://github.com/uuverifiers/eldarica/releases/download/v${eldarica_version}/eldarica-bin-${eldarica_version}.zip" -O /opt/eld_binaries.zip
+    test "$(sha256sum /opt/eld_binaries.zip)" = "0ac43f45c0925383c9d2077f62bbb515fd792375f3b2b101b30c9e81dcd7785c  /opt/eld_binaries.zip"
+    unzip /opt/eld_binaries.zip -d /opt
+    rm -f /opt/eld_binaries.zip
+EOF
 
 # CVC5
-RUN set -ex; \
-	cvc5_version="1.2.0"; \
-	cvc5_archive_name="cvc5-Linux-x86_64-static"; \
-	wget "https://github.com/cvc5/cvc5/releases/download/cvc5-${cvc5_version}/${cvc5_archive_name}.zip" -O /opt/cvc5.zip; \
-	test "$(sha256sum /opt/cvc5.zip)" = "d18f174ff9a11923c32c3f871f844ed16bd77a28f51050b8e7c8d821c98a1c2e  /opt/cvc5.zip"; \
-	unzip -j /opt/cvc5.zip "${cvc5_archive_name}/bin/cvc5" -d /usr/bin; \
-	rm -f /opt/cvc5.zip;
+RUN <<-EOF
+    set -ex
+    cvc5_version="1.2.0"
+    cvc5_archive_name="cvc5-Linux-x86_64-static"
+    wget "https://github.com/cvc5/cvc5/releases/download/cvc5-${cvc5_version}/${cvc5_archive_name}.zip" -O /opt/cvc5.zip
+    test "$(sha256sum /opt/cvc5.zip)" = "d18f174ff9a11923c32c3f871f844ed16bd77a28f51050b8e7c8d821c98a1c2e  /opt/cvc5.zip"
+    unzip -j /opt/cvc5.zip "${cvc5_archive_name}/bin/cvc5" -d /usr/bin
+    rm -f /opt/cvc5.zip
+EOF
 
 FROM base AS libraries
 
@@ -91,12 +99,14 @@ ENV CC clang
 ENV CXX clang++
 
 # EVMONE
-RUN set -ex; \
-	wget -O /usr/src/evmone.tar.gz https://github.com/ipsilon/evmone/releases/download/v0.22.0/evmone-0.22.0-linux-x86_64.tar.gz; \
-	test "$(sha256sum /usr/src/evmone.tar.gz)" = "ce1ee67f55f3c856aec00d8b0d0b878c47f10ccb6c7cbc74bf8e4829969983b6  /usr/src/evmone.tar.gz"; \
-	cd /usr; \
-	tar -xf /usr/src/evmone.tar.gz; \
-	rm -rf /usr/src/evmone.tar.gz
+RUN <<-EOF
+    set -ex
+    wget -O /usr/src/evmone.tar.gz https://github.com/ipsilon/evmone/releases/download/v0.22.0/evmone-0.22.0-linux-x86_64.tar.gz
+    test "$(sha256sum /usr/src/evmone.tar.gz)" = "ce1ee67f55f3c856aec00d8b0d0b878c47f10ccb6c7cbc74bf8e4829969983b6  /usr/src/evmone.tar.gz"
+    cd /usr
+    tar -xf /usr/src/evmone.tar.gz
+    rm -rf /usr/src/evmone.tar.gz
+EOF
 
 FROM base
 COPY --from=libraries /usr/lib /usr/lib

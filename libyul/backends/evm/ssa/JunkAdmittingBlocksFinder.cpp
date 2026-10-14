@@ -23,13 +23,13 @@
 namespace solidity::yul::ssa
 {
 
-JunkAdmittingBlocksFinder::JunkAdmittingBlocksFinder(SSACFG const& _cfg, traversal::ForwardTopologicalSort const& _topologicalSort):
+JunkAdmittingBlocksFinder::JunkAdmittingBlocksFinder(SSACFG const& _cfg, analysis::DepthFirstSpanningTree const& _dfsTree):
 	m_blockAllowsJunk(_cfg.numBlocks(), false)
 {
 	// special case: only one block here, we mark it as junkable in case it's not a function return
-	if (_topologicalSort.preOrder().size() == 1)
+	if (_dfsTree.preOrder().size() == 1)
 	{
-		SSACFG::BlockId const id {_topologicalSort.preOrder().front()};
+		SSACFG::BlockId const id = _dfsTree.preOrder().front();
 		m_blockAllowsJunk[id.value] = !_cfg.block(id).isFunctionReturnBlock();
 		return;
 	}
@@ -42,13 +42,12 @@ JunkAdmittingBlocksFinder::JunkAdmittingBlocksFinder(SSACFG const& _cfg, travers
 
 	// of the bridge vertices, we have the exclude the ones that can lead to a function return
 	std::vector<SSACFG::BlockId> toVisit;
-	for (auto const blockIndex: _topologicalSort.preOrder())
+	for (SSACFG::BlockId const blockId: _dfsTree.preOrder())
 	{
-		SSACFG::BlockId const blockId {blockIndex};
-		bool const isLoopHead = _topologicalSort.backEdgeTargets().contains(blockIndex);
-		m_blockAllowsJunk[blockIndex] = (bridgeFinder.bridgeVertex(blockId) && !isLoopHead) || _cfg.block(blockId).isTerminationBlock();
+		bool const isLoopHead = _dfsTree.backEdgeTargets().contains(blockId);
+		m_blockAllowsJunk[blockId.value] = (bridgeFinder.bridgeVertex(blockId) && !isLoopHead) || _cfg.block(blockId).isTerminationBlock();
 		if (_cfg.block(blockId).isFunctionReturnBlock())
-			toVisit.emplace_back(SSACFG::BlockId{blockIndex});
+			toVisit.emplace_back(blockId);
 	}
 
 	std::vector<uint8_t> visited(_cfg.numBlocks(), false);

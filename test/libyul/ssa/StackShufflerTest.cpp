@@ -260,8 +260,8 @@ struct ShuffleTestInput
 				result.initialSpilledSetSlots = parseSlots(_table, value, '{', '}');
 				for (auto const& slot: result.initialSpilledSetSlots)
 				{
-					yulAssert(slot.isValue(), "Only value IDs can be spilled.");
-					result.initialSpilledSet.add(slot.value());
+					yulAssert(slot.isVariable(), "Only variables can be spilled.");
+					result.initialSpilledSet.add(slot);
 				}
 			}
 		}
@@ -445,9 +445,9 @@ Lines starting with // are comments. Comments at the end of lines are supported,
 	spill::SpillSet const spillSetBefore = spillSet;
 	stack::ShuffleResult shuffleResult = stack::shuffle(stackData, target, spillSet, true, testConfig.reachableDepth);
 	std::vector<StackSlot> newlySpilled;
-	for (InstId const value: spillSet.spilledValues())
-		if (!spillSetBefore.isSpilled(value))
-			newlySpilled.push_back(Slot::makeValue(table.store, value));
+	for (SpillKey const key: spillSet.spilledValues())
+		if (!spillSetBefore.isSpilled(key))
+			newlySpilled.push_back(key);
 	bool const tooDeep =
 		shuffleResult.status != stack::ShuffleResult::Status::Admissible ||
 		(!testConfig.allowSpilling && !newlySpilled.empty());

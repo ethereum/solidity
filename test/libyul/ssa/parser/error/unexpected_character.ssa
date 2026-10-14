@@ -1,0 +1,5 @@
+#0:
+    v0 = const 0x00 ; comment
+    main_exit
+// ----
+// ParseError at line 2, ";": Unexpected character ';'.

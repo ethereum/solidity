@@ -52,6 +52,7 @@ struct BlockId
 	constexpr bool hasValue() const noexcept { return value != std::numeric_limits<ValueType>::max(); }
 	auto operator<=>(BlockId const&) const = default;
 };
+static_assert(std::is_trivially_copyable_v<BlockId>, "Should be able to use memcpy semantics");
 
 struct InstId
 {
@@ -63,6 +64,7 @@ struct InstId
 	/// Returns a human-readable string representation
 	std::string str(SSACFG const& _cfg) const;
 };
+static_assert(std::is_trivially_copyable_v<InstId>, "Should be able to use memcpy semantics");
 
 enum class InstOpcode : std::uint8_t
 {

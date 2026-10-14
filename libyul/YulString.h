@@ -135,22 +135,22 @@ public:
 	YulString& operator=(YulString const&) = default;
 	YulString& operator=(YulString&&) = default;
 
-	/// This is not consistent with the string <-operator!
+	/// This is not consistent with the string ordering!
 	/// First compares the string hashes. If they are equal
 	/// it checks for identical IDs (only identical strings have
 	/// identical IDs and identical strings do not compare as "less").
 	/// If the hashes are identical and the strings are distinct, it
 	/// falls back to string comparison.
-	bool operator<(YulString const& _other) const
+	std::strong_ordering operator<=>(YulString const& _other) const
 	{
-		if (m_handle.hash < _other.m_handle.hash) return true;
-		if (_other.m_handle.hash < m_handle.hash) return false;
-		if (m_handle.id == _other.m_handle.id) return false;
-		return str() < _other.str();
+		if (auto const order = m_handle.hash <=> _other.m_handle.hash; order != std::strong_ordering::equal)
+			return order;
+		if (m_handle.id == _other.m_handle.id)
+			return std::strong_ordering::equal;
+		return str().compare(_other.str()) <=> 0;
 	}
 	/// Equality is determined based on the string ID.
 	bool operator==(YulString const& _other) const { return m_handle.id == _other.m_handle.id; }
-	bool operator!=(YulString const& _other) const { return m_handle.id != _other.m_handle.id; }
 
 	bool empty() const { return m_handle.id == 0; }
 	std::string const& str() const

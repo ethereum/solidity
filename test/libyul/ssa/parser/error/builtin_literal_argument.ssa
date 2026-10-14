@@ -1,0 +1,6 @@
+#0:
+    v0 = const 0x00
+    v1 = builtin @datasize v0
+    main_exit
+// ----
+// ParseError at line 3, "v1 = builtin @datasize v0": Argument 0 of @datasize must be a string literal.

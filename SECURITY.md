@@ -6,11 +6,22 @@ We appreciate your efforts and responsible disclosure and will make every effort
 ## Scope
 
 Bugs in the Solidity repository are in scope.
-Bugs in third-party dependencies e.g., jsoncpp, boost etc. are not in scope unless they result in a Solidity specific bug.
+Bugs in third-party dependencies e.g., nlohmann-json, boost etc. are not in scope unless they result in a Solidity specific bug.
 
 Only bugs that have a demonstrable security impact on smart contracts are in scope.
 For example, a Solidity program whose optimization is incorrect (e.g., leads to an incorrect output) qualifies as a security bug.
-Please note that the [rules][2] of the [Ethereum bounty program][1] have precedence over this security policy.
+Please note that the [rules][1] of the [Ethereum bounty program][2] have precedence over this security policy.
+
+## Before You Report
+
+Please check that what you found is not
+- intentional,
+- documented,
+- explicitly not guaranteed by the language,
+- contained in the [summary of known security vulnerabilities][3], or
+- already reported in the [public issue tracker][4].
+
+Furthermore, please check whether it is one of the [frequently reported non-bugs][5] and, if it resembles one of them, explain in your report why you still consider it a compiler bug.
 
 ## Supported Versions
 
@@ -24,7 +35,7 @@ Example 2: Assuming the current release is `0.6.25` and a security bug has been 
 
 ## Reporting a Vulnerability
 
-To report a vulnerability, please follow the instructions stated in the [Ethereum bounty program][1].
+To report a vulnerability, please follow the instructions stated in the [Ethereum bounty program][2].
 
 In the bug report, please include all details necessary to reproduce the vulnerability such as:
 
@@ -43,10 +54,12 @@ Once the reported bug has been successfully reproduced, the Solidity team will w
 The Solidity team maintains the following JSON-formatted lists of patched security vulnerabilities:
 
 - [Summary of known security vulnerabilities][3]
-- [List of security vulnerabilities affecting a specific version of the compiler][4].
+- [List of security vulnerabilities affecting a specific version of the compiler][6].
 
 
-[1]: https://bounty.ethereum.org/
-[2]: https://bounty.ethereum.org/#rules
+[1]: https://bounty.ethereum.org/#rules
+[2]: https://bounty.ethereum.org/
 [3]: https://docs.soliditylang.org/en/develop/bugs.html
-[4]: https://github.com/argotorg/solidity/blob/develop/docs/bugs_by_version.json
+[4]: https://github.com/argotorg/solidity/issues
+[5]: https://docs.soliditylang.org/en/develop/frequently-reported-non-bugs.html
+[6]: https://github.com/argotorg/solidity/blob/develop/docs/bugs_by_version.json

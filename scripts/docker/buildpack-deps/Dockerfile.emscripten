@@ -32,8 +32,8 @@
 # apparently this currently breaks due to conflicting compatibility headers.
 # Using $(em-config CACHE)/sysroot/usr seems to work, though, and still has cmake find the
 # dependencies automatically.
-FROM emscripten/emsdk:3.1.19 AS base
-LABEL version="22"
+FROM emscripten/emsdk:3.1.54 AS base
+LABEL version="28"
 
 ADD emscripten.jam /usr/src
 RUN <<-EOF
@@ -67,8 +67,8 @@ RUN <<-EOF
 		-DZ3_SINGLE_THREADED=ON \
 		-DCMAKE_CXX_FLAGS="-s DISABLE_EXCEPTION_CATCHING=0" \
 		..
-	make
-	make install
+	cmake --build . --parallel "$(nproc)"
+	cmake --install .
 	rm -r /usr/src/z3
 EOF
 
@@ -91,13 +91,3 @@ RUN <<-EOF
 	rm -r /usr/src/boost_1_83_0
 EOF
 
-# CVC5
-RUN <<-EOF
-    set -ex
-    cvc5_version="1.2.0"
-    cvc5_archive_name="cvc5-Linux-x86_64-static"
-    wget "https://github.com/cvc5/cvc5/releases/download/cvc5-${cvc5_version}/${cvc5_archive_name}.zip" -O /opt/cvc5.zip
-    test "$(sha256sum /opt/cvc5.zip)" = "d18f174ff9a11923c32c3f871f844ed16bd77a28f51050b8e7c8d821c98a1c2e  /opt/cvc5.zip"
-    unzip -j /opt/cvc5.zip "${cvc5_archive_name}/bin/cvc5" -d /usr/bin
-    rm -f /opt/cvc5.zip
-EOF

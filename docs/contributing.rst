@@ -14,15 +14,15 @@ In particular, we appreciate support in the following areas:
 * Improving the documentation.
 * `Translating <https://github.com/solidity-docs>`_ the documentation into more languages.
 * Responding to questions from other users on `StackExchange
-  <https://ethereum.stackexchange.com>`_ and the `Solidity Gitter Chat
-  <https://gitter.im/ethereum/solidity>`_.
+  <https://ethereum.stackexchange.com>`_ and the `Solidity Matrix Chat
+  <https://matrix.to/#/#ethereum\_solidity:gitter.im>`_.
 * Getting involved in the language design process by proposing language changes or new features in the `Solidity forum <https://forum.soliditylang.org/>`_ and providing feedback.
 
 To get started, you can try :ref:`building-from-source` in order to familiarize
 yourself with the components of Solidity and the build process. Also, it may be
 useful to become well-versed at writing smart-contracts in Solidity.
 
-Please note that this project is released with a `Contributor Code of Conduct <https://raw.githubusercontent.com/ethereum/solidity/develop/CODE_OF_CONDUCT.md>`_. By participating in this project — in the issues, pull requests, or Gitter channels — you agree to abide by its terms.
+Please note that this project is released with a `Contributor Code of Conduct <https://raw.githubusercontent.com/ethereum/solidity/develop/CODE_OF_CONDUCT.md>`_. By participating in this project — in the issues, pull requests, or Matrix channels — you agree to abide by its terms.
 
 Team Calls
 ==========
@@ -71,8 +71,8 @@ more easily.
 Additionally, if you are writing a new feature, please ensure you add appropriate
 test cases under ``test/`` (see below).
 
-However, if you are making a larger change, please consult with the `Solidity Development Gitter channel
-<https://gitter.im/ethereum/solidity-dev>`_ (different from the one mentioned above — this one is
+However, if you are making a larger change, please consult with the `Solidity Development Matrix channel
+<https://matrix.to/#/#ethereum\_solidity-dev:gitter.im>`_ (different from the one mentioned above — this one is
 focused on compiler and language development instead of language usage) first.
 
 New features and bugfixes should be added to the ``Changelog.md`` file: please
@@ -111,7 +111,7 @@ Prerequisites
 For running all compiler tests you may want to optionally install a few
 dependencies (`evmone <https://github.com/ipsilon/evmone/releases>`_,
 `z3 <https://github.com/Z3Prover/z3>`_, `Eldarica <https://github.com/uuverifiers/eldarica/>`_,
-`cvc5 <https://github.com/cvc5/cvc5>`).
+`cvc5 <https://github.com/cvc5/cvc5>`_).
 
 On macOS systems, some of the testing scripts expect GNU coreutils to be installed.
 This can be easiest accomplished using Homebrew: ``brew install coreutils``.

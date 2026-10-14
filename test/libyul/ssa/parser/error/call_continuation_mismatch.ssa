@@ -1,0 +1,10 @@
+#0:
+    call @f
+    main_exit
+
+func @f(args: ()) -> 0 nocontinue {
+#0:
+    terminated
+}
+// ----
+// ParseError at line 2, "call @f": Call to @f disagrees with its definition on whether it can continue.

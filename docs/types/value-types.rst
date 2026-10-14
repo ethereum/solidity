@@ -636,7 +636,7 @@ Enums
 -----
 
 Enums are one way to create a user-defined type in Solidity. They are explicitly convertible
-to and from all integer types but implicit conversion is not allowed.  The explicit conversion
+to and from all unsigned integer types but implicit conversion is not allowed. The explicit conversion
 from integer checks at runtime that the value lies inside the range of the enum and causes a
 :ref:`Panic error<assert-and-require>` otherwise.
 Enums require at least one member, and its default value when declared is the first member.

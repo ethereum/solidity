@@ -19,6 +19,7 @@
 #include <libyul/backends/evm/ssa/transform/OptimizationPipeline.h>
 
 #include <libyul/backends/evm/ssa/transform/ConstantConditionFolder.h>
+#include <libyul/backends/evm/ssa/transform/CriticalEdgeBreaker.h>
 #include <libyul/backends/evm/ssa/transform/IdentityAndNopRemover.h>
 #include <libyul/backends/evm/ssa/transform/JumpThreader.h>
 #include <libyul/backends/evm/ssa/transform/Outliner.h>
@@ -45,6 +46,7 @@ void transform::optimize(ControlFlowGraphs& _cfgs)
 			transform::threadJumps(*cfg);
 			transform::cleanUnreachableBlocks(*cfg);
 		}
+		breakCriticalEdges(*cfg);
 	}
 	// transform::runOutliner(_cfgs);
 }

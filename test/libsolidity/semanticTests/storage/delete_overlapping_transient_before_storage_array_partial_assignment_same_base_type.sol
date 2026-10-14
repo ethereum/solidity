@@ -21,8 +21,8 @@ contract C {
 // EVMVersion: >=cancun
 // ----
 // setAndClear() ->
-// gas irOptimized: 124683
+// gas irOptimized: 124680
 // gas legacy: 127807
 // gas legacyOptimized: 124828
-// gas ssaCFGOptimized: 124676
+// gas ssaCFGOptimized: 124673
 // getLarge() -> 10, 20, 0, 0

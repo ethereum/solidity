@@ -1,5 +1,8 @@
 $ErrorActionPreference = "Stop"
 
+# NOTE: Changing this file invalidates the CI dependency cache on purpose, so the
+# dependencies get rebuilt with the current toolchain (last: Visual Studio 2022).
+
 # Needed for Invoke-WebRequest to work via CI.
 $progressPreference = "silentlyContinue"
 

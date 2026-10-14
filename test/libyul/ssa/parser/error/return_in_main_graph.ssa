@@ -1,0 +1,4 @@
+#0:
+    return
+// ----
+// ParseError at line 2, "return": 'return' is not allowed in the main graph.

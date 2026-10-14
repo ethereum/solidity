@@ -1,0 +1,5 @@
+#0:
+    builtin @sstore unreachable, unreachable
+    main_exit
+// ----
+// ParseError at line 2, "unreachable": Unreachable values are never referenced. Found keyword 'unreachable'.

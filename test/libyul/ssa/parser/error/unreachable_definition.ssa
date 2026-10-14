@@ -1,0 +1,5 @@
+#0:
+    v0 = unreachable
+    main_exit
+// ----
+// ParseError at line 2, "unreachable": Unreachables should never be in a block. Found keyword 'unreachable'.

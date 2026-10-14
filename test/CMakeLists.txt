@@ -94,6 +94,7 @@ set(libsolidity_sources
     libsolidity/Metadata.cpp
     libsolidity/MemoryGuardTest.cpp
     libsolidity/MemoryGuardTest.h
+    libsolidity/MultiUseYulFunctionCollector.cpp
     libsolidity/NatspecJSONTest.cpp
     libsolidity/NatspecJSONTest.h
     libsolidity/OptimizedIRCachingTest.cpp
@@ -180,6 +181,8 @@ set(libyul_sources
     libyul/ssa/CallGraphTest.h
     libyul/ssa/ControlFlowGraphTest.cpp
     libyul/ssa/ControlFlowGraphTest.h
+    libyul/ssa/ParserTest.cpp
+    libyul/ssa/ParserTest.h
     libyul/ssa/PrinterTest.cpp
     libyul/ssa/PrinterTest.h
     libyul/ssa/SpillTest.cpp

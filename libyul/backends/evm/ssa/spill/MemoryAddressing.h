@@ -25,6 +25,8 @@
 #include <libsolutil/Numeric.h>
 #include <libsolutil/UnorderedContainers.h>
 
+#include <boost/container_hash/hash.hpp>
+
 #include <span>
 #include <vector>
 
@@ -34,7 +36,7 @@ namespace solidity::yul::ssa::spill
 /// Per-subobject owner of spill-memory addressing.
 ///
 /// The ctor sums `numSpilled()` across the per-CFG `SpillSet`s, bumps `_cfgs.memoryGuard` (if any spilling is required)
-/// to reserve one contiguous region for the subobject, and builds the full `(cfgIdx, InstId) -> u256 address` map.
+/// to reserve one contiguous region for the subobject, and builds the full `(cfgIdx, SpillKey) -> u256 address` map.
 class MemoryAddressing
 {
 public:
@@ -43,14 +45,14 @@ public:
 		std::span<SpillSet const> _spillSetsPerCFG
 	);
 
-	/// Address (within the reserved region) at which `_value` from CFG `_cfg` lives
-	[[nodiscard]] u256 addressOf(FunctionGraphID _cfg, InstId _value) const;
+	/// Address (within the reserved region) at which the variable `_key` from CFG `_cfg` lives
+	[[nodiscard]] u256 addressOf(FunctionGraphID _cfg, SpillKey _key) const;
 
-	[[nodiscard]] bool hasAddress(FunctionGraphID _cfg, InstId _value) const;
+	[[nodiscard]] bool hasAddress(FunctionGraphID _cfg, SpillKey _key) const;
 
 private:
-	/// m_addresses[cfgIdx][value.value] -> u256 final address
-	std::vector<solidity::util::unordered_flat_map<InstId::ValueType, u256>> m_addresses;
+	/// m_addresses[cfgIdx][key] -> u256 final address
+	std::vector<solidity::util::unordered_flat_map<SpillKey, u256, boost::hash<SpillKey>>> m_addresses;
 };
 
 }

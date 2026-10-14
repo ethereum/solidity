@@ -200,20 +200,20 @@ code {
 //   spilled: none
 // CFG[1] f
 //   spilled:
-//     v52 (phi) -> mem 0x80
-//     v54 (phi) -> mem 0xa0
-//     v55 (value) -> mem 0xc0
-//     v56 (phi) -> mem 0xe0
-//     v57 (value) -> mem 0x0100
-//     v58 (phi) -> mem 0x0120
-//     v59 (value) -> mem 0x0140
-//     v60 (phi) -> mem 0x0160
+//     phi52 -> mem 0x80
+//     phi54 -> mem 0xa0
+//     v55 -> mem 0xc0
+//     phi56 -> mem 0xe0
+//     v57 -> mem 0x0100
+//     phi58 -> mem 0x0120
+//     v59 -> mem 0x0140
+//     phi60 -> mem 0x0160
 //   mstore schedule:
-//     mstore addr(v52) <- v52 (B#1)
-//     mstore addr(v54) <- v54 (B#1)
+//     mstore addr(phi52) <- phi52 (B#1)
+//     mstore addr(phi54) <- phi54 (B#1)
 //     mstore addr(v55) <- v55 (B#2)
-//     mstore addr(v56) <- v56 (B#1)
+//     mstore addr(phi56) <- phi56 (B#1)
 //     mstore addr(v57) <- v57 (B#2)
-//     mstore addr(v58) <- v58 (B#1)
+//     mstore addr(phi58) <- phi58 (B#1)
 //     mstore addr(v59) <- v59 (B#2)
-//     mstore addr(v60) <- v60 (B#1)
+//     mstore addr(phi60) <- phi60 (B#1)

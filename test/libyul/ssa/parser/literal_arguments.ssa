@@ -1,0 +1,20 @@
+#0:
+    v0 = builtin @linkersymbol "a.sol:L, v1"
+    v1 = builtin @loadimmutable "i m\"x\\"
+    builtin @sstore v0, v1
+    v2 = const 0x00
+    builtin @setimmutable v2, "q", v1
+    v3 = builtin @verbatim_0i_1o "`\x00\n"
+    builtin @sstore v2, v3
+    main_exit
+// ----
+// #0:
+//     v0 = builtin @linkersymbol "a.sol:L, v1"
+//     v1 = builtin @loadimmutable "i m\"x\\"
+//     builtin @sstore v0, v1
+//     v3 = const 0x00
+//     builtin @setimmutable v3, "q", v1
+//     v5 = builtin @verbatim_0i_1o "`\x00\n"
+//     builtin @sstore v3, v5
+//     main_exit
+//

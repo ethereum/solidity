@@ -122,6 +122,27 @@ BOOST_AUTO_TEST_CASE(difference)
 	BOOST_CHECK(kb.differenceIfKnownConstant("b"_yulname, "e"_yulname) == u256(-8));
 }
 
+BOOST_AUTO_TEST_CASE(variable_changed)
+{
+	yul::KnowledgeBase kb = constructKnowledgeBase(R"({
+		let t := calldataload(0)
+		let a := add(t, 1)
+		let c := add(a, 1)
+	})");
+
+	BOOST_CHECK(kb.differenceIfKnownConstant("c"_yulname, "t"_yulname) == u256(2));
+
+	// `t` changes, but `a` and `c` still hold values computed from its old value.
+	// Like the DataFlowAnalyzer, forget the value of `a`, since it references `t` directly.
+	kb.variableChanged("t"_yulname);
+	m_values.erase("a"_yulname);
+
+	// Queries `c` first, so its cached offset relative to the old `t` is used.
+	BOOST_CHECK(!kb.differenceIfKnownConstant("c"_yulname, "t"_yulname));
+	BOOST_CHECK(!kb.differenceIfKnownConstant("t"_yulname, "c"_yulname));
+	BOOST_CHECK(!kb.knownToBeDifferent("c"_yulname, "t"_yulname));
+	BOOST_CHECK(kb.differenceIfKnownConstant("c"_yulname, "a"_yulname) == u256(1));
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

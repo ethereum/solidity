@@ -20,6 +20,7 @@
 
 #include <libyul/backends/evm/ssa/SSACFGTypes.h>
 #include <libyul/backends/evm/ssa/ShuffleTrace.h>
+#include <libyul/backends/evm/ssa/StackSlot.h>
 
 #include <libyul/Exceptions.h>
 
@@ -31,39 +32,40 @@
 namespace solidity::yul::ssa::spill
 {
 
-/// Per spilled value the recorded shuffle realizing its def-site store: brings the value to the stack top and
-/// concludes with the `Store` op consuming it.
+/// Per def site of a spilled variable the recorded shuffle realizing its store: brings the variable to the
+/// stack top and concludes with the `Store` op consuming it. Keyed by the defining Inst.
 using SpillStoreTraces = std::map<InstId, ShuffleTrace>;
 
-/// Per-CFG set of SSA values spilled to memory
+/// Per-CFG set of variables spilled to memory
 class SpillSet
 {
 public:
-	void add(InstId const _value)
+	void add(SpillKey const _key)
 	{
-		bool const inserted = m_values.insert(_value).second;
-		yulAssert(inserted, fmt::format("can't spill a value ({}) twice", _value));
+		yulAssert(_key.isVariable(), fmt::format("only variables can be spilled, not {}", _key));
+		bool const inserted = m_values.insert(_key).second;
+		yulAssert(inserted, fmt::format("can't spill a variable ({}) twice", _key));
 	}
 
-	bool isSpilled(InstId const _value) const { return m_values.contains(_value); }
+	bool isSpilled(SpillKey const _key) const { return m_values.contains(_key); }
 
 	std::size_t numSpilled() const { return m_values.size(); }
 
-	std::set<InstId> const& spilledValues() const { return m_values; }
+	std::set<SpillKey> const& spilledValues() const { return m_values; }
 
 	/// Finalizes the spill set by making every spilled value's def-site `mstore` reachable.
 	/// If `_storeTraces` is provided, it is rebuilt to hold each spilled value's recorded def-site store trace.
 	void closeUnderReachabilityConstraints(SSACFG const& _cfg, SSACFGStackLayout const& _layout, SpillStoreTraces* _storeTraces = nullptr);
 
-	/// Yields a copy of this spill set minus `_id`.
-	[[nodiscard]] SpillSet without(InstId _id) const;
+	/// Yields a copy of this spill set minus `_key`.
+	[[nodiscard]] SpillSet without(SpillKey _key) const;
 
 private:
-	/// Ensure that the value `_value` can be spilled with respect to `_defStack`, i.e., brought up to the top
-	/// and `mstore`d. Might populate the spill set with more entries if not possible right away.
-	void ensureDefSiteFeasible(SSACFG const& _cfg, InstId _value, StackData const& _defStack, std::deque<InstId>& _workQueue, SpillStoreTraces* _storeTraces);
+	/// Ensure that the variable `_key` can be spilled, i.e.,
+	/// brought up to the top and `mstore`d. Might populate the spill set with more entries if not possible right away.
+	void ensureDefSiteFeasible(SpillKey _key, StackData const& _defStack, std::deque<SpillKey>& _workQueue, SpillStoreTraces* _storeTraces);
 
-	std::set<InstId> m_values;
+	std::set<SpillKey> m_values;
 };
 
 }

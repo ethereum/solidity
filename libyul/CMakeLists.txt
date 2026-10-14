@@ -109,10 +109,14 @@ add_library(yul
 	backends/evm/ssa/util/TLSFFreeList.h
 	backends/evm/ssa/StackUtils.cpp
 	backends/evm/ssa/StackUtils.h
+	backends/evm/ssa/analysis/DepthFirstSpanningTree.cpp
+	backends/evm/ssa/analysis/DepthFirstSpanningTree.h
 	backends/evm/ssa/io/DotExporterBase.cpp
 	backends/evm/ssa/io/DotExporterBase.h
-	backends/evm/ssa/io/JSONExporter.cpp
-	backends/evm/ssa/io/JSONExporter.h
+	backends/evm/ssa/io/Keywords.cpp
+	backends/evm/ssa/io/Keywords.h
+	backends/evm/ssa/io/Parser.cpp
+	backends/evm/ssa/io/Parser.h
 	backends/evm/ssa/io/Printer.cpp
 	backends/evm/ssa/io/Printer.h
 	backends/evm/ssa/spill/Emitter.h
@@ -126,6 +130,8 @@ add_library(yul
 	backends/evm/ssa/stack/Shuffler.h
 	backends/evm/ssa/transform/ConstantConditionFolder.cpp
 	backends/evm/ssa/transform/ConstantConditionFolder.h
+	backends/evm/ssa/transform/CriticalEdgeBreaker.cpp
+	backends/evm/ssa/transform/CriticalEdgeBreaker.h
 	backends/evm/ssa/transform/IdentityAndNopRemover.cpp
 	backends/evm/ssa/transform/IdentityAndNopRemover.h
 	backends/evm/ssa/transform/JumpThreader.cpp
@@ -140,8 +146,6 @@ add_library(yul
 	backends/evm/ssa/transform/UnreachableBlockCleaner.h
 	backends/evm/ssa/transform/UseCounts.cpp
 	backends/evm/ssa/transform/UseCounts.h
-	backends/evm/ssa/traversal/ForwardTopologicalSort.cpp
-	backends/evm/ssa/traversal/ForwardTopologicalSort.h
 	optimiser/ASTCopier.cpp
 	optimiser/ASTCopier.h
 	optimiser/ASTWalker.cpp

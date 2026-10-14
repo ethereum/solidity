@@ -1,0 +1,2 @@
+Error: Stack too deep.
+No memoryguard was present. Consider using memory-safe assembly only and annotating it via 'assembly ("memory-safe") { ... }'.

@@ -1,0 +1,4 @@
+#0:
+    jump #5
+// ----
+// ParseError at line 2, "jump #5": Reference to undefined block #5.

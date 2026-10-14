@@ -295,6 +295,10 @@ void CompilerStack::setMetadataHash(MetadataHash _metadataHash)
 void CompilerStack::selectDebugInfo(DebugInfoSelection _debugInfoSelection)
 {
 	solAssert(m_stackState < CompilationSuccessful, "Must select debug info components before compilation.");
+	solAssert(
+		!_debugInfoSelection.ethdebug || _debugInfoSelection.astID,
+		"Ethdebug semantic data requires AST ID debug information."
+	);
 	m_debugInfoSelection = _debugInfoSelection;
 }
 
@@ -317,6 +321,7 @@ void CompilerStack::reset(bool _keepSettings)
 		m_libraries.clear();
 		m_viaIR = false;
 		m_viaSSACFG = false;
+		m_experimental = false;
 		m_evmVersion = langutil::EVMVersion();
 		m_modelCheckerSettings = ModelCheckerSettings{};
 		m_selectedContracts.clear();
@@ -325,6 +330,7 @@ void CompilerStack::reset(bool _keepSettings)
 		m_metadataLiteralSources = false;
 		m_metadataFormat = defaultMetadataFormat();
 		m_metadataHash = MetadataHash::IPFS;
+		m_debugInfoSelection = langutil::DebugInfoSelection::Default();
 		m_stopAfter = State::CompilationSuccessful;
 		m_compilationSourceType = CompilationSourceType::Solidity;
 	}
@@ -974,20 +980,6 @@ std::optional<Json> CompilerStack::yulIRAst(std::string const& _contractName) co
 	if (!currentContract.yulIR)
 		return std::nullopt;
 	return loadGeneratedIR(*currentContract.yulIR).astJson();
-}
-
-std::optional<Json> CompilerStack::yulCFGJson(std::string const& _contractName) const
-{
-	solAssert(m_stackState == CompilationSuccessful, "Compilation was not successful.");
-
-	// NOTE: Intentionally not using LazyInit. The artifact can get very large and we don't want to
-	// keep it around when compiling a large project containing many contracts.
-	Contract const& currentContract = contract(_contractName);
-	yulAssert(currentContract.contract);
-	yulAssert(currentContract.yulIROptimized.has_value() == currentContract.contract->canBeDeployed());
-	if (!currentContract.yulIROptimized)
-		return std::nullopt;
-	return loadGeneratedIR(*currentContract.yulIROptimized).cfgJson();
 }
 
 std::optional<std::string> const& CompilerStack::yulIROptimized(std::string const& _contractName) const

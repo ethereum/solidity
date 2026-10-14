@@ -27,7 +27,7 @@ no_cli_platforms=(
     emscripten
 )
 native_platforms=(
-    ubuntu2004-static
+    ubuntu-static
     ubuntu_arm
     ubuntu
     osx

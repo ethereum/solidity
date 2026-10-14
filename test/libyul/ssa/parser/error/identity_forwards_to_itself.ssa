@@ -1,0 +1,5 @@
+#0:
+    v0 = identity v0
+    main_exit
+// ----
+// ParseError at line 2, "v0 = identity v0": v0 cannot forward to itself.

@@ -20,7 +20,7 @@ We currently use a 0.y.z version number `to indicate this fast pace of change <h
 
 .. warning::
 
-  Solidity recently released the 0.8.x version that introduced a lot of breaking changes.
+  The Solidity 0.8.x release introduced a lot of breaking changes.
   Make sure you read :doc:`the full list <080-breaking-changes>`.
 
 Ideas for improving Solidity or this documentation are always welcome,
@@ -75,7 +75,7 @@ and a wide selection of tutorials, tools, and development frameworks.
 
 If you have any questions, you can try searching for answers or asking on the
 `Ethereum StackExchange <https://ethereum.stackexchange.com/>`_,
-or our `Gitter channel <https://gitter.im/ethereum/solidity>`_.
+or our `Matrix channel <https://matrix.to/#/#ethereum\_solidity:gitter.im>`_.
 
 .. _translations:
 
@@ -159,6 +159,7 @@ Contents
 
    security-considerations.rst
    bugs.rst
+   frequently-reported-non-bugs.rst
    050-breaking-changes.rst
    060-breaking-changes.rst
    070-breaking-changes.rst

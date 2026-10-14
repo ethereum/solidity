@@ -27,7 +27,7 @@
 namespace solidity::yul::ssa::spill
 {
 
-/// Emits the two memory accesses that move a spilled SSA value between the stack and its reserved memory slot.
+/// Emits the two memory accesses that move a spilled variable between the stack and its reserved memory slot.
 class Emitter
 {
 public:
@@ -42,23 +42,23 @@ public:
 	{
 	}
 
-	[[nodiscard]] bool hasAddress(InstId const _value) const
+	[[nodiscard]] bool hasAddress(SpillKey const _key) const
 	{
-		return m_addressing->hasAddress(m_cfgIdx, _value);
+		return m_addressing->hasAddress(m_cfgIdx, _key);
 	}
 
-	/// Materializes the spilled value `_value` on the stack top: `PUSH addr; MLOAD`. Dual of emitStore.
-	void emitLoad(InstId const _value) const
+	/// Materializes the spilled variable `_key` on the stack top: `PUSH addr; MLOAD`. Dual of emitStore.
+	void emitLoad(SpillKey const _key) const
 	{
-		m_assembly->appendConstant(m_addressing->addressOf(m_cfgIdx, _value));
+		m_assembly->appendConstant(m_addressing->addressOf(m_cfgIdx, _key));
 		m_assembly->appendInstruction(evmasm::Instruction::MLOAD);
 	}
 
-	/// Writes the stack-top value into the spill slot of `_value`, consuming it: `PUSH addr; MSTORE`.
+	/// Writes the stack-top value into the spill slot of `_key`, consuming it: `PUSH addr; MSTORE`.
 	/// Dual of emitLoad. The value must already be on the stack top.
-	void emitStore(InstId const _value) const
+	void emitStore(SpillKey const _key) const
 	{
-		m_assembly->appendConstant(m_addressing->addressOf(m_cfgIdx, _value));
+		m_assembly->appendConstant(m_addressing->addressOf(m_cfgIdx, _key));
 		m_assembly->appendInstruction(evmasm::Instruction::MSTORE);
 	}
 

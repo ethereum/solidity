@@ -75,7 +75,7 @@ public:
 		boost::replace_all(filter, "/", "\\/");
 		boost::replace_all(filter, "*", ".*");
 
-		m_filterExpression = std::regex{"(" + filter + "(\\.sol|\\.yul|\\.asm|\\.asmjson|\\.stack))"};
+		m_filterExpression = std::regex{"(" + filter + "(\\.sol|\\.yul|\\.asm|\\.asmjson|\\.stack|\\.ssa))"};
 	}
 
 	bool matches(fs::path const& _path, std::string const& _name) const

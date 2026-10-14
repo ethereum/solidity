@@ -118,7 +118,7 @@ StackLayoutGenerator::StackLayoutGenerator(
 	m_graphID(_graphID),
 	m_hasFunctionReturnLabel(!_liveness.cfg().isMainGraph() && _liveness.cfg().canContinue),
 	m_spillingAllowed(_spillingAllowed),
-	m_junkAdmittingBlocksFinder(std::make_unique<JunkAdmittingBlocksFinder>(_liveness.cfg(), _liveness.topologicalSort())),
+	m_junkAdmittingBlocksFinder(std::make_unique<JunkAdmittingBlocksFinder>(_liveness.cfg(), _liveness.dfsTree())),
 	m_inputStackProposalsPerBlock(m_cfg.numBlocks()),
 	m_resultLayout(m_cfg.numBlocks()),
 	m_spillSet(std::move(_initialSpillSet))
@@ -132,7 +132,7 @@ StackLayoutGenerator::StackLayoutGenerator(
 
 		for (SSACFG::BlockId const id: m_cfg.liveBlocks())
 			for (auto const& entry: m_cfg.block(id).entries)
-				if (!m_liveness.topologicalSort().backEdge(entry, id))
+				if (!m_liveness.dfsTree().backEdge(entry, id))
 					inDegreesIgnoringBackedges[id.value] += 1;
 
 		std::queue<SSACFG::BlockId> traversalQueue;
@@ -152,7 +152,7 @@ StackLayoutGenerator::StackLayoutGenerator(
 			});
 			++numVisited;
 		}
-		yulAssert(numVisited == m_liveness.topologicalSort().preOrder().size());
+		yulAssert(numVisited == m_liveness.dfsTree().preOrder().size());
 	}
 }
 
@@ -273,8 +273,7 @@ void StackLayoutGenerator::visitBlock(SSACFG::BlockId const& _blockId)
 	StackData currentStackData = blockLayout.stackIn;
 	Stack stack(currentStackData);
 
-	blockLayout.operationShuffles.reserve(block.instructions.size());
-	m_cfg.forEachOperation(block, [&](InstId const _instId, SSACFG::Inst const& _inst) {
+	auto const layoutOperation = [&](InstId const _instId, SSACFG::Inst const& _inst) {
 		auto opLiveOutWithoutOutputs = m_liveness.operationLiveOut(_instId);
 		m_cfg.forEachOutput(_instId, [&](InstId const id) { opLiveOutWithoutOutputs.erase(id); });
 
@@ -310,11 +309,21 @@ void StackLayoutGenerator::visitBlock(SSACFG::BlockId const& _blockId)
 		m_cfg.forEachOutput(_instId, [&](InstId const id) {
 			stack.push(Slot::makeValue(m_cfg, id));
 		});
-	});
+	};
+
+	blockLayout.operationShuffles.reserve(block.instructions.size());
+	for (InstId const instId: block.instructions)
+	{
+		SSACFG::Inst const& inst = m_cfg.inst(instId);
+		if (inst.isOperation())
+			layoutOperation(instId, inst);
+		else
+			blockLayout.operationShuffles.emplace_back();
+	}
 
 	// we don't explicitly visit backedges and might have to spill here, too
 	auto const validateBackEdge = [&](SSACFG::BlockId const& _target) {
-		if (!m_liveness.topologicalSort().backEdge(_blockId, _target))
+		if (!m_liveness.dfsTree().backEdge(_blockId, _target))
 			return;
 		yulAssert(m_resultLayout[_target], "Back-edge target must have its stackIn defined already.");
 		StackData const target = stackPreImage(m_cfg, m_resultLayout[_target]->stackIn, PhiInverse(m_cfg, _blockId, _target));

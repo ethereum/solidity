@@ -32,11 +32,14 @@
 #include <libsolutil/Numeric.h>
 #include <libsolutil/Common.h>
 
+#include <boost/container/flat_set.hpp>
+#include <boost/container/small_vector.hpp>
+
 #include <map>
-#include <set>
 
 namespace solidity::yul
 {
+
 class Dialect;
 struct SideEffects;
 class KnowledgeBase;
@@ -104,25 +107,20 @@ public:
 
 	/// @returns the current value of the given variable, if known - always movable.
 	AssignedValue const* variableValue(YulName _variable) const { return util::valueOrNullptr(m_state.value, _variable); }
-	std::vector<YulName> const* sortedReferences(YulName _variable) const { return util::valueOrNullptr(m_state.sortedReferences, _variable); }
-	std::map<YulName, AssignedValue> const& allValues() const { return m_state.value; }
+	boost::container::small_vector<YulName, 2> const* sortedReferences(YulName _variable) const { return util::valueOrNullptr(m_state.sortedReferences, _variable); }
 	std::optional<YulName> storageValue(YulName _key) const;
 	std::optional<YulName> memoryValue(YulName _key) const;
 	std::optional<YulName> keccakValue(YulName _start, YulName _length) const;
 
 protected:
 	/// Registers the assignment.
-	void handleAssignment(std::set<YulName> const& _names, Expression* _value, bool _isDeclaration);
+	void handleAssignment(boost::container::small_flat_set<YulName, 1> const& _names, Expression* _value, bool _isDeclaration);
 
 	/// Creates a new inner scope.
 	void pushScope(bool _functionScope);
 
 	/// Removes the innermost scope and clears all variables in it.
 	void popScope();
-
-	/// Clears information about the values assigned to the given variables,
-	/// for example at points where control flow is merged.
-	void clearValues(std::set<YulName> const& _variablesToClear);
 
 	virtual void assignValue(YulName _variable, Expression const* _value);
 
@@ -168,6 +166,11 @@ protected:
 	std::map<FunctionHandle, SideEffects> m_functionSideEffects;
 
 private:
+	/// Clears information about the values assigned to the given variables,
+	/// for example at points where control flow is merged.
+	template <class VariableSet>
+	void clearValues(VariableSet const& _variablesToClear);
+
 	struct Environment
 	{
 		util::unordered_flat_map<YulName, YulName> storage;
@@ -178,10 +181,12 @@ private:
 	struct State
 	{
 		/// Current values of variables, always movable.
-		std::map<YulName, AssignedValue> value;
+		/// A value never references the variable it is assigned to, and is cleared as soon as
+		/// a variable it references changes (see clearValues). The knowledge base relies on this.
+		util::unordered_flat_map<YulName, AssignedValue> value;
 		/// m_references[a].contains(b) <=> the current expression assigned to a references b
 		/// The mapped vectors _must always_ be sorted
-		util::unordered_flat_map<YulName, std::vector<YulName>> sortedReferences;
+		util::unordered_flat_map<YulName, boost::container::small_vector<YulName, 2>> sortedReferences;
 
 		Environment environment;
 	};
@@ -213,7 +218,7 @@ protected:
 	struct Scope
 	{
 		explicit Scope(bool _isFunction): isFunction(_isFunction) {}
-		std::set<YulName> variables;
+		util::unordered_flat_set<YulName> variables;
 		bool isFunction;
 	};
 	/// Special expression whose address will be used in m_value.

@@ -1,0 +1,5 @@
+#0:
+    v0 = arg 0
+    main_exit
+// ----
+// ParseError at line 2, "v0 = arg 0": Function arguments are not allowed in the main graph.

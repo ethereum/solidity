@@ -1,0 +1,6 @@
+#0:
+    v0 = const 0x00
+    upsilon v0 -> ^v0
+    main_exit
+// ----
+// ParseError at line 3, "upsilon v0 -> ^v0": Upsilon target v0 is not a phi.

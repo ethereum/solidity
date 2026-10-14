@@ -1,0 +1,14 @@
+#0:
+    main_exit
+
+func @f(args: ()) -> 0 {
+#0:
+    return
+}
+
+func @f(args: ()) -> 0 {
+#0:
+    return
+}
+// ----
+// ParseError at line 9, "func @f(args: ()) -> 0 {": Duplicate function @f. Names must be unique (stem from a disambiguated AST).

@@ -20,9 +20,6 @@
 
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
-#include <libyul/backends/evm/ssa/SSACFGBuilder.h>
-#include <libyul/backends/evm/ssa/io/JSONExporter.h>
-#include <libyul/backends/evm/ssa/transform/OptimizationPipeline.h>
 #include <libyul/backends/evm/EthAssemblyAdapter.h>
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/EVMDialect.h>
@@ -379,51 +376,6 @@ Json YulStack::astJson() const
 	yulAssert(m_parserResult, "");
 	yulAssert(m_parserResult->hasCode(), "");
 	return  m_parserResult->toJson();
-}
-
-Json YulStack::cfgJson() const
-{
-	yulAssert(m_parserResult, "");
-	yulAssert(m_parserResult->hasCode(), "");
-	yulAssert(m_parserResult->analysisInfo, "");
-	// FIXME: we should not regenerate the cfg, but for now this is sufficient for testing purposes
-	auto exportCFGFromObject = [&](Object const& _object) -> Json {
-		// with this set to `true`, assignments of the type `let x := 42` are preserved and added as assignment
-		// operations to the control flow graphs
-		bool constexpr keepLiteralAssignments = true;
-		// NOTE: The block Ids are reset for each object
-		std::unique_ptr<ssa::ControlFlowGraphs> controlFlowGraphs = ssa::SSACFGBuilder::build(
-			*_object.analysisInfo,
-			EVMDialect::strictAssemblyForEVMObjects(m_evmVersion),
-			_object.code()->root(),
-			keepLiteralAssignments
-		);
-		ssa::transform::optimize(*controlFlowGraphs);
-		std::unique_ptr<ssa::ControlFlowGraphsLiveness> liveness = std::make_unique<ssa::ControlFlowGraphsLiveness>(*controlFlowGraphs);
-		return ssa::io::json::exportControlFlow(*controlFlowGraphs, liveness.get());
-	};
-
-	std::function<Json(std::vector<std::shared_ptr<ObjectNode>>)> exportCFGFromSubObjects;
-	exportCFGFromSubObjects = [&](std::vector<std::shared_ptr<ObjectNode>> _subObjects) -> Json {
-		Json subObjectsJson = Json::object();
-		for (std::shared_ptr<ObjectNode> const& subObjectNode: _subObjects)
-			if (Object const* subObject = dynamic_cast<Object const*>(subObjectNode.get()))
-			{
-				subObjectsJson[subObject->name] = exportCFGFromObject(*subObject);
-				subObjectsJson["type"] = "subObject";
-				if (!subObject->subObjects.empty())
-					subObjectsJson[subObject->name]["subObjects"] = exportCFGFromSubObjects(subObject->subObjects);
-			}
-		return subObjectsJson;
-	};
-
-	Object const& object = *m_parserResult.get();
-	Json jsonObject = Json::object();
-	jsonObject[object.name] = exportCFGFromObject(object);
-	jsonObject["type"] = "Object";
-	if (!object.subObjects.empty())
-		jsonObject[object.name]["subObjects"] = exportCFGFromSubObjects(object.subObjects);
-	return jsonObject;
 }
 
 std::shared_ptr<Object> YulStack::parserResult() const

@@ -18,12 +18,14 @@
 
 #include <libsolidity/formal/ModelChecker.h>
 
+#ifndef EMSCRIPTEN_BUILD
 #include <boost/version.hpp>
 #if (BOOST_VERSION < 108800)
 #include <boost/process.hpp>
 #else
 #define BOOST_PROCESS_VERSION 1
 #include <boost/process/v1/search_path.hpp>
+#endif
 #endif
 
 #include <range/v3/algorithm/any_of.hpp>
@@ -179,11 +181,11 @@ std::vector<std::string> ModelChecker::unhandledQueries()
 SMTSolverChoice ModelChecker::availableSolvers()
 {
 	smtutil::SMTSolverChoice available = smtutil::SMTSolverChoice::SMTLIB2();
-	available.eld = !boost::process::search_path("eld").empty();
-	available.cvc5 = !boost::process::search_path("cvc5").empty();
 #ifdef EMSCRIPTEN_BUILD
 	available.z3 = true;
 #else
+	available.eld = !boost::process::search_path("eld").empty();
+	available.cvc5 = !boost::process::search_path("cvc5").empty();
 	available.z3 = !boost::process::search_path("z3").empty();
 #endif
 	return available;

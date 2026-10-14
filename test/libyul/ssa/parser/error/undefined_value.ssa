@@ -1,0 +1,6 @@
+#0:
+    v0 = const 0x00
+    builtin @sstore v0, v1
+    main_exit
+// ----
+// ParseError at line 3, "builtin @sstore v0, v1": Reference to undefined value v1.

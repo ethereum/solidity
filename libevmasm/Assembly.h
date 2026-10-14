@@ -196,7 +196,7 @@ protected:
 
 	/// Add all assembly items from given JSON array. This function imports the items by iterating through
 	/// the code array. This method only works on clean Assembly objects that don't have any items defined yet.
-	/// @param _json JSON array that contains assembly items (e.g. json['.code'])
+	/// @param _code JSON array that contains assembly items (e.g. json['.code'])
 	/// @param _sourceList List of source names.
 	void importAssemblyItemsFromJSON(Json const& _code, std::vector<std::string> const& _sourceList);
 

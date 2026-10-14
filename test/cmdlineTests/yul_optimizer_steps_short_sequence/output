@@ -4,7 +4,7 @@ object "C_8" {
     code {
         {
             /// @src 0:80:221  "contract C {..."
-            mstore(64, memoryguard(0x80))
+            mstore(64, memoryguard(128))
             /// @src 0:129:213  "assembly (\"memory-safe\") {..."
             revert(0, 0)
         }
@@ -14,7 +14,7 @@ object "C_8" {
         code {
             {
                 /// @src 0:80:221  "contract C {..."
-                mstore(64, memoryguard(0x80))
+                mstore(64, memoryguard(128))
                 revert(0, 0)
             }
         }

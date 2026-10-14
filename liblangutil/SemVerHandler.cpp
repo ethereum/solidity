@@ -115,7 +115,14 @@ bool SemVerMatchExpression::MatchComponent::matches(SemVerVersion const& _versio
 			if (version.numbers[i] != std::numeric_limits<unsigned>::max())
 			{
 				didCompare = true;
-				cmp = static_cast<int>(_version.numbers[i]) - static_cast<int>(version.numbers[i]);
+				// Version components are unsigned and may be >= 2^31. Casting them
+				// to signed int would overflow and invert the comparison.
+				unsigned const left = _version.numbers[i];
+				unsigned const right = version.numbers[i];
+				if (left < right)
+					cmp = -1;
+				else if (left > right)
+					cmp = 1;
 			}
 
 		if (cmp == 0 && !_version.prerelease.empty() && didCompare)

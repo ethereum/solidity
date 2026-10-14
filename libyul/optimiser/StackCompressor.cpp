@@ -189,9 +189,6 @@ void eliminateVariablesOptimizedCodegen(
 	bool _allowMSizeOptimization
 )
 {
-	if (std::all_of(_unreachables.begin(), _unreachables.end(), [](auto const& _item) { return _item.second.empty(); }))
-		return;
-
 	RematCandidateSelector selector{_dialect};
 	selector(_ast);
 
@@ -267,10 +264,13 @@ std::tuple<bool, Block> StackCompressor::run(
 		);
 		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, *_object.dialect(), astRoot);
 		yulAssert(evmDialect);
+		auto const unreachables = StackLayoutGenerator::reportStackTooDeep(*cfg, *evmDialect);
+		if (ranges::all_of(unreachables, [](auto const& _item) { return _item.second.empty(); }))
+			return std::make_tuple(true, std::move(astRoot));;
 		eliminateVariablesOptimizedCodegen(
 			*_object.dialect(),
 			astRoot,
-			StackLayoutGenerator::reportStackTooDeep(*cfg, *evmDialect),
+			unreachables,
 			allowMSizeOptimization
 		);
 	}
@@ -293,4 +293,3 @@ std::tuple<bool, Block> StackCompressor::run(
 	}
 	return std::make_tuple(false, std::move(astRoot));
 }
-

@@ -105,8 +105,8 @@ spill::SpillSet toSpillSet(std::vector<StackSlot> const& _slots)
 {
 	spill::SpillSet spills;
 	for (StackSlot const& slot: _slots)
-		if (!spills.isSpilled(slot.value()))
-			spills.add(slot.value());
+		if (!spills.isSpilled(slot))
+			spills.add(slot);
 	return spills;
 }
 

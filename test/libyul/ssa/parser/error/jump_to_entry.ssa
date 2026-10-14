@@ -1,0 +1,6 @@
+#0:
+    jump #1
+#1: preds: #0
+    jump #0
+// ----
+// ParseError at line 1, "#0:": The entry block must not have predecessors.

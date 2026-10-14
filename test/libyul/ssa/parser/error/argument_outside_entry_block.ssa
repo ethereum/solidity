@@ -1,0 +1,12 @@
+#0:
+    main_exit
+
+func @f(args: (v0)) -> 0 {
+#0:
+    jump #1
+#1: preds: #0
+    v0 = arg 0
+    return
+}
+// ----
+// ParseError at line 8, "v0 = arg 0": Function arguments must be defined in the entry block.

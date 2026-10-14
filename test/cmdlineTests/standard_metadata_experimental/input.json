@@ -8,6 +8,7 @@
 		"viaIR": true,
 		"debug": {
 			"debugInfo": [
+				"ast-id",
 				"ethdebug"
 			]
 		},

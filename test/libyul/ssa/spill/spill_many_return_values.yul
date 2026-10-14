@@ -60,8 +60,8 @@
 // ===== spill info =====
 // CFG[0] <main>
 //   spilled:
-//     v5 (value) -> mem 0x0120
-//     v21 (value) -> mem 0x0140
+//     v5 -> mem 0x0120
+//     v21 -> mem 0x0140
 //   mstore schedule:
 //     mstore addr(v5) <- v5 (B#0)
 //     mstore addr(v21) <- v21 (B#0)

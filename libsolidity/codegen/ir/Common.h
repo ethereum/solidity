@@ -42,6 +42,8 @@ struct YulArity
 
 	bool operator==(YulArity const& _other) const { return in == _other.in && out == _other.out; }
 	bool operator!=(YulArity const& _other) const { return !(*this == _other); }
+	// Lexicographic order. Required to use YulArity as a map key.
+	bool operator<(YulArity const& _other) const { return in < _other.in || (in == _other.in && out < _other.out); }
 
 	size_t in;  /// Number of input parameters
 	size_t out; /// Number of output parameters
@@ -79,15 +81,3 @@ std::string dispenseLocationComment(langutil::SourceLocation const& _location, I
 std::string dispenseLocationComment(ASTNode const& _node, IRGenerationContext& _context);
 
 }
-
-// Overloading std::less() makes it possible to use YulArity as a map key. We could define operator<
-// instead but such an operator would be a bit ambiguous (e.g. YulArity{2, 2} would be greater than
-// YulArity{1, 10} in lexicographical order but the latter has greater total number of inputs and outputs).
-template<>
-struct std::less<solidity::frontend::YulArity>
-{
-	bool operator() (solidity::frontend::YulArity const& _lhs, solidity::frontend::YulArity const& _rhs) const
-	{
-		return _lhs.in < _rhs.in || (_lhs.in == _rhs.in && _lhs.out < _rhs.out);
-	}
-};

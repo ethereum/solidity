@@ -21,7 +21,11 @@
 #include <libyul/backends/evm/ssa/ControlFlowGraphs.h>
 #include <libyul/backends/evm/ssa/SSACFG.h>
 
+#include <boost/container_hash/hash.hpp>
+
 #include <range/v3/algorithm/find.hpp>
+
+#include <fmt/format.h>
 
 #include <cstdint>
 #include <type_traits>
@@ -91,6 +95,10 @@ public:
 	constexpr bool isValue() const noexcept { return kind() == Kind::Value; }
 	constexpr bool isLiteralValue() const noexcept { return m_valueOpcode == InstOpcode::Const; }
 	constexpr bool isPhiValue() const noexcept { return m_valueOpcode == InstOpcode::Phi; }
+
+	// a spilling and liveness relevant slot
+	constexpr bool isVariable() const noexcept { return isValue() && !isLiteralValue(); }
+
 	constexpr bool isFunctionReturnLabel() const noexcept { return kind() == Kind::FunctionReturnLabel; }
 	constexpr bool isFunctionCallReturnLabel() const noexcept { return kind() == Kind::FunctionCallReturnLabel; }
 	constexpr bool isJunk() const noexcept { return kind() == Kind::Junk; }
@@ -117,6 +125,14 @@ public:
 	static constexpr StackSlot makeFunctionCallReturnLabel(CallSites::CallSiteID const _callSiteID) { return {_callSiteID, Kind::FunctionCallReturnLabel};	}
 
 	auto operator<=>(StackSlot const&) const = default;
+	friend std::size_t hash_value(StackSlot const& _slot)
+	{
+		std::size_t hash = 0;
+		boost::hash_combine(hash, _slot.m_payload);
+		boost::hash_combine(hash, static_cast<std::underlying_type_t<Kind>>(_slot.m_kind));
+		boost::hash_combine(hash, static_cast<std::underlying_type_t<InstOpcode>>(_slot.m_valueOpcode));
+		return hash;
+	}
 private:
 	constexpr StackSlot(std::uint32_t const _payload, Kind const _kind, InstOpcode const _valueOpcode = InstOpcode::Unreachable):
 		m_payload(_payload),
@@ -143,6 +159,9 @@ constexpr bool canBeFreelyGenerated(StackSlot const& _slot)
 
 std::string slotToString(StackSlot const& _slot);
 std::string stackToString(StackData const& _stackData);
+
+/// A slot as spill key: a non-literal SSA value, each addressing its own memory slot
+using SpillKey = StackSlot;
 
 /// Array index into stack from the bottom (offset 0 = bottom).
 /// Natural for array-like access and iteration; used when treating the stack as a data structure.
@@ -172,3 +191,15 @@ constexpr auto operator<=>(size_t const lhs, StackDepth const rhs) noexcept { re
 constexpr bool operator==(StackDepth const lhs, size_t const rhs) noexcept { return lhs.value == rhs; }
 
 }
+
+template<>
+struct fmt::formatter<solidity::yul::ssa::StackSlot>
+{
+	static auto constexpr parse(format_parse_context& ctx) -> decltype(ctx.begin()) { return ctx.begin(); }
+
+	template<typename FormatContext>
+	auto format(solidity::yul::ssa::StackSlot const& _slot, FormatContext& _ctx) const -> decltype(_ctx.out())
+	{
+		return fmt::format_to(_ctx.out(), "{}", solidity::yul::ssa::slotToString(_slot));
+	}
+};

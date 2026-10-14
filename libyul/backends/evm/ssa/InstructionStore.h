@@ -66,6 +66,8 @@ public:
 		FunctionGraphID graphID;
 		bool canContinue;
 		std::size_t numReturns;
+
+		bool operator==(Call const&) const = default;
 	};
 
 	using Payload = std::variant<
@@ -373,6 +375,34 @@ public:
 		instruction.opcode = InstOpcode::Nop;
 		instruction.inputs.clear();
 		instruction.payload.reset();
+	}
+
+	/// Flips _target to Upsilon writing _value from _block to _phi
+	void replaceWithUpsilon(
+		InstId const _target,
+		BlockId const _block,
+		InstId const _value,
+		InstId const _phi
+	)
+	{
+		yulAssert(_target.hasValue());
+		yulAssert(_block.hasValue());
+		yulAssert(_value.hasValue());
+		yulAssert(inst(_phi).isPhi());
+		yulAssert(_target != _phi, "Cannot replace a phi with an upsilon into itself");
+		auto& instruction = inst(_target);
+		yulAssert(
+			!instruction.block.hasValue() || instruction.block == _block,
+			"replaceWithUpsilon must not move _target to another block"
+		);
+		yulAssert(!instruction.isProjection());
+		yulAssert(!instruction.isLiteral());
+		yulAssert(!instruction.isMemoryGuard());
+		yulAssert(numTrailingProjections(_target) == 0);
+		instruction.opcode = InstOpcode::Upsilon;
+		instruction.block = _block;
+		instruction.inputs.assign(1, _value);
+		instruction.payload = std::make_unique<Payload>(UpsilonPayload{_phi});
 	}
 
 	/// Tombstones an Inst, releasing its slot(s) to the free pool. If `_id` is a

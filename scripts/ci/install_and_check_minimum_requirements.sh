@@ -8,16 +8,17 @@ BOOST_VERSION=1.83
 
 # minimum cmake version
 CMAKE_MAJOR=3
-CMAKE_MINOR=13
-CMAKE_PATCH=0
+CMAKE_MINOR=21
+CMAKE_PATCH=3
 CMAKE_FULL_VERSION="${CMAKE_MAJOR}.${CMAKE_MINOR}.${CMAKE_PATCH}"
-CMAKE_TARBALL="cmake-${CMAKE_FULL_VERSION}-Linux-x86_64.tar.gz"
+CMAKE_FILENAME="cmake-${CMAKE_FULL_VERSION}-linux-x86_64"
+CMAKE_TARBALL="${CMAKE_FILENAME}.tar.gz"
 # Cache dir for cmake set in config.yml
 CMAKE_DOWNLOAD_DIR="${CMAKE_DOWNLOAD_DIR:-${HOME}/.cache/cmake-download}"
 
 # minimum gcc/clang versions
 GCC_VERSION=13.3.0
-CLANG_VERSION=18.1.3
+CLANG_VERSION=19.1.1
 
 # which compiler version to check in this script
 check_gcc=false
@@ -62,7 +63,7 @@ else
     wget --output-document "${CMAKE_DOWNLOAD_DIR}/${CMAKE_TARBALL}" "https://github.com/Kitware/CMake/releases/download/v${CMAKE_FULL_VERSION}/${CMAKE_TARBALL}"
 fi
 tar --extract --gzip --file "${CMAKE_DOWNLOAD_DIR}/${CMAKE_TARBALL}"
-sudo mv "cmake-${CMAKE_FULL_VERSION}-Linux-x86_64" "/opt/cmake-${CMAKE_FULL_VERSION}"
+sudo mv "${CMAKE_FILENAME}" "/opt/cmake-${CMAKE_FULL_VERSION}"
 sudo ln --symbolic "/opt/cmake-${CMAKE_FULL_VERSION}/bin/"* /usr/local/bin/
 echo "-- Installed $(cmake --version)"
 

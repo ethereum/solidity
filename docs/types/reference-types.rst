@@ -491,6 +491,8 @@ Array Members
 
 .. index:: ! array;dangling storage references
 
+.. _dangling-storage-references:
+
 Dangling References to Storage Array Elements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

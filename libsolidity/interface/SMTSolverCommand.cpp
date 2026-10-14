@@ -20,6 +20,7 @@
 #include <liblangutil/Exceptions.h>
 
 #include <boost/algorithm/string/join.hpp>
+#ifndef EMSCRIPTEN_BUILD
 #include <boost/version.hpp>
 #if (BOOST_VERSION < 108800)
 #include <boost/process.hpp>
@@ -29,6 +30,7 @@
 #include <boost/process/v1/io.hpp>
 #include <boost/process/v1/pipe.hpp>
 #include <boost/process/v1/search_path.hpp>
+#endif
 #endif
 
 namespace solidity::frontend
@@ -97,6 +99,11 @@ void SMTSolverCommand::setZ3(std::optional<unsigned int> timeoutInMilliseconds, 
 
 ReadCallback::Result SMTSolverCommand::solve(std::string const& _kind, std::string const& _query) const
 {
+#ifdef EMSCRIPTEN_BUILD
+	std::ignore = _kind;
+	std::ignore = _query;
+	solAssert(false, "SMTQuery callback used in emscripten build");
+#else
 	try
 	{
 		if (_kind != ReadCallback::kindString(ReadCallback::Kind::SMTQuery))
@@ -140,6 +147,7 @@ ReadCallback::Result SMTSolverCommand::solve(std::string const& _kind, std::stri
 	{
 		return ReadCallback::Result{false, "Exception in SMTQuery callback: " + boost::current_exception_diagnostic_information()};
 	}
+#endif
 }
 
 }

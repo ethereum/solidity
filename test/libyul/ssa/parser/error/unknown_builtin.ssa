@@ -1,0 +1,6 @@
+#0:
+    v0 = const 0x00
+    builtin @nonexistent v0
+    main_exit
+// ----
+// ParseError at line 3, "builtin @nonexistent v0": Unknown builtin @nonexistent.

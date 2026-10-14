@@ -4,6 +4,7 @@
 		"C": {"urls": ["in.yul"]}
 	},
 	"settings": {
+	    "debug": {"debugInfo": ["location", "snippet", "ast-id", "ethdebug"]},
 		"experimental": true,
 		"outputSelection": {
 			"*": {"*": ["evm.bytecode.ethdebug", "ethdebug.resources"]}

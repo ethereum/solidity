@@ -1,0 +1,22 @@
+#0:
+    v0 = const 0x00
+    v1 = builtin @calldataload v0
+    branch v1, #1, #2
+#1: preds: #0
+    jump #3
+#2: preds: #0
+    jump #3
+#3: preds: #2, #1
+    main_exit
+// ----
+// #0:
+//     v0 = const 0x00
+//     v1 = builtin @calldataload v0
+//     branch v1, #1, #2
+// #1: preds: #0
+//     jump #3
+// #2: preds: #0
+//     jump #3
+// #3: preds: #2, #1
+//     main_exit
+//

@@ -33,6 +33,8 @@
 
 #include <range/v3/view/transform.hpp>
 
+#include <set>
+
 using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::util;
@@ -113,26 +115,14 @@ Json Object::toJson() const
 	return ret;
 }
 
-
-std::set<std::string> Object::Structure::topLevelSubObjectNames() const
-{
-	std::set<std::string> topLevelObjectNames;
-
-	for (auto const& path: objectPaths)
-		if (!util::contains(path, '.') && path != objectName)
-			topLevelObjectNames.insert(path);
-
-	return topLevelObjectNames;
-}
-
 Object::Structure Object::summarizeStructure() const
 {
 	Structure structure;
 
 	structure.objectPaths =
 		name.empty() || util::contains(name, '.') ?
-		std::set<std::string>{} :
-		std::set<std::string>{name};
+		Structure::PathSet{} :
+		Structure::PathSet{name};
 
 	structure.objectName = name;
 
@@ -151,14 +141,18 @@ Object::Structure Object::summarizeStructure() const
 			for (auto const& subSubObj: subObjectStructure.objectPaths)
 				if (subObject->name != subSubObj)
 				{
-					yulAssert(!structure.contains(subObject->name + "." + subSubObj));
-					structure.objectPaths.insert(subObject->name + "." + subSubObj);
+					std::string path = subObject->name + "." + subSubObj;
+					yulAssert(!structure.containsData(path));
+					bool const inserted = structure.objectPaths.insert(std::move(path)).second;
+					yulAssert(inserted);
 				}
 			for (auto const& subSubObjData: subObjectStructure.dataPaths)
 				if (subObject->name != subSubObjData)
 				{
-					yulAssert(!structure.contains(subObject->name + "." + subSubObjData));
-					structure.dataPaths.insert(subObject->name + "." + subSubObjData);
+					std::string path = subObject->name + "." + subSubObjData;
+					yulAssert(!structure.containsObject(path));
+					bool const inserted = structure.dataPaths.insert(std::move(path)).second;
+					yulAssert(inserted);
 				}
 		}
 		else

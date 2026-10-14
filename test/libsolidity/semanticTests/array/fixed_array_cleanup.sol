@@ -10,13 +10,13 @@ contract c {
 // ----
 // storageEmpty -> 1
 // fill() ->
-// gas irOptimized: 465013
+// gas irOptimized: 465010
 // gas legacy: 468825
 // gas legacyOptimized: 466238
-// gas ssaCFGOptimized: 464892
+// gas ssaCFGOptimized: 464889
 // storageEmpty -> 0
 // clear() ->
-// gas irOptimized: 97800
+// gas irOptimized: 97798
 // gas legacy: 97944
 // gas legacyOptimized: 97880
 // storageEmpty -> 1

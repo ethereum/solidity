@@ -80,7 +80,8 @@ releases in the [projects section](https://github.com/argotorg/solidity/projects
 
 ## Maintainers
 The Solidity programming language and compiler are open-source community projects governed by a core team.
-The core team is sponsored by the [Ethereum Foundation](https://ethereum.foundation/).
+The core team is part of the [Argot Collective](https://argot.org/), a non-profit that develops and maintains Solidity.
+The project was originally started at and sponsored by the [Ethereum Foundation](https://ethereum.foundation/).
 
 ## License
 Solidity is licensed under [GNU General Public License v3.0](LICENSE.txt).

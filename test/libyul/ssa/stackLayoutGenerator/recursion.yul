@@ -41,7 +41,7 @@
 // "];
 // Block1_0 -> Block1_0Exit;
 // Block1_0Exit [label="{ If v0 | { <0> Zero | <1> NonZero }}" shape=Mrecord];
-// Block1_0Exit:0 -> Block1_2 [style="solid"];
+// Block1_0Exit:0 -> Block1_3 [style="solid"];
 // Block1_0Exit:1 -> Block1_1 [style="solid"];
 // Block1_1 [label="\
 // IN: [ReturnLabel[1], v0]\l\
@@ -63,6 +63,14 @@
 // Block1_1 -> Block1_1Exit [arrowhead=none];
 // Block1_1Exit [label="Jump" shape=oval];
 // Block1_1Exit -> Block1_2 [style="solid"];
+// Block1_3 [label="\
+// IN: [ReturnLabel[1], JUNK]\l\
+// \l\
+// OUT: [ReturnLabel[1], JUNK]\l\
+// "];
+// Block1_3 -> Block1_3Exit [arrowhead=none];
+// Block1_3Exit [label="Jump" shape=oval];
+// Block1_3Exit -> Block1_2 [style="solid"];
 // Block1_2 [label="\
 // IN: [ReturnLabel[1], phi6]\l\
 // \l\

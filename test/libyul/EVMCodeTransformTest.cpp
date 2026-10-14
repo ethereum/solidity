@@ -21,6 +21,7 @@
 
 #include <test/Common.h>
 
+#include <libyul/Exceptions.h>
 #include <libyul/YulStack.h>
 #include <libyul/backends/evm/EthAssemblyAdapter.h>
 #include <libyul/backends/evm/EVMObjectCompiler.h>
@@ -28,6 +29,8 @@
 #include <libevmasm/Assembly.h>
 
 #include <libsolutil/CommonIO.h>
+
+#include <fmt/format.h>
 
 using namespace solidity;
 using namespace solidity::test;
@@ -43,6 +46,9 @@ EVMCodeTransformTest::EVMCodeTransformTest(std::string const& _filename):
 {
 	m_source = m_reader.source();
 	m_stackOpt = m_reader.boolSetting("stackOptimization", false);
+	m_viaSSACFG = m_reader.boolSetting("viaSSACFG", false);
+	if (m_viaSSACFG && !m_stackOpt)
+		BOOST_THROW_EXCEPTION(std::runtime_error("viaSSACFG requires stackOptimization."));
 	m_expectation = m_reader.simpleExpectations();
 }
 
@@ -67,11 +73,20 @@ TestCase::TestResult EVMCodeTransformTest::run(std::ostream& _stream, std::strin
 
 	evmasm::Assembly assembly{CommonOptions::get().evmVersion(), false, {}};
 	EthAssemblyAdapter adapter(assembly);
-	EVMObjectCompiler::compile(
-		*yulStack.parserResult(),
-		adapter,
-		m_stackOpt
-	);
+	try
+	{
+		EVMObjectCompiler::compile(
+			*yulStack.parserResult(),
+			adapter,
+			m_stackOpt,
+			m_viaSSACFG
+		);
+	}
+	catch (StackTooDeepError const& _error)
+	{
+		m_obtainedResult = fmt::format("StackTooDeepError: {}\n", _error.comment() ? *_error.comment() : "");
+		return checkResult(_stream, _linePrefix, _formatted);
+	}
 
 	m_obtainedResult = toString(assembly);
 

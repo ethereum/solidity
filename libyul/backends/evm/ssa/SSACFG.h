@@ -122,7 +122,7 @@ public:
 		if (!m_freeBlocks.empty())
 		{
 			blockId = m_freeBlocks.back();
-			yulAssert(blockId.value < m_freeBlocks.size());
+			yulAssert(blockId.value < m_blocks.size());
 			std::optional<BasicBlock>& block = m_blocks[blockId.value];
 			yulAssert(!block.has_value());
 			m_freeBlocks.pop_back();
@@ -339,6 +339,17 @@ public:
 	void replaceWithIdentity(InstId const _target, InstId const _forward)
 	{
 		m_instructions.replaceWithIdentity(_target, _forward);
+	}
+
+	/// Flips _target's opcode to Upsilon feeding _value from _block to _phi
+	void replaceWithUpsilon(
+		InstId const _target,
+		BlockId const _block,
+		InstId const _value,
+		InstId const _phi
+	)
+	{
+		m_instructions.replaceWithUpsilon(_target, _block, _value, _phi);
 	}
 
 	/// Flips _target to Const carrying _value

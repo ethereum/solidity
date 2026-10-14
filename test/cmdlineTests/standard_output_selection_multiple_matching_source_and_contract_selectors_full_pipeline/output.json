@@ -70,7 +70,7 @@ object \"A_1\" {
 object \"A_1\" {
     code {
         {
-            let _1 := memoryguard(0x80)
+            let _1 := memoryguard(128)
             mstore(64, _1)
             if callvalue() { revert(0, 0) }
             let _2 := datasize(\"A_1_deployed\")
@@ -105,7 +105,7 @@ object \"A_1\" {
 object \"A_5\" {
     code {
         {
-            let _1 := memoryguard(0x80)
+            let _1 := memoryguard(128)
             mstore(64, _1)
             if callvalue() { revert(0, 0) }
             let _2 := datasize(\"A_5_deployed\")

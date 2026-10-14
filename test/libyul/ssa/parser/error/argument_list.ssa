@@ -1,0 +1,11 @@
+#0:
+    main_exit
+
+func @f(args: (v1, v0)) -> 0 {
+#0:
+    v0 = arg 0
+    v1 = arg 1
+    return
+}
+// ----
+// ParseError at line 4, "func @f(args: (v1, v0)) -> 0 {": Argument 0 is listed as v1, which is not 'arg 0'.

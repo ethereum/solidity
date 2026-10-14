@@ -1,0 +1,14 @@
+
+#0:
+v0 = const 0x00
+
+        builtin @sstore v0, v0
+  main_exit
+
+
+// ----
+// #0:
+//     v0 = const 0x00
+//     builtin @sstore v0, v0
+//     main_exit
+//

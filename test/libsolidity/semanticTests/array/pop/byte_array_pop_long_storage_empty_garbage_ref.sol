@@ -15,8 +15,8 @@ contract c {
 }
 // ----
 // test() ->
-// gas irOptimized: 113631
+// gas irOptimized: 113628
 // gas legacy: 131256
 // gas legacyOptimized: 126668
-// gas ssaCFGOptimized: 113837
+// gas ssaCFGOptimized: 113969
 // storageEmpty -> 1

@@ -1,0 +1,3 @@
+pragma solidity >3000000000.0.0;
+// ----
+// ParserError 5333: (0-32): Source file requires different compiler version (current compiler is ....

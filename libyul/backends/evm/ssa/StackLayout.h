@@ -31,8 +31,7 @@ struct BlockLayout
 	// stack layout required to enter the block
 	StackData stackIn;
 
-	/// Transforms the stack after the (i-1)-th operation (`stackIn` for i = 0) into the i-th operation's
-	/// input layout
+	/// One trace per Inst of the block
 	std::vector<ShuffleTrace> operationShuffles;
 	/// Transforms the stack after the last operation into the block's exit state (for conditional jumps: condition on top, pre-JUMPI)
 	ShuffleTrace exitShuffle;

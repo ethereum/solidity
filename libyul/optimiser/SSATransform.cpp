@@ -27,6 +27,7 @@
 #include <libyul/AST.h>
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/UnorderedContainers.h>
 
 using namespace solidity;
 using namespace solidity::yul;
@@ -44,7 +45,7 @@ class IntroduceSSA: public ASTModifier
 public:
 	explicit IntroduceSSA(
 		NameDispenser& _nameDispenser,
-		std::set<YulName> const& _variablesToReplace
+		util::unordered_flat_set<YulName> const& _variablesToReplace
 	):
 		m_nameDispenser(_nameDispenser),
 		m_variablesToReplace(_variablesToReplace)
@@ -54,7 +55,7 @@ public:
 
 private:
 	NameDispenser& m_nameDispenser;
-	std::set<YulName> const& m_variablesToReplace;
+	util::unordered_flat_set<YulName> const& m_variablesToReplace;
 };
 
 
@@ -140,7 +141,7 @@ class IntroduceControlFlowSSA: public ASTModifier
 public:
 	explicit IntroduceControlFlowSSA(
 		NameDispenser& _nameDispenser,
-		std::set<YulName> const& _variablesToReplace
+		util::unordered_flat_set<YulName> const& _variablesToReplace
 	):
 		m_nameDispenser(_nameDispenser),
 		m_variablesToReplace(_variablesToReplace)
@@ -153,7 +154,7 @@ public:
 
 private:
 	NameDispenser& m_nameDispenser;
-	std::set<YulName> const& m_variablesToReplace;
+	util::unordered_flat_set<YulName> const& m_variablesToReplace;
 	/// Variables (that are to be replaced) currently in scope.
 	std::set<YulName> m_variablesInScope;
 	/// Variables that do not have a specific value.
@@ -270,7 +271,7 @@ void IntroduceControlFlowSSA::operator()(Block& _block)
 class PropagateValues: public ASTModifier
 {
 public:
-	explicit PropagateValues(std::set<YulName> const& _variablesToReplace):
+	explicit PropagateValues(util::unordered_flat_set<YulName> const& _variablesToReplace):
 		m_variablesToReplace(_variablesToReplace)
 	{ }
 
@@ -283,7 +284,7 @@ public:
 private:
 	/// This is a set of all variables that are assigned to anywhere in the code.
 	/// Variables that are only declared but never re-assigned are not touched.
-	std::set<YulName> const& m_variablesToReplace;
+	util::unordered_flat_set<YulName> const& m_variablesToReplace;
 	std::map<YulName, YulName> m_currentVariableValues;
 	std::set<YulName> m_clearAtEndOfBlock;
 };
@@ -369,9 +370,9 @@ void PropagateValues::operator()(Block& _block)
 void SSATransform::run(OptimiserStepContext& _context, Block& _ast)
 {
 	std::set<YulName> assignedVariables = assignedVariableNames(_ast);
-	IntroduceSSA{_context.dispenser, assignedVariables}(_ast);
-	IntroduceControlFlowSSA{_context.dispenser, assignedVariables}(_ast);
-	PropagateValues{assignedVariables}(_ast);
+	util::unordered_flat_set<YulName> variablesToReplace{assignedVariables.begin(), assignedVariables.end()};
+	IntroduceSSA{_context.dispenser, variablesToReplace}(_ast);
+	IntroduceControlFlowSSA{_context.dispenser, variablesToReplace}(_ast);
+	PropagateValues{variablesToReplace}(_ast);
 }
-
 

@@ -1,0 +1,46 @@
+memoryguard = 0x80
+
+#0:
+    v0 = memoryguard
+    v1 = call @pair v0
+    v2 = proj v1, 0
+    v3 = proj v1, 1
+    builtin @sstore v2, v3
+    call @noop
+    main_exit
+
+func @pair(args: (v7)) -> 2 {
+#0:
+    v7 = arg 0
+    v1 = const 0x2222
+    return v7, v1
+}
+
+func @noop(args: ()) -> 0 {
+#0:
+    return
+}
+// ----
+// memoryguard = 0x80
+//
+// #0:
+//     v0 = memoryguard
+//     v1 = call @pair v0
+//     v2 = proj v1, 0
+//     v3 = proj v1, 1
+//     builtin @sstore v2, v3
+//     call @noop
+//     main_exit
+//
+// func @pair(args: (v0)) -> 2 {
+// #0:
+//     v0 = arg 0
+//     v1 = const 0x2222
+//     return v0, v1
+// }
+//
+// func @noop(args: ()) -> 0 {
+// #0:
+//     return
+// }
+//

@@ -144,7 +144,6 @@ static bool needsHumanTargetedStdout(CommandLineOptions const& _options)
 		_options.compiler.outputs.abi ||
 		_options.compiler.outputs.asm_ ||
 		_options.compiler.outputs.asmJson ||
-		_options.compiler.outputs.yulCFGJson ||
 		_options.compiler.outputs.binary ||
 		_options.compiler.outputs.binaryRuntime ||
 		_options.compiler.outputs.ethdebugResources ||
@@ -289,32 +288,6 @@ void CommandLineInterface::handleIRAst(std::string const& _contractName)
 		sout() << "IR AST:" << std::endl;
 		sout() << util::jsonPrint(
 			yulIRAst.value_or(Json{}),
-			m_options.formatting.json
-		) << std::endl;
-	}
-}
-
-void CommandLineInterface::handleYulCFGExport(std::string const& _contractName)
-{
-	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
-
-	if (!m_options.compiler.outputs.yulCFGJson)
-		return;
-
-	std::optional<Json> const& yulCFGJson = m_compiler->yulCFGJson(_contractName);
-	if (!m_options.output.dir.empty())
-		createFile(
-			m_compiler->filesystemFriendlyName(_contractName) + "_yul_cfg.json",
-			util::jsonPrint(
-				yulCFGJson.value_or(Json{}),
-				m_options.formatting.json
-			)
-		);
-	else
-	{
-		sout() << "Yul Control Flow Graph:" << std::endl;
-		sout() << util::jsonPrint(
-			yulCFGJson.value_or(Json{}),
 			m_options.formatting.json
 		) << std::endl;
 	}
@@ -945,8 +918,7 @@ void CommandLineInterface::compile()
 		CompilerStack::PipelineConfig pipelineConfig;
 		pipelineConfig.irOptimization =
 			m_options.compiler.outputs.irOptimized ||
-			m_options.compiler.outputs.irOptimizedAstJson ||
-			m_options.compiler.outputs.yulCFGJson;
+			m_options.compiler.outputs.irOptimizedAstJson;
 		pipelineConfig.irCodegen =
 			pipelineConfig.irOptimization ||
 			m_options.compiler.outputs.ir ||
@@ -1393,11 +1365,6 @@ void CommandLineInterface::assembleYul(yul::YulStack::Machine _targetMachine)
 			sout() << "AST:" << std::endl << std::endl;
 			sout() << util::jsonPrint(stack.astJson(), m_options.formatting.json) << std::endl;
 		}
-		if (m_options.compiler.outputs.yulCFGJson)
-		{
-			sout() << "Yul Control Flow Graph:" << std::endl << std::endl;
-			sout() << util::jsonPrint(stack.cfgJson(), m_options.formatting.json) << std::endl;
-		}
 		solAssert(_targetMachine == yul::YulStack::Machine::EVM, "");
 		if (m_options.compiler.outputs.asm_)
 		{
@@ -1463,7 +1430,6 @@ void CommandLineInterface::outputCompilationResults()
 			handleIRAst(contract);
 			handleIROptimized(contract);
 			handleIROptimizedAst(contract);
-			handleYulCFGExport(contract);
 			handleSignatureHashes(contract);
 			handleMetadata(contract);
 			handleABI(contract);

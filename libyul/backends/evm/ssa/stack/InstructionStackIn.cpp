@@ -68,9 +68,8 @@ struct InstructionStackInBuilder
 	{
 		StackSlot const& arg = args[_argIndex];
 		return
-			arg.isValue() &&
-			!arg.isLiteralValue() &&
-			(!liveOut.contains(arg) || spillSet.isSpilled(arg.value())) &&
+			arg.isVariable() &&
+			(!liveOut.contains(arg) || spillSet.isSpilled(arg)) &&
 			remainingArgsCount(arg, _argIndex + 1) == 0 &&
 			ranges::contains(stack, arg);
 	}
@@ -82,9 +81,8 @@ struct InstructionStackInBuilder
 		return
 			isDead(_slot) ||
 			(
-				_slot.isValue() &&
-				!_slot.isLiteralValue() &&
-				spillSet.isSpilled(_slot.value()) &&
+				_slot.isVariable() &&
+				spillSet.isSpilled(_slot) &&
 				remainingArgsCount(_slot, 0) == 0
 			);
 	}
@@ -157,7 +155,7 @@ struct InstructionStackInBuilder
 		yulAssert(ranges::none_of(pending, std::identity{}));
 		for (std::size_t i = 0; i < args.size(); ++i)
 		{
-			if (!moved[i] && !canBeFreelyGenerated(args[i]) && !spillSet.isSpilled(args[i].value()))
+			if (!moved[i] && !canBeFreelyGenerated(args[i]) && !spillSet.isSpilled(args[i]))
 				if (auto const source = sim.findSlotDepth(args[i]))
 					dropForReach(
 						data,

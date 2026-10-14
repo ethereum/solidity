@@ -1,0 +1,6 @@
+#0:
+    jump #1
+#1: preds: #0, #0
+    main_exit
+// ----
+// ParseError at line 3, "#1: preds: #0, #0": Predecessors of #1 differ from jumps to it.

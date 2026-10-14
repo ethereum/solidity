@@ -161,7 +161,10 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 			set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s STRICT=1")
 			# Export the Emscripten-generated auxiliary methods which are needed by solc-js.
 			# Which methods of libsolc itself are exported is specified in libsolc/CMakeLists.txt.
-			set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s EXTRA_EXPORTED_RUNTIME_METHODS=['cwrap','addFunction','removeFunction','UTF8ToString','lengthBytesUTF8','stringToUTF8','setValue']")
+			set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s EXPORTED_RUNTIME_METHODS=['cwrap','addFunction','removeFunction','UTF8ToString','lengthBytesUTF8','stringToUTF8','setValue']")
+			# Read the embedded wasm binary from Module["wasmBinary"] (see scripts/ci/pack_soljson.sh).
+			# Since emscripten 3.1.46, STRICT=1 implies INCOMING_MODULE_JS_API=[], so we have to be explicit.
+			set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s INCOMING_MODULE_JS_API=['wasmBinary']")
 			# Build for webassembly target.
 			set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s WASM=1")
 			# Set webassembly build to synchronous loading.
@@ -170,8 +173,8 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 			set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s ALLOW_TABLE_GROWTH=1")
 			# Disable warnings about not being pure asm.js due to memory growth.
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-almost-asm")
-			# Increase stack size from 5MB to 16MB to prevent stack overflow issues.
-			set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s TOTAL_STACK=16mb")
+			# Increase stack size from 64kB to 16MB to prevent stack overflow issues.
+			set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s STACK_SIZE=16mb")
 			# Increase memory size from 16MB to 32MB since the stack size is now 16MB.
 			set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s INITIAL_MEMORY=32mb")
 		endif()

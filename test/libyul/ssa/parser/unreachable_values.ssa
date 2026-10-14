@@ -1,0 +1,30 @@
+#0:
+    v0 = call @r { nocontinue = true }
+    terminated
+#1:
+    v1 = builtin @calldataload unreachable
+    builtin @sstore unreachable, v1
+    v2 = identity unreachable
+    branch unreachable, #2, #3
+#2: preds: #1
+    v3 = call @f unreachable
+    terminated
+#3: preds: #1
+    v4 = phi
+    upsilon unreachable -> ^v4
+    terminated
+
+func @r(args: ()) -> 1 nocontinue {
+#0:
+    v0 = const 0x00
+    builtin @revert v0, v0
+    terminated
+}
+
+func @f(args: (v0)) -> 1 {
+#0:
+    v0 = arg 0
+    return unreachable
+}
+// ----
+// ParseError at line 5, "unreachable": Unreachable values are never referenced. Found keyword 'unreachable'.

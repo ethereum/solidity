@@ -33,9 +33,10 @@
 
 #include <libsolutil/CommonData.h>
 
-#include <variant>
-
 #include <range/v3/view/reverse.hpp>
+
+#include <set>
+#include <variant>
 
 using namespace solidity;
 using namespace solidity::util;
@@ -93,7 +94,7 @@ void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
 
 void DataFlowAnalyzer::operator()(Assignment& _assignment)
 {
-	std::set<YulName> names;
+	boost::container::small_flat_set<YulName, 1> names;
 	for (auto const& var: _assignment.variableNames)
 		names.emplace(var.name);
 	assertThrow(_assignment.value, OptimizerException, "");
@@ -104,10 +105,10 @@ void DataFlowAnalyzer::operator()(Assignment& _assignment)
 
 void DataFlowAnalyzer::operator()(VariableDeclaration& _varDecl)
 {
-	std::set<YulName> names;
+	boost::container::small_flat_set<YulName, 1> names;
 	for (auto const& var: _varDecl.variables)
 		names.emplace(var.name);
-	m_variableScopes.back().variables += names;
+	m_variableScopes.back().variables.insert(names.begin(), names.end());
 
 	if (_varDecl.value)
 	{
@@ -241,7 +242,7 @@ std::optional<YulName> DataFlowAnalyzer::keccakValue(YulName _start, YulName _le
 		return std::nullopt;
 }
 
-void DataFlowAnalyzer::handleAssignment(std::set<YulName> const& _variables, Expression* _value, bool _isDeclaration)
+void DataFlowAnalyzer::handleAssignment(boost::container::small_flat_set<YulName, 1> const& _variables, Expression* _value, bool _isDeclaration)
 {
 	if (!_isDeclaration)
 		clearValues(_variables);
@@ -263,25 +264,9 @@ void DataFlowAnalyzer::handleAssignment(std::set<YulName> const& _variables, Exp
 	}
 
 	auto const& referencedVariables = movableChecker.referencedVariables();
-	std::vector const referencedVariablesSorted(referencedVariables.begin(), referencedVariables.end());
+	boost::container::small_vector<YulName, 2> const referencedVariablesSorted(referencedVariables.begin(), referencedVariables.end());
 	for (auto const& name: _variables)
-	{
 		m_state.sortedReferences[name] = referencedVariablesSorted;
-		if (!_isDeclaration)
-		{
-			// assignment to slot denoted by "name"
-			m_state.environment.storage.erase(name);
-			// assignment to slot contents denoted by "name"
-			boost::unordered::erase_if(m_state.environment.storage, mapTuple([&name](auto&& /* key */, auto&& value) { return value == name; }));
-			// assignment to slot denoted by "name"
-			m_state.environment.memory.erase(name);
-			// assignment to slot contents denoted by "name"
-			std::erase_if(m_state.environment.keccak, [&name](auto&& _item) {
-				return _item.first.first == name || _item.first.second == name || _item.second == name;
-			});
-			boost::unordered::erase_if(m_state.environment.memory, mapTuple([&name](auto&& /* key */, auto&& value) { return value == name; }));
-		}
-	}
 
 	if (_value && _variables.size() == 1)
 	{
@@ -316,7 +301,8 @@ void DataFlowAnalyzer::popScope()
 	m_variableScopes.pop_back();
 }
 
-void DataFlowAnalyzer::clearValues(std::set<YulName> const& _variablesToClear)
+template <class VariableSet>
+void DataFlowAnalyzer::clearValues(VariableSet const& _variablesToClear)
 {
 	// All variables that reference variables to be cleared also have to be
 	// cleared, but not recursively, since only the value of the original
@@ -347,20 +333,28 @@ void DataFlowAnalyzer::clearValues(std::set<YulName> const& _variablesToClear)
 	});
 
 	// Also clear variables that reference variables to be cleared.
-	std::set<YulName> referencingVariablesToClear;
 	std::vector const sortedVariablesToClear(_variablesToClear.begin(), _variablesToClear.end());
-	for (auto const& [referencingVariable, referencedVariables]: m_state.sortedReferences)
+	boost::unordered::erase_if(m_state.sortedReferences, mapTuple([&](auto&& referencingVariable, auto&& referencedVariables) {
 		// instead of checking each variable in `referencedVariables`, we check if there is any intersection making use of the
 		// sortedness of the vectors, which can increase performance by up to 50% in pathological cases
-		if (hasNonemptyIntersectionSorted(referencedVariables, sortedVariablesToClear))
-			referencingVariablesToClear.emplace(referencingVariable);
+		if (!hasNonemptyIntersectionSorted(referencedVariables, sortedVariablesToClear))
+			return false;
+		m_state.value.erase(referencingVariable);
+		return true;
+	}));
 
 	// Clear the value and update the reference relation.
-	for (auto const& name: _variablesToClear + referencingVariablesToClear)
+	for (auto const& name: _variablesToClear)
 	{
 		m_state.value.erase(name);
 		m_state.sortedReferences.erase(name);
 	}
+
+	// Only the variables to clear changed. The values of the referencing variables did not
+	// change, we just forgot their expressions because we can no longer evaluate them.
+	// What the knowledge base computed for them is still valid though.
+	for (auto const& name: _variablesToClear)
+		m_knowledgeBase.variableChanged(name);
 }
 
 void DataFlowAnalyzer::assignValue(YulName _variable, Expression const* _value)

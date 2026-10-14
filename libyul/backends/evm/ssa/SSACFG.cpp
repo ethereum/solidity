@@ -66,7 +66,7 @@ public:
 		m_controlFlow(_controlFlow)
 	{
 		if (_liveness)
-			m_junkAdmittingBlocks = std::make_unique<JunkAdmittingBlocksFinder>(_cfg, _liveness->topologicalSort());
+			m_junkAdmittingBlocks = std::make_unique<JunkAdmittingBlocksFinder>(_cfg, _liveness->dfsTree());
 	}
 
 protected:
@@ -80,8 +80,8 @@ protected:
 			_out << fmt::format(
 				"\\\nBlock {}; ({}, max {})\\n",
 				_blockId.value,
-				m_liveness->topologicalSort().preOrderIndexOf(_blockId.value),
-				m_liveness->topologicalSort().maxSubtreePreOrderIndexOf(_blockId.value)
+				m_liveness->dfsTree().preOrderIndexOf(_blockId),
+				m_liveness->dfsTree().maxSubtreePreOrderIndexOf(_blockId)
 			);
 			_out << fmt::format(
 				"LiveIn: {}\\l\\\n",
@@ -154,7 +154,7 @@ protected:
 
 	EdgeStyle edgeStyle(BlockId _source, BlockId _target) override
 	{
-		if (m_liveness && m_liveness->topologicalSort().backEdge(_source, _target))
+		if (m_liveness && m_liveness->dfsTree().backEdge(_source, _target))
 			return EdgeStyle::Dashed;
 		return EdgeStyle::Solid;
 	}

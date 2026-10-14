@@ -1,0 +1,5 @@
+#0:
+    v0 = memoryguard
+    main_exit
+// ----
+// ParseError at line 2, "v0 = memoryguard": memoryguard requires a 'memoryguard = <value>' header.

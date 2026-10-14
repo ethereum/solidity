@@ -335,6 +335,26 @@ BOOST_AUTO_TEST_CASE(test_format_number_readable_signed)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(test_to_unsigned_int)
+{
+	BOOST_CHECK(toUnsignedInt("0") == 0u);
+	BOOST_CHECK(toUnsignedInt("42") == 42u);
+	BOOST_CHECK(toUnsignedInt("4294967295") == 4294967295u);
+
+	// the whole string has to be consumed
+	BOOST_CHECK(!toUnsignedInt("0x10"));
+	BOOST_CHECK(!toUnsignedInt("1e2"));
+	BOOST_CHECK(!toUnsignedInt("1.5"));
+	BOOST_CHECK(!toUnsignedInt("42 "));
+	BOOST_CHECK(!toUnsignedInt(" 42"));
+	BOOST_CHECK(!toUnsignedInt("+42"));
+	BOOST_CHECK(!toUnsignedInt("-1"));
+	BOOST_CHECK(!toUnsignedInt(""));
+
+	// out of range
+	BOOST_CHECK(!toUnsignedInt("4294967296"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

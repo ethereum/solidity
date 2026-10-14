@@ -1,0 +1,9 @@
+#0:
+    main_exit
+
+func @f(args: ()) -> 0 {
+#0:
+    main_exit
+}
+// ----
+// ParseError at line 6, "main_exit": 'main_exit' is only allowed in the main graph.

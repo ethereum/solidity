@@ -31,10 +31,9 @@
 
 #include <libsolutil/Common.h>
 #include <libsolutil/JSON.h>
+#include <libsolutil/UnorderedContainers.h>
 
 #include <memory>
-#include <set>
-#include <limits>
 
 namespace solidity::yul
 {
@@ -105,12 +104,15 @@ public:
 	/// in particular the paths that can be used from within to refer to nested nodes (objects and data).
 	struct Structure
 	{
+		/// boost::hash is much faster for long strings
+		using PathSet = util::unordered_flat_set<std::string, boost::hash<std::string>>;
+
 		/// The name of the object
 		std::string objectName;
 		/// Available dot-separated paths to nested objects (relative to current object).
-		std::set<std::string> objectPaths;
+		PathSet objectPaths;
 		/// Available dot-separated paths to nested data entries (relative to current object).
-		std::set<std::string> dataPaths;
+		PathSet dataPaths;
 
 		/// Checks if a path is available.
 		bool contains(std::string const& _path) const { return containsObject(_path) || containsData(_path); }
@@ -118,8 +120,6 @@ public:
 		bool containsObject(std::string const& _path) const { return objectPaths.count(_path) > 0; }
 		/// Checks if a path is available and leads to a data entry.
 		bool containsData(std::string const& _path) const { return dataPaths.count(_path) > 0; }
-
-		std::set<std::string> topLevelSubObjectNames() const;
 	};
 
 	/// @returns the set of names of data objects accessible from within the code of

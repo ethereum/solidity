@@ -41,7 +41,7 @@ boost_dir=("${ROOTDIR}/deps/boost/lib/cmake/Boost-"*)
 
  # shellcheck disable=SC2086
  "${ROOTDIR}/deps/cmake/bin/cmake" \
-    -G "Visual Studio 16 2019" \
+    -G "Visual Studio 17 2022" \
     -DBoost_DIR="${boost_dir[*]}" \
     -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded \
     -DCMAKE_INSTALL_PREFIX="${ROOTDIR}/uploads/" \

@@ -1,0 +1,11 @@
+{
+    "errors": [
+        {
+            "component": "general",
+            "formattedMessage": "To use 'ethdebug' with settings.debug.debugInfo you must select also 'ast-id'.",
+            "message": "To use 'ethdebug' with settings.debug.debugInfo you must select also 'ast-id'.",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}
