@@ -51,9 +51,15 @@ struct Deallocate { std::size_t block; };
 using Operation = std::variant<Allocate, Deallocate>;
 
 static FreeList::Length constexpr maxLength = 256;
+static std::size_t constexpr minWarmUpAllocations = 8;
+static std::size_t constexpr maxWarmUpAllocations = 128;
+static std::size_t constexpr minOperations = 32;
 static std::size_t constexpr maxOperations = 512;
 
-static void MatchesReferenceAndCoalesces(std::vector<Operation> const& _operations)
+static void MatchesReferenceAndCoalesces(
+	std::vector<Allocate> const& _warmUp,
+	std::vector<Operation> const& _operations
+)
 {
 	FreeList freeList;
 	std::vector<std::uint64_t> reference;
@@ -108,22 +114,35 @@ static void MatchesReferenceAndCoalesces(std::vector<Operation> const& _operatio
 		return testing::AssertionSuccess();
 	};
 
-	for (Operation const& operation: _operations)
+	for (Allocate const& allocate: _warmUp)
 	{
 		// assertions inside the visitor only return from it
+		ASSERT_NO_FATAL_FAILURE(perform(allocate));
+		ASSERT_TRUE(matchesReference());
+	}
+	for (Operation const& operation: _operations)
+	{
 		ASSERT_NO_FATAL_FAILURE(std::visit(perform, operation));
 		ASSERT_TRUE(matchesReference());
 	}
 }
 
+static auto allocateDomain()
+{
+	return fuzztest::StructOf<Allocate>(fuzztest::InRange<FreeList::Length>(1, maxLength));
+}
+
 FUZZ_TEST(TLSFFreeListProperty, MatchesReferenceAndCoalesces)
 	.WithDomains(
+		fuzztest::VectorOf(allocateDomain())
+			.WithMinSize(minWarmUpAllocations)
+			.WithMaxSize(maxWarmUpAllocations),
 		fuzztest::VectorOf(
 			fuzztest::VariantOf(
-				fuzztest::StructOf<Allocate>(fuzztest::InRange<FreeList::Length>(1, maxLength)),
+				allocateDomain(),
 				fuzztest::StructOf<Deallocate>(fuzztest::Arbitrary<std::size_t>())
 			)
-		).WithMaxSize(maxOperations)
+		).WithMinSize(minOperations).WithMaxSize(maxOperations)
 	);
 
 }
