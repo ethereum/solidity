@@ -33,6 +33,7 @@ set(yul_fuzztest_sources
 	libyul/StackLimitEvaderPropertyTest.cpp
 	libyul/StackShufflerPropertyTest.cpp
 	libyul/TarjanSCCPropertyTest.cpp
+	libyul/TLSFFreeListPropertyTest.cpp
 )
 detect_stray_source_files("${yul_fuzztest_sources}" "libyul/")
 
