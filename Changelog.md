@@ -1,5 +1,8 @@
 ### 0.8.38 (unreleased)
 
+Important Bugfixes:
+* Yul Optimizer: Fix knowledge about storage/memory address relations going stale in the `DataFlowAnalyzer` after a variable is reassigned in Yul, which could cause `LoadResolver` to replace loads with outdated values and `EqualStoreEliminator` to remove needed stores.
+
 Language Features:
 
 Compiler Features:
