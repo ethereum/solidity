@@ -101,9 +101,9 @@ sudo unzip -j /tmp/z3.zip "${z3_archive_name}/bin/z3" -d /usr/local/bin
 rm -f /tmp/z3.zip
 
 # evmone
-evmone_version="0.22.0"
+evmone_version="0.25.0"
 evmone_package="evmone-${evmone_version}-darwin-arm64.tar.gz"
 wget "https://github.com/ipsilon/evmone/releases/download/v${evmone_version}/${evmone_package}"
-validate_checksum "$evmone_package" 3ff5633e49ae3726dc094c7c9819440c11d04c8036bc27f45a4385120951599c
+validate_checksum "$evmone_package" 09134d16fd8db9b469a67574756e9c8dc620c7bc45e9aeb0dc27146fe836fc42
 sudo tar xzpf "$evmone_package" -C /usr/local
 rm "$evmone_package"
