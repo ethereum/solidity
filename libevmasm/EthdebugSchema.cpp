@@ -29,7 +29,51 @@
 using namespace solidity;
 using namespace solidity::evmasm::ethdebug;
 
-schema::Type::Specifier::Specifier(std::shared_ptr<Type const> _type): value(std::move(_type))
+std::map<schema::materials::Reference::Type, std::string> const schema::materials::Reference::typeNames = {
+	{Type::Compilation, "compilation"},
+	{Type::Source, "source"},
+};
+
+std::map<schema::Type::Function::Visibility, std::string> const schema::Type::Function::visibilityNames = {
+	{Visibility::Internal, "internal"},
+	{Visibility::External, "external"},
+};
+
+std::map<schema::Pointer::Constant, std::string> const schema::Pointer::constantNames = {
+	{Constant::WordSize, "~wordsize"},
+};
+
+std::map<schema::Pointer::Lookup::Property, std::string> const schema::Pointer::Lookup::propertyNames = {
+	{Property::Slot, ".slot"},
+	{Property::Offset, ".offset"},
+	{Property::Length, ".length"},
+};
+
+std::map<schema::Pointer::Arithmetic::Operator, std::string> const schema::Pointer::Arithmetic::operatorNames = {
+	{Operator::Sum, "~sum"},
+	{Operator::Difference, "~difference"},
+	{Operator::Product, "~product"},
+	{Operator::Quotient, "~quotient"},
+	{Operator::Remainder, "~remainder"},
+};
+
+std::map<schema::Pointer::Location, std::string> const schema::Pointer::locationNames = {
+	{Location::Stack, "stack"},
+	{Location::Memory, "memory"},
+	{Location::Storage, "storage"},
+	{Location::Calldata, "calldata"},
+	{Location::Returndata, "returndata"},
+	{Location::Transient, "transient"},
+	{Location::Code, "code"},
+};
+
+std::map<schema::Program::Environment, std::string> const schema::Program::environmentNames = {
+	{Environment::CALL, "call"},
+	{Environment::CREATE, "create"},
+};
+
+schema::Type::Specifier::Specifier(std::shared_ptr<Type const> _type):
+	value(std::move(_type))
 {
 	solAssert(std::get<std::shared_ptr<Type const>>(value), "Type specifier without a type.");
 }
@@ -41,23 +85,29 @@ schema::Type::Definition::Definition(std::optional<std::string> _name, std::opti
 	solAssert(name || location, "Type definition without properties.");
 }
 
-schema::Type::UInt::UInt(unsigned _bits): bits(_bits)
+schema::Type::UInt::UInt(unsigned _bits):
+	bits(_bits)
 {
 	solAssert(isValidWidth(bits), "Type width must be a multiple of 8 bits up to 256.");
 }
 
-schema::Type::Int::Int(unsigned _bits): bits(_bits)
+schema::Type::Int::Int(unsigned _bits):
+	bits(_bits)
 {
 	solAssert(isValidWidth(bits), "Type width must be a multiple of 8 bits up to 256.");
 }
 
-schema::Type::UFixed::UFixed(unsigned _bits, unsigned _places): bits(_bits), places(_places)
+schema::Type::UFixed::UFixed(unsigned _bits, unsigned _places):
+	bits(_bits),
+	places(_places)
 {
 	solAssert(isValidWidth(bits), "Type width must be a multiple of 8 bits up to 256.");
 	solAssert(isValidPlaces(places), "Fixed point type must have between 1 and 80 decimal places.");
 }
 
-schema::Type::Fixed::Fixed(unsigned _bits, unsigned _places): bits(_bits), places(_places)
+schema::Type::Fixed::Fixed(unsigned _bits, unsigned _places):
+	bits(_bits),
+	places(_places)
 {
 	solAssert(isValidWidth(bits), "Type width must be a multiple of 8 bits up to 256.");
 	solAssert(isValidPlaces(places), "Fixed point type must have between 1 and 80 decimal places.");
@@ -80,22 +130,28 @@ bool schema::Pointer::isRegionReference(std::string_view _text)
 	return _text == "~this" || isIdentifier(_text);
 }
 
-schema::Pointer::Variable::Variable(std::string _identifier): identifier(std::move(_identifier))
+schema::Pointer::Variable::Variable(std::string _identifier):
+	identifier(std::move(_identifier))
 {
 	solAssert(isIdentifier(identifier), "Pointer expression variable \"" + identifier + "\" is not an identifier.");
 }
 
-schema::Pointer::Lookup::Lookup(Property _property, std::string _region): property(_property), region(std::move(_region))
+schema::Pointer::Lookup::Lookup(Property _property, std::string _region):
+	property(_property),
+	region(std::move(_region))
 {
 	solAssert(isRegionReference(region), "Region reference \"" + region + "\" is not an identifier.");
 }
 
-schema::Pointer::Read::Read(std::string _region): region(std::move(_region))
+schema::Pointer::Read::Read(std::string _region):
+	region(std::move(_region))
 {
 	solAssert(isRegionReference(region), "Region reference \"" + region + "\" is not an identifier.");
 }
 
-schema::Pointer::Arithmetic::Arithmetic(Operator _op, Operands _operands): op(_op), operands(std::move(_operands))
+schema::Pointer::Arithmetic::Arithmetic(Operator _op, Operands _operands):
+	op(_op),
+	operands(std::move(_operands))
 {
 	if (op == Operator::Difference || op == Operator::Quotient || op == Operator::Remainder)
 		solAssert(operands.size() == 2, "Difference, quotient and remainder take exactly two operands.");
@@ -142,7 +198,8 @@ schema::Pointer::Region::Region(
 	}
 }
 
-schema::Pointer::Group::Group(std::vector<Pointer> _members): members(std::move(_members))
+schema::Pointer::Group::Group(std::vector<Pointer> _members):
+	members(std::move(_members))
 {
 	solAssert(!members.empty(), "A group pointer must have at least one member.");
 }
@@ -240,7 +297,7 @@ void schema::materials::to_json(Json& _json, Reference const& _source)
 {
 	_json["id"] = _source.id;
 	if (_source.type)
-		_json["type"] = *_source.type == Reference::Type::Compilation ? "compilation" : "source";
+		_json["type"] = Reference::typeNames.at(*_source.type);
 }
 
 void schema::materials::to_json(Json& _json, SourceRange::Range const& _range)
@@ -316,10 +373,6 @@ void schema::to_json(Json& _json, Type::Definition const& _definition)
 void schema::to_json(Json& _json, Type const& _type)
 {
 	_json = Json::object();
-	auto const definition = [&](std::optional<Type::Definition> const& _definition) {
-		if (_definition)
-			_json["definition"] = *_definition;
-	};
 	std::visit(util::GenericVisitor{
 		[&](Type::UInt const& _uint)
 		{
@@ -371,19 +424,22 @@ void schema::to_json(Json& _json, Type const& _type)
 				_json["library"] = true;
 			else if (_contract.kind == Type::Contract::Kind::Interface)
 				_json["interface"] = true;
-			definition(_contract.definition);
+			if (_contract.definition)
+				_json["definition"] = *_contract.definition;
 		},
 		[&](Type::Enum const& _enum)
 		{
 			_json["kind"] = "enum";
 			_json["values"] = _enum.values;
-			definition(_enum.definition);
+			if (_enum.definition)
+				_json["definition"] = *_enum.definition;
 		},
 		[&](Type::Alias const& _alias)
 		{
 			_json["kind"] = "alias";
 			_json["contains"] = _alias.contains;
-			definition(_alias.definition);
+			if (_alias.definition)
+				_json["definition"] = *_alias.definition;
 		},
 		[&](Type::Array const& _array)
 		{
@@ -401,7 +457,8 @@ void schema::to_json(Json& _json, Type const& _type)
 		{
 			_json["kind"] = "struct";
 			_json["contains"] = _struct.contains;
-			definition(_struct.definition);
+			if (_struct.definition)
+				_json["definition"] = *_struct.definition;
 		},
 		[&](Type::Tuple const& _tuple)
 		{
@@ -411,12 +468,13 @@ void schema::to_json(Json& _json, Type const& _type)
 		[&](Type::Function const& _function)
 		{
 			_json["kind"] = "function";
-			_json[_function.visibility == Type::Function::Visibility::Internal ? "internal" : "external"] = true;
+			_json[Type::Function::visibilityNames.at(_function.visibility)] = true;
 			Json contains{{"parameters", _function.parameters}};
 			if (_function.returns)
 				contains["returns"] = *_function.returns;
 			_json["contains"] = std::move(contains);
-			definition(_function.definition);
+			if (_function.definition)
+				_json["definition"] = *_function.definition;
 		}
 	}, _type.value);
 }
@@ -426,33 +484,15 @@ void schema::to_json(Json& _json, Pointer::Expression const& _expression)
 	std::visit(util::GenericVisitor{
 		[&](Pointer::Literal const& _literal) { _json = _literal.value; },
 		[&](Pointer::Variable const& _variable) { _json = _variable.identifier; },
-		[&](Pointer::Constant const _constant)
-		{
-			solAssert(_constant == Pointer::Constant::WordSize, "Unknown pointer expression constant.");
-			_json = "~wordsize";
-		},
+		[&](Pointer::Constant const _constant) { _json = Pointer::constantNames.at(_constant); },
 		[&](Pointer::Lookup const& _lookup)
 		{
-			char const* property = nullptr;
-			switch (_lookup.property)
-			{
-			case Pointer::Lookup::Property::Slot: property = ".slot"; break;
-			case Pointer::Lookup::Property::Offset: property = ".offset"; break;
-			case Pointer::Lookup::Property::Length: property = ".length"; break;
-			}
-			_json = Json{{property, _lookup.region}};
+			_json = Json{{Pointer::Lookup::propertyNames.at(_lookup.property), _lookup.region}};
 		},
 		[&](Pointer::Read const& _read) { _json = Json{{"~read", _read.region}}; },
 		[&](Pointer::Arithmetic const& _arithmetic)
 		{
-			switch (_arithmetic.op)
-			{
-			case Pointer::Arithmetic::Operator::Sum: _json = Json{{"~sum", _arithmetic.operands}}; break;
-			case Pointer::Arithmetic::Operator::Product: _json = Json{{"~product", _arithmetic.operands}}; break;
-			case Pointer::Arithmetic::Operator::Difference: _json = Json{{"~difference", _arithmetic.operands}}; break;
-			case Pointer::Arithmetic::Operator::Quotient: _json = Json{{"~quotient", _arithmetic.operands}}; break;
-			case Pointer::Arithmetic::Operator::Remainder: _json = Json{{"~remainder", _arithmetic.operands}}; break;
-			}
+			_json = Json{{Pointer::Arithmetic::operatorNames.at(_arithmetic.op), _arithmetic.operands}};
 		},
 		[&](Pointer::Keccak256 const& _keccak256) { _json = Json{{"~keccak256", _keccak256.operands}}; },
 		[&](Pointer::Concat const& _concat) { _json = Json{{"~concat", _concat.operands}}; },
@@ -471,18 +511,7 @@ void schema::to_json(Json& _json, Pointer::Region const& _region)
 	_json = Json::object();
 	if (_region.name)
 		_json["name"] = *_region.name;
-	char const* location = nullptr;
-	switch (_region.location)
-	{
-	case Pointer::Location::Stack: location = "stack"; break;
-	case Pointer::Location::Storage: location = "storage"; break;
-	case Pointer::Location::Transient: location = "transient"; break;
-	case Pointer::Location::Memory: location = "memory"; break;
-	case Pointer::Location::Calldata: location = "calldata"; break;
-	case Pointer::Location::Returndata: location = "returndata"; break;
-	case Pointer::Location::Code: location = "code"; break;
-	}
-	_json["location"] = location;
+	_json["location"] = Pointer::locationNames.at(_region.location);
 	if (_region.slot)
 		_json["slot"] = *_region.slot;
 	if (_region.offset)
@@ -612,15 +641,7 @@ void schema::to_json(Json& _json, Program const& _program)
 
 void schema::to_json(Json& _json, Program::Environment const& _environment)
 {
-	switch (_environment)
-	{
-	case Program::Environment::CALL:
-		_json = "call";
-		break;
-	case Program::Environment::CREATE:
-		_json = "create";
-		break;
-	}
+	_json = Program::environmentNames.at(_environment);
 }
 
 void schema::info::to_json(Json& _json, Resources const& _resources)

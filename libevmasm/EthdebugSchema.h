@@ -84,7 +84,13 @@ struct ID
 
 struct Reference
 {
-	enum class Type { Compilation, Source };
+	enum class Type
+	{
+		Compilation,
+		Source
+	};
+	static std::map<Type, std::string> const typeNames;
+
 	ID id;
 	std::optional<Type> type;
 };
@@ -141,7 +147,9 @@ struct Type
 	/// ethdebug/format/type/specifier: a full type representation or a reference.
 	struct Specifier
 	{
-		Specifier(Reference _reference): value(std::move(_reference)) {}
+		Specifier(Reference _reference):
+			value(std::move(_reference))
+		{}
 		/// @a _type must not be null.
 		explicit Specifier(std::shared_ptr<Type const> _type);
 
@@ -231,7 +239,12 @@ struct Type
 
 	struct Contract
 	{
-		enum class Kind { Contract, Library, Interface };
+		enum class Kind
+		{
+			Contract,
+			Library,
+			Interface
+		};
 
 		Kind kind = Kind::Contract;
 		std::optional<bool> payable;
@@ -279,7 +292,12 @@ struct Type
 	/// the wrapper of a single type.
 	struct Function
 	{
-		enum class Visibility { Internal, External };
+		enum class Visibility
+		{
+			Internal,
+			External
+		};
+		static std::map<Visibility, std::string> const visibilityNames;
 
 		Visibility visibility;
 		Wrapper parameters;
@@ -288,8 +306,22 @@ struct Type
 	};
 
 	std::variant<
-		UInt, Int, Bool, Bytes, String, UFixed, Fixed, Address, Contract, Enum,
-		Alias, Array, Mapping, Struct, Tuple, Function
+		UInt,
+		Int,
+		Bool,
+		Bytes,
+		String,
+		UFixed,
+		Fixed,
+		Address,
+		Contract,
+		Enum,
+		Alias,
+		Array,
+		Mapping,
+		Struct,
+		Tuple,
+		Function
 	> value;
 };
 
@@ -327,13 +359,23 @@ struct Pointer
 		std::string identifier;
 	};
 
-	enum class Constant { WordSize };
+	enum class Constant
+	{
+		WordSize
+	};
+	static std::map<Constant, std::string> const constantNames;
 
 	/// `{ ".slot" | ".offset" | ".length": <region> }`, a property of a named
 	/// region or of `~this`.
 	struct Lookup
 	{
-		enum class Property { Slot, Offset, Length };
+		enum class Property
+		{
+			Slot,
+			Offset,
+			Length
+		};
+		static std::map<Property, std::string> const propertyNames;
 
 		/// @a _region must satisfy isRegionReference().
 		Lookup(Property _property, std::string _region);
@@ -353,7 +395,15 @@ struct Pointer
 
 	struct Arithmetic
 	{
-		enum class Operator { Sum, Difference, Product, Quotient, Remainder };
+		enum class Operator
+		{
+			Sum,
+			Difference,
+			Product,
+			Quotient,
+			Remainder
+		};
+		static std::map<Operator, std::string> const operatorNames;
 
 		/// Difference, quotient and remainder take exactly two @a _operands.
 		Arithmetic(Operator _op, Operands _operands);
@@ -385,10 +435,30 @@ struct Pointer
 	/// ethdebug/format/pointer/expression
 	struct Expression
 	{
-		std::variant<Literal, Variable, Constant, Lookup, Read, Arithmetic, Keccak256, Concat, Resize> value;
+		std::variant<
+			Literal,
+			Variable,
+			Constant,
+			Lookup,
+			Read,
+			Arithmetic,
+			Keccak256,
+			Concat,
+			Resize
+		> value;
 	};
 
-	enum class Location { Stack, Memory, Storage, Calldata, Returndata, Transient, Code };
+	enum class Location
+	{
+		Stack,
+		Memory,
+		Storage,
+		Calldata,
+		Returndata,
+		Transient,
+		Code
+	};
+	static std::map<Location, std::string> const locationNames;
 
 	/// ethdebug/format/pointer/region. Stack, storage and transient regions are
 	/// addressed by @a slot (offset and length within the slot optional); the
@@ -480,7 +550,15 @@ struct Pointer
 		std::shared_ptr<Pointer const> in;
 	};
 
-	std::variant<Region, Group, List, Conditional, Scope, TemplateReference, Templates> value;
+	std::variant<
+		Region,
+		Group,
+		List,
+		Conditional,
+		Scope,
+		TemplateReference,
+		Templates
+	> value;
 };
 
 namespace program
@@ -520,8 +598,10 @@ struct Program
 {
 	enum class Environment
 	{
-		CALL, CREATE
+		CALL,
+		CREATE
 	};
+	static std::map<Environment, std::string> const environmentNames;
 
 	struct Contract
 	{
