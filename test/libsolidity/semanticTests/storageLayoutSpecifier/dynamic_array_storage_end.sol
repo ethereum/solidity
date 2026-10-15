@@ -14,6 +14,8 @@ contract C layout at 2**256 - 2 {
             array.pop();
     }
 }
+// ====
+// EVMVersion: <amsterdam
 // ----
 // init() ->
 // gas irOptimized: 22738148

@@ -109,6 +109,8 @@ bool isValidSemanticTestPath(boost::filesystem::path const& _testPath);
 /// is older than @p _minEVMVersion.
 /// @return A predicate (function) that can be passed into @a boost::unit_test::precondition().
 boost::unit_test::precondition::predicate_t minEVMVersionCheck(langutil::EVMVersion _minEVMVersion);
+/// Same as minEVMVersionCheck() but skips the test if the EVM version is newer than @p _maxEVMVersion.
+boost::unit_test::precondition::predicate_t maxEVMVersionCheck(langutil::EVMVersion _maxEVMVersion);
 
 bool loadVMs(CommonOptions const& _options);
 
