@@ -1,5 +1,3 @@
-.. index:: ! ethdebug; implementation
-
 .. _ethdebug-internals:
 
 ***********************
