@@ -1,6 +1,4 @@
-:orphan:
-
-.. index:: ! ethdebug, ! debug info
+.. index:: ethdebug; internal debug info
 
 ****************************
 ethdebug Internal Debug Info
