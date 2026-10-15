@@ -15,6 +15,7 @@ Important Bugfixes:
 Compiler Features:
 * Commandline Interface: Remove the experimental `--yul-cfg-json` output.
 * Commandline Interface: Selecting an ethdebug output no longer implicitly enables the `ethdebug` and `ast-id` components of `--debug-info`; without `ethdebug` in the selection the `--ethdebug-program` and `--ethdebug-program-runtime` outputs carry no semantic debug info.
+* EVM: Warn about exceeding the increased contract code size (64 KiB) and initcode size (128 KiB) limits instead of the EIP-170 and EIP-3860 limits when compiling for the Amsterdam EVM version ([EIP-7954](https://eips.ethereum.org/EIPS/eip-7954)).
 * Standard JSON Interface: Remove the experimental `yulCFGJson` output.
 * Standard JSON Interface: Selecting an ethdebug output no longer implicitly enables the `ethdebug` and `ast-id` components of `settings.debug.debugInfo`; without `ethdebug` in the selection the `evm.bytecode.ethdebug` and `evm.deployedBytecode.ethdebug` outputs carry no semantic debug info.
 * Yul: Warn when the assembled bytecode of a compiled Yul object exceeds the EIP-170 (runtime code) or EIP-3860 (initcode) size limit, matching the existing warnings for Solidity input.
