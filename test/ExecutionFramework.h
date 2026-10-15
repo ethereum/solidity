@@ -274,7 +274,7 @@ private:
 protected:
 	u256 const InitialGas = 100000000;
 
-	void selectVM(evmc_capabilities _cap = evmc_capabilities::EVMC_CAPABILITY_EVM1);
+	void selectVM();
 	void reset();
 
 	void sendMessage(bytes const& _bytecode, bytes const& _argument, bool _isCreation, u256 const& _value = 0);

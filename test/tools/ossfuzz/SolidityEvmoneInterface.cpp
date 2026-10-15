@@ -93,11 +93,19 @@ evmc::Result EvmoneUtility::executeContract(
 	return m_evmHost.call(message);
 }
 
-evmc::Result EvmoneUtility::deployContract(bytes const& _code)
+std::pair<evmc::Result, evmc::address> EvmoneUtility::deployContract(bytes const& _code)
 {
 	evmc_message message = initializeMessage(_code);
 	message.kind = EVMC_CREATE;
-	return m_evmHost.call(message);
+	// NOTE: unlike ExecutionFramework::reset(), the host here does not seed sender
+	// accounts to nonce 1, so the first deploy's address differs from what
+	// ExecutionFramework would derive for the same sender. This is harmless: no golden
+	// addresses are asserted against this host, and it is not compared against
+	// ExecutionFramework, so nothing depends on the two matching.
+	message.recipient = EVMHost::convertToEVMC(
+		EVMHost::computeCreateAddress(message.sender, m_evmHost.get_nonce(message.sender))
+	);
+	return {m_evmHost.call(message), message.recipient};
 }
 
 evmc::Result EvmoneUtility::deployAndExecute(
@@ -106,7 +114,7 @@ evmc::Result EvmoneUtility::deployAndExecute(
 )
 {
 	// Deploy contract and signal failure if deploy failed
-	evmc::Result createResult = deployContract(_byteCode);
+	auto [createResult, createAddress] = deployContract(_byteCode);
 	solAssert(
 		createResult.status_code == EVMC_SUCCESS,
 		"SolidityEvmoneInterface: Contract creation failed"
@@ -116,7 +124,7 @@ evmc::Result EvmoneUtility::deployAndExecute(
 	// did not return expected output on successful execution.
 	evmc::Result callResult = executeContract(
 		util::fromHex(_hexEncodedInput),
-		createResult.create_address
+		createAddress
 	);
 
 	// We don't care about EVM One failures other than EVMC_REVERT
@@ -138,12 +146,12 @@ evmc::Result EvmoneUtility::compileDeployAndExecute(std::string _fuzzIsabelle)
 		solAssert(compilationOutput.has_value(), "Compiling library failed");
 		CompilerOutput cOutput = compilationOutput.value();
 		// Deploy contract and signal failure if deploy failed
-		evmc::Result createResult = deployContract(cOutput.byteCode);
+		auto [createResult, createAddress] = deployContract(cOutput.byteCode);
 		solAssert(
 			createResult.status_code == EVMC_SUCCESS,
 			"SolidityEvmoneInterface: Library deployment failed"
 		);
-		libraryAddressMap[m_libraryName] = EVMHost::convertFromEVMC(createResult.create_address);
+		libraryAddressMap[m_libraryName] = EVMHost::convertFromEVMC(createAddress);
 		m_compilationFramework.libraryAddresses(libraryAddressMap);
 	}
 

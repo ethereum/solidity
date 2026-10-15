@@ -119,10 +119,10 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	bool noInvalidInSource = true;
 	if (!unoptimizedStackTooDeep)
 	{
-		evmc::Result deployResult = YulEvmoneUtility{}.deployCode(unoptimisedByteCode, hostContext);
+		auto [deployResult, deployAddress] = YulEvmoneUtility{}.deployCode(unoptimisedByteCode, hostContext);
 		if (deployResult.status_code != EVMC_SUCCESS)
 			return;
-		auto callMessage = YulEvmoneUtility{}.callMessage(deployResult.create_address);
+		auto callMessage = YulEvmoneUtility{}.callMessage(deployAddress);
 		evmc::Result callResult = hostContext.call(callMessage);
 		// If the fuzzer synthesized input does not contain the revert opcode which
 		// we lazily check by string find, the EVM call should not revert.
@@ -147,7 +147,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 			(!noInvalidInSource && callResult.status_code == EVMC_INVALID_INSTRUCTION)),
 			"Unoptimised call failed."
 		);
-		unoptimizedState << EVMHostPrinter{hostContext, deployResult.create_address}.state();
+		unoptimizedState << EVMHostPrinter{hostContext, deployAddress}.state();
 	}
 
 	settings.runYulOptimiser = true;
@@ -169,12 +169,12 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		return;
 	// Reset host before running optimised code.
 	hostContext.reset();
-	evmc::Result deployResultOpt = YulEvmoneUtility{}.deployCode(optimisedByteCode, hostContext);
+	auto [deployResultOpt, deployAddressOpt] = YulEvmoneUtility{}.deployCode(optimisedByteCode, hostContext);
 	solAssert(
 		deployResultOpt.status_code == EVMC_SUCCESS,
 		"Evmone: Optimized contract creation failed"
 	);
-	auto callMessageOpt = YulEvmoneUtility{}.callMessage(deployResultOpt.create_address);
+	auto callMessageOpt = YulEvmoneUtility{}.callMessage(deployAddressOpt);
 	evmc::Result callResultOpt = hostContext.call(callMessageOpt);
 	if (noRevertInSource)
 		solAssert(
@@ -193,7 +193,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		"Optimised call failed."
 	);
 	std::ostringstream optimizedState;
-	optimizedState << EVMHostPrinter{hostContext, deployResultOpt.create_address}.state();
+	optimizedState << EVMHostPrinter{hostContext, deployAddressOpt}.state();
 
 	if (unoptimizedState.str() != optimizedState.str())
 	{

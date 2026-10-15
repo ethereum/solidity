@@ -51,16 +51,6 @@ static inline const char* evmc_vm_version(struct evmc_vm* vm)
 }
 
 /**
- * Checks if the VM has the given capability.
- *
- * @see evmc_get_capabilities_fn
- */
-static inline bool evmc_vm_has_capability(struct evmc_vm* vm, enum evmc_capabilities capability)
-{
-    return (vm->get_capabilities(vm) & (evmc_capabilities_flagset)capability) != 0;
-}
-
-/**
  * Destroys the VM instance.
  *
  * @see evmc_destroy_fn
@@ -130,8 +120,7 @@ static inline struct evmc_result evmc_make_result(enum evmc_status_code status_c
                                                   const uint8_t* output_data,
                                                   size_t output_size)
 {
-    struct evmc_result result;
-    memset(&result, 0, sizeof(result));
+    struct evmc_result result = {};
 
     if (output_size != 0)
     {
@@ -229,13 +218,11 @@ static inline const char* evmc_revision_to_string(enum evmc_revision rev)
     case EVMC_HOMESTEAD:
         return "Homestead";
     case EVMC_TANGERINE_WHISTLE:
-        return "Tangerine Whistle";
+        return "TangerineWhistle";
     case EVMC_SPURIOUS_DRAGON:
-        return "Spurious Dragon";
+        return "SpuriousDragon";
     case EVMC_BYZANTIUM:
         return "Byzantium";
-    case EVMC_CONSTANTINOPLE:
-        return "Constantinople";
     case EVMC_PETERSBURG:
         return "Petersburg";
     case EVMC_ISTANBUL:

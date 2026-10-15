@@ -58,12 +58,7 @@ evmc::VM& EVMHost::getVM(std::string const& _path)
 		evmc_loader_error_code errorCode = {};
 		auto vm = evmc::VM{evmc_load_and_configure(_path.c_str(), &errorCode)};
 		if (vm && errorCode == EVMC_LOADER_SUCCESS)
-		{
-			if (vm.get_capabilities() & (EVMC_CAPABILITY_EVM1))
-				vms[_path] = std::make_unique<evmc::VM>(evmc::VM(std::move(vm)));
-			else
-				std::cerr << "VM loaded does not support EVM1" << std::endl;
-		}
+			vms[_path] = std::make_unique<evmc::VM>(evmc::VM(std::move(vm)));
 		else
 		{
 			std::cerr << "Error loading VM from " << _path;
@@ -88,12 +83,9 @@ bool EVMHost::checkVmPaths(std::vector<boost::filesystem::path> const& _vmPaths)
 		if (!vm)
 			continue;
 
-		if (vm.has_capability(EVMC_CAPABILITY_EVM1))
-		{
-			if (evmVmFound)
-				BOOST_THROW_EXCEPTION(std::runtime_error("Multiple evm1 evmc vms defined. Please only define one evm1 evmc vm."));
-			evmVmFound = true;
-		}
+		if (evmVmFound)
+			BOOST_THROW_EXCEPTION(std::runtime_error("Multiple evmc vms defined. Please only define one evmc vm."));
+		evmVmFound = true;
 	}
 	return evmVmFound;
 }
@@ -117,7 +109,23 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 	else if (_evmVersion == langutil::EVMVersion::byzantium())
 		m_evmRevision = EVMC_BYZANTIUM;
 	else if (_evmVersion == langutil::EVMVersion::constantinople())
-		m_evmRevision = EVMC_CONSTANTINOPLE;
+		// EVMC 18 dropped EVMC_CONSTANTINOPLE. Petersburg is Constantinople without the
+		// reverted EIP-1283, so it is the closest available revision.
+		//
+		// This is NOT a behavioural no-op: Petersburg uses legacy (pre-EIP-1283) SSTORE
+		// gas metering, while Constantinople used EIP-1283 net metering, so SSTORE gas
+		// genuinely differs between the two. That difference is not covered by this test
+		// suite: gas is only enforced at the default EVM version (see the single
+		// `--enforce-gas-cost` in `.circleci/soltest_all.sh`, which is only ever added for
+		// `EVM == DEFAULT_EVM`, currently osaka -- never constantinople), and no fixture
+		// asserts gas at constantinople specifically.
+		//
+		// This does not affect solc's actual output for `--evm-version constantinople`:
+		// code generation is driven entirely by `langutil::EVMVersion`, not by
+		// `evmc_revision`/`m_evmRevision`, which exists only in this test host and only
+		// controls the VM's execution semantics (verified: `evmc_revision` does not
+		// appear anywhere under libsolidity/, libyul/, libevmasm/, or liblangutil/).
+		m_evmRevision = EVMC_PETERSBURG;
 	else if (_evmVersion == langutil::EVMVersion::petersburg())
 		m_evmRevision = EVMC_PETERSBURG;
 	else if (_evmVersion == langutil::EVMVersion::istanbul())
@@ -319,49 +327,14 @@ evmc::Result EVMHost::call(evmc_message const& _message) noexcept
 
 	if (message.kind == EVMC_CREATE)
 	{
-		// TODO is the nonce incremented on failure, too?
-		// NOTE: nonce for creation from contracts starts at 1
-		// TODO: check if sender is an EOA and do not pre-increment
+		// The VM computed message.recipient from get_nonce(sender) before calling us (EVMC 18).
 		sender.nonce++;
-
-		auto encodeRlpInteger = [](int value) -> bytes {
-			if (value == 0) {
-				return bytes{128};
-			} else if (value <= 127) {
-				return bytes{static_cast<uint8_t>(value)};
-			} else if (value <= 0xff) {
-				return bytes{128 + 1, static_cast<uint8_t>(value)};
-			} else if (value <= 0xffff) {
-				return bytes{128 + 55 + 2, static_cast<uint8_t>(value >> 8), static_cast<uint8_t>(value)};
-			} else {
-				solUnimplemented("Can only encode RLP numbers <= 0xffff");
-			}
-		};
-
-		bytes encodedNonce = encodeRlpInteger(sender.nonce);
-
-		h160 createAddress(keccak256(
-			bytes{static_cast<uint8_t>(0xc0 + 21 + encodedNonce.size())} +
-			bytes{0x94} +
-			bytes(std::begin(message.sender.bytes), std::end(message.sender.bytes)) +
-			encodedNonce
-		), h160::AlignRight);
-
-		message.recipient = convertToEVMC(createAddress);
 		soltestAssert(accounts.count(message.recipient) == 0, "Account cannot exist");
-
 		code = evmc::bytes(message.input_data, message.input_data + message.input_size);
 	}
 	else if (message.kind == EVMC_CREATE2)
 	{
-		h160 createAddress(keccak256(
-			bytes{0xff} +
-			bytes(std::begin(message.sender.bytes), std::end(message.sender.bytes)) +
-			bytes(std::begin(message.create2_salt.bytes), std::end(message.create2_salt.bytes)) +
-			keccak256(bytes(message.input_data, message.input_data + message.input_size)).asBytes()
-		), h160::AlignRight);
-
-		message.recipient = convertToEVMC(createAddress);
+		// The VM computed message.recipient from the salt and init code before calling us (EVMC 18).
 		if (accounts.count(message.recipient) && (
 			accounts[message.recipient].nonce > 0 ||
 			!accounts[message.recipient].code.empty()
@@ -373,7 +346,6 @@ evmc::Result EVMHost::call(evmc_message const& _message) noexcept
 			return result;
 		}
 
-
 		code = evmc::bytes(message.input_data, message.input_data + message.input_size);
 	}
 	else
@@ -381,9 +353,20 @@ evmc::Result EVMHost::call(evmc_message const& _message) noexcept
 
 	auto& destination = accounts[message.recipient];
 	if (message.kind == EVMC_CREATE || message.kind == EVMC_CREATE2)
+	{
 		// Mark account as created if it is a CREATE or CREATE2 call
 		// TODO: Should we roll changes back on failure like we do for `accounts`?
 		m_newlyCreatedAccounts.emplace(message.recipient);
+
+		// A created account's nonce starts at 1 (EIP-161), and must already read as 1 while its
+		// own constructor is still running: the constructor (or a state variable initializer) may
+		// itself issue a CREATE, whose address the VM derives from get_nonce(message.recipient)
+		// *before* that nested call reaches us. Previously this host derived create addresses from
+		// the pre-incremented sender nonce, which had the same effect on nested creates; now that
+		// the VM derives them from get_nonce(), the nonce must actually be stored, and stored here
+		// rather than only on successful completion below.
+		destination.nonce = 1;
+	}
 
 	if (value != 0 && message.kind != EVMC_DELEGATECALL && message.kind != EVMC_CALLCODE)
 	{
@@ -431,7 +414,6 @@ evmc::Result EVMHost::call(evmc_message const& _message) noexcept
 		else
 		{
 			m_totalCodeDepositGas += codeDepositGas;
-			result.create_address = message.recipient;
 			destination.code = evmc::bytes(result.output_data, result.output_data + result.output_size);
 			destination.codehash = convertToEVMC(keccak256({result.output_data, result.output_size}));
 		}
@@ -472,6 +454,39 @@ evmc::bytes32 EVMHost::convertToEVMC(h256 const& _data)
 	for (unsigned i = 0; i < 32; ++i)
 		d.bytes[i] = _data[i];
 	return d;
+}
+
+Address EVMHost::computeCreateAddress(evmc::address const& _sender, uint64_t _nonce)
+{
+	// RLP-encodes an unsigned integer: the empty string (0x80) for 0, the single byte
+	// itself for 1 <= _value <= 127, and otherwise a short-string prefix (0x80 + length)
+	// followed by the value's minimal big-endian encoding (no leading zero byte). A
+	// uint64_t needs at most 8 payload bytes, far below the 55-byte short-string limit,
+	// so the "long string" RLP prefix form (0xb7 + length-of-length) never applies here.
+	// Compare evmone's RLP_STR_BASE-based implementation in evmone's create_address.cpp.
+	auto const encodeRlpInteger = [](uint64_t _value) -> bytes {
+		if (_value == 0)
+			return bytes{128};
+		else if (_value <= 127)
+			return bytes{static_cast<uint8_t>(_value)};
+
+		bytes payload;
+		for (int shift = 56; shift >= 0; shift -= 8)
+		{
+			auto const byteValue = static_cast<uint8_t>(_value >> shift);
+			if (!payload.empty() || byteValue != 0)
+				payload.push_back(byteValue);
+		}
+		return bytes{static_cast<uint8_t>(128 + payload.size())} + payload;
+	};
+
+	bytes const encodedNonce = encodeRlpInteger(_nonce);
+	return h160(keccak256(
+		bytes{static_cast<uint8_t>(0xc0 + 21 + encodedNonce.size())} +
+		bytes{0x94} +
+		bytes(std::begin(_sender.bytes), std::end(_sender.bytes)) +
+		encodedNonce
+	), h160::AlignRight);
 }
 
 evmc::Result EVMHost::precompileECRecover(evmc_message const& _message) noexcept
@@ -1316,10 +1331,11 @@ evmc::Result EVMHost::resultWithGas(
 	return result;
 }
 
-StorageMap const& EVMHost::get_address_storage(evmc::address const& _addr)
+StorageMap EVMHost::get_address_storage(evmc::address const& _addr)
 {
 	soltestAssert(account_exists(_addr), "Account does not exist.");
-	return accounts[_addr].storage;
+	auto const& storage = accounts[_addr].storage;
+	return {storage.begin(), storage.end()};
 }
 
 std::string EVMHostPrinter::state()

@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <cassert>
 #include <string>
-#include <map>
 #include <unordered_map>
 #include <vector>
 
@@ -58,7 +57,7 @@ struct MockedAccount
     uint256be balance;
 
     /// The account storage map.
-    std::map<bytes32, StorageValue> storage;
+    std::unordered_map<bytes32, StorageValue> storage;
 
     /// The account transient storage.
     std::unordered_map<bytes32, bytes32> transient_storage;
@@ -323,6 +322,17 @@ public:
             return {};
 
         return it->second.balance;
+    }
+
+    /// Get the account's nonce (EVMC Host method).
+    uint64_t get_nonce(const address& addr) const noexcept override
+    {
+        record_account_access(addr);
+        const auto it = accounts.find(addr);
+        if (it == accounts.end())
+            return 0;
+
+        return static_cast<uint64_t>(it->second.nonce);
     }
 
     /// Get the account's code size (EVMC host method).
