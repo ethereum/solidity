@@ -70,7 +70,7 @@ private:
 	std::optional<schema::Type> document(Type const& _type);
 	std::optional<schema::Type::Wrapper> wrapper(std::optional<std::string> _name, Type const& _type);
 	std::optional<std::vector<schema::Type::Wrapper>> wrappers(std::vector<Type const*> const& _types);
-	std::optional<schema::Type::Definition> definition(Declaration const& _declaration) const;
+	schema::Type::Definition definition(Declaration const& _declaration) const;
 
 	std::map<std::string, unsigned> const& m_sourceIndices;
 	std::map<std::string, schema::Type> m_documents;
@@ -93,14 +93,13 @@ std::optional<schema::materials::SourceRange> TypeRegistry::sourceRange(langutil
 	return range;
 }
 
-std::optional<schema::Type::Definition> TypeRegistry::definition(Declaration const& _declaration) const
+schema::Type::Definition TypeRegistry::definition(Declaration const& _declaration) const
 {
 	std::optional<std::string> name;
 	if (!_declaration.name().empty())
 		name = _declaration.name();
 	std::optional<schema::materials::SourceRange> location = sourceRange(_declaration.location());
-	if (!name && !location)
-		return std::nullopt;
+	solAssert(location, "Declaration without a source location.");
 	return schema::Type::Definition{std::move(name), std::move(location)};
 }
 
@@ -308,7 +307,7 @@ std::optional<schema::Type> TypeRegistry::document(Type const& _type)
 	solAssert(false, "");
 }
 
-// Pointer expressions and pointers, in the shape ethdebug/format/pointer
+// Pointer expressions and pointers, as ethdebug/format/pointer
 // prescribes.
 
 using schema::Pointer;

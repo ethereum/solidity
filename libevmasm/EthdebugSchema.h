@@ -298,8 +298,7 @@ struct Type
 /// addressed as `Pointer::Region` and do not clash with names in use elsewhere.
 ///
 /// The constructors of the parts assert the constraints the schema puts on
-/// them, so that a pointer cannot be assembled in a shape that does not
-/// serialize.
+/// them, so that a pointer that does not serialize cannot be assembled.
 struct Pointer
 {
 	struct Expression;

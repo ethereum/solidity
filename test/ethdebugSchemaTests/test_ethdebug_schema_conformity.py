@@ -232,7 +232,7 @@ class EthdebugTestCase(unittest.TestCase):
         elif "templates" in pointer:
             self.assertPointerIsClosed(pointer["in"], bound_variables, regions)
         else:
-            self.assertIn("template", pointer, f"Unknown pointer shape: {pointer}")
+            self.assertIn("template", pointer, f"Unknown pointer variant: {pointer}")
             # The referenced template's parameters are bound where it is referenced.
             self.assertIn(pointer["template"], self.templates, f"Unknown template {pointer['template']}")
             self.assertLessEqual(set(self.templates[pointer["template"]]["expect"]), bound_variables)

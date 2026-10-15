@@ -365,7 +365,7 @@ One shared component provides both serialization and deserialization, so the wri
 Serialization includes the resource tables, pointer expressions, variable updates, and scope records that have no Yul attachment.
 All integer fields are native JSON numbers; the reader decodes the full 64-bit ranges exactly.
 String-encoded numbers occur only inside pointer expressions, where the ethdebug expression grammar governs them.
-Declaration and type-definition ranges use the ethdebug `source range <https://github.com/ethdebug/format/blob/main/schemas/materials/source-range.schema.yaml>`_ shape.
+Declaration and type-definition ranges use the ethdebug `source range <https://github.com/ethdebug/format/blob/main/schemas/materials/source-range.schema.yaml>`_ schema.
 Source IDs are opaque to the Yul stage.
 The producer uses the same source IDs in the sidecar as in the accompanying ``ethdebug.compilation`` record, and the Yul stage transports them unchanged.
 Each source record in ``ethdebug.compilation`` maps its ID to the source path and contents, so a path is not used as an ID.

@@ -6,7 +6,9 @@ ethdebug Implementation
 
 This page is aimed at compiler developers.
 It describes how the compiler derives the :ref:`ethdebug output <ethdebug>` from its analysis results: how each type of the language maps to the type schema and what the pointers of the state variables look like for each kind of type and location.
-The debug info that is passed from the Solidity frontend through Yul is specified in :doc:`ethdebug_internal_debug_info`.
+
+.. note::
+    The debug info that is passed from the Solidity frontend through Yul is specified in :doc:`ethdebug_internal_debug_info`.
 
 The documents are modelled as data structures in ``libevmasm/EthdebugSchema.h``, one per schema, and serialized to JSON from there.
 The constructors of the parts assert the constraints of the schemas, so that the compiler cannot assemble a document that does not serialize.
@@ -114,9 +116,8 @@ The Mapping
 References to component types are ``{"type": {"id": <identifier>}}``, the parameter and return tuples of a function type included.
 The members of a struct are taken from ``StructType::members()``.
 
-A ``definition`` carries the ``name`` of the declaration, unless it is empty, and its source range as the ``location``.
+A ``definition`` carries the ``name`` of the declaration, unless it is empty as for a constructor, fallback or receive function, and its source range as the ``location``.
 The source ``id`` of the location is the index of the source unit in ``CompilerStack::sourceIndices()``, which is also what the compilation record and the source mappings use; the offset and length are byte positions in the UTF-8 source, as ``SourceLocation`` holds them.
-Definitions without a name and a known location are omitted.
 
 State Variable Pointers
 =======================
@@ -143,8 +144,8 @@ Static arrays ``T[N]``
     A ``list`` with ``count`` ``N`` and the index variable ``index``, whose element ``item`` is:
 
     - for a value type narrower than a word, packed *k* to a slot from the least significant byte, the region at slot ``slot + index / k``, offset ``~wordsize - (index % k + 1) * size`` and length ``size``,
-    - for another value type the region at ``slot + index * slots``, with ``slots`` being the storage size of the element type, omitted when it is one,
-    - for a type with a template a reference to it with that slot bound, its regions prefixed with ``item``.
+    - for a value type occupying the whole slot the region at ``slot + index``,
+    - for a type with a template a reference to it with the slot ``slot + index * slots`` bound, its regions prefixed with ``item``, where ``slots`` is the storage size of the element type and the product is just ``index`` when that is one.
 
 Dynamic arrays ``T[]``
     A ``group`` of the region ``length`` at ``slot`` and a scope defining ``data`` as ``keccak256(wordsized(slot))``, in which the elements are the list of a static array with ``count`` ``~read(length)`` starting at ``data``.
@@ -166,4 +167,4 @@ Transient storage
     Only value types can be declared ``transient``, so transient storage adds no templates; a transient state variable is a single region with the location ``transient``.
 
 Slot arithmetic on literal slots is folded into the literals, so that the members of a struct at slot 3 are addressed as ``0x03``, ``0x04`` and so on rather than as sums.
-The test cases under ``test/libsolidity/ethdebugTests/resources/`` show the complete type and pointer tables for each of these layouts and are the reference for their exact shape.
+The test cases under ``test/libsolidity/ethdebugTests/resources/`` show the complete type and pointer tables for each of these layouts and are the reference for their exact form.
