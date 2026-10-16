@@ -460,7 +460,7 @@ BOOST_AUTO_TEST_CASE(ethdebug_resources)
 		},
 		"version1"
 	);
-	std::string const compilationID = resources["compilation"]["id"];
+	std::string const compilationID = resources["compilation"]["id"].get<std::string>();
 	BOOST_REQUIRE(compilationID.substr(0, 5) == "solc-");
 	std::string const repeatedCompilationID = ethdebug::resources(
 		{
@@ -468,7 +468,7 @@ BOOST_AUTO_TEST_CASE(ethdebug_resources)
 			{.id = 1, .path = "sourceB", .contents = "contentsB", .language = "Yul"}
 		},
 		"version1"
-	)["compilation"]["id"];
+	)["compilation"]["id"].get<std::string>();
 	BOOST_REQUIRE(compilationID == repeatedCompilationID);
 	std::string const changedCompilationID = ethdebug::resources(
 		{
@@ -476,7 +476,7 @@ BOOST_AUTO_TEST_CASE(ethdebug_resources)
 			{.id = 1, .path = "sourceB", .contents = "contentsB", .language = "Yul"}
 		},
 		"version1"
-	)["compilation"]["id"];
+	)["compilation"]["id"].get<std::string>();
 	BOOST_REQUIRE(compilationID != changedCompilationID);
 	BOOST_REQUIRE(resources["types"].is_object());
 	BOOST_REQUIRE(resources["types"].empty());

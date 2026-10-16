@@ -68,6 +68,10 @@ else ()
   find_package(nlohmann_json REQUIRED)
   find_package(range-v3 REQUIRED)
 endif()
+add_compile_definitions(JSON_USE_IMPLICIT_CONVERSIONS=0)
+# TODO: Remove once the emscripten build uses emscripten >= 4.0.0, whose standard library
+# defines __cpp_lib_three_way_comparison.
+add_compile_definitions(JSON_HAS_THREE_WAY_COMPARISON=1)
 
 find_package(Threads)
 
