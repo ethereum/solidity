@@ -3,6 +3,7 @@ PUSH 0x1
 PUSH 0x0123456789ABCDEF
 PUSH 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 // ====
+// EVMVersion: >=shanghai
 // outputs: InputAssemblyJSON,Assembly,Bytecode,Opcodes,SourceMappings
 // ----
 // InputAssemblyJSON: {

@@ -166,12 +166,14 @@ public:
 	/// @param _level Nesting level of the current assembly in the assembly tree. The root is
 	///     at level 0 and the value increases down the tree. Necessary to distinguish between creation
 	///     and deployed objects.
+	/// @param _evmVersion EVM version targeted by the created assembly and all its sub-assemblies.
 	/// @returns Created @a Assembly and the source list read from the 'sourceList' field of the root
 	///     assembly or an empty list (in recursive calls).
 	static std::pair<std::shared_ptr<Assembly>, std::vector<std::string>> fromJSON(
 		Json const& _json,
-		std::vector<std::string> const& _sourceList = {},
-		size_t _level = 0
+		std::vector<std::string> const& _sourceList,
+		size_t _level,
+		langutil::EVMVersion _evmVersion
 	);
 
 	/// Mark this assembly as invalid. Calling ``assemble`` on it will throw.

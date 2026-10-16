@@ -11,6 +11,7 @@
     }
 }
 // ====
+// EVMVersion: >=constantinople
 // optimizationPreset: standard
 // optimizer.expectedExecutionsPerDeployment: 0
 // ----

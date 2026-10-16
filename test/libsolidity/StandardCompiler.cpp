@@ -1241,6 +1241,56 @@ BOOST_AUTO_TEST_CASE(evm_version)
 	BOOST_CHECK(result["errors"][0]["message"].get<std::string>() == "Invalid EVM version requested.");
 }
 
+BOOST_AUTO_TEST_CASE(evm_version_evm_assembly_import)
+{
+	auto inputForVersion = [](std::string const& _version)
+	{
+		return R"(
+			{
+				"language": "EVMAssembly",
+				"sources": {
+					"input.json": {
+						"assemblyJson": {
+							".code": [
+								{ "name": "PUSH", "value": "0" },
+								{ "name": "PUSH", "value": "0" },
+								{ "name": "RETURN" }
+							]
+						}
+					}
+				},
+				"settings": {
+					"evmVersion": ")" + _version + R"(",
+					"experimental": true,
+					"outputSelection": {
+						"input.json": {
+							"": [ "evm.bytecode.object", "evm.bytecode.opcodes" ]
+						}
+					}
+				}
+			}
+		)";
+	};
+	for (auto const& version: EVMVersion::allVersions())
+	{
+		Json result = compile(inputForVersion(version.name()));
+		BOOST_REQUIRE_MESSAGE(containsAtMostWarnings(result), version.name());
+		Json contract = getContractResult(result, "input.json", "");
+		BOOST_REQUIRE_MESSAGE(contract.is_object(), version.name());
+		Json const& bytecode = contract["evm"]["bytecode"];
+		if (version.hasPush0())
+		{
+			BOOST_CHECK_MESSAGE(bytecode["object"].get<std::string>() == "5f5ff3", version.name());
+			BOOST_CHECK_MESSAGE(bytecode["opcodes"].get<std::string>() == "PUSH0 PUSH0 RETURN ", version.name());
+		}
+		else
+		{
+			BOOST_CHECK_MESSAGE(bytecode["object"].get<std::string>() == "60006000f3", version.name());
+			BOOST_CHECK_MESSAGE(bytecode["opcodes"].get<std::string>() == "PUSH1 0x0 PUSH1 0x0 RETURN ", version.name());
+		}
+	}
+}
+
 BOOST_AUTO_TEST_CASE(optimizer_settings_default_disabled)
 {
 	char const* input = R"(

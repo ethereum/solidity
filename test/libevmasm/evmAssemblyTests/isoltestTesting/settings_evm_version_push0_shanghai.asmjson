@@ -1,0 +1,15 @@
+{
+    ".code": [
+        {"name": "PUSH", "value": "0"},
+        {"name": "PUSH", "value": "0"},
+        {"name": "RETURN"}
+    ]
+}
+// ====
+// EVMVersion: >=shanghai
+// ----
+// Assembly:
+//   return(0x00, 0x00)
+// Bytecode: 5f5ff3
+// Opcodes: PUSH0 PUSH0 RETURN
+// SourceMappings: :::-:0;;

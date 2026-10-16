@@ -45,7 +45,8 @@ void EVMAssemblyStack::analyze(std::string const& _sourceName, Json const& _asse
 {
 	solAssert(!m_evmAssembly);
 	m_name = _sourceName;
-	std::tie(m_evmAssembly, m_sourceList) = evmasm::Assembly::fromJSON(_assemblyJson, {}, 0);
+	std::tie(m_evmAssembly, m_sourceList) =
+		evmasm::Assembly::fromJSON(_assemblyJson, {}, 0, m_evmVersion);
 	solRequire(m_evmAssembly != nullptr, AssemblyImportException, "Could not create evm assembly object.");
 }
 
