@@ -31,6 +31,7 @@ fuzztest_setup_fuzzing_flags()
 
 set(yul_fuzztest_sources
 	libyul/DataFlowAnalyzerPropertyTest.cpp
+	libyul/OptimizerStepPropertyTest.cpp
 	libyul/OptimizerStepSequence.cpp
 	libyul/OptimizerStepSequence.h
 	libyul/StackLimitEvaderPropertyTest.cpp
