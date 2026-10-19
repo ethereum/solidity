@@ -19,6 +19,8 @@
  * Interactive yul optimizer
  */
 
+#include <test/tools/yulFactAuditor/FactAuditor.h>
+
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/Exceptions.h>
 #include <libsolutil/StringUtils.h>
@@ -175,12 +177,24 @@ public:
 		m_nameDispenser.reset(*m_astRoot);
 	}
 
-	void runSteps(std::string _source, std::string _steps)
+	enum class Output { Optimized, WithFactChecks };
+
+	void runSteps(std::string _source, std::string _steps, Output const _output)
 	{
 		parse(_source);
 		disambiguate();
 		OptimiserSuite{m_context}.runSequence(_steps, *m_astRoot);
-		std::cout << AsmPrinter{m_dialect}(*m_astRoot) << std::endl;
+		if (_output == Output::WithFactChecks)
+		{
+			// Works on a copy, so that an interactive session continues with the uninstrumented code.
+			yul::Block instrumented = std::get<yul::Block>(ASTCopier{}(*m_astRoot));
+			// The FunctionHoister and ForLoopInitRewriter establish what instrumentWithFactChecks requires.
+			OptimiserSuite{m_context}.runSequence("ho", instrumented);
+			std::cerr << "facts: " << yul::test::instrumentWithFactChecks(m_dialect, instrumented).size() << std::endl;
+			std::cout << AsmPrinter{m_dialect}(instrumented) << std::endl;
+		}
+		else
+			std::cout << AsmPrinter{m_dialect}(*m_astRoot) << std::endl;
 	}
 
 	void runInteractive(std::string _source, bool _disambiguated = false)
@@ -259,6 +273,7 @@ int main(int argc, char** argv)
 	try
 	{
 		bool nonInteractive = false;
+		bool audit = false;
 		po::options_description options(
 			R"(yulopti, yul optimizer exploration tool.
 	Usage: yulopti [Options] <file>
@@ -285,6 +300,12 @@ int main(int argc, char** argv)
 				"non-interactive,n",
 				po::bool_switch(&nonInteractive)->default_value(false),
 				"stop after executing the provided steps"
+			)
+			(
+				"audit",
+				po::bool_switch(&audit)->default_value(false),
+				"after the steps, run h and o and insert runtime checks of every fact the DataFlowAnalyzer "
+				"claims; run the output with yulrun"
 			)
 			("help,h", "Show this help screen.");
 
@@ -322,7 +343,7 @@ int main(int argc, char** argv)
 			return 1;
 		}
 
-		if (nonInteractive && !arguments.count("steps"))
+		if ((nonInteractive || audit) && !arguments.count("steps"))
 		{
 			std::cout << options;
 			return 1;
@@ -337,7 +358,7 @@ int main(int argc, char** argv)
 			std::string sequence = arguments["steps"].as<std::string>();
 			if (!nonInteractive)
 				std::cout << "----------------------" << std::endl;
-			yulOpti.runSteps(input, sequence);
+			yulOpti.runSteps(input, sequence, audit ? YulOpti::Output::WithFactChecks : YulOpti::Output::Optimized);
 			disambiguated = true;
 		}
 		if (!nonInteractive)

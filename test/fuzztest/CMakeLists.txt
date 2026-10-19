@@ -30,15 +30,20 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/deps/fuzztest ${CMAKE_BINARY_DIR}/deps/fu
 fuzztest_setup_fuzzing_flags()
 
 set(yul_fuzztest_sources
+	libyul/DataFlowAnalyzerPropertyTest.cpp
+	libyul/OptimizerStepSequence.cpp
+	libyul/OptimizerStepSequence.h
 	libyul/StackLimitEvaderPropertyTest.cpp
 	libyul/StackShufflerPropertyTest.cpp
 	libyul/TarjanSCCPropertyTest.cpp
 	libyul/TLSFFreeListPropertyTest.cpp
+	libyul/YulProgramGenerator.cpp
+	libyul/YulProgramGenerator.h
 )
 detect_stray_source_files("${yul_fuzztest_sources}" "libyul/")
 
 add_executable(yul_fuzztest ${yul_fuzztest_sources})
-target_link_libraries(yul_fuzztest PRIVATE yul)
+target_link_libraries(yul_fuzztest PRIVATE yul yulFactAuditor yulInterpreter)
 link_fuzztest(yul_fuzztest)
 
 set(evmasm_fuzztest_sources
