@@ -73,7 +73,7 @@ std::pair<std::shared_ptr<AST const>, std::shared_ptr<AsmAnalysisInfo>> parse(st
 	}
 }
 
-void interpret(std::string const& _source, bool _inspect, bool _disableExternalCalls)
+void interpret(std::string const& _source, bool _inspect, bool _disableExternalCalls, bytes const& _calldata)
 {
 	std::shared_ptr<AST const> ast;
 	std::shared_ptr<AsmAnalysisInfo> analysisInfo;
@@ -83,6 +83,7 @@ void interpret(std::string const& _source, bool _inspect, bool _disableExternalC
 
 	InterpreterState state;
 	state.maxTraceSize = 10000;
+	state.calldata = _calldata;
 	try
 	{
 		if (_inspect)
@@ -113,6 +114,7 @@ Allowed options)",
 		("help", "Show this help screen.")
 		("enable-external-calls", "Enable external calls")
 		("interactive", "Run interactive")
+		("calldata", po::value<std::string>(), "Calldata as hex string")
 		("input-file", po::value<std::vector<std::string>>(), "input file");
 	po::positional_options_description filesPositions;
 	filesPositions.add("input-file", -1);
@@ -156,7 +158,19 @@ Allowed options)",
 		else
 			input = readUntilEnd(std::cin);
 
-		interpret(input, arguments.count("interactive"), !arguments.count("enable-external-calls"));
+		bytes calldata;
+		if (arguments.count("calldata"))
+			try
+			{
+				calldata = fromHex(arguments["calldata"].as<std::string>(), WhenError::Throw);
+			}
+			catch (BadHexCharacter const&)
+			{
+				std::cerr << "Calldata is not a hex string." << std::endl;
+				return 1;
+			}
+
+		interpret(input, arguments.count("interactive"), !arguments.count("enable-external-calls"), calldata);
 	}
 
 	return 0;
