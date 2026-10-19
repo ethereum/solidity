@@ -5,6 +5,8 @@ set(sources
 	Interpreter.cpp
 	Inspector.h
 	Inspector.cpp
+	SideEffectsAuditor.h
+	SideEffectsAuditor.cpp
 )
 
 add_library(yulInterpreter ${sources})

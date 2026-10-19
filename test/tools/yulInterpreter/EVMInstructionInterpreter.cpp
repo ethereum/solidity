@@ -321,8 +321,10 @@ u256 EVMInstructionInterpreter::eval(
 		m_state.memory[arg[0]] = uint8_t(arg[1] & 0xff);
 		return 0;
 	case Instruction::SLOAD:
+		++m_state.numStorageAccesses;
 		return m_state.storage[h256(arg[0])];
 	case Instruction::SSTORE:
+		++m_state.numStorageAccesses;
 		m_state.storage[h256(arg[0])] = h256(arg[1]);
 		return 0;
 	case Instruction::PC:
@@ -406,13 +408,13 @@ u256 EVMInstructionInterpreter::eval(
 		logTrace(_instruction, arg);
 		m_state.storage.clear();
 		m_state.transientStorage.clear();
-		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
+		BOOST_THROW_EXCEPTION(ExplicitlyTerminatedWithFailure());
 	case Instruction::INVALID:
 		logTrace(_instruction);
 		m_state.storage.clear();
 		m_state.transientStorage.clear();
 		m_state.trace.clear();
-		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
+		BOOST_THROW_EXCEPTION(ExplicitlyTerminatedWithFailure());
 	case Instruction::SELFDESTRUCT:
 		logTrace(_instruction, arg);
 		m_state.storage.clear();
@@ -582,6 +584,7 @@ bool EVMInstructionInterpreter::accessMemory(u256 const& _offset, u256 const& _s
 	if (_size == 0)
 		return true;
 
+	++m_state.numMemoryAccesses;
 	if (_offset <= (_offset + _size) && (_offset + _size) <= (_offset + _size + 0x1f))
 	{
 		u256 newMSize = (_offset + _size + 0x1f) & ~u256(0x1f);

@@ -34,6 +34,7 @@ set(yul_fuzztest_sources
 	libyul/OptimizerStepPropertyTest.cpp
 	libyul/OptimizerStepSequence.cpp
 	libyul/OptimizerStepSequence.h
+	libyul/SideEffectsPropertyTest.cpp
 	libyul/StackLimitEvaderPropertyTest.cpp
 	libyul/StackShufflerPropertyTest.cpp
 	libyul/TarjanSCCPropertyTest.cpp

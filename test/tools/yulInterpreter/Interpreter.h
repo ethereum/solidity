@@ -54,6 +54,11 @@ class ExplicitlyTerminatedWithReturn: public ExplicitlyTerminated
 {
 };
 
+/// By revert or invalid
+class ExplicitlyTerminatedWithFailure: public ExplicitlyTerminated
+{
+};
+
 class StepLimitReached: public InterpreterTerminatedGeneric
 {
 };
@@ -83,6 +88,8 @@ struct InterpreterState
 	u256 msize;
 	std::map<util::h256, util::h256> storage;
 	std::map<util::h256, util::h256> transientStorage;
+	size_t numStorageAccesses = 0;
+	size_t numMemoryAccesses = 0;
 	util::h160 address = util::h160("0x0000000000000000000000000000000011111111");
 	u256 balance = 0x22222222;
 	u256 selfbalance = 0x22223333;
