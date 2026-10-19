@@ -657,14 +657,17 @@ defaults:
         MAKEFLAGS: -j 10
         CPUs: 10
 
+  # Windows images are pinned so that preinstalled tools (e.g. Python) do not change unexpectedly.
   - base_win: &base_win
       executor:
         name: win/default
+        version: 2024.12.1
         shell: bash.exe
 
   - base_win_large: &base_win_large
       executor:
         name: win/default
+        version: 2024.12.1
         size: large
         shell: bash.exe
 
@@ -1867,11 +1870,10 @@ jobs:
       - run: git config --global core.autocrlf false
       - checkout
       - run:
-          name: Force install python3.12
-          command: choco install python312 --pre --force
-      - run:
-          name: Create a symlink for python3
-          command: ln -s /c/ProgramData/chocolatey/bin/python3.12 /c/ProgramData/chocolatey/bin/python3
+          name: Make preinstalled python available as python3
+          command: |
+            cp "$(command -v python)" "$(dirname "$(command -v python)")/python3.exe"
+            python3 --version
       - attach_workspace:
           at: build
       - prepare_bytecode_report:
