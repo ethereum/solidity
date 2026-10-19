@@ -26,8 +26,11 @@
 #include <libsolutil/Assertions.h>
 #include <nlohmann/json.hpp>
 
+#include <compare>
+#include <concepts>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <optional>
 #include <limits>
 
@@ -35,6 +38,10 @@ namespace solidity
 {
 
 using Json = nlohmann::json;
+
+// Comparisons of tuples, pairs and containers of JSON values go through operator<=>, which must
+// compare the values rather than only their types.
+static_assert(std::same_as<decltype(std::declval<Json const&>() <=> std::declval<Json const&>()), std::partial_ordering>);
 
 } // namespace solidity
 
