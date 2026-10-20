@@ -681,8 +681,9 @@ void AsmAnalyzer::expectValidIdentifier(YulName _identifier, SourceLocation cons
 			_location,
 			fmt::format("The identifier \"{}\" is reserved and can not be used.", label)
 		);
-
-	warnIfFutureKeywordOrReservedIdentifier(_identifier, _location);
+	else
+		// issue warning only if not reserved yet.
+		warnIfFutureKeywordOrReservedIdentifier(_identifier, _location);
 }
 
 bool AsmAnalyzer::validateInstructions(std::string_view _instructionIdentifier, langutil::SourceLocation const& _location)
