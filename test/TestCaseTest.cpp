@@ -80,51 +80,65 @@ BOOST_AUTO_TEST_CASE(range_with_multiple_versions)
 	bool const inRange =
 		selectedEVMVersion() >= langutil::EVMVersion::london() &&
 		selectedEVMVersion() <= langutil::EVMVersion::osaka();
-	BOOST_CHECK_EQUAL(shouldRunWithEVMVersionSetting(">=london <=osaka"), inRange);
-	BOOST_CHECK_EQUAL(shouldRunWithEVMVersionSetting(">berlin <amsterdam"), inRange);
-	BOOST_CHECK_EQUAL(shouldRunWithEVMVersionSetting("<=osaka >=london"), inRange);
+	BOOST_CHECK_EQUAL(shouldRunWithEVMVersionSetting(">=london,<=osaka"), inRange);
+	BOOST_CHECK_EQUAL(shouldRunWithEVMVersionSetting(">berlin,<amsterdam"), inRange);
+	BOOST_CHECK_EQUAL(shouldRunWithEVMVersionSetting("<=osaka,>=london"), inRange);
 }
 
 BOOST_AUTO_TEST_CASE(range_with_all_versions)
 {
-	BOOST_CHECK(shouldRunWithEVMVersionSetting(">=homestead <=@future"));
+	BOOST_CHECK(shouldRunWithEVMVersionSetting(">=homestead,<=@future"));
 }
 
 BOOST_AUTO_TEST_CASE(range_with_single_version)
 {
 	BOOST_CHECK_EQUAL(
-		shouldRunWithEVMVersionSetting(">=osaka <=osaka"),
+		shouldRunWithEVMVersionSetting(">=osaka,<=osaka"),
 		selectedEVMVersion() == langutil::EVMVersion::osaka()
 	);
 	BOOST_CHECK_EQUAL(
-		shouldRunWithEVMVersionSetting(">prague <amsterdam"),
+		shouldRunWithEVMVersionSetting(">prague,<amsterdam"),
 		selectedEVMVersion() == langutil::EVMVersion::osaka()
 	);
 }
 
 BOOST_AUTO_TEST_CASE(empty_range)
 {
-	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting(">osaka <osaka"), std::runtime_error);
-	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting(">osaka <=osaka"), std::runtime_error);
-	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting(">=amsterdam <=osaka"), std::runtime_error);
-	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting("=osaka !osaka"), std::runtime_error);
-	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting("=osaka =amsterdam"), std::runtime_error);
+	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting(">osaka,<osaka"), std::runtime_error);
+	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting(">osaka,<=osaka"), std::runtime_error);
+	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting(">=amsterdam,<=osaka"), std::runtime_error);
+	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting("=osaka,!osaka"), std::runtime_error);
+	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting("=osaka,=amsterdam"), std::runtime_error);
+	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting("<homestead"), std::runtime_error);
 }
 
-BOOST_AUTO_TEST_CASE(multiple_whitespaces_between_constraints)
+BOOST_AUTO_TEST_CASE(whitespace_around_commas)
 {
-	bool const inRange =
-		selectedEVMVersion() >= langutil::EVMVersion::london() &&
-		selectedEVMVersion() <= langutil::EVMVersion::osaka();
-	BOOST_CHECK_EQUAL(shouldRunWithEVMVersionSetting(">=london     <=osaka"), inRange);
-	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting(">osaka     <osaka"), std::runtime_error);
+	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting(">=london, <=osaka"), std::runtime_error);
+	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting(">=london ,<=osaka"), std::runtime_error);
+	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting(">=london  ,   <=osaka"), std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(constraints_not_separated_by_comma)
+{
+	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting(">=london <=osaka"), std::runtime_error);
+	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting(">=london;<=osaka"), std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(empty_constraints)
+{
+	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting(">=london,,<=osaka"), std::runtime_error);
+	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting(">=london, ,<=osaka"), std::runtime_error);
+	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting(",>=london"), std::runtime_error);
+	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting(">=london,"), std::runtime_error);
+	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting(","), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(whitespace_between_comparator_and_version)
 {
 	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting(">= osaka"), std::runtime_error);
 	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting("= osaka"), std::runtime_error);
-	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting(">=london <= osaka"), std::runtime_error);
+	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting(">=london,<= osaka"), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(invalid_constraints)
@@ -133,7 +147,7 @@ BOOST_AUTO_TEST_CASE(invalid_constraints)
 	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting(">=unknownfork"), std::runtime_error);
 	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting("=>osaka"), std::runtime_error);
 	// An invalid constraint is reported even if an earlier one is not satisfied.
-	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting("!osaka >=unknownfork"), std::runtime_error);
+	BOOST_CHECK_THROW(shouldRunWithEVMVersionSetting("!osaka,>=unknownfork"), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

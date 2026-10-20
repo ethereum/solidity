@@ -26,7 +26,7 @@
 
 #include <algorithm>
 #include <iostream>
-#include <sstream>
+#include <ranges>
 #include <stdexcept>
 #include <vector>
 
@@ -156,18 +156,19 @@ void EVMVersionRestrictedTestCase::processEVMVersionSetting()
 	if (versionSetting == "any")
 		return;
 
+	if (versionSetting.empty())
+		BOOST_THROW_EXCEPTION(std::runtime_error{"Empty EVMVersion setting"});
+
 	auto const allVersions = langutil::EVMVersion::allVersions();
 	std::vector<langutil::EVMVersion> remainingVersions(allVersions.begin(), allVersions.end());
-	std::istringstream versionConstraints(versionSetting);
-	bool parsedAnyConstraint = false;
-	for (std::string constraint; versionConstraints >> constraint;)
+	for (auto const part: std::views::split(versionSetting, ','))
 	{
-		parsedAnyConstraint = true;
+		std::string const constraint(part.begin(), part.end());
+		if (constraint.empty())
+			BOOST_THROW_EXCEPTION(std::runtime_error{"Empty constraint in EVMVersion setting \"" + versionSetting + "\""});
 		removeVersionsNotSatisfyingConstraint(constraint, remainingVersions);
 	}
 
-	if (!parsedAnyConstraint)
-		BOOST_THROW_EXCEPTION(std::runtime_error{"Empty EVMVersion setting"});
 	if (remainingVersions.empty())
 		BOOST_THROW_EXCEPTION(std::runtime_error{
 			"EVMVersion setting \"" + versionSetting + "\" is not satisfied by any EVM version"
