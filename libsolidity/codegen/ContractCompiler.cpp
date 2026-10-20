@@ -365,7 +365,7 @@ void ContractCompiler::appendInternalSelector(
 	{
 		size_t pivotIndex = _ids.size() / 2;
 		FixedHash<4> pivot{_ids.at(pivotIndex)};
-		m_context << dupInstruction(1) << u256(FixedHash<4>::Arith(pivot)) << Instruction::GT;
+		m_context << AssemblyItem::dup(1) << u256(FixedHash<4>::Arith(pivot)) << Instruction::GT;
 		evmasm::AssemblyItem lessTag{m_context.appendConditionalJump()};
 		// Here, we have funid >= pivot
 		std::vector<FixedHash<4>> larger{_ids.begin() + static_cast<ptrdiff_t>(pivotIndex), _ids.end()};
@@ -379,7 +379,7 @@ void ContractCompiler::appendInternalSelector(
 	{
 		for (auto const& id: _ids)
 		{
-			m_context << dupInstruction(1) << u256(FixedHash<4>::Arith(id)) << Instruction::EQ;
+			m_context << AssemblyItem::dup(1) << u256(FixedHash<4>::Arith(id)) << Instruction::EQ;
 			m_context.appendConditionalJumpTo(_entryPoints.at(id));
 		}
 		m_context.appendJumpTo(_notFoundTag);
@@ -518,7 +518,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 		{
 			// If the function is not a view function and is called without DELEGATECALL,
 			// we revert.
-			m_context << dupInstruction(2);
+			m_context << AssemblyItem::dup(2);
 			m_context.appendConditionalRevert(false, "Non-view function of library called without DELEGATECALL");
 		}
 		m_context.setStackOffset(0);
@@ -686,7 +686,7 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 		}
 		else
 		{
-			m_context << swapInstruction(static_cast<unsigned>(stackLayout.size()) - static_cast<unsigned>(stackLayout.back()) - 1u);
+			m_context << AssemblyItem::swap(stackLayout.size() - static_cast<size_t>(stackLayout.back()) - 1u);
 			std::swap(stackLayout[static_cast<size_t>(stackLayout.back())], stackLayout.back());
 		}
 	for (size_t i = 0; i < stackLayout.size(); ++i)
@@ -848,7 +848,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 							errinfo_sourceLocation(_inlineAssembly.location()) <<
 							util::errinfo_comment(util::stackTooDeepString)
 						);
-					_assembly.appendInstruction(dupInstruction(stackDiff));
+					_assembly.appendDup(stackDiff);
 				}
 				else
 					solAssert(false, "");
@@ -922,7 +922,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 					errinfo_sourceLocation(_inlineAssembly.location()) <<
 					util::errinfo_comment(util::stackTooDeepString)
 				);
-			_assembly.appendInstruction(swapInstruction(stackDiff));
+			_assembly.appendSwap(stackDiff);
 			_assembly.appendInstruction(Instruction::POP);
 		}
 	};

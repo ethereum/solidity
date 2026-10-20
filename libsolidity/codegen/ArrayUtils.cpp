@@ -55,7 +55,7 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 	bool haveSourceLengthOnStack = fromCalldata && _sourceType.isDynamicallySized();
 
 	for (unsigned i = _sourceType.sizeOnStack(); i > 0; --i)
-		m_context << swapInstruction(i);
+		m_context << AssemblyItem::swap(i);
 	// stack: target_ref source_ref [source_length]
 
 	if (_sourceType.baseType()->category() == Type::Category::Array)
@@ -318,7 +318,7 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 			}
 		}
 		// check for loop condition
-		m_context << Instruction::DUP1 << dupInstruction(haveByteOffset ? 5 : 4);
+		m_context << Instruction::DUP1 << AssemblyItem::dup(haveByteOffset ? 5 : 4);
 		m_context << Instruction::GT;
 		m_context.appendConditionalJumpTo(loopStart);
 		// stack here: memory_end_offset storage_data_offset [storage_byte_offset] memory_offset
@@ -666,7 +666,7 @@ void ArrayUtils::retrieveLength(ArrayType const& _arrayType, unsigned _stackDept
 		m_context << _arrayType.length();
 	else
 	{
-		m_context << dupInstruction(1 + _stackDepth);
+		m_context << AssemblyItem::dup(1 + _stackDepth);
 		switch (_arrayType.location())
 		{
 		case DataLocation::CallData:
@@ -842,19 +842,19 @@ void ArrayUtils::incrementByteOffset(unsigned _byteSize, unsigned _byteOffsetPos
 	//     byteOffset = 0;
 	// }
 	if (_byteOffsetPosition > 1)
-		m_context << swapInstruction(_byteOffsetPosition - 1);
+		m_context << AssemblyItem::swap(_byteOffsetPosition - 1);
 	m_context << u256(_byteSize) << Instruction::ADD;
 	if (_byteOffsetPosition > 1)
-		m_context << swapInstruction(_byteOffsetPosition - 1);
+		m_context << AssemblyItem::swap(_byteOffsetPosition - 1);
 	// compute, X := (byteOffset + byteSize - 1) / 32, should be 1 iff byteOffset + bytesize > 32
 	m_context
-		<< u256(32) << dupInstruction(1 + _byteOffsetPosition) << u256(_byteSize - 1)
+		<< u256(32) << AssemblyItem::dup(1 + _byteOffsetPosition) << u256(_byteSize - 1)
 		<< Instruction::ADD << Instruction::DIV;
 	// increment storage offset if X == 1 (just add X to it)
 	// stack: X
 	m_context
-		<< swapInstruction(_storageOffsetPosition) << dupInstruction(_storageOffsetPosition + 1)
-		<< Instruction::ADD << swapInstruction(_storageOffsetPosition);
+		<< AssemblyItem::swap(_storageOffsetPosition) << AssemblyItem::dup(_storageOffsetPosition + 1)
+		<< Instruction::ADD << AssemblyItem::swap(_storageOffsetPosition);
 	// stack: X
 	// set source_byte_offset to zero if X == 1 (using source_byte_offset *= 1 - X)
 	m_context << u256(1) << Instruction::SUB;
@@ -863,6 +863,6 @@ void ArrayUtils::incrementByteOffset(unsigned _byteSize, unsigned _byteOffsetPos
 		m_context << Instruction::MUL;
 	else
 		m_context
-			<< dupInstruction(_byteOffsetPosition + 1) << Instruction::MUL
-			<< swapInstruction(_byteOffsetPosition) << Instruction::POP;
+			<< AssemblyItem::dup(_byteOffsetPosition + 1) << Instruction::MUL
+			<< AssemblyItem::swap(_byteOffsetPosition) << Instruction::POP;
 }

@@ -539,9 +539,9 @@ void CompilerUtils::encodeToMemory(
 				StackTooDeepError,
 				util::stackTooDeepString
 			);
-			m_context << dupInstruction(2 + dynPointers) << Instruction::DUP2;
+			m_context << AssemblyItem::dup(2 + dynPointers) << Instruction::DUP2;
 			m_context << Instruction::SUB;
-			m_context << dupInstruction(2 + dynPointers - thisDynPointer);
+			m_context << AssemblyItem::dup(2 + dynPointers - thisDynPointer);
 			m_context << Instruction::MSTORE;
 			// stack: ... <end_of_mem>
 			if (_givenTypes[i]->category() == Type::Category::StringLiteral)
@@ -582,13 +582,13 @@ void CompilerUtils::encodeToMemory(
 				copyToStackTop(argSize - stackPos + dynPointers + 2, arrayType->sizeOnStack());
 				// stack: ... <end_of_mem> <value...>
 				// copy length to memory
-				m_context << dupInstruction(1 + arrayType->sizeOnStack());
+				m_context << AssemblyItem::dup(1 + arrayType->sizeOnStack());
 				ArrayUtils(m_context).retrieveLength(*arrayType, 1);
 				// stack: ... <end_of_mem> <value...> <end_of_mem'> <length>
 				storeInMemoryDynamic(*TypeProvider::uint256(), true);
 				// stack: ... <end_of_mem> <value...> <end_of_mem''>
 				// copy the new memory pointer
-				m_context << swapInstruction(arrayType->sizeOnStack() + 1) << Instruction::POP;
+				m_context << AssemblyItem::swap(arrayType->sizeOnStack() + 1) << Instruction::POP;
 				// stack: ... <end_of_mem''> <value...>
 				// copy data part
 				ArrayUtils(m_context).copyArrayToMemory(*arrayType, _padToWordBoundaries);
@@ -601,7 +601,7 @@ void CompilerUtils::encodeToMemory(
 	}
 
 	// remove unneeded stack elements (and retain memory pointer)
-	m_context << swapInstruction(argSize + dynPointers + 1);
+	m_context << AssemblyItem::swap(argSize + dynPointers + 1);
 	popStackSlots(argSize + dynPointers + 1);
 }
 
@@ -1278,7 +1278,7 @@ void CompilerUtils::convertType(
 					// Move it back into its place.
 					for (unsigned j = 0; j < std::min(sourceSize, targetSize); ++j)
 						m_context <<
-							swapInstruction(depth + targetSize - sourceSize) <<
+							AssemblyItem::swap(depth + targetSize - sourceSize) <<
 							Instruction::POP;
 					// Value shrank
 					for (unsigned j = targetSize; j < sourceSize; ++j)
@@ -1430,7 +1430,7 @@ void CompilerUtils::moveToStackVariable(VariableDeclaration const& _variable)
 			util::errinfo_comment(util::stackTooDeepString)
 		);
 	for (unsigned i = 0; i < size; ++i)
-		m_context << swapInstruction(stackPosition - size + 1) << Instruction::POP;
+		m_context << AssemblyItem::swap(stackPosition - size + 1) << Instruction::POP;
 }
 
 void CompilerUtils::copyToStackTop(unsigned _stackDepth, unsigned _itemSize)
@@ -1441,7 +1441,7 @@ void CompilerUtils::copyToStackTop(unsigned _stackDepth, unsigned _itemSize)
 		util::stackTooDeepString
 	);
 	for (unsigned i = 0; i < _itemSize; ++i)
-		m_context << dupInstruction(_stackDepth);
+		m_context << AssemblyItem::dup(_stackDepth);
 }
 
 void CompilerUtils::moveToStackTop(unsigned _stackDepth, unsigned _itemSize)
@@ -1467,7 +1467,7 @@ void CompilerUtils::rotateStackUp(unsigned _items)
 		util::stackTooDeepString
 	);
 	for (unsigned i = 1; i < _items; ++i)
-		m_context << swapInstruction(_items - i);
+		m_context << AssemblyItem::swap(_items - i);
 }
 
 void CompilerUtils::rotateStackDown(unsigned _items)
@@ -1478,7 +1478,7 @@ void CompilerUtils::rotateStackDown(unsigned _items)
 		util::stackTooDeepString
 	);
 	for (unsigned i = 1; i < _items; ++i)
-		m_context << swapInstruction(i);
+		m_context << AssemblyItem::swap(i);
 }
 
 void CompilerUtils::popStackElement(Type const& _type)
