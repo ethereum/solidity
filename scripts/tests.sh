@@ -116,9 +116,9 @@ do
         then
             if [ -n "$optimize" ]
             then
-                log+=("--logger=JUNIT,error,$log_directory/opt_$vm.xml")
+                log+=("--logger=JUNIT,error,$log_directory/opt_$CURRENT_EVM_VERSION.xml")
             else
-                log+=("--logger=JUNIT,error,$log_directory/noopt_$vm.xml")
+                log+=("--logger=JUNIT,error,$log_directory/noopt_$CURRENT_EVM_VERSION.xml")
             fi
         fi
 
