@@ -24,9 +24,11 @@
 
 #include <boost/algorithm/string/predicate.hpp>
 
+#include <algorithm>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <vector>
 
 using namespace solidity;
 using namespace solidity::frontend;
@@ -106,7 +108,9 @@ TestCase::TestResult TestCase::checkResult(std::ostream& _stream, const std::str
 namespace
 {
 
-bool satisfiesEVMVersionConstraint(std::string const& _constraint, langutil::EVMVersion _evmVersion)
+/// Parses a single constraint of the ``EVMVersion`` setting (e.g. ``>=london``)
+/// and removes the versions not satisfying it from @a _versions.
+void removeVersionsNotSatisfyingConstraint(std::string const& _constraint, std::vector<langutil::EVMVersion>& _versions)
 {
 	std::string comparator;
 	size_t versionBegin = 0;
@@ -129,17 +133,17 @@ bool satisfiesEVMVersionConstraint(std::string const& _constraint, langutil::EVM
 		BOOST_THROW_EXCEPTION(std::runtime_error{"Invalid EVM version: \"" + versionString + "\""});
 
 	if (comparator == ">")
-		return _evmVersion > version;
+		std::erase_if(_versions, [&](langutil::EVMVersion _evmVersion) { return _evmVersion <= *version; });
 	else if (comparator == ">=")
-		return _evmVersion >= version;
+		std::erase_if(_versions, [&](langutil::EVMVersion _evmVersion) { return _evmVersion < *version; });
 	else if (comparator == "<")
-		return _evmVersion < version;
+		std::erase_if(_versions, [&](langutil::EVMVersion _evmVersion) { return _evmVersion >= *version; });
 	else if (comparator == "<=")
-		return _evmVersion <= version;
+		std::erase_if(_versions, [&](langutil::EVMVersion _evmVersion) { return _evmVersion > *version; });
 	else if (comparator == "=")
-		return _evmVersion == version;
+		std::erase_if(_versions, [&](langutil::EVMVersion _evmVersion) { return _evmVersion != *version; });
 	else if (comparator == "!")
-		return !(_evmVersion == version);
+		std::erase_if(_versions, [&](langutil::EVMVersion _evmVersion) { return _evmVersion == *version; });
 	else
 		BOOST_THROW_EXCEPTION(std::runtime_error{"Invalid EVM comparator: \"" + comparator + "\""});
 }
@@ -152,20 +156,26 @@ void EVMVersionRestrictedTestCase::processEVMVersionSetting()
 	if (versionSetting == "any")
 		return;
 
-	// Multiple space-separated constraints are allowed and all of them have to be satisfied.
+	auto const allVersions = langutil::EVMVersion::allVersions();
+	std::vector<langutil::EVMVersion> remainingVersions(allVersions.begin(), allVersions.end());
 	std::istringstream versionConstraints(versionSetting);
-	std::string constraint;
-	langutil::EVMVersion evmVersion = solidity::test::CommonOptions::get().evmVersion();
 	bool parsedAnyConstraint = false;
-	while (versionConstraints >> constraint)
+	for (std::string constraint; versionConstraints >> constraint;)
 	{
 		parsedAnyConstraint = true;
-		if (!satisfiesEVMVersionConstraint(constraint, evmVersion))
-			m_shouldRun = false;
+		removeVersionsNotSatisfyingConstraint(constraint, remainingVersions);
 	}
 
 	if (!parsedAnyConstraint)
 		BOOST_THROW_EXCEPTION(std::runtime_error{"Empty EVMVersion setting"});
+	if (remainingVersions.empty())
+		BOOST_THROW_EXCEPTION(std::runtime_error{
+			"EVMVersion setting \"" + versionSetting + "\" is not satisfied by any EVM version"
+		});
+
+	langutil::EVMVersion const evmVersion = solidity::test::CommonOptions::get().evmVersion();
+	if (std::find(remainingVersions.begin(), remainingVersions.end(), evmVersion) == remainingVersions.end())
+		m_shouldRun = false;
 }
 
 EVMVersionRestrictedTestCase::EVMVersionRestrictedTestCase(std::string const& _filename):
