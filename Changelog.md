@@ -4,6 +4,7 @@ Important Bugfixes:
 * Yul Optimizer: Fix knowledge about storage/memory address relations going stale in the `DataFlowAnalyzer` after a variable is reassigned in Yul, which could cause `LoadResolver` to replace loads with outdated values and `EqualStoreEliminator` to remove needed stores.
 
 Compiler Features:
+* Code Generator: Use `DUPN` and `SWAPN` to reach stack slots deeper than 16 when compiling for the Amsterdam EVM version, avoiding stack too deep errors ([EIP-8024](https://eips.ethereum.org/EIPS/eip-8024)).
 * Commandline Interface: Remove the experimental `--yul-cfg-json` output.
 * Commandline Interface: Selecting an ethdebug output no longer implicitly enables the `ethdebug` and `ast-id` components of `--debug-info`; without `ethdebug` in the selection the `--ethdebug-program` and `--ethdebug-program-runtime` outputs carry no semantic debug info.
 * Standard JSON Interface: Remove the experimental `yulCFGJson` output.
