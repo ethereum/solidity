@@ -478,7 +478,7 @@ void CSECodeGenerator::appendDup(int _fromPosition, langutil::DebugData::ConstPt
 	int instructionNum = 1 + m_stackHeight - _fromPosition;
 	assertThrow(instructionNum <= reachableStackDepth, StackTooDeepException, util::stackTooDeepString);
 	assertThrow(1 <= instructionNum, OptimizerException, "Invalid stack access.");
-	appendItem(AssemblyItem(dupInstruction(static_cast<unsigned>(instructionNum)), std::move(_debugData)));
+	appendItem(AssemblyItem::dup(static_cast<size_t>(instructionNum), std::move(_debugData)));
 	m_stack[m_stackHeight] = m_stack[_fromPosition];
 	m_classPositions[m_stack[m_stackHeight]].insert(m_stackHeight);
 }
@@ -492,7 +492,7 @@ void CSECodeGenerator::appendOrRemoveSwap(int _fromPosition, langutil::DebugData
 	int instructionNum = m_stackHeight - _fromPosition;
 	assertThrow(instructionNum <= reachableStackDepth, StackTooDeepException, util::stackTooDeepString);
 	assertThrow(1 <= instructionNum, OptimizerException, "Invalid stack access.");
-	appendItem(AssemblyItem(swapInstruction(static_cast<unsigned>(instructionNum)), std::move(_debugData)));
+	appendItem(AssemblyItem::swap(static_cast<size_t>(instructionNum), std::move(_debugData)));
 
 	if (m_stack[m_stackHeight] != m_stack[_fromPosition])
 	{
