@@ -61,14 +61,14 @@ severity
 conditions
     Conditions that have to be met to trigger the bug. The following
     keys can be used:
-    ``optimizer``, Boolean value which
-    means that the optimizer has to be switched on to enable the bug.
+    ``optimizer``, Boolean value which means that the opcode-based evmasm optimizer
+    has to be switched on to trigger the bug. This says nothing about the Yul optimizer.
     ``yulOptimizer``, Boolean value which means that the Yul optimizer
-    has to be switched on to enable the bug.
+    has to be switched on to trigger the bug.
     ``ABIEncoderV2``, Boolean value which means that ABI coder v2
-    has to be used to enable the bug.
+    has to be used to trigger the bug.
     ``viaIR``, Boolean value which means that the IR-based code generator
-    has to be used (``true``) or must not be used (``false``) to enable the bug.
+    has to be used (``true``) or must not be used (``false``) to trigger the bug.
     ``evmVersion``, a string that indicates which EVM version compiler
     settings trigger the bug. The string can contain comparison
     operators. For example, ``">=constantinople"`` means that the bug
