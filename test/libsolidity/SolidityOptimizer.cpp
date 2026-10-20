@@ -108,7 +108,7 @@ public:
 		bytes realCode = bytecodeSansMetadata(_bytecode);
 		BOOST_REQUIRE_MESSAGE(!realCode.empty(), "Invalid or missing metadata in bytecode.");
 		size_t instructions = 0;
-		evmasm::eachInstruction(realCode, m_evmVersion, [&](Instruction _instr, u256 const&) {
+		evmasm::eachInstruction(realCode, m_evmVersion, [&](Instruction _instr, std::optional<u256> const&) {
 			if (!_which || *_which == _instr)
 				instructions++;
 		});
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(retain_information_in_branches)
 
 	bytes optimizedBytecode = compileAndRunWithOptimizer(sourceCode, 0, "c", true);
 	size_t numSHA3s = 0;
-	eachInstruction(optimizedBytecode, m_evmVersion, [&](Instruction _instr, u256 const&) {
+	eachInstruction(optimizedBytecode, m_evmVersion, [&](Instruction _instr, std::optional<u256> const&) {
 		if (_instr == Instruction::KECCAK256)
 			numSHA3s++;
 	});
@@ -329,7 +329,7 @@ BOOST_AUTO_TEST_CASE(store_tags_as_unions)
 
 	bytes optimizedBytecode = compileAndRunWithOptimizer(sourceCode, 0, "test", true);
 	size_t numSHA3s = 0;
-	eachInstruction(optimizedBytecode, m_evmVersion, [&](Instruction _instr, u256 const&) {
+	eachInstruction(optimizedBytecode, m_evmVersion, [&](Instruction _instr, std::optional<u256> const&) {
 		if (_instr == Instruction::KECCAK256)
 			numSHA3s++;
 	});

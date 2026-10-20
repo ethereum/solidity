@@ -109,6 +109,41 @@ BOOST_AUTO_TEST_CASE(legacy_dupn_swapn_rejected_before_amsterdam)
 	BOOST_CHECK_THROW(assembleSingleItem(AssemblyItem::swap(20)), InternalCompilerError);
 }
 
+BOOST_AUTO_TEST_CASE(legacy_dupn_swapn_disassembly_spec_vectors)
+{
+	// Test vectors from https://eips.ethereum.org/EIPS/eip-8024
+	BOOST_CHECK_EQUAL(disassemble(util::fromHex("e680"), EVMVersion::amsterdam()), "DUPN 17 ");
+	BOOST_CHECK_EQUAL(disassemble(util::fromHex("e7db"), EVMVersion::amsterdam()), "SWAPN 108 ");
+	BOOST_CHECK_EQUAL(disassemble(util::fromHex("e6805b"), EVMVersion::amsterdam()), "DUPN 17 JUMPDEST ");
+	// Invalid immediates are not consumed and are decoded as the following instructions.
+	BOOST_CHECK_EQUAL(disassemble(util::fromHex("e75b"), EVMVersion::amsterdam()), "INVALID_SWAPN JUMPDEST ");
+	BOOST_CHECK_EQUAL(disassemble(util::fromHex("e6605b"), EVMVersion::amsterdam()), "INVALID_DUPN PUSH1 0x5B ");
+	BOOST_CHECK_EQUAL(disassemble(util::fromHex("e7610000"), EVMVersion::amsterdam()), "INVALID_SWAPN PUSH2 0x0 ");
+	BOOST_CHECK_EQUAL(disassemble(util::fromHex("e65f"), EVMVersion::amsterdam()), "INVALID_DUPN PUSH0 ");
+}
+
+BOOST_AUTO_TEST_CASE(disassembly_truncated_push_immediate)
+{
+	// Missing immediate bytes at the end of the code are read as zeros.
+	BOOST_CHECK_EQUAL(disassemble(util::fromHex("61ff"), EVMVersion::amsterdam()), "PUSH2 0xFF00 ");
+	BOOST_CHECK_EQUAL(disassemble(util::fromHex("6001610102"), EVMVersion::amsterdam()), "PUSH1 0x1 PUSH2 0x102 ");
+}
+
+BOOST_AUTO_TEST_CASE(legacy_dupn_swapn_disassembly_implicit_zero_immediate)
+{
+	// The EVM reads code beyond its end as zeros, and zero is a valid immediate (depth 145).
+	BOOST_CHECK_EQUAL(disassemble(util::fromHex("e6"), EVMVersion::amsterdam()), "DUPN 145 ");
+	BOOST_CHECK_EQUAL(disassemble(util::fromHex("e7"), EVMVersion::amsterdam()), "SWAPN 145 ");
+}
+
+BOOST_AUTO_TEST_CASE(legacy_dupn_swapn_disassembly_is_version_agnostic)
+{
+	// Like for all other instructions, disassembly does not check whether the EVM version
+	// actually supports DUPN/SWAPN.
+	BOOST_CHECK_EQUAL(disassemble(util::fromHex("e680"), EVMVersion::prague()), "DUPN 17 ");
+	BOOST_CHECK_EQUAL(disassemble(util::fromHex("e780"), EVMVersion::prague()), "SWAPN 17 ");
+}
+
 BOOST_AUTO_TEST_CASE(all_assembly_items)
 {
 	std::map<std::string, unsigned> indices = {
