@@ -43,8 +43,6 @@
 #include <vector>
 #include <stack>
 
-using solidity::util::h256;
-
 namespace solidity::langutil
 {
 class ErrorReporter;
@@ -63,7 +61,7 @@ public:
 		langutil::UniqueErrorReporter& _errorReporter,
 		langutil::UniqueErrorReporter& _unsupportedErrorReporter,
 		langutil::ErrorReporter& _provedSafeReporter,
-		std::map<h256, std::string> const& _smtlib2Responses,
+		std::map<util::h256, std::string> const& _smtlib2Responses,
 		ReadCallback::Callback const& _smtCallback,
 		ModelCheckerSettings _settings,
 		langutil::CharStreamProvider const& _charStreamProvider
