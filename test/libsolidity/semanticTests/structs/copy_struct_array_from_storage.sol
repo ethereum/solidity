@@ -83,8 +83,6 @@ contract Test {
         return true;
     }
 }
-// ====
-// EVMVersion: >homestead
 // ----
 // test1() -> true
 // gas irOptimized: 152962

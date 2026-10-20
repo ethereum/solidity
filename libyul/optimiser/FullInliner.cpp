@@ -211,7 +211,7 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulName _callSite)
 
 	if (
 		EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&m_dialect);
-		!evmDialect || !evmDialect->providesObjectAccess() || evmDialect->evmVersion() <= langutil::EVMVersion::homestead()
+		!evmDialect || !evmDialect->providesObjectAccess()
 	)
 		// No aggressive inlining with the old code transform.
 		aggressiveInlining = false;

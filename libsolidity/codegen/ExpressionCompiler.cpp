@@ -2810,21 +2810,6 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		utils().storeFreeMemoryPointer();
 	}
 
-	if (!m_context.evmVersion().canOverchargeGasForCall())
-	{
-		// Touch the end of the output area so that we do not pay for memory resize during the call
-		// (which we would have to subtract from the gas left)
-		// We could also just use MLOAD; POP right before the gas calculation, but the optimizer
-		// would remove that, so we use MSTORE here.
-		if (!_functionType.gasSet() && retSize > 0)
-		{
-			m_context << u256(0);
-			utils().fetchFreeMemoryPointer();
-			// This touches too much, but that way we save some rounding arithmetic
-			m_context << u256(retSize) << Instruction::ADD << Instruction::MSTORE;
-		}
-	}
-
 	// Copy function identifier to memory.
 	utils().fetchFreeMemoryPointer();
 	if (!_functionType.isBareCall())
@@ -2889,7 +2874,6 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		m_context << u256(0);
 	m_context << dupInstruction(m_context.baseToCurrentStackOffset(contractStackPos));
 
-	bool existenceChecked = false;
 	// Check the target contract exists (has code) for non-low-level calls.
 	if (funKind == FunctionType::Kind::External || funKind == FunctionType::Kind::DelegateCall)
 	{
@@ -2906,26 +2890,14 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		{
 			m_context << Instruction::DUP1 << Instruction::EXTCODESIZE << Instruction::ISZERO;
 			m_context.appendConditionalRevert(false, "Target contract does not contain code");
-			existenceChecked = true;
 		}
 	}
 
 	if (_functionType.gasSet())
 		m_context << dupInstruction(m_context.baseToCurrentStackOffset(gasStackPos));
-	else if (m_context.evmVersion().canOverchargeGasForCall())
+	else
 		// Send all gas (requires tangerine whistle EVM)
 		m_context << Instruction::GAS;
-	else
-	{
-		// send all gas except the amount needed to execute "SUB" and "CALL"
-		// @todo this retains too much gas for now, needs to be fine-tuned.
-		u256 gasNeededByCaller = evmasm::GasCosts::callGas(m_context.evmVersion()) + 10;
-		if (_functionType.valueSet())
-			gasNeededByCaller += evmasm::GasCosts::callValueTransferGas;
-		if (!existenceChecked)
-			gasNeededByCaller += evmasm::GasCosts::callNewAccountGas; // we never know
-		m_context << gasNeededByCaller << Instruction::GAS << Instruction::SUB;
-	}
 	// Order is important here, STATICCALL might overlap with DELEGATECALL.
 	if (isDelegateCall)
 		m_context << Instruction::DELEGATECALL;

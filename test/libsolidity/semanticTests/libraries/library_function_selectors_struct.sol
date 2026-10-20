@@ -19,8 +19,6 @@ contract C {
 		return (L.g.selector == bytes4(keccak256("g(L.S)")), success, abi.decode(data, (uint256)));
     }
 }
-// ====
-// EVMVersion: >homestead
 // ----
 // library: L
 // f() -> true, true, 42

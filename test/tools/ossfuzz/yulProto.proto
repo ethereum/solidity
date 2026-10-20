@@ -395,7 +395,7 @@ message Data {
 
 message Program {
   enum Version {
-    HOMESTEAD = 0;
+    reserved 0;
     TANGERINE = 1;
     SPURIOUS = 2;
     BYZANTIUM = 3;

@@ -82,7 +82,7 @@ void EVMObjectCompiler::run(Object const& _object, bool _optimize, bool _viaSSAC
 
 	yulAssert(_object.analysisInfo, "No analysis info.");
 	yulAssert(_object.hasCode(), "No code.");
-	if (_optimize && evmDialect->evmVersion().canOverchargeGasForCall())
+	if (_optimize)
 	{
 		if (_viaSSACFG)
 		{

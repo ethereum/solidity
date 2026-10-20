@@ -11,8 +11,6 @@ contract C {
         return this.f(s);
     }
 }
-// ====
-// EVMVersion: >homestead
 // ----
 // f((uint256)): 3 -> 32, 32, 3
 // g((uint256)): 3 -> 32, 32, 3

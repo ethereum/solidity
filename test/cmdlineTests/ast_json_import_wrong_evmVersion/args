@@ -1,1 +1,1 @@
---experimental --evm-version=homestead --import-ast --combined-json ast --pretty-json
+--experimental --evm-version=cancun --import-ast --combined-json ast --pretty-json

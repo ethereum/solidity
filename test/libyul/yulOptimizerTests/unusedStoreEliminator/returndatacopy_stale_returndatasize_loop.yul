@@ -9,8 +9,6 @@
         pop(staticcall(gas(), 0, 0, 0, 0, 0))
     }
 }
-// ====
-// EVMVersion: >homestead
 // ----
 // step: unusedStoreEliminator
 //

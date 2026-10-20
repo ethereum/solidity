@@ -21,6 +21,12 @@ New Restrictions
 Interface Changes
 =================
 
+This section lists changes that are unrelated to the language itself, but that have an effect on the interfaces of
+the compiler. These may change the way how you use the compiler on the command-line, how you use its programmable
+interface, or how you analyze the output produced by it.
+
+* EVM version ``homestead`` is no longer supported. CLI and JSON interfaces now reject it.
+
 
 How to update your code
 =======================

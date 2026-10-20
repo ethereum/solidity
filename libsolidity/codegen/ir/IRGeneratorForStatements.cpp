@@ -1710,16 +1710,8 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		templ("success", m_context.newYulVariable());
 		templ("retVars", IRVariable(_functionCall).commaSeparatedList());
 		templ("forwardingRevert", m_utils.forwardingRevertFunction());
-		if (m_context.evmVersion().canOverchargeGasForCall())
-			// Send all gas (requires tangerine whistle EVM)
-			templ("gas", "gas()");
-		else
-		{
-			// @todo The value 10 is not exact and this could be fine-tuned,
-			// but this has worked for years in the old code generator.
-			u256 gasNeededByCaller = evmasm::GasCosts::callGas(m_context.evmVersion()) + 10 + evmasm::GasCosts::callNewAccountGas;
-			templ("gas", "sub(gas(), " + formatNumber(gasNeededByCaller) + ")");
-		}
+		// Send all gas (requires tangerine whistle EVM)
+		templ("gas", "gas()");
 
 		appendCode() << templ.render();
 
@@ -2656,16 +2648,6 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 		argumentStrings += IRVariable(*arg).stackSlots();
 	}
 
-	if (!m_context.evmVersion().canOverchargeGasForCall())
-	{
-		// Touch the end of the output area so that we do not pay for memory resize during the call
-		// (which we would have to subtract from the gas left)
-		// We could also just use MLOAD; POP right before the gas calculation, but the optimizer
-		// would remove that, so we use MSTORE here.
-		if (!funType.gasSet() && returnInfo.estimatedReturnSize > 0)
-			appendCode() << "mstore(add(" << m_utils.allocateUnboundedFunction() << "() , " << std::to_string(returnInfo.estimatedReturnSize) << "), 0)\n";
-	}
-
 	// NOTE: When the expected size of returndata is static, we pass that in to the call opcode and it gets copied automatically.
 	// When it's dynamic, we get zero from estimatedReturnSize() instead and then we need an explicit returndatacopy().
 	Whiskers templ(R"(
@@ -2759,20 +2741,9 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 
 	if (funType.gasSet())
 		templ("gas", IRVariable(_functionCall.expression()).part("gas").name());
-	else if (m_context.evmVersion().canOverchargeGasForCall())
+	else
 		// Send all gas (requires tangerine whistle EVM)
 		templ("gas", "gas()");
-	else
-	{
-		// send all gas except the amount needed to execute "SUB" and "CALL"
-		// @todo this retains too much gas for now, needs to be fine-tuned.
-		u256 gasNeededByCaller = evmasm::GasCosts::callGas(m_context.evmVersion()) + 10;
-		if (funType.valueSet())
-			gasNeededByCaller += evmasm::GasCosts::callValueTransferGas;
-		if (!checkExtcodesize)
-			gasNeededByCaller += evmasm::GasCosts::callNewAccountGas; // we never know
-		templ("gas", "sub(gas(), " + formatNumber(gasNeededByCaller) + ")");
-	}
 	// Order is important here, STATICCALL might overlap with DELEGATECALL.
 	if (isDelegateCall)
 		templ("call", "delegatecall");
@@ -2861,19 +2832,9 @@ void IRGeneratorForStatements::appendBareCall(
 
 	if (funType.gasSet())
 		templ("gas", IRVariable(_functionCall.expression()).part("gas").name());
-	else if (m_context.evmVersion().canOverchargeGasForCall())
+	else
 		// Send all gas (requires tangerine whistle EVM)
 		templ("gas", "gas()");
-	else
-	{
-		// send all gas except the amount needed to execute "SUB" and "CALL"
-		// @todo this retains too much gas for now, needs to be fine-tuned.
-		u256 gasNeededByCaller = evmasm::GasCosts::callGas(m_context.evmVersion()) + 10;
-		if (funType.valueSet())
-			gasNeededByCaller += evmasm::GasCosts::callValueTransferGas;
-		gasNeededByCaller += evmasm::GasCosts::callNewAccountGas; // we never know
-		templ("gas", "sub(gas(), " + formatNumber(gasNeededByCaller) + ")");
-	}
 
 	appendCode() << templ.render();
 }

@@ -250,7 +250,6 @@ std::tuple<bool, Block> StackCompressor::run(
 	{
 		usesOptimizedCodeGenerator =
 			_optimizeStackAllocation &&
-			evmDialect->evmVersion().canOverchargeGasForCall() &&
 			evmDialect->providesObjectAccess();
 	}
 	bool allowMSizeOptimization = !MSizeFinder::containsMSize(*_object.dialect(), _object.code()->root());

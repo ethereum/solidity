@@ -50,7 +50,6 @@ public:
 
 	static EVMVersion current() { return {currentVersion}; }
 
-	static EVMVersion constexpr homestead() { return {Version::Homestead}; }
 	static EVMVersion constexpr tangerineWhistle() { return {Version::TangerineWhistle}; }
 	static EVMVersion constexpr spuriousDragon() { return {Version::SpuriousDragon}; }
 	static EVMVersion constexpr byzantium() { return {Version::Byzantium}; }
@@ -69,7 +68,6 @@ public:
 
 	static auto constexpr allVersions() {
 		return std::array{
-			homestead(),
 			tangerineWhistle(),
 			spuriousDragon(),
 			byzantium(),
@@ -107,7 +105,6 @@ public:
 	{
 		switch (m_version)
 		{
-		case Version::Homestead: return "homestead";
 		case Version::TangerineWhistle: return "tangerineWhistle";
 		case Version::SpuriousDragon: return "spuriousDragon";
 		case Version::Byzantium: return "byzantium";
@@ -148,13 +145,9 @@ public:
 
 	bool hasOpcode(evmasm::Instruction _opcode) const;
 
-	/// Whether we have to retain the costs for the call opcode itself (false),
-	/// or whether we can just forward easily all remaining gas (true).
-	bool canOverchargeGasForCall() const { return *this >= tangerineWhistle(); }
-
 private:
 	enum class Version {
-		Homestead,
+		// Homestead, -- support dropped
 		TangerineWhistle,
 		SpuriousDragon,
 		Byzantium,

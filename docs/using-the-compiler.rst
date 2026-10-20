@@ -149,7 +149,7 @@ at each version. Backward compatibility is not guaranteed between each version.
 See also the `Timeline of all Ethereum forks <https://ethereum.org/ethereum-forks/>`__ for more details.
 Note that the compiler introduces a new option only for forks that actually change the EVM.
 
-- ``homestead`` (*support deprecated*)
+- ``homestead`` (*support dropped*)
    - (oldest version)
 - ``tangerineWhistle`` (*support deprecated*)
    - Gas cost for access to other accounts increased, relevant for gas estimation and the optimizer.
@@ -362,7 +362,7 @@ Input Description
           }
         },
         // Version of the EVM to compile for (optional).
-        // Affects type checking and code generation. Can be homestead,
+        // Affects type checking and code generation. Can be
         // tangerineWhistle, spuriousDragon, byzantium, constantinople,
         // petersburg, istanbul, berlin, london, paris, shanghai, cancun,
         // prague, osaka (default), amsterdam (experimental), or @future (experimental).

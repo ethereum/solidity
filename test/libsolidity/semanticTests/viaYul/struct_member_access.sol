@@ -29,8 +29,6 @@ contract C {
         return (s.a, s.b.length, s.c, s.b[0], s.b[1], s.b[2]);
     }
 }
-// ====
-// EVMVersion: >homestead
 // ----
 // f((uint256,uint256[],uint256)): 0x20, 42, 0x60, 21, 3, 1, 2, 3 -> 42, 0x60, 21, 3, 1, 2, 3
 // g((uint256,uint256[],uint256)): 0x20, 42, 0x60, 21, 3, 1, 2, 3 -> 42, 3, 21, 1, 2, 3

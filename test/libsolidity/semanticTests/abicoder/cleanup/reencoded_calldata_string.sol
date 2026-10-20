@@ -21,7 +21,5 @@ contract C {
         return this.f("abc");
     }
 }
-// ====
-// EVMVersion: >homestead
 // ----
 // test() -> 0x20, 0x60, 0x20, 3, "abc"

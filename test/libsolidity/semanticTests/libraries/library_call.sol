@@ -5,8 +5,6 @@ contract Test {
         sender = Lib.m();
     }
 }
-// ====
-// EVMVersion: >=homestead
 // ----
 // library: Lib
 // f() ->

@@ -23,8 +23,6 @@ contract C {
         return (success, success ? abi.decode(data,(uint256)) : 0);
     }
 }
-// ====
-// EVMVersion: >homestead
 // ----
 // library: L
 // f() -> 1

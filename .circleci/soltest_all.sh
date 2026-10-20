@@ -31,8 +31,9 @@ REPODIR="$(realpath "$(dirname "$0")"/..)"
 # shellcheck source=scripts/common.sh
 source "${REPODIR}/scripts/common.sh"
 
+# This list should always include the earliest version we still support.
+# It's the one that differs the most from the latest one and should be tested on every PR.
 DEFAULT_EVM_VALUES=(
-    homestead
     constantinople
     istanbul
     berlin

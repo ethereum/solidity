@@ -105,7 +105,6 @@ void OptimiserSuite::run(
 	bool usesOptimizedCodeGenerator =
 		_optimizeStackAllocation &&
 		evmDialect &&
-		evmDialect->evmVersion().canOverchargeGasForCall() &&
 		evmDialect->providesObjectAccess();
 	bool usesSSACFGCodeGenerator = usesOptimizedCodeGenerator && _viaSSACFG;
 	std::set<YulName> reservedIdentifiers = _externallyUsedIdentifiers;

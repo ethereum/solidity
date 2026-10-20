@@ -21,8 +21,6 @@ contract C {
 		return (L.h.selector == bytes4(keccak256("h(uint256[])")), success, abi.decode(data, (uint256)));
     }
 }
-// ====
-// EVMVersion: >homestead
 // ----
 // library: L
 // f() -> true, true, 7
