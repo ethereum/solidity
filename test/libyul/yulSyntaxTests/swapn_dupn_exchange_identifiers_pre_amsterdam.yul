@@ -35,6 +35,8 @@ object "test"
         }
     }
 }
+// ====
+// EVMVersion: <amsterdam
 // ----
 // Warning 5470: (88-123): "swapn" will be promoted to Yul reserved identifier in the future and will not be allowed anymore as an identifier.
 // Warning 5470: (103-107): "dupn" will be promoted to Yul reserved identifier in the future and will not be allowed anymore as an identifier.

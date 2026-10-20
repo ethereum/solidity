@@ -59,6 +59,8 @@
         sstore(mul(1,5), b1)
     }
 }
+// ====
+// EVMVersion: <amsterdam
 // ----
 // step: stackLimitEvader
 //
