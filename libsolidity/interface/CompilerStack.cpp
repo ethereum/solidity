@@ -99,6 +99,7 @@ using namespace solidity::yul;
 using namespace std::string_literals;
 
 using solidity::util::errinfo_comment;
+using solidity::util::h256;
 
 static int g_compilerStackCounts = 0;
 
