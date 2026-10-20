@@ -245,7 +245,7 @@ Given the contract:
     :force:
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.9.0;
+    pragma solidity >=0.4.16 <0.10.0;
 
     contract Foo {
         function bar(bytes3[2] memory) public pure {}
@@ -521,7 +521,7 @@ reverts with a custom error of "insufficient balance":
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.8.4;
+    pragma solidity >=0.8.4 <0.10.0;
 
     contract TestToken {
         error InsufficientBalance(uint256 available, uint256 required);
@@ -610,7 +610,7 @@ For example,
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.8.4;
+    pragma solidity >=0.8.4 <0.10.0;
 
 
     contract Test {
@@ -664,7 +664,7 @@ As an example, the code
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.7.5 <0.9.0;
+    pragma solidity >=0.7.5 <0.10.0;
     pragma abicoder v2;
 
     contract Test {

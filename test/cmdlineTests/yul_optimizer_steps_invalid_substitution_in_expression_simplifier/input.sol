@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 // reproducing https://github.com/argotorg/solidity/issues/16155
 
-pragma solidity ^0.8.19;
+pragma solidity >=0.8.19 <0.10.0;
 
 contract PlaceholderContract {
     function tZhBDeXU4NnUR6(bool assert_in1) internal virtual returns (int128) {

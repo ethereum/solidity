@@ -25,7 +25,7 @@ to receive their Ether - contracts cannot activate themselves.
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.8.4;
+    pragma solidity >=0.8.4 <0.10.0;
     contract SimpleAuction {
         // Parameters of the auction. Times are either
         // absolute unix timestamps (seconds since 1970-01-01)
@@ -200,7 +200,7 @@ invalid bids.
     :force:
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.8.4;
+    pragma solidity >=0.8.4 <0.10.0;
     contract BlindAuction {
         struct Bid {
             bytes32 blindedBid;

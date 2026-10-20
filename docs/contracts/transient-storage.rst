@@ -47,7 +47,7 @@ which can be readily implemented with the opcodes as showcased next.
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.8.28;
+    pragma solidity >=0.8.28 <0.10.0;
 
     contract Generosity {
         mapping(address => bool) sentGifts;
@@ -120,7 +120,7 @@ Let's illustrate the problem with a simple example:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.8.28;
+    pragma solidity >=0.8.28 <0.10.0;
 
     contract MulService {
         uint transient multiplier;

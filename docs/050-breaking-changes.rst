@@ -314,7 +314,7 @@ This will no longer compile with Solidity v0.5.0. However, you can define a comp
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.9.0;
+    pragma solidity >=0.5.0 <0.10.0;
     interface OldContract {
         function someOldFunction(uint8 a) external;
         function anotherOldFunction() external returns (bool);
@@ -332,7 +332,7 @@ Given the interface defined above, you can now easily use the already deployed p
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.9.0;
+    pragma solidity >=0.5.0 <0.10.0;
 
     interface OldContract {
         function someOldFunction(uint8 a) external;

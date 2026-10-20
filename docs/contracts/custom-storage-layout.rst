@@ -13,7 +13,7 @@ start from the specified base slot instead of the default slot zero.
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.8.29;
+    pragma solidity >=0.8.29 <0.10.0;
 
     contract C layout at 0xAAAA + 0x11 {
         uint[3] x; // Occupies slots 0xAABB..0xAABD
