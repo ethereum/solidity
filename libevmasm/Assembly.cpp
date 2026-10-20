@@ -106,6 +106,8 @@ std::map<std::string, std::shared_ptr<std::string const>> Assembly::s_sharedSour
 
 AssemblyItem const& Assembly::append(AssemblyItem _i)
 {
+	solAssert(m_evmVersion.hasDupSwapN() || (_i.type() != SwapN && _i.type() != DupN));
+
 	assertThrow(m_deposit >= 0, AssemblyException, "Stack underflow.");
 	m_deposit += static_cast<int>(_i.deposit());
 	m_items.emplace_back(std::move(_i));
@@ -1099,6 +1101,13 @@ LinkerObject const& Assembly::assembleLegacy() const
 		{
 		case Operation:
 			ret.bytecode += assembleOperation(item);
+			break;
+		case SwapN:
+		case DupN:
+			solAssert(m_evmVersion.hasDupSwapN());
+			ret.bytecode.push_back(static_cast<uint8_t>(item.instruction()));
+			solAssert(item.data() < std::numeric_limits<size_t>::max());
+			ret.bytecode.push_back(encodeDupSwapNImmediate(static_cast<size_t>(item.data())));
 			break;
 		case Push:
 			ret.bytecode += assemblePush(item);

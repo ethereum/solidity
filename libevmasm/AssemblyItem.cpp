@@ -104,6 +104,10 @@ std::pair<std::string, std::string> AssemblyItem::nameAndData(langutil::EVMVersi
 		return {"PUSH data", toStringInHex(data())};
 	case VerbatimBytecode:
 		return {"VERBATIM", util::toHex(verbatimData())};
+	case SwapN:
+		return {"SWAPN", util::toString(data())};
+	case DupN:
+		return {"DUPN", util::toString(data())};
 	case UndefinedItem:
 		solAssert(false);
 	}
@@ -165,6 +169,9 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength, langutil::EVMVersion _
 	}
 	case VerbatimBytecode:
 		return std::get<2>(*m_verbatimBytecode).size();
+	case SwapN:
+	case DupN:
+		return 1 + 1; // Instruction + one byte of immediate data. According to https://eips.ethereum.org/EIPS/eip-8024
 	case UndefinedItem:
 		solAssert(false);
 	}
@@ -205,8 +212,10 @@ size_t AssemblyItem::returnValues() const
 	case PushLibraryAddress:
 	case PushImmutable:
 	case PushDeployTimeAddress:
+	case DupN:
 		return 1;
 	case Tag:
+	case SwapN:
 		return 0;
 	case VerbatimBytecode:
 		return std::get<1>(*m_verbatimBytecode);
@@ -240,6 +249,8 @@ bool AssemblyItem::canBeFunctional() const
 	case AssignImmutable:
 	case VerbatimBytecode:
 	case UndefinedItem:
+	case SwapN:
+	case DupN:
 		break;
 	}
 	return false;
@@ -335,6 +346,12 @@ std::string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 	case VerbatimBytecode:
 		text = std::string("verbatimbytecode_") + util::toHex(std::get<2>(*m_verbatimBytecode));
 		break;
+	case SwapN:
+		text = "swapn{" + std::to_string(static_cast<size_t>(data())) + "}";
+		break;
+	case DupN:
+		text = "dupn{" + std::to_string(static_cast<size_t>(data())) + "}";
+		break;
 	}
 	if (m_jumpType == JumpType::IntoFunction || m_jumpType == JumpType::OutOfFunction)
 	{
@@ -356,6 +373,10 @@ std::ostream& solidity::evmasm::operator<<(std::ostream& _out, AssemblyItem cons
 		_out << " " << instructionInfo(_item.instruction(), EVMVersion()).name;
 		if (_item.instruction() == Instruction::JUMP || _item.instruction() == Instruction::JUMPI)
 			_out << "\t" << _item.getJumpTypeAsString();
+		break;
+	case SwapN:
+	case DupN:
+		_out << " " << instructionInfo(_item.instruction(), EVMVersion()).name << " " << std::dec << _item.data();
 		break;
 	case Push:
 		_out << " PUSH " << std::hex << _item.data() <<  std::dec;
