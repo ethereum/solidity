@@ -297,6 +297,13 @@ boost::unit_test::precondition::predicate_t minEVMVersionCheck(langutil::EVMVers
 	};
 }
 
+boost::unit_test::precondition::predicate_t maxEVMVersionCheck(langutil::EVMVersion _maxEVMVersion)
+{
+	return [_maxEVMVersion](boost::unit_test::test_unit_id) {
+		return test::CommonOptions::get().evmVersion() <= _maxEVMVersion;
+	};
+}
+
 bool loadVMs(CommonOptions const& _options)
 {
 	if (_options.disableSemanticTests)

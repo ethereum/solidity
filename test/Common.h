@@ -110,6 +110,11 @@ bool isValidSemanticTestPath(boost::filesystem::path const& _testPath);
 /// @return A predicate (function) that can be passed into @a boost::unit_test::precondition().
 boost::unit_test::precondition::predicate_t minEVMVersionCheck(langutil::EVMVersion _minEVMVersion);
 
+/// Helper that can be used to skip tests when the EVM version selected on the command line
+/// is newer than @p _maxEVMVersion.
+/// @return A predicate (function) that can be passed into @a boost::unit_test::precondition().
+boost::unit_test::precondition::predicate_t maxEVMVersionCheck(langutil::EVMVersion _maxEVMVersion);
+
 bool loadVMs(CommonOptions const& _options);
 
 /**

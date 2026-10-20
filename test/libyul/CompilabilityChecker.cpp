@@ -27,7 +27,13 @@
 #include <libyul/CompilabilityChecker.h>
 #include <libyul/YulStack.h>
 
+#include <libsolutil/CommonData.h>
+
 #include <boost/test/unit_test.hpp>
+
+using namespace solidity::langutil;
+using namespace solidity::test;
+
 
 namespace solidity::yul::test
 {
@@ -46,6 +52,41 @@ std::string check(std::string const& _input)
 		out += function.first.str() + ": " + std::to_string(function.second) + " ";
 	return out;
 }
+
+/// @returns the source of a function with @a _numVariables local variables of which the
+/// first @a _numUses are used in a computation afterwards.
+std::string manyVariablesSource(size_t _numVariables, size_t _numUses)
+{
+	soltestAssert(_numUses <= _numVariables);
+
+	std::vector<std::string> variables;
+	for (size_t i = 1; i <= _numVariables; ++i)
+		variables.emplace_back("r" + std::to_string(i));
+
+	std::string expression = "x";
+	for (size_t i = _numUses; i >= 1; --i)
+		expression = "add(" + expression + ", r" + std::to_string(i) + ")";
+
+	return
+		"{ function f(a, b) -> x, y {\n"
+		"let " + util::joinHumanReadable(variables, ", ") + "\n"
+		"x := " + expression + "\n"
+		"} }\n";
+}
+
+/// @returns the source of a function with @a _numReturnVariables return variables whose
+/// arguments are used in the body if @a _useArguments is set.
+std::string manyReturnVariablesSource(size_t _numReturnVariables, bool _useArguments)
+{
+	std::vector<std::string> returnVariables;
+	for (size_t i = 1; i <= _numReturnVariables; ++i)
+		returnVariables.emplace_back("r" + std::to_string(i));
+
+	return
+		"{ function f(a, b) -> " + util::joinHumanReadable(returnVariables, ", ") + " {\n" +
+		(_useArguments ? "r1 := 0\nsstore(a, b)\n" : "") +
+		"} }\n";
+}
 }
 
 BOOST_AUTO_TEST_SUITE(CompilabilityChecker)
@@ -62,7 +103,7 @@ BOOST_AUTO_TEST_CASE(simple_function)
 	BOOST_CHECK_EQUAL(out, "");
 }
 
-BOOST_AUTO_TEST_CASE(many_variables_few_uses)
+BOOST_AUTO_TEST_CASE(many_variables_few_uses, *boost::unit_test::precondition(maxEVMVersionCheck(EVMVersion::osaka())))
 {
 	std::string out = check(R"({
 		function f(a, b) -> x, y {
@@ -90,7 +131,7 @@ BOOST_AUTO_TEST_CASE(many_variables_few_uses)
 	BOOST_CHECK_EQUAL(out, "f: 4 ");
 }
 
-BOOST_AUTO_TEST_CASE(many_variables_many_uses)
+BOOST_AUTO_TEST_CASE(many_variables_many_uses, *boost::unit_test::precondition(maxEVMVersionCheck(EVMVersion::osaka())))
 {
 	std::string out = check(R"({
 		function f(a, b) -> x, y {
@@ -118,7 +159,7 @@ BOOST_AUTO_TEST_CASE(many_variables_many_uses)
 	BOOST_CHECK_EQUAL(out, "f: 10 ");
 }
 
-BOOST_AUTO_TEST_CASE(many_return_variables_unused_arguments)
+BOOST_AUTO_TEST_CASE(many_return_variables_unused_arguments, *boost::unit_test::precondition(maxEVMVersionCheck(EVMVersion::osaka())))
 {
 	std::string out = check(R"({
 		function f(a, b) -> r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15, r16, r17, r18, r19 {
@@ -127,7 +168,7 @@ BOOST_AUTO_TEST_CASE(many_return_variables_unused_arguments)
 	BOOST_CHECK_EQUAL(out, "f: 3 ");
 }
 
-BOOST_AUTO_TEST_CASE(many_return_variables_used_arguments)
+BOOST_AUTO_TEST_CASE(many_return_variables_used_arguments, *boost::unit_test::precondition(maxEVMVersionCheck(EVMVersion::osaka())))
 {
 	std::string out = check(R"({
 		function f(a, b) -> r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15, r16, r17, r18, r19 {
@@ -138,7 +179,34 @@ BOOST_AUTO_TEST_CASE(many_return_variables_used_arguments)
 	BOOST_CHECK_EQUAL(out, "f: 5 ");
 }
 
-BOOST_AUTO_TEST_CASE(multiple_functions_used_arguments)
+// Starting from "amsterdam", DUPN and SWAPN (EIP-8024) extend the reachable stack depth to 235,
+// so the deficits only appear with correspondingly more values on the stack.
+
+BOOST_AUTO_TEST_CASE(many_variables_few_uses_dupn_swapn, *boost::unit_test::precondition(minEVMVersionCheck(EVMVersion::amsterdam())))
+{
+	BOOST_CHECK_EQUAL(check(manyVariablesSource(18, 9)), "");
+	BOOST_CHECK_EQUAL(check(manyVariablesSource(237, 228)), "f: 223 ");
+}
+
+BOOST_AUTO_TEST_CASE(many_variables_many_uses_dupn_swapn, *boost::unit_test::precondition(minEVMVersionCheck(EVMVersion::amsterdam())))
+{
+	BOOST_CHECK_EQUAL(check(manyVariablesSource(18, 12)), "");
+	BOOST_CHECK_EQUAL(check(manyVariablesSource(237, 231)), "f: 229 ");
+}
+
+BOOST_AUTO_TEST_CASE(many_return_variables_unused_arguments_dupn_swapn, *boost::unit_test::precondition(minEVMVersionCheck(EVMVersion::amsterdam())))
+{
+	BOOST_CHECK_EQUAL(check(manyReturnVariablesSource(19, false)), "");
+	BOOST_CHECK_EQUAL(check(manyReturnVariablesSource(238, false)), "f: 3 ");
+}
+
+BOOST_AUTO_TEST_CASE(many_return_variables_used_arguments_dupn_swapn, *boost::unit_test::precondition(minEVMVersionCheck(EVMVersion::amsterdam())))
+{
+	BOOST_CHECK_EQUAL(check(manyReturnVariablesSource(19, true)), "");
+	BOOST_CHECK_EQUAL(check(manyReturnVariablesSource(238, true)), "f: 5 ");
+}
+
+BOOST_AUTO_TEST_CASE(multiple_functions_used_arguments, *boost::unit_test::precondition(maxEVMVersionCheck(EVMVersion::osaka())))
 {
 	std::string out = check(R"({
 		function f(a, b) -> r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15, r16, r17, r18, r19 {
@@ -174,7 +242,7 @@ BOOST_AUTO_TEST_CASE(multiple_functions_used_arguments)
 	BOOST_CHECK_EQUAL(out, "h: 9 g: 5 f: 5 ");
 }
 
-BOOST_AUTO_TEST_CASE(multiple_functions_unused_arguments)
+BOOST_AUTO_TEST_CASE(multiple_functions_unused_arguments, *boost::unit_test::precondition(maxEVMVersionCheck(EVMVersion::osaka())))
 {
 	std::string out = check(R"({
 		function f(a, b) -> r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15, r16, r17, r18, r19 {
@@ -206,7 +274,7 @@ BOOST_AUTO_TEST_CASE(multiple_functions_unused_arguments)
 	BOOST_CHECK_EQUAL(out, "h: 9 f: 3 ");
 }
 
-BOOST_AUTO_TEST_CASE(nested_used_arguments)
+BOOST_AUTO_TEST_CASE(nested_used_arguments, *boost::unit_test::precondition(maxEVMVersionCheck(EVMVersion::osaka())))
 {
 	std::string out = check(R"({
 		function h(x) {
@@ -243,7 +311,7 @@ BOOST_AUTO_TEST_CASE(nested_used_arguments)
 }
 
 
-BOOST_AUTO_TEST_CASE(nested_unused_arguments)
+BOOST_AUTO_TEST_CASE(nested_unused_arguments, *boost::unit_test::precondition(maxEVMVersionCheck(EVMVersion::osaka())))
 {
 	std::string out = check(R"({
 		function h(x) {
@@ -276,7 +344,7 @@ BOOST_AUTO_TEST_CASE(nested_unused_arguments)
 }
 
 
-BOOST_AUTO_TEST_CASE(also_in_outer_block_used_arguments)
+BOOST_AUTO_TEST_CASE(also_in_outer_block_used_arguments, *boost::unit_test::precondition(maxEVMVersionCheck(EVMVersion::osaka())))
 {
 	std::string out = check(R"({
 			let x := 0
@@ -307,7 +375,7 @@ BOOST_AUTO_TEST_CASE(also_in_outer_block_used_arguments)
 	BOOST_CHECK_EQUAL(out, "g: 5 : 9 ");
 }
 
-BOOST_AUTO_TEST_CASE(also_in_outer_block_unused_arguments)
+BOOST_AUTO_TEST_CASE(also_in_outer_block_unused_arguments, *boost::unit_test::precondition(maxEVMVersionCheck(EVMVersion::osaka())))
 {
 	std::string out = check(R"({
 			let x := 0
