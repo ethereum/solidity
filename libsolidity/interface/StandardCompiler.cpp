@@ -710,7 +710,6 @@ std::variant<StandardCompiler::InputsAndSettings, Json> StandardCompiler::parseI
 		return formatFatalError(Error::Type::JSONError, "No input sources specified.");
 
 	ret.errors = Json::array();
-	ret.sources = Json::object();
 
 	if (ret.language == "Solidity" || ret.language == "Yul")
 	{

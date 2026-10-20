@@ -41,12 +41,17 @@ struct AssignedValue;
  * Class that can answer questions about values of variables and their relations.
  *
  * Requires a callback that returns the current value of the variable.
- * The value can change any time during the lifetime of the KnowledgeBase,
- * it will update its internal data structure accordingly.
- *
- * This means that the code the KnowledgeBase is used on does not need to be in SSA
- * form.
- * The only requirement is that the assigned values are movable expressions.
+ * The value can change during the lifetime of the KnowledgeBase, so the code it is
+ * used on does not need to be in SSA form. In that case, the caller has to ensure:
+ *  - The values are movable expressions.
+ *  - ``variableChanged`` is called whenever the value of a variable changes.
+ *  - A value only references variables that have not changed since it was assigned.
+ *    In particular, it does not reference the variable it is assigned to.
+ *    Values are evaluated lazily. So if a referenced variable changes, the value
+ *    has to be forgotten, otherwise it would be evaluated using the new value of
+ *    the referenced variable. This also rules out cycles, which is needed
+ *    for exploration to terminate.
+ * The DataFlowAnalyzer ensures this in ``handleAssignment`` and ``clearValues``.
  *
  * There is a constructor to provide all SSA values right at the beginning.
  * If you use this, the KnowledgeBase will be slightly more efficient.
@@ -54,6 +59,8 @@ struct AssignedValue;
  * Internally, tries to find groups of variables that have a mutual constant
  * difference and stores these differences always relative to a specific
  * representative variable of the group.
+ * Variables are versioned, so these differences never have to be invalidated,
+ * in particular, after a change, the variable is treated as a new one.
  *
  * There is a special group which is the constant values. Those use the
  * empty YulName as representative "variable".
@@ -78,19 +85,35 @@ public:
 	std::optional<u256> valueIfKnownConstant(YulName _a);
 	std::optional<u256> valueIfKnownConstant(Expression const& _expression);
 
+	/// Has to be called whenever the value of @a _var changes.
+	void variableChanged(YulName const _var)
+	{
+		yulAssert(!m_valuesAreSSA);
+		yulAssert(!_var.empty());
+		++m_currentVersions[_var];
+	}
+
 private:
+	struct VersionedVariable
+	{
+		YulName name;
+		std::size_t version = 0;
+
+		auto operator<=>(VersionedVariable const&) const = default;
+	};
+
 	/**
 	 * Constant offset relative to a reference variable, or absolute constant if the
 	 * reference variable is the empty YulName.
 	 */
 	struct VariableOffset
 	{
-		YulName reference;
+		VersionedVariable reference;
 		u256 offset;
 
 		bool isAbsolute() const
 		{
-			return reference.empty();
+			return reference.name.empty();
 		}
 
 		std::optional<u256> absoluteValue() const
@@ -101,6 +124,16 @@ private:
 				return std::nullopt;
 		}
 	};
+
+	struct CachedOffset
+	{
+		VariableOffset offset;
+		/// Value of the variable the offset was computed from, nullptr if it was unknown
+		Expression const* computedFrom = nullptr;
+	};
+
+	/// @returns @a _var at its current version, which is zero if it never changed.
+	VersionedVariable withCurrentVersion(YulName _var) const;
 
 	/// Determines the offset of @a _var relative to the representative of its group by recursively exploring the value
 	/// provided by the value callback. The result is memoized. If the value is unknown or cannot be expressed as a
@@ -113,15 +146,6 @@ private:
 	/// @returns the offset or nullopt if @a _value is not of one of these forms
 	std::optional<VariableOffset> explore(Expression const& _value);
 
-	/// Retrieves the current value of a variable and potentially resets the variable if it is not up to date.
-	Expression const* valueOf(YulName _var);
-
-	/// Resets all information about the variable and removes it from its group,
-	/// potentially finding a new representative.
-	void reset(YulName _var);
-
-	VariableOffset setOffset(YulName _variable, VariableOffset _value);
-
 	/// If true, we can assume that variable values never change and skip some steps.
 	bool m_valuesAreSSA = false;
 	/// Callback to retrieve the current value of a variable.
@@ -129,13 +153,12 @@ private:
 	std::optional<BuiltinHandle> m_addBuiltinHandle;
 	std::optional<BuiltinHandle> m_subBuiltinHandle;
 
-	/// Offsets for each variable to one representative per group.
+	/// Offsets for each version of a variable to one representative per group.
 	/// The empty string is the representative of the constant value zero.
-	std::map<YulName, VariableOffset> m_offsets;
-	/// Last known value of each variable we queried.
-	std::map<YulName, Expression const*> m_lastKnownValue;
-	/// For each representative, variables that use it to offset from.
-	std::map<YulName, std::set<YulName>> m_groupMembers;
+	std::map<VersionedVariable, CachedOffset> m_offsets;
+
+	/// Current version of each variable that changed at least once.
+	std::map<YulName, std::size_t> m_currentVersions;
 };
 
 }

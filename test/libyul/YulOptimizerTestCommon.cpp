@@ -345,6 +345,14 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(std::shared_ptr<Object const> _ob
 			ExpressionJoiner::run(*m_context, block);
 			return block;
 		}},
+		{"loadResolverSolo", [&]() {
+			auto block = disambiguate();
+			updateContext(block);
+			ForLoopInitRewriter::run(*m_context, block);
+
+			LoadResolver::run(*m_context, block);
+			return block;
+		}},
 		{"loopInvariantCodeMotion", [&]() {
 			auto block = disambiguate();
 			updateContext(block);

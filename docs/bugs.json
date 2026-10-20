@@ -1,5 +1,18 @@
 [
     {
+        "uid": "SOL-2026-7",
+        "name": "YulOptimizerKnowledgeBaseStaleBookkeeping",
+        "summary": "The Yul optimizer could consider two memory or storage locations distinct even though their addresses were computed from different values of the same reassigned variable and coincided at runtime. This could lead to loads being replaced with outdated values and to needed stores being removed.",
+        "description": "The Yul optimizer steps ``LoadResolver`` and ``EqualStoreEliminator`` keep track of what was stored in memory and storage. ``LoadResolver`` uses this to replace loads and ``keccak256`` calls with known values, and ``EqualStoreEliminator`` uses it to remove stores of a value that the location already contains. Whenever a store is encountered whose exact location cannot be determined, the optimizer has to forget what it knows about every location the store might overwrite. To decide this, the optimizer represents an address symbolically as a constant offset either from zero or from another variable (its base variable). Two addresses with the same base can then be determined to be distinct if their offsets differ (for storage) or are at least 32 bytes apart (for memory). These representations were cached per variable. The base variable, however, may be reassigned afterwards. The optimizer did not always notice and then compared an address computed from the old value of the base with an address computed from the new value as if both used the same base. As a result, it could consider two locations distinct even though they coincided at runtime, keeping a stale entry for a location that had just been overwritten. A subsequent load from that location could then be replaced with an outdated value, a subsequent store of that value to the location could be removed, and ``keccak256`` over the location could be replaced with the hash of an outdated value. Whether the bug is triggered depends on the structure of the intermediate code these optimizer steps receive. It is therefore sensitive to the optimizer sequence and to the surrounding code, and the two locations additionally have to coincide at runtime. In optimized IR code generation, any code may be affected, including code without inline assembly. In optimized evmasm code generation, only inline assembly that does not refer to any Solidity variables or functions and compiler-generated Yul utility functions could be affected. Unoptimized code is unaffected.",
+        "link": "https://blog.soliditylang.org/2026/10/22/yul-optimizer-knowledge-base-stale-bookkeeping-bug/",
+        "introduced": "0.8.19",
+        "fixed": "0.8.38",
+        "severity": "low",
+        "conditions": {
+            "yulOptimizer": true
+        }
+    },
+    {
         "uid": "SOL-2026-6",
         "name": "MisorderedNamedParametersInRequireWithCustomErrors",
         "summary": "Custom error arguments passed to ``require`` using named-parameter syntax are ABI-encoded in call-site order instead of declaration order when compiling via IR.",

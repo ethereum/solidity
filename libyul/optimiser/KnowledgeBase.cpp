@@ -85,37 +85,49 @@ std::optional<u256> KnowledgeBase::valueIfKnownConstant(Expression const& _expre
 		return std::nullopt;
 }
 
+KnowledgeBase::VersionedVariable KnowledgeBase::withCurrentVersion(YulName _var) const
+{
+	return {
+		.name = _var,
+		.version = util::valueOrDefault(m_currentVersions, _var, 0U)
+	};
+}
+
 KnowledgeBase::VariableOffset KnowledgeBase::explore(YulName _var)
 {
-	Expression const* value = nullptr;
-	if (m_valuesAreSSA)
+	yulAssert(!_var.empty());
+	VersionedVariable const currentVar = withCurrentVersion(_var);
+	AssignedValue const* assignedValueWrapper = m_variableValues(_var);
+	Expression const* assignedValue = assignedValueWrapper ? assignedValueWrapper->value : nullptr;
+	// A versioned variable always refers to the same value,
+	// so we check if we already computed it
+	if (CachedOffset const* cachedOffset = util::valueOrNullptr(m_offsets, currentVar))
 	{
-		// In SSA, a once determined offset is always valid, so we first see
-		// if we already computed it.
-		if (VariableOffset const* varOff = util::valueOrNullptr(m_offsets, _var))
-			return *varOff;
-		value = valueOf(_var);
-	}
-	else
-	{
-		// For non-SSA, we query the value first so that the variable is reset if it has changed
-		// since the last call.
-		value = valueOf(_var);
-		if (VariableOffset const* varOff = util::valueOrNullptr(m_offsets, _var))
-			return *varOff;
+		yulAssert(
+			!assignedValue || cachedOffset->computedFrom == assignedValue,
+			"Value changed without a call to variableChanged()."
+		);
+		return cachedOffset->offset;
 	}
 
-	if (value)
-		if (std::optional<VariableOffset> offset = explore(*value))
-			return setOffset(_var, *offset);
-	return setOffset(_var, VariableOffset{_var, 0});
-
+	VariableOffset offset{.reference = currentVar, .offset = 0};
+	// This terminates only because the owner of the knowledge base is required to ensure that
+	// a value does not reference _var, not even indirectly.
+	// We explore the variables referenced by the value at their current version, as we cannot
+	// tell which version was current when the value was assigned. This is only correct if none
+	// of them changed since then. It is the owner's responsibility to return nullptr for the
+	// value if they did.
+	if (assignedValue)
+		if (std::optional<VariableOffset> const offsetIfKnown = explore(*assignedValue))
+			offset = *offsetIfKnown;
+	m_offsets[currentVar] = {.offset = offset, .computedFrom = assignedValue};
+	return offset;
 }
 
 std::optional<KnowledgeBase::VariableOffset> KnowledgeBase::explore(Expression const& _value)
 {
 	if (Literal const* literal = std::get_if<Literal>(&_value))
-		return VariableOffset{YulName{}, literal->value.value()};
+		return VariableOffset{VersionedVariable{}, literal->value.value()};
 	else if (Identifier const* identifier = std::get_if<Identifier>(&_value))
 		return explore(identifier->name);
 	else if (
@@ -143,7 +155,7 @@ std::optional<KnowledgeBase::VariableOffset> KnowledgeBase::explore(Expression c
 				{
 					u256 offset = a->offset - b->offset;
 					if (a->reference == b->reference)
-						return VariableOffset{YulName{}, offset};
+						return VariableOffset{VersionedVariable{}, offset};
 					else if (b->isAbsolute())
 						// b is constant
 						return VariableOffset{a->reference, offset};
@@ -151,66 +163,4 @@ std::optional<KnowledgeBase::VariableOffset> KnowledgeBase::explore(Expression c
 	}
 
 	return std::nullopt;
-}
-
-Expression const* KnowledgeBase::valueOf(YulName _var)
-{
-	AssignedValue const* assignedValue = m_variableValues(_var);
-	Expression const* currentValue = assignedValue ? assignedValue->value : nullptr;
-	if (m_valuesAreSSA)
-		return currentValue;
-
-	Expression const* lastValue = m_lastKnownValue[_var];
-	if (lastValue != currentValue)
-		reset(_var);
-	m_lastKnownValue[_var] = currentValue;
-	return currentValue;
-}
-
-void KnowledgeBase::reset(YulName _var)
-{
-	yulAssert(!m_valuesAreSSA);
-
-	m_lastKnownValue.erase(_var);
-	if (VariableOffset const* offset = util::valueOrNullptr(m_offsets, _var))
-	{
-		// Remove var from its group
-		if (!offset->isAbsolute())
-			m_groupMembers[offset->reference].erase(_var);
-		m_offsets.erase(_var);
-	}
-	if (std::set<YulName>* group = util::valueOrNullptr(m_groupMembers, _var))
-	{
-		// _var was a representative, we might have to find a new one.
-		if (!group->empty())
-		{
-			YulName newRepresentative = *group->begin();
-			yulAssert(newRepresentative != _var);
-			u256 newOffset = m_offsets[newRepresentative].offset;
-			// newOffset = newRepresentative - _var
-			for (YulName groupMember: *group)
-			{
-				yulAssert(m_offsets[groupMember].reference == _var);
-				m_offsets[groupMember].reference = newRepresentative;
-				// groupMember = _var + m_offsets[groupMember].offset (old)
-				//             = newRepresentative - newOffset + m_offsets[groupMember].offset (old)
-				// so subtracting newOffset from .offset yields the original relation again,
-				// just with _var replaced by newRepresentative
-				m_offsets[groupMember].offset -= newOffset;
-			}
-			m_groupMembers[newRepresentative] = std::move(*group);
-
-		}
-		m_groupMembers.erase(_var);
-	}
-}
-
-KnowledgeBase::VariableOffset KnowledgeBase::setOffset(YulName _variable, VariableOffset _value)
-{
-	m_offsets[_variable] = _value;
-	// Constants are not tracked in m_groupMembers because
-	// the "representative" can never be reset.
-	if (!_value.reference.empty())
-		m_groupMembers[_value.reference].insert(_variable);
-	return _value;
 }

@@ -2294,7 +2294,7 @@ BOOST_DATA_TEST_CASE(ethdebug_output_instructions_smoketest, boost::unit_test::d
 			BOOST_REQUIRE(instruction["context"]["code"]["range"].contains("offset"));
 			BOOST_REQUIRE(instruction["context"]["code"]["source"].contains("id"));
 		}
-		std::string mnemonic = instruction["operation"]["mnemonic"];
+		std::string mnemonic = instruction["operation"]["mnemonic"].get<std::string>();
 		if (mnemonic.find("PUSH") != std::string::npos)
 		{
 			size_t bytesToPush = boost::lexical_cast<size_t>(mnemonic.substr(4));
@@ -2303,7 +2303,7 @@ BOOST_DATA_TEST_CASE(ethdebug_output_instructions_smoketest, boost::unit_test::d
 				BOOST_REQUIRE(instruction["operation"].contains("arguments"));
 				BOOST_REQUIRE(instruction["operation"]["arguments"].is_array());
 				BOOST_REQUIRE(instruction["operation"]["arguments"].size() == 1);
-				std::string argument = instruction["operation"]["arguments"][0];
+				std::string argument = instruction["operation"]["arguments"][0].get<std::string>();
 				BOOST_REQUIRE(argument.length() % 2 == 0);
 				BOOST_REQUIRE(bytesToPush == (argument.length() - 2) / 2); // remove "0x" and calculate actual byte size from hex.
 			}

@@ -181,6 +181,8 @@ private:
 	struct State
 	{
 		/// Current values of variables, always movable.
+		/// A value never references the variable it is assigned to, and is cleared as soon as
+		/// a variable it references changes (see clearValues). The knowledge base relies on this.
 		util::unordered_flat_map<YulName, AssignedValue> value;
 		/// m_references[a].contains(b) <=> the current expression assigned to a references b
 		/// The mapped vectors _must always_ be sorted
