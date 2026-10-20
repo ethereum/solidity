@@ -241,36 +241,53 @@ AssemblyItem Assembly::createAssemblyItemFromJSON(Json const& _json, std::vector
 	if (srcIndex != -1)
 		location.sourceName = sharedSourceName(_sourceList[static_cast<size_t>(srcIndex)]);
 
+	solRequire(
+		jumpType.empty() || name == "JUMP" || name == "JUMPI",
+		AssemblyImportException,
+		"Member 'jumpType' set on instruction different from JUMP or JUMPI (was set on instruction '" + name + "')"
+	);
+
 	AssemblyItem result(0);
 
 	if (c_instructions.count(name))
 	{
-		AssemblyItem item{c_instructions.at(name), langutil::DebugData::create(location)};
-		if (!jumpType.empty())
+		if (name == "SWAPN" || name == "DUPN")
 		{
-			if (item.instruction() == Instruction::JUMP || item.instruction() == Instruction::JUMPI)
+			solRequire(
+				m_evmVersion.hasDupSwapN(),
+				AssemblyImportException,
+				"Instruction '" + name + "' is only available starting from the \"amsterdam\" EVM version."
+			);
+			requireValueDefinedForInstruction(name, value);
+
+			std::optional<uint8_t> const depth = parseArithmetic<uint8_t>(value);
+			solRequire(depth.has_value(), AssemblyImportException, "Invalid depth for instruction '" + name + "'.");
+			solRequire(
+				isValidDupSwapNDepth(*depth),
+				AssemblyImportException,
+				"Invalid depth for instruction '" + name + "'."
+			);
+			if (name == "SWAPN")
+				result = AssemblyItem::swap(*depth);
+			else
+				result = AssemblyItem::dup(*depth);
+		}
+		else
+		{
+			AssemblyItem item{c_instructions.at(name), langutil::DebugData::create(location)};
+			if (!jumpType.empty())
 			{
 				std::optional<AssemblyItem::JumpType> parsedJumpType = AssemblyItem::parseJumpType(jumpType);
 				if (!parsedJumpType.has_value())
 					solThrow(AssemblyImportException, "Invalid jump type.");
 				item.setJumpType(parsedJumpType.value());
 			}
-			else
-				solThrow(
-					AssemblyImportException,
-					"Member 'jumpType' set on instruction different from JUMP or JUMPI (was set on instruction '" + name + "')"
-				);
+			requireValueUndefinedForInstruction(name, value);
+			result = item;
 		}
-		requireValueUndefinedForInstruction(name, value);
-		result = item;
 	}
 	else
 	{
-		solRequire(
-			jumpType.empty(),
-			AssemblyImportException,
-			"Member 'jumpType' set on instruction different from JUMP or JUMPI (was set on instruction '" + name + "')"
-		);
 		if (name == "PUSH")
 		{
 			requireValueDefinedForInstruction(name, value);

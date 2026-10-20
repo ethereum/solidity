@@ -24,6 +24,8 @@
 
 #include <liblangutil/Common.h>
 
+#include <libsolutil/StringUtils.h>
+
 #include <boost/algorithm/string/find.hpp>
 
 #include <fmt/format.h>
@@ -78,8 +80,30 @@ Json PlainAssemblyParser::parseAssembly(size_t _nestingLevel)
 
 		if (c_instructions.contains(currentToken().value) || currentToken().value == "PUSHSIZE")
 		{
-			expectNoMoreArguments();
-			codeJSON.push_back({{"name", currentToken().value}});
+			std::string_view name = currentToken().value;
+			if (name == "SWAPN" || name == "DUPN")
+			{
+				if (
+					std::optional<uint8_t> const depth = solidity::util::parseArithmetic<uint8_t>(expectArgument());
+					depth.has_value() && isValidDupSwapNDepth(*depth)
+				)
+					codeJSON.push_back({{"name", name}, {"value", currentToken().value}});
+				else
+					BOOST_THROW_EXCEPTION(
+						std::runtime_error(
+							formatError(
+								"Invalid " + std::string(name) + " depth: " + std::string(currentToken().value)
+							)
+						)
+					);
+
+				expectNoMoreArguments();
+			}
+			else
+			{
+				expectNoMoreArguments();
+				codeJSON.push_back({{"name", currentToken().value}});
+			}
 		}
 		else if (currentToken().value == "PUSH")
 		{

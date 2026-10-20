@@ -109,6 +109,31 @@ BOOST_AUTO_TEST_CASE(legacy_dupn_swapn_rejected_before_amsterdam)
 	BOOST_CHECK_THROW(assembleSingleItem(AssemblyItem::swap(20)), InternalCompilerError);
 }
 
+BOOST_AUTO_TEST_CASE(plain_assembly_parser_dupn_swapn_depth_range)
+{
+	auto parse = [](std::string const& _source)
+	{
+		return evmasm::test::PlainAssemblyParser{}.parse("test.asm", _source);
+	};
+
+	for (std::string const name: {"DUPN", "SWAPN"})
+	{
+		for (std::string const depth: {"17", "100", "108", "144", "145", "235"})
+		{
+			Json const json = parse(name + " " + depth);
+			BOOST_REQUIRE_EQUAL(json[".code"].size(), 1);
+			BOOST_CHECK_EQUAL(json[".code"][0]["name"], name);
+			BOOST_CHECK_EQUAL(json[".code"][0]["value"], depth);
+		}
+
+		// Depths outside of [17, 235], values not fitting into a byte and non-numeric values.
+		for (std::string const depth: {"0", "1", "16", "236", "255", "256", "-1", "abc"})
+			BOOST_CHECK_THROW(parse(name + " " + depth), std::runtime_error);
+		BOOST_CHECK_THROW(parse(name), std::runtime_error);
+		BOOST_CHECK_THROW(parse(name + " 17 18"), std::runtime_error);
+	}
+}
+
 BOOST_AUTO_TEST_CASE(legacy_dupn_swapn_disassembly_spec_vectors)
 {
 	// Test vectors from https://eips.ethereum.org/EIPS/eip-8024
