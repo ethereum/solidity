@@ -89,15 +89,9 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 
 	# Additional GCC-specific compiler settings.
 	if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
-		# Check that we've got GCC 11.0 or newer.
-		if (NOT (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 11.0))
-			message(FATAL_ERROR "${PROJECT_NAME} requires g++ 11.0 or greater.")
-		endif ()
-
-		# GCC 12 emits warnings for string concatenations with operator+ under O3
-		# See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105651
-		if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 12.0 AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13.0)
-			add_compile_options(-Wno-error=restrict)
+		# Check that we've got GCC 13.0 or newer.
+		if (NOT (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 13.0))
+			message(FATAL_ERROR "${PROJECT_NAME} requires g++ 13.0 or greater.")
 		endif ()
 
 		# Use fancy colors in the compiler diagnostics
@@ -105,9 +99,12 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 
 	# Additional Clang-specific compiler settings.
 	elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-		# Check that we've got clang 14.0 or newer.
-		if (NOT (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 14.0))
-			message(FATAL_ERROR "${PROJECT_NAME} requires clang++ 14.0 or greater.")
+		if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+			if (NOT (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 17.0))
+				message(FATAL_ERROR "${PROJECT_NAME} requires AppleClang 17.0 or greater.")
+			endif ()
+		elseif (NOT (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.0))
+			message(FATAL_ERROR "${PROJECT_NAME} requires clang++ 19.0 or greater.")
 		endif ()
 
 		# use std::invoke_result, superseding std::result_of which has been removed in c++20
