@@ -206,11 +206,36 @@ void DeclarationContainer::populateHomonyms(std::back_insert_iterator<Homonyms> 
 
 	for (auto [name, location]: m_homonymCandidates)
 	{
+		// Variables declared in a block are only visible from their declaration onwards, so an inner
+		// declaration cannot shadow one that comes later. It shadows whatever the name refers to further
+		// out instead, if anything.
+		auto const declaredLater = [location = location](Declaration const* _declaration)
+		{
+			ASTNode const* scope = _declaration->scope();
+			langutil::SourceLocation const& declarationLocation = _declaration->location();
+			return
+				(dynamic_cast<Block const*>(scope) || dynamic_cast<ForStatement const*>(scope)) &&
+				location->hasText() &&
+				declarationLocation.hasText() &&
+				location->equalSources(declarationLocation) &&
+				location->start < declarationLocation.start;
+		};
+
 		ResolvingSettings settings;
-		settings.recursive = true;
 		settings.alsoInvisible = true;
-		std::vector<Declaration const*> const& declarations = m_enclosingContainer->resolveName(name, std::move(settings));
-		if (!declarations.empty())
-			_it = make_pair(location, declarations);
+		for (
+			DeclarationContainer const* container = m_enclosingContainer;
+			container;
+			container = container->m_enclosingContainer
+		)
+		{
+			std::vector<Declaration const*> declarations = container->resolveName(name, settings);
+			std::erase_if(declarations, declaredLater);
+			if (!declarations.empty())
+			{
+				_it = make_pair(location, std::move(declarations));
+				break;
+			}
+		}
 	}
 }
