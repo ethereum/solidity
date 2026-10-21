@@ -1,0 +1,110 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/argotorg/solidity/develop/docs/bugs.schema.json",
+    "title": "Solidity known bugs list",
+    "description": "Schema for docs/bugs.json, the list of known security-relevant bugs in the Solidity compiler. See docs/bugs.rst for the meaning of the fields.",
+    "$comment": "When changing this schema, update the description of the fields in docs/bugs.rst accordingly.",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["uid", "name", "summary", "description", "fixed", "severity"],
+        "properties": {
+            "uid": {
+                "description": "Identifier of the bug. Multiple entries share a uid if the same bug affects multiple version ranges.",
+                "type": "string",
+                "pattern": "^SOL-[0-9]{4}-[0-9]+$"
+            },
+            "name": {
+                "description": "Unique name of the bug.",
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_.]*$"
+            },
+            "summary": {
+                "description": "Short description of the bug.",
+                "type": "string",
+                "minLength": 1
+            },
+            "description": {
+                "description": "Detailed description of the bug.",
+                "type": "string",
+                "minLength": 1
+            },
+            "link": {
+                "description": "URL of a website with more detailed information.",
+                "type": "string",
+                "pattern": "^https://"
+            },
+            "introduced": {
+                "description": "The first published compiler version that contained the bug.",
+                "$ref": "#/$defs/version"
+            },
+            "fixed": {
+                "description": "The first published compiler version that did not contain the bug anymore.",
+                "$ref": "#/$defs/version"
+            },
+            "publish": {
+                "description": "The date at which the bug became known publicly.",
+                "type": "string",
+                "format": "date",
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+            },
+            "severity": {
+                "description": "Severity of the bug.",
+                "enum": ["very low", "very low/low", "low", "low/medium", "medium", "medium/high", "high"]
+            },
+            "conditions": {
+                "description": "Conditions that have to be met to trigger the bug. If absent, the bug is present unconditionally.",
+                "type": "object",
+                "additionalProperties": false,
+                "minProperties": 1,
+                "properties": {
+                    "optimizer": {
+                        "description": "Whether the opcode-based evmasm optimizer has to be enabled (true) or disabled (false) for the bug to be present.",
+                        "type": "boolean"
+                    },
+                    "yulOptimizer": {
+                        "description": "Whether the Yul optimizer has to be enabled (true) or disabled (false) for the bug to be present.",
+                        "type": "boolean"
+                    },
+                    "ABIEncoderV2": {
+                        "description": "Whether ABI coder v2 has to be used (true) or not used (false) for the bug to be present.",
+                        "type": "boolean"
+                    },
+                    "viaIR": {
+                        "description": "Whether the IR-based code generator has to be used (true) or not used (false) for the bug to be present.",
+                        "type": "boolean"
+                    },
+                    "evmVersion": {
+                        "description": "EVM version setting that triggers the bug, optionally prefixed with a comparison operator, e.g. \">=constantinople\".",
+                        "type": "string"
+                    }
+                }
+            },
+            "check": {
+                "description": "Checks that report whether a contract may be affected by the bug.",
+                "type": "object",
+                "additionalProperties": false,
+                "minProperties": 1,
+                "properties": {
+                    "regex-source": {
+                        "description": "JavaScript regular expression to be matched against the source code with comments stripped.",
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "ast-compact-json-path": {
+                        "description": "JsonPath query to be matched against the compact JSON AST.",
+                        "type": "string",
+                        "minLength": 1
+                    }
+                }
+            }
+        }
+    },
+    "$defs": {
+        "version": {
+            "type": "string",
+            "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        }
+    }
+}
