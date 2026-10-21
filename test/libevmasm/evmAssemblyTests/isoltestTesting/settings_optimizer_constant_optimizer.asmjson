@@ -4,6 +4,7 @@
     ]
 }
 // ====
+// EVMVersion: >=constantinople
 // optimizationPreset: none
 // optimizer.constantOptimizer: true
 // ----
