@@ -24,8 +24,11 @@
 
 #include <boost/algorithm/string/predicate.hpp>
 
+#include <algorithm>
 #include <iostream>
+#include <ranges>
 #include <stdexcept>
+#include <vector>
 
 using namespace solidity;
 using namespace solidity::frontend;
@@ -102,15 +105,16 @@ TestCase::TestResult TestCase::checkResult(std::ostream& _stream, const std::str
 	return TestResult::Success;
 }
 
-void EVMVersionRestrictedTestCase::processEVMVersionSetting()
+namespace
 {
-	std::string versionString = m_reader.stringSetting("EVMVersion", "any");
-	if (versionString == "any")
-		return;
 
+/// Parses a single constraint of the ``EVMVersion`` setting (e.g. ``>=london``)
+/// and removes the versions not satisfying it from @a _versions.
+void removeVersionsNotSatisfyingConstraint(std::string const& _constraint, std::vector<langutil::EVMVersion>& _versions)
+{
 	std::string comparator;
 	size_t versionBegin = 0;
-	for (auto character: versionString)
+	for (auto character: _constraint)
 		if (!isalpha(character, std::locale::classic()) && character != '@')
 		{
 			comparator += character;
@@ -119,7 +123,7 @@ void EVMVersionRestrictedTestCase::processEVMVersionSetting()
 		else
 			break;
 
-	versionString = versionString.substr(versionBegin);
+	std::string versionString = _constraint.substr(versionBegin);
 	std::optional<langutil::EVMVersion> version;
 	if (versionString == "current")
 		version = std::make_optional<langutil::EVMVersion>();
@@ -128,24 +132,50 @@ void EVMVersionRestrictedTestCase::processEVMVersionSetting()
 	if (!version)
 		BOOST_THROW_EXCEPTION(std::runtime_error{"Invalid EVM version: \"" + versionString + "\""});
 
-	langutil::EVMVersion evmVersion = solidity::test::CommonOptions::get().evmVersion();
-	bool comparisonResult;
 	if (comparator == ">")
-		comparisonResult = evmVersion > version;
+		std::erase_if(_versions, [&](langutil::EVMVersion _evmVersion) { return _evmVersion <= *version; });
 	else if (comparator == ">=")
-		comparisonResult = evmVersion >= version;
+		std::erase_if(_versions, [&](langutil::EVMVersion _evmVersion) { return _evmVersion < *version; });
 	else if (comparator == "<")
-		comparisonResult = evmVersion < version;
+		std::erase_if(_versions, [&](langutil::EVMVersion _evmVersion) { return _evmVersion >= *version; });
 	else if (comparator == "<=")
-		comparisonResult = evmVersion <= version;
+		std::erase_if(_versions, [&](langutil::EVMVersion _evmVersion) { return _evmVersion > *version; });
 	else if (comparator == "=")
-		comparisonResult = evmVersion == version;
+		std::erase_if(_versions, [&](langutil::EVMVersion _evmVersion) { return _evmVersion != *version; });
 	else if (comparator == "!")
-		comparisonResult = !(evmVersion == version);
+		std::erase_if(_versions, [&](langutil::EVMVersion _evmVersion) { return _evmVersion == *version; });
 	else
 		BOOST_THROW_EXCEPTION(std::runtime_error{"Invalid EVM comparator: \"" + comparator + "\""});
+}
 
-	if (!comparisonResult)
+}
+
+void EVMVersionRestrictedTestCase::processEVMVersionSetting()
+{
+	std::string versionSetting = m_reader.stringSetting("EVMVersion", "any");
+	if (versionSetting == "any")
+		return;
+
+	if (versionSetting.empty())
+		BOOST_THROW_EXCEPTION(std::runtime_error{"Empty EVMVersion setting"});
+
+	auto const allVersions = langutil::EVMVersion::allVersions();
+	std::vector<langutil::EVMVersion> remainingVersions(allVersions.begin(), allVersions.end());
+	for (auto const part: std::views::split(versionSetting, ','))
+	{
+		std::string const constraint(part.begin(), part.end());
+		if (constraint.empty())
+			BOOST_THROW_EXCEPTION(std::runtime_error{"Empty constraint in EVMVersion setting \"" + versionSetting + "\""});
+		removeVersionsNotSatisfyingConstraint(constraint, remainingVersions);
+	}
+
+	if (remainingVersions.empty())
+		BOOST_THROW_EXCEPTION(std::runtime_error{
+			"EVMVersion setting \"" + versionSetting + "\" is not satisfied by any EVM version"
+		});
+
+	langutil::EVMVersion const evmVersion = solidity::test::CommonOptions::get().evmVersion();
+	if (std::find(remainingVersions.begin(), remainingVersions.end(), evmVersion) == remainingVersions.end())
 		m_shouldRun = false;
 }
 

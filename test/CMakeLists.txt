@@ -17,6 +17,7 @@ set(sources
     TestCase.h
     TestCaseReader.cpp
     TestCaseReader.h
+    TestCaseTest.cpp
 )
 detect_stray_source_files("${sources}" ".")
 
