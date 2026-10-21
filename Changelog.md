@@ -13,6 +13,7 @@ Compiler Features:
 * Yul Optimizer: Improve performance of `DataFlowAnalyzer` using flat hash containers.
 
 Bugfixes:
+* Code Generator: Fix tuple assignments swapping values when a nested tuple component occupying at least one stack slot grows during type conversion.
 * Parser: Fix inverted version pragma range comparison for components in the range [2**31, 2**32).
 * Yul Parser: Fix `@use-src` source indices that are not decimal numbers being silently truncated instead of rejected.
 

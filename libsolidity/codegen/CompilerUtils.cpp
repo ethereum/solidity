@@ -1288,7 +1288,7 @@ void CompilerUtils::convertType(
 					}
 					// Value grew
 					if (targetSize > sourceSize)
-						moveIntoStack(depth - sourceSize, targetSize - sourceSize);
+						moveIntoStack(depth, targetSize - sourceSize);
 				}
 			}
 			depth -= sourceSize;
