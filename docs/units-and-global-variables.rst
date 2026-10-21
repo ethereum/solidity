@@ -443,5 +443,5 @@ These keywords are reserved in Solidity. They might become part of the syntax in
     ``at``, ``error``, ``layout``, ``leave``, ``super``, ``transient``, ``this``.
 
     There are also names which will be considered Yul reserved identifiers in the future:
-    ``basefee``, ``blobbasefee``, ``blobhash``, ``clz``, ``memoryguard``, ``mcopy``, ``prevrandao``, ``slotnum``, ``tload``, ``tstore``.
+    ``basefee``, ``blobbasefee``, ``blobhash``, ``clz``, ``dupn``, ``exchange``, ``memoryguard``, ``mcopy``, ``prevrandao``, ``slotnum``, ``swapn``, ``tload``, ``tstore``.
 
