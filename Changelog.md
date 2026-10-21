@@ -13,6 +13,7 @@ Compiler Features:
 * Yul Optimizer: Improve performance of `DataFlowAnalyzer` using flat hash containers.
 
 Bugfixes:
+* Commandline Interface: Fix internal compiler error when combining `--optimize` with `--no-optimize-yul`.
 * Parser: Fix inverted version pragma range comparison for components in the range [2**31, 2**32).
 * Yul Parser: Fix `@use-src` source indices that are not decimal numbers being silently truncated instead of rejected.
 
