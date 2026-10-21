@@ -33,6 +33,7 @@ from runners.base import run_test
 from runners.base import TestConfig
 from runners.foundry import FoundryRunner
 from test_helpers import SettingsPreset
+from test_helpers import replace_version_pragmas
 
 class PRBMathRunner(FoundryRunner):
     def configure(self):
@@ -43,10 +44,12 @@ class PRBMathRunner(FoundryRunner):
         # Starting from version v4.0.2, the default installation method for PRBMath dependencies
         # has transitioned from Foundry to Node.js.
         subprocess.run(
-            ["pnpm", "install", "--no-frozen-lockfile"],
+            ["pnpm", "install", "--no-frozen-lockfile", "--config.package-import-method=copy"],
             env=self.env,
             check=True
         )
+        # We want to replace version pragmas in forge-std, which is a dependency of prb-math
+        replace_version_pragmas(Path("node_modules"))
 
 test_config = TestConfig(
     name="PRBMath",
