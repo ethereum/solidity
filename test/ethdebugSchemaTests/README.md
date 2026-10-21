@@ -11,11 +11,17 @@ git submodule update --init test/ethdebugSchemaTests/ethdebug-format
 Run the tests with:
 
 ```bash
-pytest test/ethdebugSchemaTests --solc-binary-path=build/solc/solc -v
+test/ethdebugSchemaTests.py --solc-binary-path build/solc/solc
 ```
 
-The JSON inputs use `contentFile` entries to keep Solidity examples in regular
-`.sol` fixture files under `sources/`. The pytest harness expands those entries
-to Standard JSON `content` before invoking `solc`.
+The runner discovers every test module in this directory and passes the compiler path to the test cases.
+To run only some tests, use the `-k` option to specify a pattern, as with [`python -m unittest -k`](https://docs.python.org/3/library/unittest.html#cmdoption-unittest-k):
+
+```bash
+test/ethdebugSchemaTests.py --solc-binary-path build/solc/solc -k test_deployed_program_schema
+```
+
+The JSON inputs use `contentFile` entries to keep Solidity examples in regular `.sol` fixture files under `sources/`.
+The tests expand those entries to Standard JSON `content` before invoking `solc`.
 
 To update the schema version, bump the submodule commit and rerun this suite.
