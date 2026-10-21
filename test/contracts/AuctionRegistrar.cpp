@@ -42,7 +42,7 @@ namespace solidity::frontend::test
 namespace
 {
 static char const* registrarCode = R"DELIMITER(
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity >=0.7.0 <0.10.0;
 
 abstract contract NameRegister {
 	function addr(string memory _name) public virtual view returns (address o_owner);

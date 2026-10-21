@@ -116,7 +116,7 @@ If the array is shorter than the target type, it will be padded with zeros at th
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.8.5;
+    pragma solidity >=0.8.5 <0.10.0;
 
     contract C {
         bytes s = "abcdefgh";

@@ -23,7 +23,7 @@ include(EthPolicy)
 eth_policy()
 
 # project name and version should be set after cmake_policy CMP0048
-set(PROJECT_VERSION "0.8.38")
+set(PROJECT_VERSION "0.9.0")
 set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0")
 project(solidity VERSION ${PROJECT_VERSION} LANGUAGES C CXX)
 

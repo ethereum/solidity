@@ -58,7 +58,7 @@ Yes:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.9.0;
+    pragma solidity >=0.4.0 <0.10.0;
 
     contract A {
         // ...
@@ -79,7 +79,7 @@ No:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.9.0;
+    pragma solidity >=0.4.0 <0.10.0;
 
     contract A {
         // ...
@@ -101,7 +101,7 @@ Yes:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.9.0;
+    pragma solidity >=0.6.0 <0.10.0;
 
     abstract contract A {
         function spam() public virtual pure;
@@ -124,7 +124,7 @@ No:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.9.0;
+    pragma solidity >=0.6.0 <0.10.0;
 
     abstract contract A {
         function spam() virtual pure public;
@@ -272,7 +272,7 @@ Yes:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.9.0;
+    pragma solidity >=0.4.0 <0.10.0;
 
     import "./Owned.sol";
 
@@ -290,7 +290,7 @@ No:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.9.0;
+    pragma solidity >=0.4.0 <0.10.0;
 
     contract A {
         // ...
@@ -326,7 +326,7 @@ Yes:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.7.0 <0.9.0;
+    pragma solidity >=0.7.0 <0.10.0;
     contract A {
         constructor() {
             // ...
@@ -364,7 +364,7 @@ No:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.7.0 <0.9.0;
+    pragma solidity >=0.7.0 <0.10.0;
     contract A {
 
         // External functions
@@ -491,7 +491,7 @@ Yes:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.9.0;
+    pragma solidity >=0.4.0 <0.10.0;
 
     contract Coin {
         struct Bank {
@@ -505,7 +505,7 @@ No:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.9.0;
+    pragma solidity >=0.4.0 <0.10.0;
 
     contract Coin
     {
@@ -841,7 +841,7 @@ Yes:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.7.0 <0.9.0;
+    pragma solidity >=0.7.0 <0.10.0;
     // Base contracts just to make this compile
     contract B {
         constructor(uint) {
@@ -879,7 +879,7 @@ No:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.7.0 <0.9.0;
+    pragma solidity >=0.7.0 <0.10.0;
 
     // Base contracts just to make this compile
     contract B {
@@ -1075,7 +1075,7 @@ Yes:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.8.4 <0.9.0;
+    pragma solidity >=0.8.4 <0.10.0;
 
     abstract contract Math {
         error DivideByZero();
@@ -1087,7 +1087,7 @@ No:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.8.4 <0.9.0;
+    pragma solidity >=0.8.4 <0.10.0;
 
     abstract contract Math {
         function divide(int256 numerator, int256 denominator) public virtual returns (uint256);
@@ -1153,7 +1153,7 @@ Yes:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.7.0 <0.9.0;
+    pragma solidity >=0.7.0 <0.10.0;
 
     // Owned.sol
     contract Owned {
@@ -1178,7 +1178,7 @@ and in ``Congress.sol``:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.9.0;
+    pragma solidity >=0.4.0 <0.10.0;
 
     import "./Owned.sol";
 
@@ -1192,7 +1192,7 @@ No:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.7.0 <0.9.0;
+    pragma solidity >=0.7.0 <0.10.0;
 
     // owned.sol
     contract owned {
@@ -1217,7 +1217,7 @@ and in ``Congress.sol``:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.7.0;
+    pragma solidity >=0.7.0 <0.10.0;
 
 
     import "./owned.sol";
@@ -1318,7 +1318,7 @@ added looks like the one below:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.9.0;
+    pragma solidity >=0.4.16 <0.10.0;
 
     /// @author The Solidity Team
     /// @title A simple storage example

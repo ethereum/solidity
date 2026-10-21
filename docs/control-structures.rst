@@ -44,7 +44,7 @@ this nonsensical example:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.22 <0.9.0;
+    pragma solidity >=0.4.22 <0.10.0;
 
     // This will report a warning
     contract C {
@@ -88,7 +88,7 @@ to the total balance of that contract:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.2 <0.9.0;
+    pragma solidity >=0.6.2 <0.10.0;
 
     contract InfoFeed {
         function info() public payable returns (uint ret) { return 42; }
@@ -174,7 +174,7 @@ parameters from the function declaration, but can be in arbitrary order.
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.9.0;
+    pragma solidity >=0.4.0 <0.10.0;
 
     contract C {
         mapping(uint => uint) data;
@@ -199,7 +199,7 @@ can still return a value to the caller by use of the ``return`` statement.
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.22 <0.9.0;
+    pragma solidity >=0.4.22 <0.10.0;
 
     contract C {
         // omitted name for parameter
@@ -223,7 +223,7 @@ is compiled so recursive creation-dependencies are not possible.
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.7.0 <0.9.0;
+    pragma solidity >=0.7.0 <0.10.0;
     contract D {
         uint public x;
         constructor(uint a) payable {
@@ -280,7 +280,7 @@ which only need to be created if there is a dispute.
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.7.0 <0.9.0;
+    pragma solidity >=0.7.0 <0.10.0;
     contract D {
         uint public x;
         constructor(uint a) {
@@ -353,7 +353,7 @@ groupings of expressions.
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.9.0;
+    pragma solidity >=0.5.0 <0.10.0;
 
     contract C {
         uint index;
@@ -399,7 +399,7 @@ because only a reference and not a copy is passed.
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.22 <0.9.0;
+    pragma solidity >=0.4.22 <0.10.0;
 
     contract C {
         uint[20] x;
@@ -458,7 +458,7 @@ the two variables have the same name but disjoint scopes.
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.9.0;
+    pragma solidity >=0.5.0 <0.10.0;
     contract C {
         function minimalScoping() pure public {
             {
@@ -480,7 +480,7 @@ In any case, you will get a warning about the outer variable being shadowed.
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.9.0;
+    pragma solidity >=0.5.0 <0.10.0;
     // This will report a warning
     contract C {
         function f() pure public returns (uint) {
@@ -502,7 +502,7 @@ In any case, you will get a warning about the outer variable being shadowed.
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.9.0;
+    pragma solidity >=0.5.0 <0.10.0;
     // This will not compile
     contract C {
         function f() pure public returns (uint) {
@@ -534,7 +534,7 @@ To obtain the previous behavior, an ``unchecked`` block can be used:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.8.0;
+    pragma solidity >=0.8.0 <0.10.0;
     contract C {
         function f(uint a, uint b) pure public returns (uint) {
             // This subtraction will wrap on underflow.
@@ -696,7 +696,7 @@ and ``assert`` for internal error checking.
     :force:
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.2 <0.9.0;
+    pragma solidity >=0.6.2 <0.10.0;
 
     contract Sharer {
         function sendHalf(address payable addr) public payable returns (uint balance) {
@@ -760,7 +760,7 @@ together with ``revert`` and the equivalent ``require``:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.8.4;
+    pragma solidity >=0.8.4 <0.10.0;
 
     contract VendingMachine {
         address owner;

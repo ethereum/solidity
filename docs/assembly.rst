@@ -43,7 +43,7 @@ Solidity language without a compiler change.
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.9.0;
+    pragma solidity >=0.4.16 <0.10.0;
 
     library GetCode {
         // This will report a warning - `at` will be promoted to reserved keyword
@@ -70,7 +70,7 @@ efficient code, for example:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.9.0;
+    pragma solidity >=0.4.16 <0.10.0;
 
 
     library VectorSum {
@@ -147,7 +147,7 @@ Both values can be assigned to. For example:
     :force:
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.8.10 <0.9.0;
+    pragma solidity >=0.8.10 <0.10.0;
 
     contract C {
         // Assigns a new selector and address to the return variable @fun
@@ -182,7 +182,7 @@ Local Solidity variables are available for assignments, for example:
     :force:
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.8.28 <0.9.0;
+    pragma solidity >=0.8.28 <0.10.0;
 
     // This will report a warning
     contract C {

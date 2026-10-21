@@ -18,7 +18,7 @@ Storage Example
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.9.0;
+    pragma solidity >=0.4.16 <0.10.0;
 
     contract SimpleStorage {
         uint storedData;
@@ -37,7 +37,7 @@ GPL version 3.0. Machine-readable license specifiers are important
 in a setting where publishing the source code is the default.
 
 The next line specifies that the source code is written for
-Solidity version 0.4.16, or a newer version of the language up to, but not including version 0.9.0.
+Solidity version 0.4.16, or a newer version of the language up to, but not including version 0.10.0.
 This is to ensure that the contract is not compilable with a new (breaking) compiler version, where it could behave differently.
 :ref:`Pragmas<pragma>` are common instructions for compilers about how to treat the
 source code (e.g. `pragma once <https://en.wikipedia.org/wiki/Pragma_once>`_).
@@ -85,7 +85,7 @@ registering with a username and password, all you need is an Ethereum keypair.
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.8.26;
+    pragma solidity >=0.8.26 <0.10.0;
 
     // This will only compile via IR
     contract Coin {

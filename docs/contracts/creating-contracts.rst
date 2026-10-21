@@ -35,7 +35,7 @@ This means that cyclic creation dependencies are impossible.
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.22 <0.9.0;
+    pragma solidity >=0.4.22 <0.10.0;
 
 
     contract OwnedToken {

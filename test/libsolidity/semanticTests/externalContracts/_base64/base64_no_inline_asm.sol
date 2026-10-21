@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity >=0.8.0 <0.10.0;
 
 /**
  * @dev Provides a set of functions to operate with Base64 strings.

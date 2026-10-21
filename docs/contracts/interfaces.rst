@@ -25,7 +25,7 @@ Interfaces are denoted by their own keyword:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.2 <0.9.0;
+    pragma solidity >=0.6.2 <0.10.0;
 
     interface Token {
         enum TokenType { Fungible, NonFungible }
@@ -46,7 +46,7 @@ inheritance.
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.2 <0.9.0;
+    pragma solidity >=0.6.2 <0.10.0;
 
     interface ParentA {
         function test() external returns (uint256);

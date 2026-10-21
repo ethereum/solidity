@@ -57,7 +57,7 @@ To give an example, the following code contains a bug (it is just a snippet and 
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.9.0;
+    pragma solidity >=0.6.0 <0.10.0;
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract Fund {
@@ -82,7 +82,7 @@ as it uses ``call`` which does not limit the amount of gas that is forwarded by 
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.2 <0.9.0;
+    pragma solidity >=0.6.2 <0.10.0;
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract Fund {
@@ -101,7 +101,7 @@ To avoid reentrancy, you can use the Checks-Effects-Interactions pattern as demo
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.2 <0.9.0;
+    pragma solidity >=0.6.2 <0.10.0;
 
     contract Fund {
         /// @dev Mapping of ether shares of the contract.
@@ -217,7 +217,7 @@ If needed, you can accomplish that using a second proxy:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.8.0;
+    pragma solidity >=0.8.0 <0.10.0;
     contract ProxyWithMoreFunctionality {
         PermissionlessProxy proxy;
 
@@ -246,7 +246,7 @@ Let's say you have a wallet contract like this:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.7.0 <0.9.0;
+    pragma solidity >=0.7.0 <0.10.0;
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract TxUserWallet {
         address owner;
@@ -268,7 +268,7 @@ Now someone tricks you into sending Ether to the address of this attack wallet:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.7.0 <0.9.0;
+    pragma solidity >=0.7.0 <0.10.0;
     interface TxUserWallet {
         function transferTo(address payable dest, uint amount) external;
     }
@@ -341,7 +341,7 @@ The ``mapping`` is also ignored in assignments of structs or arrays containing a
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.9.0;
+    pragma solidity >=0.6.0 <0.10.0;
 
     contract Map {
         mapping(uint => uint)[] array;

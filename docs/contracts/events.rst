@@ -89,7 +89,7 @@ Example
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.21 <0.9.0;
+    pragma solidity >=0.4.21 <0.10.0;
 
     contract ClientReceipt {
         event Deposit(

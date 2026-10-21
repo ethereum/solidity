@@ -49,7 +49,7 @@ the value specified by ``C``.
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.8.29;
+    pragma solidity >=0.8.29 <0.10.0;
 
     struct S {
         int32 x;
@@ -212,7 +212,7 @@ As an example, consider the following contract:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.9.0;
+    pragma solidity >=0.4.0 <0.10.0;
 
 
     contract C {
@@ -329,7 +329,7 @@ containing value and reference types, types that are encoded packed, and nested 
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.8.28;
+    pragma solidity >=0.8.28 <0.10.0;
     contract A {
         struct S {
             uint128 a;
