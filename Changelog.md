@@ -13,6 +13,8 @@ Compiler Features:
 * Yul Optimizer: Improve performance of `DataFlowAnalyzer` using flat hash containers.
 
 Bugfixes:
+* Type Checker: Disallow `super` calls that would resolve to an implemented `external` function in the linearization of the most derived contract.
+  Such calls previously caused an ICE via IR and jumped into the external function's body with the legacy pipeline.
 * Parser: Fix inverted version pragma range comparison for components in the range [2**31, 2**32).
 * Yul Parser: Fix `@use-src` source indices that are not decimal numbers being silently truncated instead of rejected.
 

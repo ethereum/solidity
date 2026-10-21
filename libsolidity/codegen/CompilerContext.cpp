@@ -286,6 +286,7 @@ FunctionDefinition const& CompilerContext::superFunction(FunctionDefinition cons
 
 	FunctionDefinition const& resolvedFunction = _function.resolveVirtual(mostDerivedContract(), super);
 	solAssert(resolvedFunction.isImplemented(), "");
+	solAssert(resolvedFunction.isVisibleInDerivedContracts(), "Super call resolved to a function not visible in current context");
 
 	return resolvedFunction;
 }

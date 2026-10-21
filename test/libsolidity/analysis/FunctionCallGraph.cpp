@@ -824,6 +824,59 @@ BOOST_AUTO_TEST_CASE(inherited_functions_virtual_and_super)
 	checkCallGraphExpectations(std::get<1>(graphs), expectedDeployedEdges);
 }
 
+// D is abstract, so PostTypeContractLevelChecker does not reject the `super` call in B
+// NOTE: C3 linearization of abstract contract D is [D, B, X, A]
+BOOST_AUTO_TEST_CASE(super_resolving_to_external_function_in_abstract_contract)
+{
+	std::unique_ptr<CompilerStack> compilerStack = parseAndAnalyzeContracts(R"(
+		contract A {
+			function f() public virtual returns (uint) { return 1; }
+		}
+
+		contract X {
+			function f() external virtual returns (uint) { return 100; }
+		}
+
+		contract B is A {
+			function g() public returns (uint) { return super.f(); }
+		}
+
+		abstract contract D is A, X, B {
+			function f() public virtual override(A, X) returns (uint) { return 7; }
+		}
+	)"s);
+	std::tuple<CallGraphMap, CallGraphMap> graphs = collectGraphs(*compilerStack);
+
+	std::map<std::string, EdgeNames> expectedCreationEdges = {
+		{"A", {}},
+		{"X", {}},
+		{"B", {}},
+		{"D", {}},
+	};
+
+	std::map<std::string, EdgeNames> expectedDeployedEdges = {
+		{"A", {
+			{"Entry", "function A.f()"},
+		}},
+		{"X", {
+			{"Entry", "function X.f()"},
+		}},
+		{"B", {
+			{"Entry", "function A.f()"},
+			{"Entry", "function B.g()"},
+			{"function B.g()", "function A.f()"},
+		}},
+		{"D", {
+			{"Entry", "function D.f()"},
+			{"Entry", "function B.g()"},
+			{"function B.g()", "function X.f()"},
+		}},
+	};
+
+	checkCallGraphExpectations(std::get<0>(graphs), expectedCreationEdges);
+	checkCallGraphExpectations(std::get<1>(graphs), expectedDeployedEdges);
+}
+
 BOOST_AUTO_TEST_CASE(overloaded_functions)
 {
 	std::unique_ptr<CompilerStack> compilerStack = parseAndAnalyzeContracts(R"(
