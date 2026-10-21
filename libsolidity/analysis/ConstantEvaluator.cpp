@@ -73,7 +73,7 @@ bool fitsPrecisionBase2(bigint const& _mantissa, uint32_t _expBase2)
 
 }
 
-std::optional<rational> ConstantEvaluator::evaluateBinaryOperator(Token _operator, rational const& _left, rational const& _right)
+std::optional<rational> ConstantEvaluator::evaluateBinaryOperator(Token _operator, rational const& _left, rational const& _right, bool _truncateShift)
 {
 	bool fractional = _left.denominator() != 1 || _right.denominator() != 1;
 	switch (_operator)
@@ -167,14 +167,24 @@ std::optional<rational> ConstantEvaluator::evaluateBinaryOperator(Token _operato
 		else if (_right < 0)
 			return std::nullopt;
 		else if (_right > std::numeric_limits<uint32_t>::max())
+		{
+			if (_truncateShift)  // truncate to 0 same as codegen
+				return 0;
+
 			return std::nullopt;
+		}
 		if (_left.numerator() == 0)
 			return 0;
 		else
 		{
 			uint32_t exponent = _right.numerator().convert_to<uint32_t>();
 			if (!fitsPrecisionBase2(abs(_left.numerator()), exponent))
+			{
+				if (_truncateShift)  // truncate to 0 same as codegen
+					return 0;
+
 				return std::nullopt;
+			}
 			return _left.numerator() * boost::multiprecision::pow(bigint(2), exponent);
 		}
 		break;
@@ -188,7 +198,12 @@ std::optional<rational> ConstantEvaluator::evaluateBinaryOperator(Token _operato
 		else if (_right < 0)
 			return std::nullopt;
 		else if (_right > std::numeric_limits<uint32_t>::max())
+		{
+			if (_truncateShift)  // truncate to -1 or 0 same as codegen
+				return _left.numerator() < 0 ? -1 : 0;
+
 			return std::nullopt;
+		}
 		if (_left.numerator() == 0)
 			return 0;
 		else
@@ -278,6 +293,29 @@ TypedValue convertType(TypedValue const& _value, Type const& _type)
 	}, _value.value());
 }
 
+rational truncateToType(rational const& _value, Type const& _type)
+{
+	if (_type.category() == Type::Category::RationalNumber)
+		return _value;
+
+	auto const* integerType = dynamic_cast<IntegerType const*>(&_type);
+	solAssert(integerType);
+
+	solAssert(_value.denominator() == 1);
+	bigint integerValue = _value.numerator();
+
+	unsigned int numBits = integerType->numBits();
+	bigint mask = (bigint(1) << numBits) - 1;
+	// clean bits out of range
+	integerValue = integerValue & mask;
+
+	// extend sign if needed
+	if (integerType->isSigned() && boost::multiprecision::bit_test(integerValue, numBits - 1))
+		integerValue = integerValue | ~mask;
+
+	return rational(integerValue);
+}
+
 TypedValue constantToTypedValue(Type const& _type)
 {
 	if (_type.category() == Type::Category::RationalNumber)
@@ -361,7 +399,11 @@ void ConstantEvaluator::endVisit(UnaryOperation const& _operation)
 
 	if (std::optional<rational> result = evaluateUnaryOperator(_operation.getOperator(), value.asRational()))
 	{
-		TypedValue convertedValue = convertType(*result, *resultType);
+		rational resultValue = *result;
+		if (_operation.getOperator() == Token::BitNot)
+			resultValue = truncateToType(resultValue, *resultType);
+
+		TypedValue convertedValue = convertType(resultValue, *resultType);
 		if (convertedValue.isEmpty())
 			m_errorReporter.fatalTypeError(
 				3667_error,
@@ -408,13 +450,20 @@ void ConstantEvaluator::endVisit(BinaryOperation const& _operation)
 	)
 		return;
 
+	bool truncateShift = TokenTraits::isShiftOp(_operation.getOperator()) && resultType->category() == Type::Category::Integer;
 	if (std::optional<rational> value = evaluateBinaryOperator(
 		_operation.getOperator(),
 		left.asRational(),
-		right.asRational()
+		right.asRational(),
+		truncateShift
 	))
 	{
-		TypedValue convertedValue = convertType(*value, *resultType);
+		rational resultValue = *value;
+		// Shift left might produce a value out of range of the result type
+		if (_operation.getOperator() == Token::SHL)
+			resultValue = truncateToType(*value, *resultType);
+
+		TypedValue convertedValue = convertType(resultValue, *resultType);
 		if (convertedValue.isEmpty())
 			m_errorReporter.fatalTypeError(
 				2643_error,
