@@ -33,6 +33,7 @@ contract Main {
     }
 }
 // ====
+// targetContract: Main
 // ----
 // getFlag() -> true
 // getName() -> "abc"

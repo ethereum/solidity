@@ -25,6 +25,7 @@ contract C is A layout at 42 {
 }
 // ====
 // EVMVersion: >=cancun
+// targetContract: C
 // ----
 // s1SlotOffset() -> 42, 0
 // dArraySlotOffset() -> 44, 0

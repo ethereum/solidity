@@ -18,5 +18,6 @@ contract C is A {
 }
 // ====
 // EVMVersion: >=cancun
+// targetContract: C
 // ----
 // f() -> 1, 2, 3, 4

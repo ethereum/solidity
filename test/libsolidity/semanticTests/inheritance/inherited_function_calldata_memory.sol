@@ -17,5 +17,7 @@ contract B is A {
         return A(this).f(m);
     }
 }
+// ====
+// targetContract: B
 // ----
 // g() -> 23

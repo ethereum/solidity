@@ -28,6 +28,8 @@ contract C is B {
         return foo(new A());
     }
 }
+// ====
+// targetContract: C
 // ----
 // test() -> 77
 // gas irOptimized: 55111

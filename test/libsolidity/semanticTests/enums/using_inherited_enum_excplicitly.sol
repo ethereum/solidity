@@ -8,5 +8,7 @@ contract test is base {
         _ret = base.Choice.B;
     }
 }
+// ====
+// targetContract: test
 // ----
 // answer() -> 1

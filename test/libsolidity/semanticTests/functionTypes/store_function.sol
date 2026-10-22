@@ -23,6 +23,8 @@ contract C {
         return ev(x);
     }
 }
+// ====
+// targetContract: C
 // ----
 // t() -> 9
 // gas irOptimized: 77291

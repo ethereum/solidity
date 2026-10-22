@@ -12,5 +12,7 @@ contract C {
         return input.at(1);
     }
 }
+// ====
+// targetContract: C
 // ----
 // secondChar() -> 98

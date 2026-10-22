@@ -21,5 +21,7 @@ contract C {
         return Utils.reduce(x, Utils.sum, 0);
     }
 }
+// ====
+// targetContract: C
 // ----
 // f(uint256[]): 0x20, 0x3, 0x1, 0x7, 0x3 -> 11

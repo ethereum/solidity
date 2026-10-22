@@ -48,5 +48,6 @@ contract C is Base {
 }
 // ====
 // EVMVersion: >=byzantium
+// targetContract: C
 // ----
 // test() -> 11116

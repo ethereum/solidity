@@ -25,6 +25,8 @@ contract C is A layout at 42 {
         L.validate(s);
     }
 }
+// ====
+// targetContract: C
 // ----
 // library: L
 // initUsingReference() ->

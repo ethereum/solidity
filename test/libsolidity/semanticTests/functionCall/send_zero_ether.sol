@@ -13,6 +13,8 @@ contract Main {
         return payable(r).send(0);
     }
 }
+// ====
+// targetContract: Main
 // ----
 // constructor(), 20 wei ->
 // gas irOptimized: 56298

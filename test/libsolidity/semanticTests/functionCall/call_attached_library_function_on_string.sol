@@ -11,6 +11,8 @@ contract C {
         return s.length();
     }
 }
+// ====
+// targetContract: C
 // ----
 // library: D
 // f() -> 3

@@ -31,5 +31,7 @@ contract C is X {
         return keccak256(data) == keccak256(f());
     }
 }
+// ====
+// targetContract: C
 // ----
 // test() -> true

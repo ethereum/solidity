@@ -60,6 +60,7 @@ contract D {
 }
 // ====
 // EVMVersion: =shanghai
+// targetContract: D
 // ----
 // constructor(), 1 ether ->
 // gas irOptimized: 67028

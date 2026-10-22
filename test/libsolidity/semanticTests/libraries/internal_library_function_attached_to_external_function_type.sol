@@ -16,5 +16,7 @@ contract C {
         return this.identity.double(value);
     }
 }
+// ====
+// targetContract: C
 // ----
 // test(uint256): 5 -> 10

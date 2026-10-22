@@ -26,6 +26,7 @@ contract Test {
 // ====
 // compileViaYul: also
 // EVMVersion: >=shanghai
+// targetContract: Test
 // ----
 // bytecode() -> 0x20, 4, 0x60205ff300000000000000000000000000000000000000000000000000000000
 // isPush0Supported() -> true

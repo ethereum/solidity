@@ -21,6 +21,8 @@ contract C {
         return L.fe({c: 3, a: 1, b: 2});
     }
 }
+// ====
+// targetContract: C
 // ----
 // library: L
 // internalOrdered() -> 14

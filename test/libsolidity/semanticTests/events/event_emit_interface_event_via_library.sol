@@ -14,6 +14,8 @@ contract C {
     }
 }
 
+// ====
+// targetContract: C
 // ----
 // g() ->
 // ~ emit E()

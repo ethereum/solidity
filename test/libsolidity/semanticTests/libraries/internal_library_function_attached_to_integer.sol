@@ -11,5 +11,7 @@ contract C {
         return a.add(b);
     }
 }
+// ====
+// targetContract: C
 // ----
 // foo(uint256,uint256): 8, 42 -> 50

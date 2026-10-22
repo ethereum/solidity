@@ -29,6 +29,8 @@ contract D is A, B, C layout at 42 {
         return (x, y, w, z);
     }
 }
+// ====
+// targetContract: D
 // ----
 // test() -> 1, 2, 3, 5
 // gas irOptimized: 110109

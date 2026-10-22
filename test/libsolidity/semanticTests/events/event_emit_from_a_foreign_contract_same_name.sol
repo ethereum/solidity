@@ -11,6 +11,8 @@ contract D {
     }
 }
 
+// ====
+// targetContract: D
 // ----
 // test() ->
 // ~ emit E(uint256): 0x01

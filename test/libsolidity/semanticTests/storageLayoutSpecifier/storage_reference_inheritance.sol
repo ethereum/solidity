@@ -20,6 +20,8 @@ contract C is A layout at 42 {
         require(ptr.b);
     }
 }
+// ====
+// targetContract: C
 // ----
 // InitUsingReference() ->
 // s() -> 2, true

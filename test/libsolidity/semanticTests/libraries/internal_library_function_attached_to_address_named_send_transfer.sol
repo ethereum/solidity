@@ -14,6 +14,8 @@ contract C {
         a.send();
     }
 }
+// ====
+// targetContract: C
 // ----
 // useTransfer(address): 0x111122223333444455556666777788889999aAaa ->
 // useSend(address): 0x111122223333444455556666777788889999aAaa ->

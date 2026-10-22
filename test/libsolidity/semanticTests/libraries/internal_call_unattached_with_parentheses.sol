@@ -9,5 +9,7 @@ contract C {
 		return (L.f)();
 	}
 }
+// ====
+// targetContract: C
 // ----
 // foo() -> 3

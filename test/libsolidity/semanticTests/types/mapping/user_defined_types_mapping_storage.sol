@@ -19,6 +19,8 @@ contract C {
 		return uintMap[3] == 4;
 	}
 }
+// ====
+// targetContract: C
 // ----
 // library: L
 // testAB() -> true

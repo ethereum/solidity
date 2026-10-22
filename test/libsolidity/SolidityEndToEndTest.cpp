@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(creation_code_optimizer)
 	ALSO_VIA_YUL({
 		bytes bytecodeC = compileContract(codeC);
 		reset();
-		compileAndRun(codeC + codeD);
+		compileAndRun(codeC + codeD, 0, "D");
 		ABI_CHECK(callContractFunction("f()"), encodeArgs(0x20, bytecodeC.size()) + encode(bytecodeC, false));
 	})
 }
@@ -1114,7 +1114,7 @@ BOOST_AUTO_TEST_CASE(contracts_as_addresses)
 			}
 		}
 	)";
-	compileAndRun(sourceCode, 20);
+	compileAndRun(sourceCode, 20, "test");
 	BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 20 - 5);
 	BOOST_REQUIRE(callContractFunction("getBalance()") == encodeArgs(u256(20 - 5), u256(5)));
 }
@@ -2814,7 +2814,7 @@ BOOST_AUTO_TEST_CASE(include_creation_bytecode_only_once)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
+	compileAndRun(sourceCode, 0, "Single");
 	BOOST_CHECK_LE(
 		double(m_compiler.object("Double").bytecode.size()),
 		1.2 * double(m_compiler.object("Single").bytecode.size())

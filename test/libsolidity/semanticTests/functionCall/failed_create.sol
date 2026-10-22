@@ -15,6 +15,7 @@ contract C {
 }
 // ====
 // EVMVersion: >=constantinople
+// targetContract: C
 // ----
 // constructor(), 20 wei
 // gas irOptimized: 59672

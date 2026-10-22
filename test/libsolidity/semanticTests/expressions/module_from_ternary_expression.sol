@@ -11,5 +11,7 @@ contract C {
         return flag;
     }
 }
+// ====
+// targetContract: C
 // ----
 // f() -> true

@@ -6,6 +6,8 @@ contract Test {
         return x + 9;
     }
 }
+// ====
+// targetContract: Test
 // ----
 // library: Lib
 // f(uint256): 33 -> 0x2a

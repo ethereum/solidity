@@ -24,6 +24,8 @@ contract C {
         return x.internalFunction();
     }
 }
+// ====
+// targetContract: C
 // ----
 // library: L
 // f() -> 1

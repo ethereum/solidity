@@ -41,6 +41,8 @@ contract Test {
         return c.xAndZSlots();
     }
 }
+// ====
+// targetContract: Test
 // ----
 // contractASlots() -> 0
 // contractBSlots() -> 5, 6

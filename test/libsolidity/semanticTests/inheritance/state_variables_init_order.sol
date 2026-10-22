@@ -8,5 +8,7 @@ contract A {
 }
 contract B is A {
 }
+// ====
+// targetContract: B
 // ----
 // x() -> 1

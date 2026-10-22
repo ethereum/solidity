@@ -26,6 +26,8 @@ contract B is Base {
 
 
 contract Derived is Base, B, A {}
+// ====
+// targetContract: Derived
 // ----
 // getViaB() -> 0
 // setViaA(uint256): 23 ->

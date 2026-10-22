@@ -13,6 +13,8 @@ contract D {
         return c.i();
     }
 }
+// ====
+// targetContract: D
 // ----
 // constructor(): 2 ->
 // gas irOptimized: 138893

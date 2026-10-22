@@ -13,5 +13,6 @@ contract B is A {
 }
 // ====
 // EVMVersion: >=byzantium
+// targetContract: B
 // ----
 // f() -> 1, 0x40, 0x00

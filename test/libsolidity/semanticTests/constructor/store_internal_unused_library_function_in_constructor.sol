@@ -17,5 +17,6 @@ contract C {
     }
 }
 // ====
+// targetContract: C
 // ----
 // t() -> 7

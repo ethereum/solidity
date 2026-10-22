@@ -22,6 +22,8 @@ contract Test is C {
         return type(I).name;
     }
 }
+// ====
+// targetContract: Test
 // ----
 // c() -> 0x20, 1, "C"
 // a() -> 0x20, 1, "A"

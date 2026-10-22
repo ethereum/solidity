@@ -8,5 +8,6 @@ contract B is A {
 }
 // ====
 // compileViaYul: false
+// targetContract: B
 // ----
 // x() -> 4

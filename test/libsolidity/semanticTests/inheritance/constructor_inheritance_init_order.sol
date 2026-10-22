@@ -12,6 +12,7 @@ contract B is A {
 }
 // ====
 // compileViaYul: true
+// targetContract: B
 // ----
 // constructor() ->
 // gas irOptimized: 99420
