@@ -20,6 +20,8 @@
 
 #include <libyul/backends/evm/ssa/SSACFG.h>
 
+#include <libyul/Exceptions.h>
+
 #include <set>
 #include <vector>
 
@@ -45,14 +47,37 @@ public:
 	/// (a retreating edge). In a reducible CFG, these are exactly the back edges, i.e., the target dominates the source.
 	bool backEdge(SSACFG::BlockId _source, SSACFG::BlockId _target) const;
 
-	SSACFG::BlockId::ValueType preOrderIndexOf(SSACFG::BlockId _block) const { return m_blockWisePreOrder[_block.value]; }
+	SSACFG::BlockId::ValueType preOrderIndexOf(SSACFG::BlockId _block) const
+	{
+		yulAssert(reachable(_block));
+		return m_blockWisePreOrder[_block.value];
+	}
 
-	SSACFG::BlockId::ValueType maxSubtreePreOrderIndexOf(SSACFG::BlockId _block) const { return m_blockWiseMaxSubtreePreOrder[_block.value]; }
+	SSACFG::BlockId::ValueType maxSubtreePreOrderIndexOf(SSACFG::BlockId _block) const
+	{
+		yulAssert(reachable(_block));
+		return m_blockWiseMaxSubtreePreOrder[_block.value];
+	}
+
+	/// Parent of a reachable non-entry block in the DFS tree.
+	SSACFG::BlockId parentOf(SSACFG::BlockId _block) const
+	{
+		yulAssert(reachable(_block) && _block != m_cfg.entry, "Parent only defined for reachable non-entry blocks.");
+		return m_parent[_block.value];
+	}
+
+	/// Whether the block is reachable from the entry, i.e., was visited by the DFS.
+	bool reachable(SSACFG::BlockId _block) const
+	{
+		yulAssert(_block.value < m_explored.size());
+		return m_explored[_block.value];
+	}
+
+	/// Checks if `_ancestor` is an ancestor of `_block`, ie there's a path from `_ancestor` to `_block` in the dfs tree
+	bool ancestor(SSACFG::BlockId _ancestor, SSACFG::BlockId _block) const;
 
 private:
 	void dfs(SSACFG::BlockId _block);
-	/// Checks if block1 is an ancestor of block2, ie there's a path from block1 to block2 in the dfs tree
-	bool ancestor(SSACFG::BlockId _ancestor, SSACFG::BlockId _block) const;
 
 	SSACFG const& m_cfg;
 	std::vector<char> m_explored{};
@@ -60,6 +85,7 @@ private:
 	std::vector<SSACFG::BlockId> m_preOrder{};
 	std::vector<SSACFG::BlockId::ValueType> m_blockWisePreOrder{};
 	std::vector<SSACFG::BlockId::ValueType> m_blockWiseMaxSubtreePreOrder{};
+	std::vector<SSACFG::BlockId> m_parent{};
 	std::set<SSACFG::BlockId> m_backEdgeTargets{};
 };
 }

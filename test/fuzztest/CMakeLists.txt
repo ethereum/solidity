@@ -30,6 +30,7 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/deps/fuzztest ${CMAKE_BINARY_DIR}/deps/fu
 fuzztest_setup_fuzzing_flags()
 
 set(yul_fuzztest_sources
+	libyul/DominatorTreePropertyTest.cpp
 	libyul/StackLimitEvaderPropertyTest.cpp
 	libyul/StackShufflerPropertyTest.cpp
 	libyul/TarjanSCCPropertyTest.cpp
