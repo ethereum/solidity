@@ -431,7 +431,7 @@ std::string YulUtilFunctions::shiftLeftFunction(size_t _numBits)
 {
 	solAssert(_numBits < 256, "");
 
-	std::string functionName = "shift_left_" + std::to_string(_numBits);
+	std::string functionName = suffixedFunctionName("shift_left", {std::to_string(_numBits)});
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return
 			Whiskers(R"(
@@ -605,7 +605,7 @@ std::string YulUtilFunctions::updateByteSliceFunction(size_t _numBytes, size_t _
 	solAssert(_numBytes + _shiftBytes <= 32, "");
 	size_t numBits = _numBytes * 8;
 	size_t shiftBits = _shiftBytes * 8;
-	std::string functionName = "update_byte_slice_" + std::to_string(_numBytes) + "_shift_" + std::to_string(_shiftBytes);
+	std::string functionName = suffixedFunctionName("update_byte_slice", {std::to_string(_numBytes), "shift", std::to_string(_shiftBytes)});
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return
 			Whiskers(R"(

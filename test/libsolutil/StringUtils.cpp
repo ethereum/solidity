@@ -355,6 +355,19 @@ BOOST_AUTO_TEST_CASE(test_to_unsigned_int)
 	BOOST_CHECK(!toUnsignedInt("4294967296"));
 }
 
+BOOST_AUTO_TEST_CASE(test_suffixed_function_name)
+{
+	BOOST_CHECK_EQUAL(suffixedFunctionName("update_storage_value", {}), "update_storage_value");
+	BOOST_CHECK_EQUAL(
+		suffixedFunctionName("update_storage_value", {"offset", "12"}),
+		"update_storage_value_offset_12"
+	);
+	BOOST_CHECK_THROW(suffixedFunctionName("f", {""}), InvalidFunctionName);
+	BOOST_CHECK_THROW(suffixedFunctionName("f", {"offset_12"}), InvalidFunctionName);
+	BOOST_CHECK_THROW(suffixedFunctionName("", {"offset"}), InvalidFunctionName);
+	BOOST_CHECK_THROW(suffixedFunctionName("update_storage_value_", {"offset"}), InvalidFunctionName);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

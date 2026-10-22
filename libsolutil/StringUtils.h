@@ -210,4 +210,12 @@ inline std::string indent(std::string const& _input, bool _indentEmptyLines = fa
 	return prefixLines(_input, "    ", !_indentEmptyLines);
 }
 
+/// Composes the name of a generated function from a base name and a sequence of
+/// suffix components, separated by "_". Each component must be non-empty and free
+/// of underscores, so that, for a given base name, two different suffix sequences
+/// can never compose to the same name. The base name may contain underscores and
+/// uniqueness across different base names is not guaranteed.
+/// @example suffixedFunctionName("update_storage_value", {"offset", "12"}) == "update_storage_value_offset_12"
+std::string suffixedFunctionName(std::string _baseName, std::vector<std::string> const& _suffixes);
+
 }

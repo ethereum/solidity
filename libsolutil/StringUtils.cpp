@@ -24,6 +24,8 @@
 
 #include <libsolutil/StringUtils.h>
 
+#include <libsolutil/Assertions.h>
+
 #include <boost/algorithm/string/trim.hpp>
 
 #include <fmt/format.h>
@@ -226,4 +228,18 @@ void solidity::util::printPrefixed(
 		if (!input.eof() || _ensureFinalNewline)
 			_output << '\n';
 	}
+}
+
+std::string solidity::util::suffixedFunctionName(std::string _baseName, std::vector<std::string> const& _suffixes)
+{
+	assertThrow(!_baseName.empty(), InvalidFunctionName, "Empty base name.");
+	assertThrow(_baseName.back() != '_', InvalidFunctionName, "Trailing underscore in base name: " + _baseName);
+	for (std::string const& suffix: _suffixes)
+	{
+		assertThrow(!suffix.empty(), InvalidFunctionName, "Empty component in function name: " + _baseName);
+		assertThrow(!suffix.contains('_'), InvalidFunctionName, "Underscore in component \"" + suffix + "\" of function name: " + _baseName);
+		_baseName += '_';
+		_baseName += suffix;
+	}
+	return _baseName;
 }
