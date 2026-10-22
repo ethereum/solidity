@@ -64,7 +64,6 @@
                     }
                   },
                   "id": 6,
-                  "isConstant": false,
                   "isLValue": false,
                   "isPure": false,
                   "kind": "functionCall",
@@ -182,7 +181,6 @@
               {
                 "expression": {
                   "id": 21,
-                  "isConstant": false,
                   "isLValue": false,
                   "isPure": false,
                   "lValueRequested": false,
@@ -205,7 +203,6 @@
                     "expression": {
                       "argumentTypes": [],
                       "id": 19,
-                      "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
                       "lValueRequested": false,
@@ -237,7 +234,6 @@
                       }
                     },
                     "id": 20,
-                    "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "kind": "functionCall",
@@ -280,7 +276,6 @@
                       }
                     },
                     "id": 25,
-                    "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
@@ -295,7 +290,6 @@
                     }
                   },
                   "id": 26,
-                  "isConstant": false,
                   "isLValue": false,
                   "isPure": false,
                   "kind": "functionCall",

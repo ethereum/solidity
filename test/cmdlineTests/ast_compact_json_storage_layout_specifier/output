@@ -47,14 +47,12 @@ JSON AST (compact format):
                         "typeString": "int_const 5801"
                     },
                     "id": 4,
-                    "isConstant": false,
                     "isLValue": false,
                     "isPure": true,
                     "lValueRequested": false,
                     "leftExpression": {
                         "hexValue": "31323334",
                         "id": 2,
-                        "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
                         "kind": "number",
@@ -72,7 +70,6 @@ JSON AST (compact format):
                     "rightExpression": {
                         "hexValue": "34353637",
                         "id": 3,
-                        "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
                         "kind": "number",

@@ -72,7 +72,6 @@
                       "documentation": "tee\n s \"t\" 3",
                       "expression": {
                         "id": 20,
-                        "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
                         "lValueRequested": false,
@@ -93,7 +92,6 @@
                         "rightHandSide": {
                           "hexValue": "32",
                           "id": 19,
-                          "isConstant": false,
                           "isLValue": false,
                           "isPure": true,
                           "kind": "number",
@@ -124,7 +122,6 @@
                     "typeString": "uint256"
                   },
                   "id": 14,
-                  "isConstant": false,
                   "isLValue": false,
                   "isPure": false,
                   "lValueRequested": false,
@@ -145,7 +142,6 @@
                   "rightExpression": {
                     "hexValue": "3230",
                     "id": 13,
-                    "isConstant": false,
                     "isLValue": false,
                     "isPure": true,
                     "kind": "number",
@@ -203,7 +199,6 @@
                   "initialValue": {
                     "hexValue": "30",
                     "id": 10,
-                    "isConstant": false,
                     "isLValue": false,
                     "isPure": true,
                     "kind": "number",
@@ -223,7 +218,6 @@
                 "loopExpression": {
                   "expression": {
                     "id": 16,
-                    "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,

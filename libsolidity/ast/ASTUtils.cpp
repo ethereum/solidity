@@ -86,6 +86,13 @@ VariableDeclaration const* rootConstVariableDeclaration(VariableDeclaration cons
 	return rootDecl;
 }
 
+bool isConstantVariableIdentifier(ExpressionAnnotation const& _annotation)
+{
+	auto const* identifierAnnotation = dynamic_cast<IdentifierAnnotation const*>(&_annotation);
+	auto const* variable = identifierAnnotation ? dynamic_cast<VariableDeclaration const*>(identifierAnnotation->referencedDeclaration) : nullptr;
+	return variable && variable->isConstant();
+}
+
 Expression const* resolveOuterUnaryTuples(Expression const* _expr)
 {
 	while (auto const* tupleExpression = dynamic_cast<TupleExpression const*>(_expr))

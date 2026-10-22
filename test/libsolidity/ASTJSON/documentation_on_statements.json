@@ -65,7 +65,6 @@
                     {
                       "expression": {
                         "id": 19,
-                        "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
                         "lValueRequested": false,
@@ -86,7 +85,6 @@
                         "rightHandSide": {
                           "hexValue": "32",
                           "id": 18,
-                          "isConstant": false,
                           "isLValue": false,
                           "isPure": true,
                           "kind": "number",
@@ -117,7 +115,6 @@
                     "typeString": "uint256"
                   },
                   "id": 13,
-                  "isConstant": false,
                   "isLValue": false,
                   "isPure": false,
                   "lValueRequested": false,
@@ -138,7 +135,6 @@
                   "rightExpression": {
                     "hexValue": "3230",
                     "id": 12,
-                    "isConstant": false,
                     "isLValue": false,
                     "isPure": true,
                     "kind": "number",
@@ -195,7 +191,6 @@
                   "initialValue": {
                     "hexValue": "30",
                     "id": 9,
-                    "isConstant": false,
                     "isLValue": false,
                     "isPure": true,
                     "kind": "number",
@@ -215,7 +210,6 @@
                 "loopExpression": {
                   "expression": {
                     "id": 15,
-                    "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,

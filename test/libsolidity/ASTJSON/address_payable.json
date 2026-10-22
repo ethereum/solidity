@@ -142,7 +142,6 @@
                       "typeString": "address payable"
                     }
                   },
-                  "isConstant": false,
                   "isLValue": true,
                   "isPure": false,
                   "lValueRequested": false,
@@ -159,7 +158,6 @@
               {
                 "expression": {
                   "id": 19,
-                  "isConstant": false,
                   "isLValue": false,
                   "isPure": false,
                   "lValueRequested": false,
@@ -257,7 +255,6 @@
                       }
                     ],
                     "id": 24,
-                    "isConstant": false,
                     "isLValue": false,
                     "isPure": true,
                     "lValueRequested": false,
@@ -276,7 +273,6 @@
                     }
                   },
                   "id": 26,
-                  "isConstant": false,
                   "isLValue": false,
                   "isPure": false,
                   "kind": "typeConversion",
@@ -297,7 +293,6 @@
               {
                 "expression": {
                   "id": 35,
-                  "isConstant": false,
                   "isLValue": false,
                   "isPure": false,
                   "lValueRequested": false,
@@ -327,7 +322,6 @@
                         "typeString": "address"
                       }
                     },
-                    "isConstant": false,
                     "isLValue": true,
                     "isPure": false,
                     "lValueRequested": true,
@@ -345,7 +339,6 @@
                       {
                         "hexValue": "30",
                         "id": 33,
-                        "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
                         "kind": "number",
@@ -367,7 +360,6 @@
                         }
                       ],
                       "id": 32,
-                      "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
                       "lValueRequested": false,
@@ -387,7 +379,6 @@
                       }
                     },
                     "id": 34,
-                    "isConstant": false,
                     "isLValue": false,
                     "isPure": true,
                     "kind": "typeConversion",

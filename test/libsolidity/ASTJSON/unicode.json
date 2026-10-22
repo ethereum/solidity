@@ -66,7 +66,6 @@
                 "initialValue": {
                   "hexValue": "48656c6c6f20f09f9883",
                   "id": 5,
-                  "isConstant": false,
                   "isLValue": false,
                   "isPure": true,
                   "kind": "unicodeString",

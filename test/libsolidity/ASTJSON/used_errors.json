@@ -51,7 +51,6 @@
                 }
               },
               "id": 6,
-              "isConstant": false,
               "isLValue": false,
               "isPure": false,
               "kind": "functionCall",
@@ -149,7 +148,6 @@
                     }
                   },
                   "id": 15,
-                  "isConstant": false,
                   "isLValue": false,
                   "isPure": false,
                   "kind": "functionCall",

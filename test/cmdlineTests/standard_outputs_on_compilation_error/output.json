@@ -144,7 +144,6 @@
                                         {
                                             "expression": {
                                                 "id": 8,
-                                                "isConstant": false,
                                                 "isLValue": false,
                                                 "isPure": false,
                                                 "lValueRequested": false,
@@ -165,7 +164,6 @@
                                                 "rightHandSide": {
                                                     "hexValue": "30",
                                                     "id": 7,
-                                                    "isConstant": false,
                                                     "isLValue": false,
                                                     "isPure": true,
                                                     "kind": "number",
@@ -198,7 +196,6 @@
                                             "condition": {
                                                 "hexValue": "74727565",
                                                 "id": 10,
-                                                "isConstant": false,
                                                 "isLValue": false,
                                                 "isPure": true,
                                                 "kind": "bool",

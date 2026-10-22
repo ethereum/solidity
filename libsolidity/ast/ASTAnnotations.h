@@ -278,8 +278,6 @@ struct ExpressionAnnotation: ASTAnnotation
 {
 	/// Inferred type of the expression.
 	Type const* type = nullptr;
-	/// Whether the expression is a constant variable
-	util::SetOnce<bool> isConstant;
 	/// Whether the expression is pure, i.e. compile-time constant.
 	util::SetOnce<bool> isPure;
 	/// Whether it is an LValue (i.e. something that can be assigned to).

@@ -67,7 +67,6 @@
                 "initialValue": {
                   "hexValue": "31",
                   "id": 6,
-                  "isConstant": false,
                   "isLValue": false,
                   "isPure": true,
                   "kind": "number",
@@ -127,7 +126,6 @@
                       "initialValue": {
                         "hexValue": "30",
                         "id": 22,
-                        "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
                         "kind": "number",
@@ -151,7 +149,6 @@
                     "typeString": "uint256"
                   },
                   "id": 15,
-                  "isConstant": false,
                   "isLValue": false,
                   "isPure": false,
                   "lValueRequested": false,
@@ -172,7 +169,6 @@
                   "rightExpression": {
                     "hexValue": "3130",
                     "id": 14,
-                    "isConstant": false,
                     "isLValue": false,
                     "isPure": true,
                     "kind": "number",
@@ -229,7 +225,6 @@
                   "initialValue": {
                     "hexValue": "30",
                     "id": 11,
-                    "isConstant": false,
                     "isLValue": false,
                     "isPure": true,
                     "kind": "number",
@@ -249,7 +244,6 @@
                 "loopExpression": {
                   "expression": {
                     "id": 17,
-                    "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,

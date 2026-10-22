@@ -398,7 +398,6 @@
                         {
                           "hexValue": "31",
                           "id": 33,
-                          "isConstant": false,
                           "isLValue": false,
                           "isPure": true,
                           "kind": "number",
@@ -420,7 +419,6 @@
                           }
                         ],
                         "id": 32,
-                        "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
                         "lValueRequested": false,
@@ -439,7 +437,6 @@
                         }
                       },
                       "id": 34,
-                      "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
                       "kind": "typeConversion",
@@ -459,7 +456,6 @@
                         {
                           "hexValue": "32",
                           "id": 37,
-                          "isConstant": false,
                           "isLValue": false,
                           "isPure": true,
                           "kind": "number",
@@ -481,7 +477,6 @@
                           }
                         ],
                         "id": 36,
-                        "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
                         "lValueRequested": false,
@@ -500,7 +495,6 @@
                         }
                       },
                       "id": 38,
-                      "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
                       "kind": "typeConversion",
@@ -518,7 +512,6 @@
                     {
                       "hexValue": "33",
                       "id": 39,
-                      "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
                       "kind": "number",
@@ -559,7 +552,6 @@
                     }
                   },
                   "id": 40,
-                  "isConstant": false,
                   "isLValue": false,
                   "isPure": false,
                   "kind": "functionCall",
@@ -586,7 +578,6 @@
                         {
                           "hexValue": "31",
                           "id": 47,
-                          "isConstant": false,
                           "isLValue": false,
                           "isPure": true,
                           "kind": "number",
@@ -608,7 +599,6 @@
                           }
                         ],
                         "id": 46,
-                        "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
                         "lValueRequested": false,
@@ -627,7 +617,6 @@
                         }
                       },
                       "id": 48,
-                      "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
                       "kind": "typeConversion",
@@ -647,7 +636,6 @@
                         {
                           "hexValue": "32",
                           "id": 51,
-                          "isConstant": false,
                           "isLValue": false,
                           "isPure": true,
                           "kind": "number",
@@ -669,7 +657,6 @@
                           }
                         ],
                         "id": 50,
-                        "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
                         "lValueRequested": false,
@@ -688,7 +675,6 @@
                         }
                       },
                       "id": 52,
-                      "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
                       "kind": "typeConversion",
@@ -706,7 +692,6 @@
                     {
                       "hexValue": "33",
                       "id": 53,
-                      "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
                       "kind": "number",
@@ -748,7 +733,6 @@
                       }
                     },
                     "id": 44,
-                    "isConstant": false,
                     "isLValue": false,
                     "isPure": true,
                     "lValueRequested": false,
@@ -763,7 +747,6 @@
                     }
                   },
                   "id": 54,
-                  "isConstant": false,
                   "isLValue": false,
                   "isPure": false,
                   "kind": "functionCall",
@@ -790,7 +773,6 @@
                         {
                           "hexValue": "31",
                           "id": 63,
-                          "isConstant": false,
                           "isLValue": false,
                           "isPure": true,
                           "kind": "number",
@@ -812,7 +794,6 @@
                           }
                         ],
                         "id": 62,
-                        "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
                         "lValueRequested": false,
@@ -831,7 +812,6 @@
                         }
                       },
                       "id": 64,
-                      "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
                       "kind": "typeConversion",
@@ -851,7 +831,6 @@
                         {
                           "hexValue": "32",
                           "id": 67,
-                          "isConstant": false,
                           "isLValue": false,
                           "isPure": true,
                           "kind": "number",
@@ -873,7 +852,6 @@
                           }
                         ],
                         "id": 66,
-                        "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
                         "lValueRequested": false,
@@ -892,7 +870,6 @@
                         }
                       },
                       "id": 68,
-                      "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
                       "kind": "typeConversion",
@@ -910,7 +887,6 @@
                     {
                       "hexValue": "33",
                       "id": 69,
-                      "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
                       "kind": "number",
@@ -953,7 +929,6 @@
                         }
                       },
                       "id": 59,
-                      "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
                       "lValueRequested": false,
@@ -968,7 +943,6 @@
                       }
                     },
                     "id": 60,
-                    "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
@@ -983,7 +957,6 @@
                     }
                   },
                   "id": 70,
-                  "isConstant": false,
                   "isLValue": false,
                   "isPure": false,
                   "kind": "functionCall",

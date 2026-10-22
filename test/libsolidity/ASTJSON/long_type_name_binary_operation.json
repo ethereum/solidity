@@ -69,14 +69,12 @@
                     "typeString": "int_const 5"
                   },
                   "id": 7,
-                  "isConstant": false,
                   "isLValue": false,
                   "isPure": true,
                   "lValueRequested": false,
                   "leftExpression": {
                     "hexValue": "32",
                     "id": 5,
-                    "isConstant": false,
                     "isLValue": false,
                     "isPure": true,
                     "kind": "number",
@@ -94,7 +92,6 @@
                   "rightExpression": {
                     "hexValue": "33",
                     "id": 6,
-                    "isConstant": false,
                     "isLValue": false,
                     "isPure": true,
                     "kind": "number",

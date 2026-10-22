@@ -108,7 +108,6 @@
                     {
                       "hexValue": "30",
                       "id": 11,
-                      "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
                       "kind": "number",
@@ -142,7 +141,6 @@
                       }
                     },
                     "id": 10,
-                    "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
@@ -157,7 +155,6 @@
                     }
                   },
                   "id": 12,
-                  "isConstant": false,
                   "isLValue": false,
                   "isPure": false,
                   "kind": "functionCall",

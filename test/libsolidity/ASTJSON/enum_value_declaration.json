@@ -56,7 +56,6 @@
                 }
               },
               "id": 10,
-              "isConstant": false,
               "isLValue": false,
               "isPure": true,
               "lValueRequested": false,

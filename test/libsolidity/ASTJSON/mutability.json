@@ -52,7 +52,6 @@
           "value": {
             "hexValue": "34",
             "id": 2,
-            "isConstant": false,
             "isLValue": false,
             "isPure": true,
             "kind": "number",
@@ -96,7 +95,6 @@
           "value": {
             "hexValue": "32",
             "id": 5,
-            "isConstant": false,
             "isLValue": false,
             "isPure": true,
             "kind": "number",
@@ -140,7 +138,6 @@
           "value": {
             "hexValue": "33",
             "id": 8,
-            "isConstant": false,
             "isLValue": false,
             "isPure": true,
             "kind": "number",

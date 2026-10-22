@@ -140,7 +140,6 @@
                 {
                   "hexValue": "32",
                   "id": 12,
-                  "isConstant": false,
                   "isLValue": false,
                   "isPure": true,
                   "kind": "number",
