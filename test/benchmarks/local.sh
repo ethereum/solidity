@@ -50,6 +50,9 @@ function benchmark_contract {
     local pipeline="$1"
     local input_path="$2"
 
+    local input_file
+    input_file=$(basename "$input_path")
+
     local solc_command=("${solc}" --optimize --bin --color "${input_path}")
     [[ $pipeline == ir ]] && solc_command+=(--via-ir)
     local time_file="${output_dir}/time-and-status-${pipeline}.txt"
