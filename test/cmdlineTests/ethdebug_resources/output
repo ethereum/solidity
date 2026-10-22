@@ -15,6 +15,10 @@
             }
         ]
     },
+    "ethdebug": {
+        "schema": "ethdebug/format/info/resources",
+        "version": "<VERSION REMOVED>"
+    },
     "pointers": {},
     "types": {}
 }

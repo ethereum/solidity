@@ -22,8 +22,12 @@
 #include <libsolutil/JSON.h>
 
 #include <concepts>
+#include <map>
+#include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -38,6 +42,14 @@ namespace data
 struct HexValue
 {
 	bytes value;
+};
+
+/// ethdebug/format/data/stamp: the schema an object conforms to and the
+/// version of the specification that defines it.
+struct Stamp
+{
+	std::string schema;
+	std::string version;
 };
 
 struct Unsigned
@@ -72,7 +84,13 @@ struct ID
 
 struct Reference
 {
-	enum class Type { Compilation, Source };
+	enum class Type
+	{
+		Compilation,
+		Source
+	};
+	static std::map<Type, std::string> const typeNames;
+
 	ID id;
 	std::optional<Type> type;
 };
@@ -114,6 +132,436 @@ struct Compilation
 
 }
 
+/// ethdebug/format/type: one of the known elementary or complex kinds. The
+/// parts a type document is made of are nested here, so that they are
+/// addressed as `Type::Array` and do not clash with the language types of the
+/// frontend.
+struct Type
+{
+	/// ethdebug/format/type/reference: a type known by its ID in the type resources.
+	struct Reference
+	{
+		materials::ID id;
+	};
+
+	/// ethdebug/format/type/specifier: a full type representation or a reference.
+	struct Specifier
+	{
+		Specifier(Reference _reference):
+			value(std::move(_reference))
+		{}
+		/// @a _type must not be null.
+		explicit Specifier(std::shared_ptr<Type const> _type);
+
+		std::variant<Reference, std::shared_ptr<Type const>> value;
+	};
+
+	/// ethdebug/format/type/wrapper: `{ "type": ... }`, with the `name` that struct
+	/// member fields and tuple elements may carry.
+	struct Wrapper
+	{
+		std::optional<std::string> name;
+		Specifier type;
+	};
+
+	/// ethdebug/format/type/definition.
+	struct Definition
+	{
+		/// At least one of @a _name and @a _location must be set; @a _name must
+		/// not be empty.
+		Definition(std::optional<std::string> _name, std::optional<materials::SourceRange> _location);
+
+		std::optional<std::string> name;
+		std::optional<materials::SourceRange> location;
+	};
+
+	/// @returns whether @a _bits is a width the numeric kinds allow: a multiple
+	/// of 8 up to 256.
+	static bool isValidWidth(unsigned _bits) { return _bits >= 8 && _bits <= 256 && _bits % 8 == 0; }
+	/// @returns whether @a _places is a number of decimal places the fixed-point
+	/// kinds allow: between 1 and 80.
+	static bool isValidPlaces(unsigned _places) { return _places >= 1 && _places <= 80; }
+
+	// Elementary kinds
+	struct UInt
+	{
+		/// @a _bits must satisfy isValidWidth().
+		explicit UInt(unsigned _bits);
+
+		unsigned bits;
+	};
+
+	struct Int
+	{
+		/// @a _bits must satisfy isValidWidth().
+		explicit Int(unsigned _bits);
+
+		unsigned bits;
+	};
+
+	struct Bool
+	{
+	};
+
+	/// The dynamic bytes type when @a size is unset.
+	struct Bytes
+	{
+		std::optional<data::Unsigned> size;
+	};
+
+	struct String
+	{
+		std::optional<std::string> encoding;
+	};
+
+	struct UFixed
+	{
+		/// @a _bits must satisfy isValidWidth() and @a _places isValidPlaces().
+		UFixed(unsigned _bits, unsigned _places);
+
+		unsigned bits;
+		unsigned places;
+	};
+
+	struct Fixed
+	{
+		/// @a _bits must satisfy isValidWidth() and @a _places isValidPlaces().
+		Fixed(unsigned _bits, unsigned _places);
+
+		unsigned bits;
+		unsigned places;
+	};
+
+	/// @a payable unset means the payability is not known.
+	struct Address
+	{
+		std::optional<bool> payable;
+	};
+
+	struct Contract
+	{
+		enum class Kind
+		{
+			Contract,
+			Library,
+			Interface
+		};
+
+		Kind kind = Kind::Contract;
+		std::optional<bool> payable;
+		std::optional<Definition> definition;
+	};
+
+	struct Enum
+	{
+		std::vector<std::string> values;
+		std::optional<Definition> definition;
+	};
+
+	// Complex kinds
+	struct Alias
+	{
+		Wrapper contains;
+		std::optional<Definition> definition;
+	};
+
+	/// Dynamically sized when @a count is unset.
+	struct Array
+	{
+		Wrapper contains;
+		std::optional<data::Unsigned> count;
+	};
+
+	struct Mapping
+	{
+		Wrapper key;
+		Wrapper value;
+	};
+
+	struct Struct
+	{
+		std::vector<Wrapper> contains;
+		std::optional<Definition> definition;
+	};
+
+	struct Tuple
+	{
+		std::vector<Wrapper> contains;
+	};
+
+	/// @a parameters wraps a tuple type; @a returns is either a tuple wrapper or
+	/// the wrapper of a single type.
+	struct Function
+	{
+		enum class Visibility
+		{
+			Internal,
+			External
+		};
+		static std::map<Visibility, std::string> const visibilityNames;
+
+		Visibility visibility;
+		Wrapper parameters;
+		std::optional<Wrapper> returns;
+		std::optional<Definition> definition;
+	};
+
+	std::variant<
+		UInt,
+		Int,
+		Bool,
+		Bytes,
+		String,
+		UFixed,
+		Fixed,
+		Address,
+		Contract,
+		Enum,
+		Alias,
+		Array,
+		Mapping,
+		Struct,
+		Tuple,
+		Function
+	> value;
+};
+
+/// ethdebug/format/pointer: a region or a collection of pointers. The
+/// expressions and the kinds of pointers are nested here, so that they are
+/// addressed as `Pointer::Region` and do not clash with names in use elsewhere.
+///
+/// The constructors of the parts assert the constraints the schema puts on
+/// them, so that a pointer that does not serialize cannot be assembled.
+struct Pointer
+{
+	struct Expression;
+	using Operands = std::vector<Expression>;
+
+	/// @returns whether @a _text follows the identifier grammar of
+	/// ethdebug/format/pointer/identifier: `^[a-zA-Z$_\-]+[a-zA-Z0-9$_\-]*$`,
+	/// which admits every Solidity identifier as it is.
+	static bool isIdentifier(std::string_view _text);
+	/// @returns whether @a _text names a region: an identifier or `~this`.
+	static bool isRegionReference(std::string_view _text);
+
+	/// An unsigned number or `0x`-prefixed hex string.
+	struct Literal
+	{
+		data::Unsigned value;
+	};
+
+	/// The value of a variable bound by a scope definition, a list index or a
+	/// template parameter.
+	struct Variable
+	{
+		/// @a _identifier must satisfy isIdentifier().
+		explicit Variable(std::string _identifier);
+
+		std::string identifier;
+	};
+
+	enum class Constant
+	{
+		WordSize
+	};
+	static std::map<Constant, std::string> const constantNames;
+
+	/// `{ ".slot" | ".offset" | ".length": <region> }`, a property of a named
+	/// region or of `~this`.
+	struct Lookup
+	{
+		enum class Property
+		{
+			Slot,
+			Offset,
+			Length
+		};
+		static std::map<Property, std::string> const propertyNames;
+
+		/// @a _region must satisfy isRegionReference().
+		Lookup(Property _property, std::string _region);
+
+		Property property;
+		std::string region;
+	};
+
+	/// `{ "~read": <region> }`, the raw bytes in a region.
+	struct Read
+	{
+		/// @a _region must satisfy isRegionReference().
+		explicit Read(std::string _region);
+
+		std::string region;
+	};
+
+	struct Arithmetic
+	{
+		enum class Operator
+		{
+			Sum,
+			Difference,
+			Product,
+			Quotient,
+			Remainder
+		};
+		static std::map<Operator, std::string> const operatorNames;
+
+		/// Difference, quotient and remainder take exactly two @a _operands.
+		Arithmetic(Operator _op, Operands _operands);
+
+		Operator op;
+		Operands operands;
+	};
+
+	struct Keccak256
+	{
+		Operands operands;
+	};
+
+	struct Concat
+	{
+		Operands operands;
+	};
+
+	/// `{ "~sized<N>": ... }` with @a size N, or `{ "~wordsized": ... }` when unset.
+	struct Resize
+	{
+		/// @a _size, if set, must be positive; @a _operand must not be null.
+		Resize(std::optional<unsigned> _size, std::shared_ptr<Expression const> _operand);
+
+		std::optional<unsigned> size;
+		std::shared_ptr<Expression const> operand;
+	};
+
+	/// ethdebug/format/pointer/expression
+	struct Expression
+	{
+		std::variant<
+			Literal,
+			Variable,
+			Constant,
+			Lookup,
+			Read,
+			Arithmetic,
+			Keccak256,
+			Concat,
+			Resize
+		> value;
+	};
+
+	enum class Location
+	{
+		Stack,
+		Memory,
+		Storage,
+		Calldata,
+		Returndata,
+		Transient,
+		Code
+	};
+	static std::map<Location, std::string> const locationNames;
+
+	/// ethdebug/format/pointer/region. Stack, storage and transient regions are
+	/// addressed by @a slot (offset and length within the slot optional); the
+	/// byte-oriented locations by @a offset and @a length.
+	struct Region
+	{
+		/// @a _name, if set, must satisfy isIdentifier(). A stack, storage or
+		/// transient region must have a @a _slot; a memory, calldata, returndata or
+		/// code region must have an @a _offset and a @a _length and no slot.
+		Region(
+			std::optional<std::string> _name,
+			Location _location,
+			std::optional<Expression> _slot,
+			std::optional<Expression> _offset = std::nullopt,
+			std::optional<Expression> _length = std::nullopt
+		);
+
+		std::optional<std::string> name;
+		Location location;
+		std::optional<Expression> slot;
+		std::optional<Expression> offset;
+		std::optional<Expression> length;
+	};
+
+	struct Group
+	{
+		/// @a _members must not be empty.
+		explicit Group(std::vector<Pointer> _members);
+
+		std::vector<Pointer> members;
+	};
+
+	struct List
+	{
+		/// @a _each must satisfy isIdentifier(); @a _is must not be null.
+		List(Expression _count, std::string _each, std::shared_ptr<Pointer const> _is);
+
+		Expression count;
+		std::string each;
+		std::shared_ptr<Pointer const> is;
+	};
+
+	struct Conditional
+	{
+		/// @a _then must not be null.
+		Conditional(Expression _condition, std::shared_ptr<Pointer const> _then, std::shared_ptr<Pointer const> _otherwise);
+
+		Expression condition;
+		std::shared_ptr<Pointer const> then;
+		std::shared_ptr<Pointer const> otherwise;
+	};
+
+	/// Definitions are ordered: each may reference the earlier ones.
+	struct Scope
+	{
+		/// @a _definitions must not be empty and must define identifiers; @a _in
+		/// must not be null.
+		Scope(std::vector<std::pair<std::string, Expression>> _definitions, std::shared_ptr<Pointer const> _in);
+
+		std::vector<std::pair<std::string, Expression>> definitions;
+		std::shared_ptr<Pointer const> in;
+	};
+
+	struct TemplateReference
+	{
+		/// @a _name and the names in @a _yields must satisfy isIdentifier().
+		explicit TemplateReference(std::string _name, std::vector<std::pair<std::string, std::string>> _yields = {});
+
+		std::string name;
+		std::vector<std::pair<std::string, std::string>> yields;
+	};
+
+	/// ethdebug/format/pointer/template: @a body in terms of the @a expect variables.
+	struct Template
+	{
+		/// @a _expect must list identifiers; @a _body must not be null.
+		Template(std::vector<std::string> _expect, std::shared_ptr<Pointer const> _body);
+
+		std::vector<std::string> expect;
+		std::shared_ptr<Pointer const> body;
+	};
+
+	struct Templates
+	{
+		/// @a _templates must be named by identifiers; @a _in must not be null.
+		Templates(std::vector<std::pair<std::string, Template>> _templates, std::shared_ptr<Pointer const> _in);
+
+		std::vector<std::pair<std::string, Template>> templates;
+		std::shared_ptr<Pointer const> in;
+	};
+
+	std::variant<
+		Region,
+		Group,
+		List,
+		Conditional,
+		Scope,
+		TemplateReference,
+		Templates
+	> value;
+};
+
 namespace program
 {
 
@@ -151,8 +599,10 @@ struct Program
 {
 	enum class Environment
 	{
-		CALL, CREATE
+		CALL,
+		CREATE
 	};
+	static std::map<Environment, std::string> const environmentNames;
 
 	struct Contract
 	{
@@ -160,6 +610,7 @@ struct Program
 		materials::SourceRange definition;
 	};
 
+	std::optional<data::Stamp> ethdebug;
 	std::optional<materials::Reference> compilation;
 	Contract contract;
 	Environment environment;
@@ -170,11 +621,14 @@ struct Program
 namespace info
 {
 
+/// Type documents keyed by the producer's type ID and pointer templates keyed
+/// by the producer's template name.
 struct Resources
 {
+	std::optional<data::Stamp> ethdebug;
 	materials::Compilation compilation;
-	Json types;
-	Json pointers;
+	std::map<std::string, Type> types;
+	std::map<std::string, Pointer::Template> pointers;
 };
 
 }
@@ -183,6 +637,7 @@ namespace data
 {
 void to_json(Json& _json, HexValue const& _hexValue);
 void to_json(Json& _json, Unsigned const& _unsigned);
+void to_json(Json& _json, Stamp const& _stamp);
 }
 
 namespace materials
@@ -195,6 +650,17 @@ void to_json(Json& _json, Source const& _source);
 void to_json(Json& _json, Compilation::Compiler const& _compiler);
 void to_json(Json& _json, Compilation const& _compilation);
 }
+
+void to_json(Json& _json, Type::Reference const& _reference);
+void to_json(Json& _json, Type::Specifier const& _specifier);
+void to_json(Json& _json, Type::Wrapper const& _wrapper);
+void to_json(Json& _json, Type::Definition const& _definition);
+void to_json(Json& _json, Type const& _type);
+
+void to_json(Json& _json, Pointer::Expression const& _expression);
+void to_json(Json& _json, Pointer::Region const& _region);
+void to_json(Json& _json, Pointer const& _pointer);
+void to_json(Json& _json, Pointer::Template const& _template);
 
 namespace program
 {

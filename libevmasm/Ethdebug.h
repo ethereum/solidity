@@ -21,7 +21,10 @@
 #include <libsolutil/JSON.h>
 
 #include <libevmasm/Assembly.h>
+#include <libevmasm/EthdebugSchema.h>
 #include <libevmasm/LinkerObject.h>
+
+#include <map>
 
 namespace solidity::evmasm::ethdebug
 {
@@ -34,11 +37,20 @@ struct Source
 	std::string language;
 };
 
-// returns ethdebug/format/program.
+/// The version of the ethdebug/format specification the outputs follow, which
+/// the stamps of the programs and of the resources name.
+constexpr std::string_view SpecificationVersion = "0.1.0-draft.2";
+
+// returns ethdebug/format/program, stamped with its schema and the specification version.
 Json program(std::string_view _name, unsigned _sourceID, Assembly const& _assembly, LinkerObject const& _linkerObject);
 
-// returns ethdebug/format/info/resources
-Json resources(std::vector<Source> const& _sources, std::string_view _version);
+// returns ethdebug/format/info/resources, stamped with its schema and the specification version.
+Json resources(
+	std::vector<Source> const& _sources,
+	std::string_view _version,
+	std::map<std::string, schema::Type> _types = {},
+	std::map<std::string, schema::Pointer::Template> _pointers = {}
+);
 
 // returns the 'compilation' object from ethdebug/format/info/resources
 Json compilation(std::vector<Source> const& _sources, std::string_view _version);

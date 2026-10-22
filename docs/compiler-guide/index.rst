@@ -12,6 +12,12 @@ They are not part of the main table of contents.
 
 .. toctree::
    :maxdepth: 1
+   :caption: Feature guides
+
+   ethdebug.rst
+
+.. toctree::
+   :maxdepth: 1
    :caption: Implementation plans
 
    ethdebug_internal_debug_info.rst

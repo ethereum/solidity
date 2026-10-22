@@ -138,6 +138,7 @@ Contents
 
    using-the-compiler.rst
    analysing-compilation-output.rst
+   ethdebug.rst
    ir-breaking-changes.rst
 
 .. toctree::

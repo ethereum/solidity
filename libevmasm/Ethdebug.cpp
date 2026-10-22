@@ -173,7 +173,8 @@ schema::materials::Compilation materialCompilation(std::vector<Source> const& _s
 
 Json ethdebug::program(std::string_view _name, unsigned _sourceID, Assembly const& _assembly, LinkerObject const& _linkerObject)
 {
-	return schema::Program{
+	schema::Program const result{
+		.ethdebug = schema::data::Stamp{"ethdebug/format/program", std::string{SpecificationVersion}},
 		.compilation = std::nullopt,
 		.contract = {
 			.name = std::string{_name},
@@ -189,18 +190,26 @@ Json ethdebug::program(std::string_view _name, unsigned _sourceID, Assembly cons
 		.context = std::nullopt,
 		.instructions = programInstructions(_assembly, _linkerObject, _sourceID)
 	};
+	return Json(result);
 }
 
-Json ethdebug::resources(std::vector<Source> const& _sources, std::string_view _version)
+Json ethdebug::resources(
+	std::vector<Source> const& _sources,
+	std::string_view _version,
+	std::map<std::string, schema::Type> _types,
+	std::map<std::string, schema::Pointer::Template> _pointers
+)
 {
-	schema::info::Resources result;
-	result.compilation = materialCompilation(_sources, _version);
-	result.types = Json::object();
-	result.pointers = Json::object();
-	return result;
+	schema::info::Resources const result{
+		.ethdebug = schema::data::Stamp{"ethdebug/format/info/resources", std::string{SpecificationVersion}},
+		.compilation = materialCompilation(_sources, _version),
+		.types = std::move(_types),
+		.pointers = std::move(_pointers)
+	};
+	return Json(result);
 }
 
 Json ethdebug::compilation(std::vector<Source> const& _sources, std::string_view _version)
 {
-	return materialCompilation(_sources, _version);
+	return Json(materialCompilation(_sources, _version));
 }

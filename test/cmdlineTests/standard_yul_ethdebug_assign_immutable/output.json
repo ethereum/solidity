@@ -14,6 +14,10 @@
                                 "name": ""
                             },
                             "environment": "create",
+                            "ethdebug": {
+                                "schema": "ethdebug/format/program",
+                                "version": "0.1.0-draft.2"
+                            },
                             "instructions": [
                                 {
                                     "context": {
@@ -132,6 +136,10 @@
                         "path": "C"
                     }
                 ]
+            },
+            "ethdebug": {
+                "schema": "ethdebug/format/info/resources",
+                "version": "0.1.0-draft.2"
             },
             "pointers": {},
             "types": {}

@@ -50,6 +50,7 @@
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/formal/ModelChecker.h>
 #include <libsolidity/interface/ABI.h>
+#include <libsolidity/interface/Ethdebug.h>
 #include <libsolidity/interface/Natspec.h>
 #include <libsolidity/interface/GasEstimator.h>
 #include <libsolidity/interface/StorageLayout.h>
@@ -1154,12 +1155,27 @@ Json CompilerStack::interfaceSymbols(std::string const& _contractName) const
 Json CompilerStack::ethdebug() const
 {
 	solAssert(m_stackState >= AnalysisSuccessful, "Analysis was not successful.");
-	return evmasm::ethdebug::resources(ethdebugSources(), VersionString);
+	// The resource tables are derived from analysis results alone, so
+	// ethdebug.resources is available right after analysis.
+	ethdebug::Resources resources;
+	std::map<std::string, unsigned> const sourceIndexMap = sourceIndices();
+	for (auto const& [name, compiledContract]: m_contracts)
+		if (compiledContract.contract)
+			resources.merge(ethdebug::resources(*compiledContract.contract, sourceIndexMap));
+
+	return evmasm::ethdebug::resources(
+		ethdebugSources(),
+		VersionString,
+		std::move(resources.types),
+		std::move(resources.pointers)
+	);
 }
 
 Json CompilerStack::ethdebugCompilation() const
 {
-	solAssert(m_stackState >= AnalysisSuccessful, "Analysis was not successful.");
+	// The compilation record lists the sources as given; nothing in it depends
+	// on parsing or analysis.
+	solAssert(m_stackState >= SourcesSet, "No sources set.");
 	return evmasm::ethdebug::compilation(ethdebugSources(), VersionString);
 }
 

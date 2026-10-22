@@ -226,8 +226,11 @@ EOF
             local temporary_file
             temporary_file=$(mktemp -t cmdline-ethdebug-XXXXXX.tmp)
             if [[ -e strip-ethdebug ]]; then
+                # The documents themselves carry an `ethdebug` stamp naming their schema, which
+                # is not ethdebug output.
                 jq --indent 4 '
-                    (. | .. | objects | select(has("ethdebug"))) |= (.ethdebug = "<ETHDEBUG DEBUG DATA REMOVED>")
+                    (. | .. | objects | select(has("ethdebug") and ((.ethdebug | type) != "object" or (.ethdebug | has("schema") | not)))) |=
+                        (.ethdebug = "<ETHDEBUG DEBUG DATA REMOVED>")
                 ' "$stdout_path" > "$temporary_file"
             else
                 jq --indent 4 '

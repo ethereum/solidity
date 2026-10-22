@@ -144,6 +144,12 @@ set(sources
 	interface/CompilerStack.cpp
 	interface/CompilerStack.h
 	interface/DebugSettings.h
+	interface/Ethdebug.cpp
+	interface/Ethdebug.h
+	interface/EthdebugPointerTemplateRegistry.cpp
+	interface/EthdebugPointerTemplateRegistry.h
+	interface/EthdebugTypeRegistry.cpp
+	interface/EthdebugTypeRegistry.h
 	interface/FileReader.cpp
 	interface/FileReader.h
 	interface/ImportRemapper.cpp
