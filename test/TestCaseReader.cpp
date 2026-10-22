@@ -60,6 +60,13 @@ bool TestCaseReader::boolSetting(std::string const& _name, bool _defaultValue)
 {
 	if (m_settings.count(_name) == 0)
 		return _defaultValue;
+	return boolSetting(_name).value_or(_defaultValue);
+}
+
+std::optional<bool> TestCaseReader::boolSetting(std::string const& _name)
+{
+	if (m_settings.count(_name) == 0)
+		return std::nullopt;
 
 	m_unreadSettings.erase(_name);
 	std::string value = m_settings.at(_name);
@@ -75,6 +82,13 @@ size_t TestCaseReader::sizetSetting(std::string const& _name, size_t _defaultVal
 {
 	if (m_settings.count(_name) == 0)
 		return _defaultValue;
+	return sizetSetting(_name).value_or(_defaultValue);
+}
+
+std::optional<size_t> TestCaseReader::sizetSetting(std::string const& _name)
+{
+	if (m_settings.count(_name) == 0)
+		return std::nullopt;
 
 	m_unreadSettings.erase(_name);
 
@@ -86,6 +100,15 @@ std::string TestCaseReader::stringSetting(std::string const& _name, std::string 
 {
 	if (m_settings.count(_name) == 0)
 		return _defaultValue;
+
+	m_unreadSettings.erase(_name);
+	return m_settings.at(_name);
+}
+
+std::optional<std::string> TestCaseReader::stringSetting(std::string const& _name)
+{
+	if (m_settings.count(_name) == 0)
+		return std::nullopt;
 
 	m_unreadSettings.erase(_name);
 	return m_settings.at(_name);

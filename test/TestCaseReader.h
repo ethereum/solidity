@@ -29,6 +29,7 @@
 
 #include <fstream>
 #include <map>
+#include <optional>
 #include <string>
 
 namespace solidity::frontend::test
@@ -64,11 +65,19 @@ public:
 	std::string simpleExpectations();
 
 	bool boolSetting(std::string const& _name, bool _defaultValue);
+	std::optional<bool> boolSetting(std::string const& _name);
+
 	size_t sizetSetting(std::string const& _name, size_t _defaultValue);
+	std::optional<size_t> sizetSetting(std::string const& _name);
+
 	std::string stringSetting(std::string const& _name, std::string const& _defaultValue);
+	std::optional<std::string> stringSetting(std::string const& _name);
 
 	template <typename E>
 	E enumSetting(std::string const& _name, std::map<std::string, E> const& _choices, std::string const& _defaultChoice);
+
+	template <typename E>
+	std::optional<E> enumSetting(std::string const& _name, std::map<std::string, E> const& _choices);
 
 	void ensureAllSettingsRead() const;
 
@@ -88,15 +97,22 @@ template <typename E>
 E TestCaseReader::enumSetting(std::string const& _name, std::map<std::string, E> const& _choices, std::string const& _defaultChoice)
 {
 	soltestAssert(_choices.count(_defaultChoice) > 0, "");
+	return enumSetting<E>(_name, _choices).value_or(_choices.at(_defaultChoice));
+}
 
-	std::string value = stringSetting(_name, _defaultChoice);
+template <typename E>
+std::optional<E> TestCaseReader::enumSetting(std::string const& _name, std::map<std::string, E> const& _choices)
+{
+	std::optional<std::string> value = stringSetting(_name);
+	if (!value.has_value())
+		return std::nullopt;
 
-	if (_choices.count(value) == 0)
+	if (_choices.count(*value) == 0)
 		BOOST_THROW_EXCEPTION(std::runtime_error(
-			"Invalid Enum value: " + value + ". Available choices: " + util::joinHumanReadable(_choices | ranges::views::keys) + "."
+			"Invalid Enum value: " + *value + ". Available choices: " + util::joinHumanReadable(_choices | ranges::views::keys) + "."
 		));
 
-	return _choices.at(value);
+	return _choices.at(*value);
 }
 
 }

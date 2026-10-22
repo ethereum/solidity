@@ -18,14 +18,21 @@
 
 #include <test/libsolidity/SyntaxTest.h>
 
-#include <test/libsolidity/util/Common.h>
 #include <test/Common.h>
+#include <test/TestCase.h>
+#include <test/libsolidity/util/Common.h>
+
+#include <libsolidity/interface/CompilerStack.h>
+#include <libsolidity/util/SoltestErrors.h>
+
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/throw_exception.hpp>
+
 #include <range/v3/algorithm/find_if.hpp>
-#include <fstream>
+
+#include <map>
 #include <memory>
 #include <stdexcept>
 
@@ -36,55 +43,55 @@ using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 using namespace boost::unit_test;
-namespace fs = boost::filesystem;
 
-SyntaxTest::SyntaxTest(
-	std::string const& _filename,
-	langutil::EVMVersion _evmVersion,
-	Error::Severity _minSeverity
-):
-	CommonSyntaxTest(_filename, _evmVersion),
-	m_minSeverity(_minSeverity)
+SyntaxTestSettings SyntaxTestSettings::fromReader(TestCaseReader& _reader)
 {
+	SyntaxTestSettings settings;
+
+	settings.stopAfter = _reader.enumSetting<PipelineStage>(
+		"stopAfter",
+		{
+			{"parsing", PipelineStage::Parsing},
+			{"analysis", PipelineStage::Analysis},
+			{"compilation", PipelineStage::Compilation}
+		},
+		"compilation"
+	);
+	settings.experimental = _reader.boolSetting("experimental", false);
+
 	static std::set<std::string> const compileViaYulAllowedValues{"true", "false"};
+	settings.compileViaYul = _reader.stringSetting("compileViaYul", "false");
+	if (!compileViaYulAllowedValues.contains(settings.compileViaYul))
+		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid compileViaYul value: " + settings.compileViaYul + "."));
 
-	m_compileViaYul = m_reader.stringSetting("compileViaYul", "false");
-	if (!compileViaYulAllowedValues.contains(m_compileViaYul))
-		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid compileViaYul value: " + m_compileViaYul + "."));
+	settings.optimizeYul = _reader.boolSetting("optimize-yul", true);
 
-	m_optimiseYul = m_reader.boolSetting("optimize-yul", true);
-	m_experimental = m_reader.boolSetting("experimental", false);
-
-	static std::map<std::string, PipelineStage> const pipelineStages = {
-		{"parsing", PipelineStage::Parsing},
-		{"analysis", PipelineStage::Analysis},
-		{"compilation", PipelineStage::Compilation}
-	};
-	std::string stopAfter = m_reader.stringSetting("stopAfter", "compilation");
-	if (!pipelineStages.count(stopAfter))
-		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid stopAfter value: " + stopAfter + "."));
-	m_stopAfter = pipelineStages.at(stopAfter);
+	return settings;
 }
 
 void SyntaxTest::setupCompiler(CompilerStack& _compiler)
 {
 	AnalysisFramework::setupCompiler(_compiler);
 
-	_compiler.setEVMVersion(m_evmVersion);
-	_compiler.setOptimiserSettings(
-		m_optimiseYul ?
-		OptimiserSettings::full() :
-		OptimiserSettings::minimal()
-	);
-	_compiler.setViaIR(m_compileViaYul == "true");
-	_compiler.setExperimental(m_experimental);
-	_compiler.setMetadataFormat(CompilerStack::MetadataFormat::NoMetadata);
-	_compiler.setMetadataHash(CompilerStack::MetadataHash::None);
+	_compiler.setEVMVersion(m_compilerInput.evmVersion);
+	_compiler.setOptimiserSettings(m_compilerInput.optimiserSettings);
+	_compiler.setViaIR(m_compilerInput.viaIR);
+	_compiler.setExperimental(m_compilerInput.experimental);
+	_compiler.setMetadataFormat(m_compilerInput.metadataFormat);
+	_compiler.setMetadataHash(m_compilerInput.metadataHash);
 }
 
 void SyntaxTest::parseAndAnalyze()
 {
-	runFramework(withPreamble(m_sources.sources), m_stopAfter);
+	m_compilerInput.viaIR = m_settings.compileViaYul == "true";
+	m_compilerInput.experimental = m_settings.experimental;
+	m_compilerInput.optimiserSettings = m_settings.optimizeYul ?
+		OptimiserSettings::full() :
+		OptimiserSettings::minimal();
+	m_compilerInput.metadataFormat = CompilerStack::MetadataFormat::NoMetadata;
+	m_compilerInput.metadataHash = CompilerStack::MetadataHash::None;
+
+	runFramework(withPreamble(m_compilerInput.sources), m_settings.stopAfter);
 	if (!pipelineSuccessful() && stageSuccessful(PipelineStage::Analysis))
 	{
 		ErrorList const& errors = compiler().errors();
@@ -127,11 +134,11 @@ void SyntaxTest::filterObtainedErrors()
 			locationEnd = location->end;
 			solAssert(location->sourceName, "");
 			sourceName = *location->sourceName;
-			if(m_sources.sources.count(sourceName) == 1)
+			if(m_compilerInput.sources.count(sourceName) == 1)
 			{
 				int preambleSize =
 						static_cast<int>(compiler().charStream(sourceName).size()) -
-						static_cast<int>(m_sources.sources[sourceName].size());
+						static_cast<int>(m_compilerInput.sources[sourceName].size());
 				solAssert(preambleSize >= 0, "");
 
 				// ignore the version & license pragma inserted by the testing tool when calculating locations.
