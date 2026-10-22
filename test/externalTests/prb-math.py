@@ -48,8 +48,6 @@ class PRBMathRunner(FoundryRunner):
             env=self.env,
             check=True
         )
-        # We want to replace version pragmas in forge-std, which is a dependency of prb-math
-        replace_version_pragmas(Path("node_modules"))
 
 test_config = TestConfig(
     name="PRBMath",
