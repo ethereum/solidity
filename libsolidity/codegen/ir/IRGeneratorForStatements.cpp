@@ -1407,11 +1407,13 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 
 		ArrayType const* arrayType = TypeProvider::bytesMemory();
 
-		if (auto const* stringLiteral = dynamic_cast<StringLiteralType const*>(arguments.front()->annotation().type))
+		if (dynamic_cast<StringLiteralType const*>(arguments.front()->annotation().type))
 		{
 			// Optimization: Compute keccak256 on string literals at compile-time.
+			std::optional<bytes> keccakResult = keccak256CompileTimeValue(_functionCall);
+			solAssert(keccakResult.has_value());
 			define(_functionCall) <<
-				("0x" + keccak256(stringLiteral->value()).hex()) <<
+				toHex(*keccakResult, HexPrefix::Add) <<
 				"\n";
 		}
 		else

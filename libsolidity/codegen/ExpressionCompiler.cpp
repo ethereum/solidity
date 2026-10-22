@@ -908,9 +908,13 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			Type const* argType = arguments.front()->annotation().type;
 			solAssert(argType, "");
 			arguments.front()->accept(*this);
-			if (auto const* stringLiteral = dynamic_cast<StringLiteralType const*>(argType))
+			if (dynamic_cast<StringLiteralType const*>(argType))
+			{
 				// Optimization: Compute keccak256 on string literals at compile-time.
-				m_context << u256(keccak256(stringLiteral->value()));
+				std::optional<bytes> keccakResult = keccak256CompileTimeValue(_functionCall);
+				solAssert(keccakResult.has_value());
+				m_context << fromBigEndian<u256>(*keccakResult);
+			}
 			else if (*argType == *TypeProvider::bytesMemory() || *argType == *TypeProvider::stringMemory())
 			{
 				// Optimization: If type is bytes or string, then do not encode,

@@ -38,7 +38,7 @@ namespace solidity::frontend
 class TypeChecker;
 
 /**
- * Small drop-in replacement for TypeChecker to evaluate simple expressions of integer and string constants.
+ * Small drop-in replacement for TypeChecker to evaluate simple expressions of integer, string and fixed bytes constants.
  *
  * Note: This always use "checked arithmetic" in the sense that any over- or underflow
  * results in "unknown" value.
@@ -49,7 +49,7 @@ public:
 	class TypedValue
 	{
 	public:
-		using Value = std::variant<std::monostate, rational, std::string>;
+		using Value = std::variant<std::monostate, rational, std::string, bytes>;
 
 		TypedValue() = default;
 		TypedValue(Type const* _type, Value _value);
@@ -57,16 +57,19 @@ public:
 		bool isEmpty() const { return std::holds_alternative<std::monostate>(m_value); }
 		bool isString() const { return std::holds_alternative<std::string>(m_value); }
 		bool isRational() const { return std::holds_alternative<rational>(m_value); }
+		bool isBytes() const { return std::holds_alternative<bytes>(m_value); }
 
 		Type const& type() const;
 		Value const& value() const { return m_value; }
 
 		std::string const& asString() const;
 		rational const& asRational() const;
+		bytes const& asBytes() const;
 
 	private:
 		// RationalType or IntegerType if value is rational
 		// StringLiteralType or ArrayType if value is string
+		// FixedBytesType if value is bytes
 		Type const* m_type = nullptr;
 		Value m_value;
 	};

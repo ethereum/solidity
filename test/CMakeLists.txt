@@ -118,6 +118,7 @@ set(libsolidity_sources
     libsolidity/SyntaxTest.cpp
     libsolidity/SyntaxTest.h
     libsolidity/ViewPureChecker.cpp
+    libsolidity/analysis/ConstantEvaluator.cpp
     libsolidity/analysis/FunctionCallGraph.cpp
     libsolidity/interface/FileReader.cpp
     libsolidity/ASTPropertyTest.h

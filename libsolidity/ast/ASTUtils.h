@@ -66,4 +66,8 @@ u256 layoutBaseForInheritanceHierarchy(ContractDefinition const& _topLevelContra
 /// Assumes FunctionCall refers to erc7201 builtin.
 std::optional<u256> erc7201CompileTimeValue(FunctionCall const& _erc7201Call);
 
+/// @returns The 32 bytes value resulting from the keccak256 builtin function, if it can be calculated at compile time.
+/// Assumes FunctionCall refers to keccak256 builtin.
+std::optional<bytes> keccak256CompileTimeValue(FunctionCall const& _keccakCall);
+
 }

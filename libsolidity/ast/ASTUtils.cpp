@@ -156,4 +156,20 @@ std::optional<u256> erc7201CompileTimeValue(FunctionCall const& _erc7201Call)
 	solAssert(baseSlot <= std::numeric_limits<u256>::max());
 	return u256(baseSlot);
 }
+
+std::optional<bytes> keccak256CompileTimeValue(FunctionCall const& _keccakCall)
+{
+	auto const* keccakFunction = dynamic_cast<MagicVariableDeclaration const*>(ASTNode::referencedDeclaration(_keccakCall.expression()));
+	solAssert(keccakFunction);
+	solAssert(keccakFunction->functionType(true /* internal */)->kind() == FunctionType::Kind::KECCAK256);
+
+	ConstantEvaluator::TypedValue computedResult = ConstantEvaluator::tryEvaluate(_keccakCall);
+	if (computedResult.isEmpty())
+		return std::nullopt;
+
+	solAssert(computedResult.isBytes());
+	auto const& bytes = computedResult.asBytes();
+	solAssert(bytes.size() == 32);
+	return bytes;
+}
 }

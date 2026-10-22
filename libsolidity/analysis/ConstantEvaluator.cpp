@@ -248,22 +248,70 @@ TypedValue convertType(rational const& _value, Type const& _type)
 
 		return TypedValue{&_type, _value.numerator() / _value.denominator()};
 	}
-	else
-		return TypedValue{};
+	else if (auto const* fixedBytesType = dynamic_cast<FixedBytesType const*>(&_type))
+	{
+		// Only bytes32 is supported for now.
+		if (fixedBytesType->numBytes() != 32)
+			return TypedValue{};
+
+		if (
+			_value.denominator() != 1 ||
+			_value.numerator() < 0 ||
+			_value.numerator() > TypeProvider::integer(fixedBytesType->numBytes() * 8, IntegerType::Modifier::Unsigned)->max()
+		)
+			return TypedValue{};
+
+		u256 integerValue = u256(_value.numerator());
+		// toBigEndian always returns 32 bytes.
+		// If support for narrower bytesN is added, then unused high bytes need to be erased
+		bytes bytesRepresentation = toBigEndian(integerValue);
+		return TypedValue{&_type, bytesRepresentation};
+	}
+
+	return TypedValue{};
 }
 
 TypedValue convertType(std::string const& _value, Type const& _type)
 {
 	using enum Type::Category;
-	if (_type.category() != StringLiteral && _type.category() != Array)
+	if (_type.category() != StringLiteral && _type.category() != Array && _type.category() != FixedBytes)
 		return TypedValue{};
+
 	if (_type.category() == Array && !dynamic_cast<ArrayType const*>(&_type)->isByteArrayOrString())
+		return TypedValue{};
+
+	if (_type.category() == FixedBytes)
+	{
+		auto const& fixedBytesType = dynamic_cast<FixedBytesType const&>(_type);
+		// only bytes32 supported for now
+		if (fixedBytesType.numBytes() != 32)
+			return TypedValue{};
+		if (_value.size() > fixedBytesType.numBytes())
+			return TypedValue{};
+
+		// Right pad with zeros to the full width
+		auto bytesValue = asBytes(_value);
+		bytesValue.resize(fixedBytesType.numBytes(), 0);
+		return TypedValue{&_type, bytesValue};
+	}
+
+	return TypedValue{&_type, _value};
+}
+
+TypedValue convertType(bytes const& _value, Type const& _type)
+{
+	auto const* fixedBytes = dynamic_cast<FixedBytesType const*>(&_type);
+	if (
+		!fixedBytes ||
+		_value.size() != fixedBytes->numBytes() ||
+		fixedBytes->numBytes() != 32  // Supports only bytes32 for now
+	)
 		return TypedValue{};
 
 	return TypedValue{&_type, _value};
 }
 
-TypedValue convertType(TypedValue const& _value, Type const& _type)
+TypedValue convertType(TypedValue::Value const& _value, Type const& _type)
 {
 	return std::visit(util::GenericVisitor{
 		[&](std::string const& value) {
@@ -272,10 +320,18 @@ TypedValue convertType(TypedValue const& _value, Type const& _type)
 		[&](rational const& value) {
 			return convertType(value, _type);
 		},
+		[&](bytes const& value) {
+			return convertType(value, _type);
+		},
 		[&](std::monostate const&) {
 			return TypedValue{};
 		}
-	}, _value.value());
+	}, _value);
+}
+
+TypedValue convertType(TypedValue const& _typedValue, Type const& _type)
+{
+	return convertType(_typedValue.value(), _type);
 }
 
 TypedValue constantToTypedValue(Type const& _type)
@@ -487,6 +543,30 @@ void ConstantEvaluator::endVisit(FunctionCall const& _functionCall)
 			m_values[&_functionCall] = TypedValue{functionType->returnParameterTypes()[0], rational{slot}};
 			break;
 		}
+		case FunctionType::Kind::KECCAK256:
+		{
+			if (_functionCall.arguments().size() != 1)
+			{
+				m_errorReporter.typeError(
+					8392_error,
+					_functionCall.location(),
+					fmt::format(
+						"keccak256 function expects 1 parameter, but {} were given.",
+						_functionCall.arguments().size()
+					)
+				);
+				return;
+			}
+			TypedValue argValue = evaluate(*_functionCall.arguments()[0]);
+			if (!argValue.isString())
+				return;
+
+			h256 hash = keccak256(argValue.asString());
+			solAssert(functionType->returnParameterTypes().size() == 1);
+			solAssert(functionType->returnParameterTypes()[0] == TypeProvider::fixedBytes(32));
+			m_values[&_functionCall] = TypedValue{functionType->returnParameterTypes()[0], hash.asBytes()};
+			break;
+		}
 		default:
 			break;
 	}
@@ -505,6 +585,10 @@ TypedValue::TypedValue(Type const* _type, TypedValue::Value _value): m_type(_typ
 			solAssert(dynamic_cast<RationalNumberType const*>(m_type) || dynamic_cast<IntegerType const*>(m_type));
 			if (auto const* integerType = dynamic_cast<IntegerType const*>(m_type))
 				solAssert(integerType->minValue() <= _rationalValue && _rationalValue <= integerType->maxValue() && _rationalValue.denominator() == 1);
+		},
+		[&](bytes const& _bytes) {
+			solAssert(dynamic_cast<FixedBytesType const*>(m_type));
+			solAssert(dynamic_cast<FixedBytesType const*>(m_type)->numBytes() == _bytes.size());
 		},
 		[&](std::monostate const&) {
 			solAssert(!m_type);
@@ -528,4 +612,10 @@ Type const& TypedValue::type() const
 {
 	solAssert(m_type);
 	return *m_type;
+}
+
+bytes const& TypedValue::asBytes() const
+{
+	solAssert(isBytes());
+	return std::get<bytes>(m_value);
 }
