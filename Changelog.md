@@ -1,4 +1,4 @@
-### 0.8.38 (unreleased)
+### 0.8.38 (2026-10-22)
 
 Important Bugfixes:
 * Yul Optimizer: Fix knowledge about storage/memory address relations going stale in the `DataFlowAnalyzer` after a variable is reassigned in Yul, which could cause `LoadResolver` to replace loads with outdated values and `EqualStoreEliminator` to remove needed stores.
@@ -25,7 +25,7 @@ Build System:
 * Update minimum version requirement of Clang to 19.1.1.
 
 Solc-Js:
- * The wrapper now requires at least nodejs v16.
+* The wrapper now requires at least nodejs v16.
 
 
 ### 0.8.37 (2026-09-10)
