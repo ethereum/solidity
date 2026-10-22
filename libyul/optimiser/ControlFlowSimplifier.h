@@ -44,8 +44,6 @@ struct OptimiserStepContext;
  * and ``continue`` statements during its traversal.
  *
  * Prerequisite: Disambiguator, FunctionHoister, ForLoopInitRewriter.
- *
- * Important: Introduces EVM opcodes and thus can only be used on EVM code for now.
  */
 class ControlFlowSimplifier: public ASTModifier
 {

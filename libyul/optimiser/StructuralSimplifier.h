@@ -34,8 +34,6 @@ namespace solidity::yul
  * The LiteralRematerialiser should be run before this.
  *
  * Prerequisite: Disambiguator.
- *
- * Important: Can only be used on EVM code.
  */
 class StructuralSimplifier: public ASTModifier
 {
