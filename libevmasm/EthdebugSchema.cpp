@@ -18,12 +18,13 @@
 
 #include <libevmasm/EthdebugSchema.h>
 
+#include <liblangutil/Common.h>
 #include <liblangutil/Exceptions.h>
 
 #include <libsolutil/Numeric.h>
 #include <libsolutil/Visitor.h>
 
-#include <cctype>
+#include <algorithm>
 #include <string_view>
 
 using namespace solidity;
@@ -83,6 +84,7 @@ schema::Type::Definition::Definition(std::optional<std::string> _name, std::opti
 	location(std::move(_location))
 {
 	solAssert(name || location, "Type definition without properties.");
+	solAssert(!name || !name->empty(), "Type definition with an empty name.");
 }
 
 schema::Type::UInt::UInt(unsigned _bits):
@@ -115,14 +117,10 @@ schema::Type::Fixed::Fixed(unsigned _bits, unsigned _places):
 
 bool schema::Pointer::isIdentifier(std::string_view _text)
 {
-	auto const isStart = [](char _c) { return std::isalpha(static_cast<unsigned char>(_c)) || _c == '_' || _c == '-' || _c == '$'; };
-	auto const isRest = [&](char _c) { return isStart(_c) || std::isdigit(static_cast<unsigned char>(_c)); };
-	if (_text.empty() || !isStart(_text.front()))
-		return false;
-	for (char const c: _text)
-		if (!isRest(c))
-			return false;
-	return true;
+	// A Solidity identifier that may also contain `-`.
+	auto const isStart = [](char _c) { return langutil::isIdentifierStart(_c) || _c == '-'; };
+	auto const isPart = [](char _c) { return langutil::isIdentifierPart(_c) || _c == '-'; };
+	return !_text.empty() && isStart(_text.front()) && std::all_of(_text.begin(), _text.end(), isPart);
 }
 
 bool schema::Pointer::isRegionReference(std::string_view _text)

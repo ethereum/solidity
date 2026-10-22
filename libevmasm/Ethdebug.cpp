@@ -200,11 +200,12 @@ Json ethdebug::resources(
 	std::map<std::string, schema::Pointer::Template> _pointers
 )
 {
-	schema::info::Resources result;
-	result.ethdebug = schema::data::Stamp{"ethdebug/format/info/resources", std::string{SpecificationVersion}};
-	result.compilation = materialCompilation(_sources, _version);
-	result.types = std::move(_types);
-	result.pointers = std::move(_pointers);
+	schema::info::Resources const result{
+		.ethdebug = schema::data::Stamp{"ethdebug/format/info/resources", std::string{SpecificationVersion}},
+		.compilation = materialCompilation(_sources, _version),
+		.types = std::move(_types),
+		.pointers = std::move(_pointers)
+	};
 	return Json(result);
 }
 

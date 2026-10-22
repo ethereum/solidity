@@ -167,7 +167,8 @@ struct Type
 	/// ethdebug/format/type/definition.
 	struct Definition
 	{
-		/// At least one of @a _name and @a _location must be set.
+		/// At least one of @a _name and @a _location must be set; @a _name must
+		/// not be empty.
 		Definition(std::optional<std::string> _name, std::optional<materials::SourceRange> _location);
 
 		std::optional<std::string> name;
