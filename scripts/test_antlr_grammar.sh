@@ -62,6 +62,7 @@ done < <(
     "${ROOT_DIR}/test/libsolidity/semanticTests" |
       # Skipping the unicode tests as I couldn't adapt the lexical grammar to recursively counting RLO/LRO/PDF's.
       grep -v -E 'comments/.*_direction_override.*.sol' |
+      grep -v -E 'comments/.*_direction_isolate.*.sol' |
       grep -v -E 'literals/.*_direction_override.*.sol' |
       # Skipping a test with "revert E;" because ANTLR cannot distinguish it from
       # a variable declaration.
