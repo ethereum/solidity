@@ -1640,10 +1640,13 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 		resultType = builtinResult;
 	else if (!matchingDefinitions.empty())
 	{
-		// This is checked along with `using for` directive but the error is not fatal.
-		if (matchingDefinitions.size() != 1)
-			solAssert(m_errorReporter.hasErrors());
-
+		// Duplicate user-defined operator bindings are flagged later by
+		// endVisit(UsingForDirective) (error 4705). When a function body that
+		// uses the operator is type-checked before the directive is fully
+		// processed (e.g. for self-referential `using for` definitions), no
+		// error has been emitted yet and the previous solAssert(hasErrors())
+		// triggered an ICE. Pick the first match and let the directive's own
+		// duplicate check surface the error.
 		operatorDefinition = *matchingDefinitions.begin();
 	}
 	else
@@ -1705,10 +1708,13 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 		commonType = builtinResult.get();
 	else if (!matchingDefinitions.empty())
 	{
-		// This is checked along with `using for` directive but the error is not fatal.
-		if (matchingDefinitions.size() != 1)
-			solAssert(m_errorReporter.hasErrors());
-
+		// Duplicate user-defined operator bindings are flagged later by
+		// endVisit(UsingForDirective) (error 4705). When a function body that
+		// uses the operator is type-checked before the directive is fully
+		// processed (e.g. for self-referential `using for` definitions), no
+		// error has been emitted yet and the previous solAssert(hasErrors())
+		// triggered an ICE. Pick the first match and let the directive's own
+		// duplicate check surface the error.
 		operatorDefinition = *matchingDefinitions.begin();
 
 		// Set common type to the type used in the `using for` directive.
