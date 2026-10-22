@@ -1,5 +1,3 @@
-add_subdirectory(ossfuzz)
-
 add_subdirectory(yulInterpreter)
 add_executable(yulrun yulrun.cpp)
 target_link_libraries(yulrun PRIVATE yulInterpreter libsolc evmasm Boost::boost Boost::program_options)

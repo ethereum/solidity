@@ -19,10 +19,6 @@ parameters:
     type: string
     # ghcr.io/argotorg/solidity-buildpack-deps:ubuntu2404.clang-10
     default: "ghcr.io/argotorg/solidity-buildpack-deps@sha256:6cc6a569ae3d8bda8a7a18296b8713d853d2702cb6ef5c6618d9020937c2cf48"
-  ubuntu-clang-ossfuzz-docker-image:
-    type: string
-    # ghcr.io/argotorg/solidity-buildpack-deps:ubuntu.clang.ossfuzz-14
-    default: "ghcr.io/argotorg/solidity-buildpack-deps@sha256:140333dd6c939c8129239506b78fb2f2bf79bd8cc0574ca16b0916415abbcc9d"
   emscripten-docker-image:
     type: string
     # NOTE: Please remember to update the `scripts/build_emscripten.sh` whenever the hash of this image changes.
@@ -291,15 +287,6 @@ commands:
           command: scripts/ci/build.sh
       - save_ccache_if_develop
 
-  run_build_ossfuzz:
-    steps:
-      - restore_ccache_if_allowed
-      # WARNING! If you edit anything between here and save_cache, remember to invalidate the cache manually by bumping the version
-      - run_with_ccache_unless_tag:
-          step_name: Build_ossfuzz
-          command: scripts/ci/build_ossfuzz.sh
-      - save_ccache_if_develop
-
   run_build_property_tests:
     steps:
       - restore_ccache_if_allowed
@@ -393,26 +380,6 @@ commands:
             - build/solc/solc
             - build/test/soltest
             - build/test/tools/solfuzzer
-
-  persist_ossfuzz_executables_to_workspace:
-    description: Persist compiled OSSFUZZ executables to workspace
-    steps:
-      - persist_to_workspace:
-          root: build
-          paths:
-            - test/tools/ossfuzz/abiv2_proto_ossfuzz
-            - test/tools/ossfuzz/abiv2_isabelle_ossfuzz
-            - test/tools/ossfuzz/const_opt_ossfuzz
-            - test/tools/ossfuzz/solc_mutator_ossfuzz
-            - test/tools/ossfuzz/solc_ossfuzz
-            - test/tools/ossfuzz/stack_reuse_codegen_ossfuzz
-            - test/tools/ossfuzz/strictasm_assembly_ossfuzz
-            - test/tools/ossfuzz/strictasm_diff_ossfuzz
-            - test/tools/ossfuzz/strictasm_opt_ossfuzz
-            - test/tools/ossfuzz/yul_proto_diff_ossfuzz
-            - test/tools/ossfuzz/yul_proto_diff_custom_mutate_ossfuzz
-            - test/tools/ossfuzz/yul_proto_ossfuzz
-            - test/tools/ossfuzz/sol_proto_ossfuzz
 
   store_artifacts_test_results:
     description: Store test output dir as artifact
@@ -564,30 +531,6 @@ defaults:
         TERM: xterm
         MAKEFLAGS: -j8
         CPUs: 8
-
-  - base_ubuntu_clang: &base_ubuntu_clang
-      docker:
-        - image: << pipeline.parameters.ubuntu-clang-ossfuzz-docker-image >>
-      environment: &base_ubuntu_clang_env
-        TERM: xterm
-        MAKEFLAGS: -j 3
-        CPUs: 3
-
-  - base_ubuntu_clang_small: &base_ubuntu_clang_small
-      <<: *base_ubuntu_clang
-      resource_class: small
-      environment: &base_ubuntu_clang_small_env
-        <<: *base_ubuntu_clang_env
-        MAKEFLAGS: -j 2
-        CPUs: 2
-
-  - base_ubuntu_clang_large: &base_ubuntu_clang_large
-      <<: *base_ubuntu_clang
-      resource_class: large
-      environment: &base_ubuntu_clang_small_env
-        <<: *base_ubuntu_clang_env
-        MAKEFLAGS: -j 5
-        CPUs: 5
 
   - base_ubuntu2404: &base_ubuntu2404
       docker:
@@ -1153,31 +1096,6 @@ jobs:
       OPTIMIZE: 0
     steps:
       - soltest
-
-  b_ubu_ossfuzz: &b_ubu_ossfuzz
-    <<: *base_ubuntu_clang_large
-    steps:
-      - checkout
-      - setup_prerelease
-      - run_build_ossfuzz
-      - persist_ossfuzz_executables_to_workspace
-      - matrix_notify_failure_unless_pr
-
-  t_ubu_ossfuzz: &t_ubu_ossfuzz
-    <<: *base_ubuntu_clang_small
-    steps:
-      - checkout
-      - attach_workspace:
-          at: build
-      - run:
-          name: Regression tests
-          command: |
-            git clone https://github.com/argotorg/solidity-fuzzing-corpus /tmp/solidity-fuzzing-corpus
-            mkdir -p test_results
-            scripts/regressions.py -o test_results
-      - store_test_results:
-          path: test_results/
-      - store_artifacts_test_results
 
   b_ubu_property_tests: &b_ubu_property_tests
     <<: *base_ubuntu2404_large
@@ -2022,7 +1940,6 @@ workflows:
 
       # build-only
       - b_docs: *requires_nothing
-      - b_ubu_ossfuzz: *requires_nothing
 
       # property-based / fuzz tests (FuzzTest, unittest mode)
       - b_ubu_property_tests: *requires_nothing
@@ -2202,15 +2119,3 @@ workflows:
 
       # Build in a Docker container (on Alpine Linux)
       - b_alpine_docker: *requires_nothing
-
-  nightly-ossfuzz:
-
-    triggers:
-      - schedule:
-          cron: "0 0 * * *"
-          <<: *on_develop
-
-    jobs:
-      # OSSFUZZ builds and (regression) tests
-      - b_ubu_ossfuzz: *requires_nothing
-      - t_ubu_ossfuzz: *requires_b_ubu_ossfuzz
