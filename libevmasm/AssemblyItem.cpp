@@ -54,10 +54,12 @@ AssemblyItem AssemblyItem::toSubAssemblyTag(SubAssemblyID _subId) const
 {
 	assertThrow(data() < (u256(1) << 64), util::Exception, "Tag already has subassembly set.");
 	assertThrow(m_type == PushTag || m_type == Tag, util::Exception, "");
-	auto tag = static_cast<size_t>(u256(data()) & 0xffffffffffffffffULL);
+	uint64_t const tag = static_cast<uint64_t>(data());
+	if constexpr (sizeof(size_t) < sizeof(uint64_t))
+		assertThrow(tag <= std::numeric_limits<size_t>::max(), util::Exception, "Tag ID does not fit in size_t.");
 	AssemblyItem r = *this;
 	r.m_type = PushTag;
-	r.setPushTagSubIdAndTag(_subId, tag);
+	r.setPushTagSubIdAndTag(_subId, static_cast<size_t>(tag));
 	return r;
 }
 
