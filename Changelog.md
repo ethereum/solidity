@@ -1,3 +1,12 @@
+### 0.8.39 (unreleased)
+
+Language Features:
+
+Compiler Features:
+
+Bugfixes:
+
+
 ### 0.8.38 (2026-10-22)
 
 Important Bugfixes:
