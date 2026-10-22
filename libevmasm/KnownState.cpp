@@ -118,7 +118,7 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 				m_expressionClasses->newClass(_item.debugData())
 			);
 	}
-	else if (_item.type() != Operation)
+	else if (_item.type() != Operation && _item.type() != SwapN && _item.type() != DupN)
 	{
 		solAssert(_item.deposit() == 1);
 		if (_item.pushedValue())

@@ -56,6 +56,8 @@ enum AssemblyItemType
 	PushDeployTimeAddress, ///< Push an address to be filled at deploy time. Should not be touched by the optimizer.
 	PushImmutable, ///< Push the currently unknown value of an immutable variable. The actual value will be filled in by the constructor.
 	AssignImmutable, ///< Assigns the current value on the stack to an immutable variable. Only valid during creation code.
+	SwapN, ///< SWAPN with immediate argument.
+	DupN, ///< DUPN with immediate argument.
 
 	VerbatimBytecode, ///< Contains data that is inserted into the bytecode code section without modification.
 };
@@ -78,7 +80,10 @@ public:
 		m_type(Operation),
 		m_instruction(_i),
 		m_debugData(std::move(_debugData))
-	{}
+	{
+		solAssert(_i != Instruction::SWAPN, "Construct via AssemblyItem::swap");
+		solAssert(_i != Instruction::DUPN, "Construct via AssemblyItem::dup");
+	}
 	AssemblyItem(AssemblyItemType _type, u256 _data = 0, langutil::DebugData::ConstPtr _debugData = langutil::DebugData::create()):
 		m_type(_type),
 		m_debugData(std::move(_debugData))
@@ -101,6 +106,29 @@ public:
 		m_verbatimBytecode{{_arguments, _returnVariables, std::move(_verbatimData)}},
 		m_debugData{langutil::DebugData::create()}
 	{}
+
+	/// @returns an item swapping the top of the stack with the value at @a _depth,
+	/// using SWAP1-16 or SWAPN with an immediate argument, depending on the depth.
+	/// Depths above 235 cannot be encoded, see https://eips.ethereum.org/EIPS/eip-8024
+	static AssemblyItem swap(size_t _depth, langutil::DebugData::ConstPtr _debugData = langutil::DebugData::create())
+	{
+		if (_depth <= 16)
+			// Depth 0 is rejected by an assert in swapInstruction().
+			return AssemblyItem(swapInstruction(static_cast<unsigned>(_depth)), std::move(_debugData));
+		solAssert(isValidDupSwapNDepth(_depth), "Invalid SWAPN depth.");
+		return AssemblyItem(SwapN, Instruction::SWAPN, _depth, std::move(_debugData));
+	}
+	/// @returns an item duplicating the value at stack depth @a _depth to the top of the stack,
+	/// using DUP1-16 or DUPN with an immediate argument, depending on the depth.
+	/// Depths above 235 cannot be encoded, see https://eips.ethereum.org/EIPS/eip-8024
+	static AssemblyItem dup(size_t _depth, langutil::DebugData::ConstPtr _debugData = langutil::DebugData::create())
+	{
+		if (_depth <= 16)
+			// Depth 0 is rejected by an assert in dupInstruction().
+			return AssemblyItem(dupInstruction(static_cast<unsigned>(_depth)), std::move(_debugData));
+		solAssert(isValidDupSwapNDepth(_depth), "Invalid DUPN depth.");
+		return AssemblyItem(DupN, Instruction::DUPN, _depth, std::move(_debugData));
+	}
 
 	AssemblyItem(AssemblyItem const&) = default;
 	AssemblyItem(AssemblyItem&&) = default;
@@ -138,7 +166,9 @@ public:
 	bool hasInstruction() const
 	{
 		bool const shouldHaveInstruction =
-			m_type == Operation;
+			m_type == Operation ||
+			m_type == SwapN ||
+			m_type == DupN;
 		solAssert(shouldHaveInstruction == m_instruction.has_value());
 		return shouldHaveInstruction;
 	}

@@ -82,6 +82,8 @@ struct SemanticInformation
 	static bool isCommutativeOperation(AssemblyItem const& _item);
 	static bool isDupInstruction(AssemblyItem const& _item);
 	static bool isSwapInstruction(AssemblyItem const& _item);
+	static bool isDupInstruction(Instruction const& _inst);
+	static bool isSwapInstruction(Instruction const& _item);
 	static bool altersControlFlow(AssemblyItem const& _item);
 	static bool terminatesControlFlow(AssemblyItem const& _item);
 	static bool terminatesControlFlow(Instruction _instruction);

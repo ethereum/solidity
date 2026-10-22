@@ -98,7 +98,7 @@ GasEstimator::GasConsumption GasEstimator::functionalEstimation(
 	AssemblyItem invalidTag(PushTag, u256(-0x10));
 	state->feedItem(invalidTag, true);
 	if (parametersSize > 0)
-		state->feedItem(swapInstruction(parametersSize));
+		state->feedItem(AssemblyItem::swap(parametersSize));
 
 	return PathGasMeter::estimateMax(_items, m_evmVersion, _offset, state);
 }

@@ -106,6 +106,8 @@ std::map<std::string, std::shared_ptr<std::string const>> Assembly::s_sharedSour
 
 AssemblyItem const& Assembly::append(AssemblyItem _i)
 {
+	solAssert(m_evmVersion.hasDupSwapN() || (_i.type() != SwapN && _i.type() != DupN));
+
 	assertThrow(m_deposit >= 0, AssemblyException, "Stack underflow.");
 	m_deposit += static_cast<int>(_i.deposit());
 	m_items.emplace_back(std::move(_i));
@@ -239,36 +241,53 @@ AssemblyItem Assembly::createAssemblyItemFromJSON(Json const& _json, std::vector
 	if (srcIndex != -1)
 		location.sourceName = sharedSourceName(_sourceList[static_cast<size_t>(srcIndex)]);
 
+	solRequire(
+		jumpType.empty() || name == "JUMP" || name == "JUMPI",
+		AssemblyImportException,
+		"Member 'jumpType' set on instruction different from JUMP or JUMPI (was set on instruction '" + name + "')"
+	);
+
 	AssemblyItem result(0);
 
 	if (c_instructions.count(name))
 	{
-		AssemblyItem item{c_instructions.at(name), langutil::DebugData::create(location)};
-		if (!jumpType.empty())
+		if (name == "SWAPN" || name == "DUPN")
 		{
-			if (item.instruction() == Instruction::JUMP || item.instruction() == Instruction::JUMPI)
+			solRequire(
+				m_evmVersion.hasDupSwapN(),
+				AssemblyImportException,
+				"Instruction '" + name + "' is only available starting from the \"amsterdam\" EVM version."
+			);
+			requireValueDefinedForInstruction(name, value);
+
+			std::optional<uint8_t> const depth = parseArithmetic<uint8_t>(value);
+			solRequire(depth.has_value(), AssemblyImportException, "Invalid depth for instruction '" + name + "'.");
+			solRequire(
+				isValidDupSwapNDepth(*depth),
+				AssemblyImportException,
+				"Invalid depth for instruction '" + name + "'."
+			);
+			if (name == "SWAPN")
+				result = AssemblyItem::swap(*depth);
+			else
+				result = AssemblyItem::dup(*depth);
+		}
+		else
+		{
+			AssemblyItem item{c_instructions.at(name), langutil::DebugData::create(location)};
+			if (!jumpType.empty())
 			{
 				std::optional<AssemblyItem::JumpType> parsedJumpType = AssemblyItem::parseJumpType(jumpType);
 				if (!parsedJumpType.has_value())
 					solThrow(AssemblyImportException, "Invalid jump type.");
 				item.setJumpType(parsedJumpType.value());
 			}
-			else
-				solThrow(
-					AssemblyImportException,
-					"Member 'jumpType' set on instruction different from JUMP or JUMPI (was set on instruction '" + name + "')"
-				);
+			requireValueUndefinedForInstruction(name, value);
+			result = item;
 		}
-		requireValueUndefinedForInstruction(name, value);
-		result = item;
 	}
 	else
 	{
-		solRequire(
-			jumpType.empty(),
-			AssemblyImportException,
-			"Member 'jumpType' set on instruction different from JUMP or JUMPI (was set on instruction '" + name + "')"
-		);
 		if (name == "PUSH")
 		{
 			requireValueDefinedForInstruction(name, value);
@@ -1099,6 +1118,13 @@ LinkerObject const& Assembly::assembleLegacy() const
 		{
 		case Operation:
 			ret.bytecode += assembleOperation(item);
+			break;
+		case SwapN:
+		case DupN:
+			solAssert(m_evmVersion.hasDupSwapN());
+			ret.bytecode.push_back(static_cast<uint8_t>(item.instruction()));
+			solAssert(item.data() < std::numeric_limits<size_t>::max());
+			ret.bytecode.push_back(encodeDupSwapNImmediate(static_cast<size_t>(item.data())));
 			break;
 		case Push:
 			ret.bytecode += assemblePush(item);

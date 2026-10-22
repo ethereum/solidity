@@ -54,7 +54,7 @@ void StackVariable::retrieveValue(SourceLocation const& _location, bool) const
 		);
 	solAssert(stackPos + 1 >= m_size, "Size and stack pos mismatch.");
 	for (unsigned i = 0; i < m_size; ++i)
-		m_context << dupInstruction(stackPos + 1);
+		m_context << AssemblyItem::dup(stackPos + 1);
 }
 
 void StackVariable::storeValue(Type const&, SourceLocation const& _location, bool _move) const
@@ -68,7 +68,7 @@ void StackVariable::storeValue(Type const&, SourceLocation const& _location, boo
 		);
 	else if (stackDiff > 0)
 		for (unsigned i = 0; i < m_size; ++i)
-			m_context << swapInstruction(stackDiff) << Instruction::POP;
+			m_context << AssemblyItem::swap(stackDiff) << Instruction::POP;
 	if (!_move)
 		retrieveValue(_location);
 }
@@ -450,7 +450,7 @@ void GenericStorageItem<IsTransient>::storeValue(Type const& _sourceType, langut
 					}
 					unsigned stackSize = sourceMemberType->sizeOnStack();
 					std::pair<u256, unsigned> const& offsets = structType.storageOffsetsOfMember(member.name);
-					m_context << dupInstruction(1 + stackSize) << offsets.first << Instruction::ADD;
+					m_context << AssemblyItem::dup(1 + stackSize) << offsets.first << Instruction::ADD;
 					m_context << u256(offsets.second);
 					// stack: source_ref target_ref target_off source_value... target_member_ref target_member_byte_off
 					StorageItem(m_context, *memberType).storeValue(*sourceMemberType, _location, true);

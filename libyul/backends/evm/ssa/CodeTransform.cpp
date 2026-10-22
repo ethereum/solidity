@@ -510,10 +510,10 @@ void CodeTransform::emit(ShuffleOp const& _op)
 	switch (_op.kind)
 	{
 	case ShuffleOp::Kind::Swap:
-		m_assembly.appendInstruction(evmasm::swapInstruction(_op.depth));
+		m_assembly.appendSwap(_op.depth);
 		return;
 	case ShuffleOp::Kind::Dup:
-		m_assembly.appendInstruction(evmasm::dupInstruction(_op.depth));
+		m_assembly.appendDup(_op.depth);
 		return;
 	case ShuffleOp::Kind::Pop:
 		m_assembly.appendInstruction(evmasm::Instruction::POP);

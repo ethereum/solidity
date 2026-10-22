@@ -165,6 +165,7 @@
     }
 }
 // ====
+// EVMVersion: <=osaka
 // ----
 // step: stackLimitEvader
 //

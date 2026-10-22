@@ -29,6 +29,7 @@
 #include <libyul/Exceptions.h>
 
 #include <test/Common.h>
+#include <test/libevmasm/PlainAssemblyParser.h>
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
@@ -55,6 +56,118 @@ namespace
 }
 
 BOOST_AUTO_TEST_SUITE(Assembler)
+
+BOOST_AUTO_TEST_CASE(legacy_dupn_swapn_encoding_boundaries_and_wraparound)
+{
+	Assembly assembly{EVMVersion::amsterdam(), false, {}};
+
+	assembly.append(AssemblyItem::dup(17));
+	assembly.append(AssemblyItem::dup(144));
+	assembly.append(AssemblyItem::dup(145));
+	assembly.append(AssemblyItem::dup(235));
+	assembly.append(AssemblyItem::swap(17));
+	assembly.append(AssemblyItem::swap(144));
+	assembly.append(AssemblyItem::swap(145));
+	assembly.append(AssemblyItem::swap(235));
+
+	BOOST_CHECK_EQUAL(assembly.assemble().toHex(), "e680e6ffe600e65ae780e7ffe700e75a");
+}
+
+BOOST_AUTO_TEST_CASE(dup_swap_factories_dispatch_on_depth)
+{
+	BOOST_CHECK(AssemblyItem::dup(1) == Instruction::DUP1);
+	BOOST_CHECK(AssemblyItem::dup(16) == Instruction::DUP16);
+	BOOST_CHECK_EQUAL(AssemblyItem::dup(17).type(), DupN);
+	BOOST_CHECK_EQUAL(AssemblyItem::dup(17).data(), 17);
+	BOOST_CHECK_EQUAL(AssemblyItem::dup(235).type(), DupN);
+	BOOST_CHECK_EQUAL(AssemblyItem::dup(235).data(), 235);
+	BOOST_CHECK(AssemblyItem::swap(1) == Instruction::SWAP1);
+	BOOST_CHECK(AssemblyItem::swap(16) == Instruction::SWAP16);
+	BOOST_CHECK_EQUAL(AssemblyItem::swap(17).type(), SwapN);
+	BOOST_CHECK_EQUAL(AssemblyItem::swap(17).data(), 17);
+	BOOST_CHECK_EQUAL(AssemblyItem::swap(235).type(), SwapN);
+	BOOST_CHECK_EQUAL(AssemblyItem::swap(235).data(), 235);
+
+	BOOST_CHECK_THROW(AssemblyItem::dup(0), InternalCompilerError);
+	BOOST_CHECK_THROW(AssemblyItem::dup(236), InternalCompilerError);
+	BOOST_CHECK_THROW(AssemblyItem::dup(256), InternalCompilerError);
+	BOOST_CHECK_THROW(AssemblyItem::swap(0), InternalCompilerError);
+	BOOST_CHECK_THROW(AssemblyItem::swap(236), InternalCompilerError);
+	BOOST_CHECK_THROW(AssemblyItem::swap(256), InternalCompilerError);
+}
+
+BOOST_AUTO_TEST_CASE(legacy_dupn_swapn_rejected_before_amsterdam)
+{
+	auto assembleSingleItem = [](AssemblyItem const& _item)
+	{
+		Assembly assembly{EVMVersion::prague(), false, {}};
+		assembly.append(_item);
+		assembly.assemble();
+	};
+
+	BOOST_CHECK_THROW(assembleSingleItem(AssemblyItem::dup(20)), InternalCompilerError);
+	BOOST_CHECK_THROW(assembleSingleItem(AssemblyItem::swap(20)), InternalCompilerError);
+}
+
+BOOST_AUTO_TEST_CASE(plain_assembly_parser_dupn_swapn_depth_range)
+{
+	auto parse = [](std::string const& _source)
+	{
+		return evmasm::test::PlainAssemblyParser{}.parse("test.asm", _source);
+	};
+
+	for (std::string const name: {"DUPN", "SWAPN"})
+	{
+		for (std::string const depth: {"17", "100", "108", "144", "145", "235"})
+		{
+			Json const json = parse(name + " " + depth);
+			BOOST_REQUIRE_EQUAL(json[".code"].size(), 1);
+			BOOST_CHECK_EQUAL(json[".code"][0]["name"], name);
+			BOOST_CHECK_EQUAL(json[".code"][0]["value"], depth);
+		}
+
+		// Depths outside of [17, 235], values not fitting into a byte and non-numeric values.
+		for (std::string const depth: {"0", "1", "16", "236", "255", "256", "-1", "abc"})
+			BOOST_CHECK_THROW(parse(name + " " + depth), std::runtime_error);
+		BOOST_CHECK_THROW(parse(name), std::runtime_error);
+		BOOST_CHECK_THROW(parse(name + " 17 18"), std::runtime_error);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(legacy_dupn_swapn_disassembly_spec_vectors)
+{
+	// Test vectors from https://eips.ethereum.org/EIPS/eip-8024
+	BOOST_CHECK_EQUAL(disassemble(util::fromHex("e680"), EVMVersion::amsterdam()), "DUPN 17 ");
+	BOOST_CHECK_EQUAL(disassemble(util::fromHex("e7db"), EVMVersion::amsterdam()), "SWAPN 108 ");
+	BOOST_CHECK_EQUAL(disassemble(util::fromHex("e6805b"), EVMVersion::amsterdam()), "DUPN 17 JUMPDEST ");
+	// Invalid immediates are not consumed and are decoded as the following instructions.
+	BOOST_CHECK_EQUAL(disassemble(util::fromHex("e75b"), EVMVersion::amsterdam()), "INVALID_SWAPN JUMPDEST ");
+	BOOST_CHECK_EQUAL(disassemble(util::fromHex("e6605b"), EVMVersion::amsterdam()), "INVALID_DUPN PUSH1 0x5B ");
+	BOOST_CHECK_EQUAL(disassemble(util::fromHex("e7610000"), EVMVersion::amsterdam()), "INVALID_SWAPN PUSH2 0x0 ");
+	BOOST_CHECK_EQUAL(disassemble(util::fromHex("e65f"), EVMVersion::amsterdam()), "INVALID_DUPN PUSH0 ");
+}
+
+BOOST_AUTO_TEST_CASE(disassembly_truncated_push_immediate)
+{
+	// Missing immediate bytes at the end of the code are read as zeros.
+	BOOST_CHECK_EQUAL(disassemble(util::fromHex("61ff"), EVMVersion::amsterdam()), "PUSH2 0xFF00 ");
+	BOOST_CHECK_EQUAL(disassemble(util::fromHex("6001610102"), EVMVersion::amsterdam()), "PUSH1 0x1 PUSH2 0x102 ");
+}
+
+BOOST_AUTO_TEST_CASE(legacy_dupn_swapn_disassembly_implicit_zero_immediate)
+{
+	// The EVM reads code beyond its end as zeros, and zero is a valid immediate (depth 145).
+	BOOST_CHECK_EQUAL(disassemble(util::fromHex("e6"), EVMVersion::amsterdam()), "DUPN 145 ");
+	BOOST_CHECK_EQUAL(disassemble(util::fromHex("e7"), EVMVersion::amsterdam()), "SWAPN 145 ");
+}
+
+BOOST_AUTO_TEST_CASE(legacy_dupn_swapn_disassembly_is_version_agnostic)
+{
+	// Like for all other instructions, disassembly does not check whether the EVM version
+	// actually supports DUPN/SWAPN.
+	BOOST_CHECK_EQUAL(disassemble(util::fromHex("e680"), EVMVersion::prague()), "DUPN 17 ");
+	BOOST_CHECK_EQUAL(disassemble(util::fromHex("e780"), EVMVersion::prague()), "SWAPN 17 ");
+}
 
 BOOST_AUTO_TEST_CASE(all_assembly_items)
 {
@@ -533,6 +646,8 @@ BOOST_AUTO_TEST_CASE(can_be_functional)
 	BOOST_CHECK(!AssemblyItem(AssignImmutable, 0).canBeFunctional());
 	BOOST_CHECK(!AssemblyItem(bytes{0x60, 0x00}, 0, 1).canBeFunctional());  // VerbatimBytecode
 	BOOST_CHECK(!AssemblyItem(UndefinedItem).canBeFunctional());
+	BOOST_CHECK(!AssemblyItem::swap(17).canBeFunctional());
+	BOOST_CHECK(!AssemblyItem::dup(17).canBeFunctional());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

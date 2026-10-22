@@ -188,6 +188,7 @@ Note that the compiler introduces a new option only for forks that actually chan
    - ``clz`` builtin function is available in inline assembly. (`EIP-7939 <https://eips.ethereum.org/EIPS/eip-7939>`_)
 - ``amsterdam`` (**experimental**)
    - The beacon chain slot number (`EIP-7843 <https://eips.ethereum.org/EIPS/eip-7843>`_) can be accessed via the global ``block.slotnum`` or ``slotnum()`` in inline assembly.
+   - Use ``swapn``/``dupn`` opcodes to prevent stack too deep errors.
 
 .. index:: ! standard JSON, ! --standard-json
 .. _compiler-api:

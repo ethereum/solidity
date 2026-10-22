@@ -18,6 +18,8 @@ contract C {
         }
     }
 }
+// ====
+// EVMVersion: <amsterdam
 // ----
 // Warning 5470: (75-110): "swapn" will be promoted to Yul reserved identifier in the future and will not be allowed anymore as an identifier.
 // Warning 5470: (90-94): "dupn" will be promoted to Yul reserved identifier in the future and will not be allowed anymore as an identifier.

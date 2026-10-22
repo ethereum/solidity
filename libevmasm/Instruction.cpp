@@ -170,6 +170,8 @@ std::map<std::string, Instruction, std::less<>> const solidity::evmasm::c_instru
 	{ "LOG2", Instruction::LOG2 },
 	{ "LOG3", Instruction::LOG3 },
 	{ "LOG4", Instruction::LOG4 },
+	{ "SWAPN", Instruction::SWAPN },
+	{ "DUPN", Instruction::DUPN },
 	{ "CREATE", Instruction::CREATE },
 	{ "CALL", Instruction::CALL },
 	{ "CALLCODE", Instruction::CALLCODE },
@@ -326,6 +328,8 @@ static std::map<Instruction, InstructionInfo> const c_instructionInfo =
 	{Instruction::LOG2,           {"LOG2",            0,  4,   0,  true,       Tier::Special}},
 	{Instruction::LOG3,           {"LOG3",            0,  5,   0,  true,       Tier::Special}},
 	{Instruction::LOG4,           {"LOG4",            0,  6,   0,  true,       Tier::Special}},
+	{Instruction::SWAPN,          {"SWAPN",           1,  0,   0,  false,      Tier::VeryLow}}, // `args` and `ret` values depend on depth.
+	{Instruction::DUPN,           {"DUPN",            1,  0,   0,  false,      Tier::VeryLow}}, // `args` and `ret` values depend on depth.
 	{Instruction::CREATE,         {"CREATE",          0,  3,   1,  true,       Tier::Special}},
 	{Instruction::CALL,           {"CALL",            0,  7,   1,  true,       Tier::Special}},
 	{Instruction::CALLCODE,       {"CALLCODE",        0,  7,   1,  true,       Tier::Special}},
@@ -355,4 +359,12 @@ InstructionInfo solidity::evmasm::instructionInfo(Instruction _inst, langutil::E
 bool solidity::evmasm::isValidInstruction(Instruction _inst)
 {
 	return !!c_instructionInfo.count(_inst);
+}
+
+bool solidity::evmasm::isValidImmediateData(Instruction _inst, u256 const& _immediate)
+{
+	if (_inst == Instruction::SWAPN || _inst == Instruction::DUPN)
+		return _immediate <= std::numeric_limits<uint8_t>::max() && isValidDupSwapNImmediate(static_cast<uint8_t>(_immediate));
+	else
+		return true;
 }

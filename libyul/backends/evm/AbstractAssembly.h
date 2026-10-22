@@ -72,6 +72,12 @@ public:
 	virtual void setStackHeight(int height) = 0;
 	/// Append an EVM instruction.
 	virtual void appendInstruction(evmasm::Instruction _instruction) = 0;
+	/// Append an operation swapping the top of the stack with the value at @a _depth.
+	/// Chooses between SWAP1-16 and SWAPN with an immediate argument, depending on the depth.
+	virtual void appendSwap(size_t _depth) = 0;
+	/// Append an operation duplicating the value at stack depth @a _depth to the top of the stack.
+	/// Chooses between DUP1-16 and DUPN with an immediate argument, depending on the depth.
+	virtual void appendDup(size_t _depth) = 0;
 	/// Append a constant.
 	virtual void appendConstant(u256 const& _constant) = 0;
 	/// Append a label.
