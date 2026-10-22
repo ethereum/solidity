@@ -37,6 +37,7 @@
 namespace solidity::langutil
 {
 class ErrorReporter;
+class SecondarySourceLocation;
 }
 
 namespace solidity::frontend
@@ -100,6 +101,10 @@ public:
 
 	/// Generate and store warnings about declarations with the same name.
 	void warnHomonymDeclarations() const;
+	/// Generates warnings for local declarations (including function parameters and named
+	/// return parameters) that shadow state variables inherited from base contracts.
+	/// Must be called after resolveNamesAndTypes().
+	void warnShadowedInheritedStateVariables() const;
 
 	/// @returns a list of similar identifiers in the current and enclosing scopes. May return empty string if no suggestions.
 	std::string similarNameSuggestions(ASTString const& _name) const;
@@ -110,6 +115,8 @@ public:
 private:
 	/// Internal version of @a resolveNamesAndTypes (called from there) throws exceptions on fatal errors.
 	bool resolveNamesAndTypesInternal(ASTNode& _node, bool _resolveInsideCode = true);
+	/// Emits warning 2519 for a declaration that shadows other declarations.
+	void warnShadowing(langutil::SourceLocation const& _location, langutil::SecondarySourceLocation const& _shadowedLocations) const;
 
 	/// Imports all members declared directly in the given contract (i.e. does not import inherited members)
 	/// into the current scope if they are not present already.

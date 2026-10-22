@@ -28,12 +28,33 @@
 #include <liblangutil/ErrorReporter.h>
 #include <libsolutil/StringUtils.h>
 #include <boost/algorithm/string.hpp>
+#include <algorithm>
 
 using namespace std::string_literals;
 using namespace solidity::langutil;
 
 namespace solidity::frontend
 {
+
+namespace
+{
+
+/// Collects the variable declarations inside a callable definition, i.e. its parameters,
+/// named return parameters and local variables (including try/catch clause parameters).
+class LocalVariableCollector: public ASTConstVisitor
+{
+public:
+	std::vector<VariableDeclaration const*> localVariables;
+
+	bool visit(VariableDeclaration const& _variable) override
+	{
+		if (!_variable.name().empty())
+			localVariables.push_back(&_variable);
+		return true;
+	}
+};
+
+}
 
 NameAndTypeResolver::NameAndTypeResolver(
 	GlobalContext& _globalContext,
@@ -279,12 +300,74 @@ void NameAndTypeResolver::warnHomonymDeclarations() const
 				homonymousLocations
 			);
 		if (!shadowedLocations.infos.empty())
-			m_errorReporter.warning(
-				2519_error,
-				*innerLocation,
-				"This declaration shadows an existing declaration.",
-				shadowedLocations
-			);
+			warnShadowing(*innerLocation, shadowedLocations);
+	}
+}
+
+void NameAndTypeResolver::warnShadowing(
+	langutil::SourceLocation const& _location,
+	langutil::SecondarySourceLocation const& _shadowedLocations
+) const
+{
+	m_errorReporter.warning(
+		2519_error,
+		_location,
+		"This declaration shadows an existing declaration.",
+		_shadowedLocations
+	);
+}
+
+void NameAndTypeResolver::warnShadowedInheritedStateVariables() const
+{
+	std::vector<ContractDefinition const*> contracts;
+	for (auto const& scope: m_scopes)
+		if (auto contract = dynamic_cast<ContractDefinition const*>(scope.first))
+			if (!contract->annotation().linearizedBaseContracts.empty())
+				contracts.push_back(contract);
+
+	// Process contracts in a deterministic order (by source name and position).
+	sort(contracts.begin(), contracts.end(), [](ContractDefinition const* _lhs, ContractDefinition const* _rhs)
+	{
+		solAssert(_lhs->location().sourceName && _rhs->location().sourceName, "");
+		int sourceComparison = _lhs->location().sourceName->compare(*_rhs->location().sourceName);
+		if (sourceComparison != 0)
+			return sourceComparison < 0;
+		return _lhs->location().start < _rhs->location().start;
+	});
+
+	LocalVariableCollector collector;
+
+	for (ContractDefinition const* contract: contracts)
+	{
+		auto const& linearizedBaseContracts = contract->annotation().linearizedBaseContracts;
+
+		// Maps the name of an inherited state variable to its declaration. The linearization
+		// is walked from the least derived base to the most derived one so that the closest
+		// declaration (the one name lookup would find) is kept.
+		std::map<ASTString, VariableDeclaration const*> inheritedStateVariables;
+		for (size_t i = linearizedBaseContracts.size(); i > 1; --i)
+			for (ASTPointer<ASTNode> const& node: linearizedBaseContracts[i - 1]->subNodes())
+				if (auto variable = dynamic_cast<VariableDeclaration const*>(node.get()); variable && variable->isStateVariable() && variable->visibility() != Visibility::Private)
+					inheritedStateVariables[variable->name()] = variable;
+
+		for (ASTPointer<ASTNode> const& subNode: contract->subNodes())
+		{
+			if (!dynamic_cast<FunctionDefinition const*>(subNode.get()) && !dynamic_cast<ModifierDefinition const*>(subNode.get()))
+				continue;
+
+			collector.localVariables.clear();
+			subNode->accept(collector);
+
+			for (VariableDeclaration const* local: collector.localVariables)
+			{
+				auto shadowed = inheritedStateVariables.find(local->name());
+				if (shadowed != inheritedStateVariables.end())
+					warnShadowing(
+						local->location(),
+						SecondarySourceLocation().append("The shadowed declaration is here:", shadowed->second->location())
+					);
+			}
+		}
 	}
 }
 

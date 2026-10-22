@@ -5,6 +5,7 @@ Language Features:
 Compiler Features:
 
 Bugfixes:
+* Type Checker: Report warning 2519 when a local variable, function parameter or named return parameter shadows a state variable inherited from a base contract.
 
 
 ### 0.8.38 (2026-10-22)
