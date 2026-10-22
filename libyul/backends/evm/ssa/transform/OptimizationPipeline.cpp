@@ -37,6 +37,9 @@ void transform::optimize(ControlFlowGraphs& _cfgs)
 		{
 			transform::foldConstantConditions(*cfg);
 			transform::cleanUnreachableBlocks(*cfg);
+#ifdef SLOW_DEBUG
+			cfg->checkAllBlocksReachable();
+#endif
 		}
 		{
 			transform::eliminateTrivialPhis(*cfg);
@@ -45,6 +48,9 @@ void transform::optimize(ControlFlowGraphs& _cfgs)
 		{
 			transform::threadJumps(*cfg);
 			transform::cleanUnreachableBlocks(*cfg);
+#ifdef SLOW_DEBUG
+			cfg->checkAllBlocksReachable();
+#endif
 		}
 		breakCriticalEdges(*cfg);
 	}

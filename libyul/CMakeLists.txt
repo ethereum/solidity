@@ -80,6 +80,7 @@ add_library(yul
 	backends/evm/ssa/CodeTransform.h
 	backends/evm/ssa/ControlFlowGraphs.cpp
 	backends/evm/ssa/ControlFlowGraphs.h
+	backends/evm/ssa/InstructionStore.cpp
 	backends/evm/ssa/InstructionStore.h
 	backends/evm/ssa/JunkAdmittingBlocksFinder.cpp
 	backends/evm/ssa/JunkAdmittingBlocksFinder.h

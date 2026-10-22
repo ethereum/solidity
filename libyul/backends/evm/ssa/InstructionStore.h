@@ -41,6 +41,7 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <string>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -101,6 +102,10 @@ public:
 				opcode == InstOpcode::Call ||
 				opcode == InstOpcode::BuiltinCall ||
 				opcode == InstOpcode::MemoryGuard;
+		}
+		constexpr bool canHaveProjections() const noexcept
+		{
+			return opcode == InstOpcode::Call || opcode == InstOpcode::BuiltinCall;
 		}
 	};
 
@@ -166,6 +171,11 @@ public:
 		}
 		return static_cast<NumReturnsSizeType>(count);
 	}
+
+#ifdef SLOW_DEBUG
+	void checkInvariants() const;
+	void checkValidOperand(InstId _id, std::string const& _ctx) const;
+#endif
 
 	/// Allocates a new Phi Inst defined in `_definingBlock`. Returns the new InstId.
 	InstId appendPhi(BlockId const _definingBlock)
@@ -487,6 +497,13 @@ private:
 			return _i.opcode == InstOpcode::Tombstone;
 		}
 	};
+
+#ifdef SLOW_DEBUG
+	void checkOpcodeShapes() const;
+	void checkOpcodeShape(InstId _id) const;
+	void checkLiteralDedup() const;
+	void checkValueDependencyAcyclic() const;
+#endif
 
 	util::TLSFFreeList<Inst, InstTombstone> m_insts;
 	std::map<u256, InstId> m_literalDedup;

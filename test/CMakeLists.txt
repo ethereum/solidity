@@ -186,6 +186,7 @@ set(libyul_sources
     libyul/ssa/ParserTest.h
     libyul/ssa/PrinterTest.cpp
     libyul/ssa/PrinterTest.h
+    libyul/ssa/SSACFGInvariants.cpp
     libyul/ssa/SpillTest.cpp
     libyul/ssa/SpillTest.h
     libyul/ssa/StackLayoutGeneratorTest.cpp
