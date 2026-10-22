@@ -205,6 +205,12 @@ hiding new and different behavior in existing code.
 
   The arguments to the global functions ``addmod`` and ``mulmod`` are evaluated right-to-left by the old code generator
   and left-to-right by the new code generator.
+
+  This difference occurs because of how the two code generators handle argument evaluation:
+
+  - In the legacy code generator (``ExpressionCompiler.cpp``), ``addmod`` and ``mulmod`` arguments are explicitly processed in reverse order (right-to-left) in the ``FunctionType::Kind::AddMod`` and ``FunctionType::Kind::MulMod`` cases.
+  - In the IR-based code generator (``IRGeneratorForStatements.cpp``), arguments are processed in source order (left-to-right) following the general expression evaluation pattern.
+
   For example:
 
   .. code-block:: solidity
@@ -225,6 +231,29 @@ hiding new and different behavior in existing code.
 
   - Old code generator: ``aMod = 0`` and ``mMod = 2``
   - New code generator: ``aMod = 4`` and ``mMod = 0``
+
+  .. note::
+      To write code that behaves consistently between both code generators, avoid expressions with side effects (like increment operators) in ``addmod`` and ``mulmod`` arguments. Instead, evaluate the arguments separately before calling the function:
+
+      .. code-block:: solidity
+
+          // SPDX-License-Identifier: GPL-3.0
+          pragma solidity >=0.8.1;
+          contract C {
+              function f() public pure returns (uint256 aMod, uint256 mMod) {
+                  uint256 x = 3;
+                  uint256 a = ++x;
+                  uint256 b = ++x;
+                  uint256 c = x;
+                  aMod = addmod(a, b, c);
+                  
+                  uint256 y = x;
+                  uint256 d = ++y;
+                  uint256 e = ++y;
+                  uint256 f = y;
+                  mMod = mulmod(d, e, f);
+              }
+          }
 
 - The new code generator imposes a hard limit of ``type(uint64).max``
   (``0xffffffffffffffff``) for the free memory pointer. Allocations that would
