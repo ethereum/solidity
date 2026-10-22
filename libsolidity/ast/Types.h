@@ -805,7 +805,15 @@ public:
 	/// @returns true if this is valid to be stored in data location _loc
 	/// The function mostly checks sizes. For calldata, this should only be called
 	/// if the type has an interfaceType.
-	virtual BoolResult validForLocation(DataLocation _loc) const = 0;
+	BoolResult validForLocation(DataLocation _loc) const
+	{
+		std::set<StructDefinition const*> seenStructs;
+		return validForLocation(_loc, seenStructs);
+	}
+
+	/// Same as above, but @a _seenStructs keeps track of the struct definitions already
+	/// visited so that recursive struct definitions do not lead to infinite recursion.
+	virtual BoolResult validForLocation(DataLocation _loc, std::set<StructDefinition const*>& _seenStructs) const = 0;
 
 	bool equals(ReferenceType const& _other) const
 	{
@@ -878,7 +886,8 @@ public:
 	Type const* decodingType() const override;
 	TypeResult interfaceType(bool _inLibrary) const override;
 
-	BoolResult validForLocation(DataLocation _loc) const override;
+	using ReferenceType::validForLocation;
+	BoolResult validForLocation(DataLocation _loc, std::set<StructDefinition const*>& _seenStructs) const override;
 
 	/// @returns true if this is a byte array.
 	bool isByteArray() const { return m_arrayKind == ArrayKind::Bytes; }
@@ -938,7 +947,8 @@ public:
 	std::string humanReadableName() const override;
 	Type const* mobileType() const override;
 
-	BoolResult validForLocation(DataLocation _loc) const override { return m_arrayType.validForLocation(_loc); }
+	using ReferenceType::validForLocation;
+	BoolResult validForLocation(DataLocation _loc, std::set<StructDefinition const*>& _seenStructs) const override { return m_arrayType.validForLocation(_loc, _seenStructs); }
 
 	ArrayType const& arrayType() const { return m_arrayType; }
 	u256 memoryDataSize() const override { solAssert(false, ""); }
@@ -1053,7 +1063,8 @@ public:
 
 	Declaration const* typeDefinition() const override;
 
-	BoolResult validForLocation(DataLocation _loc) const override;
+	using ReferenceType::validForLocation;
+	BoolResult validForLocation(DataLocation _loc, std::set<StructDefinition const*>& _seenStructs) const override;
 
 	bool recursive() const;
 

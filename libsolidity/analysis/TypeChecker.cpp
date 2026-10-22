@@ -560,7 +560,13 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	if (isStructMemberDeclaration)
 		return false;
 
-	if (auto referenceType = dynamic_cast<ReferenceType const*>(varType))
+	// A mapping is not a reference type, so without unwrapping it here its value type would
+	// never be size-checked. Mappings only live in storage, as does the type we unwrap to.
+	Type const* checkedType = varType;
+	while (auto mappingType = dynamic_cast<MappingType const*>(checkedType))
+		checkedType = mappingType->valueType();
+
+	if (auto referenceType = dynamic_cast<ReferenceType const*>(checkedType))
 	{
 		BoolResult result = referenceType->validForLocation(referenceType->location());
 		if (result)
@@ -3073,6 +3079,16 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 				"Length has to be placed in parentheses after the array type for new expression."
 			);
 		type = TypeProvider::withLocationIfReference(DataLocation::Memory, type);
+		if (auto referenceType = dynamic_cast<ReferenceType const*>(type))
+		{
+			BoolResult result = referenceType->validForLocation(DataLocation::Memory);
+			if (!result)
+				m_errorReporter.typeError(
+					9964_error,
+					_newExpression.typeName().location(),
+					result.message()
+				);
+		}
 		_newExpression.annotation().type = TypeProvider::function(
 			TypePointers{TypeProvider::uint256()},
 			TypePointers{type},

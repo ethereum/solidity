@@ -1719,11 +1719,28 @@ bool ArrayType::operator==(ArrayType const& _other) const
 	return isDynamicallySized() || length() == _other.length();
 }
 
-BoolResult ArrayType::validForLocation(DataLocation _loc) const
+namespace
 {
-	if (auto arrayBaseType = dynamic_cast<ArrayType const*>(baseType()))
+
+/// Mappings only ever live in storage and are not reference types, so their value type would
+/// otherwise never be size-checked. @returns the first non-mapping type reachable from @a _type.
+Type const* unwrapMappingValueType(Type const* _type)
+{
+	while (auto mappingType = dynamic_cast<MappingType const*>(_type))
+		_type = mappingType->valueType();
+	return _type;
+}
+
+}
+
+BoolResult ArrayType::validForLocation(DataLocation _loc, std::set<StructDefinition const*>& _seenStructs) const
+{
+	// Note that the base type has to be validated even for dynamically sized arrays, whose own
+	// size is not statically known. Structs are reference types too, so this also covers arrays
+	// of structs whose members are too large for the location.
+	if (auto baseReferenceType = dynamic_cast<ReferenceType const*>(unwrapMappingValueType(baseType())))
 	{
-		BoolResult result = arrayBaseType->validForLocation(_loc);
+		BoolResult result = baseReferenceType->validForLocation(_loc, _seenStructs);
 		if (!result)
 			return result;
 	}
@@ -2489,12 +2506,17 @@ Declaration const* StructType::typeDefinition() const
 	return &structDefinition();
 }
 
-BoolResult StructType::validForLocation(DataLocation _loc) const
+BoolResult StructType::validForLocation(DataLocation _loc, std::set<StructDefinition const*>& _seenStructs) const
 {
+	// A recursive struct can only recurse through a dynamically sized array or a mapping, neither
+	// of which contributes a statically known size, so visiting each struct once is enough.
+	if (!_seenStructs.insert(&m_struct).second)
+		return true;
+
 	for (auto const& member: m_struct.members())
-		if (auto referenceType = dynamic_cast<ReferenceType const*>(member->annotation().type))
+		if (auto referenceType = dynamic_cast<ReferenceType const*>(unwrapMappingValueType(member->annotation().type)))
 		{
-			BoolResult result = referenceType->validForLocation(_loc);
+			BoolResult result = referenceType->validForLocation(_loc, _seenStructs);
 			if (!result)
 				return result;
 		}
