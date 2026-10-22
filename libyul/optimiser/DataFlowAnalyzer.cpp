@@ -148,7 +148,6 @@ void DataFlowAnalyzer::operator()(Switch& _switch)
 		clearKnowledgeIfInvalidated(_case.body);
 	}
 	for (auto& _case: _switch.cases)
-		clearKnowledgeIfInvalidated(_case.body);
 	clearValues(assignedVariables);
 }
 
