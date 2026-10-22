@@ -457,10 +457,16 @@ MemberList::MemberMap Type::attachedFunctions(Type const& _type, ASTNode const& 
 				}
 			}
 			else
-				addFunction(
-					dynamic_cast<FunctionDefinition const&>(*declaration),
-					identifierPath->path().back()
-				);
+			{
+				auto const& functionDefinition = dynamic_cast<FunctionDefinition const&>(*declaration);
+				// Zero-parameter functions are rejected by TypeChecker::endVisit(UsingForDirective)
+				// with error 4731, but member resolution can run before the directive is visited
+				// when the call site precedes the directive in the contract body. Skip these here
+				// so addFunction() does not assert in withBoundFirstArgument() (#16610).
+				if (functionDefinition.parameters().empty())
+					continue;
+				addFunction(functionDefinition, identifierPath->path().back());
+			}
 		}
 
 	return members;
