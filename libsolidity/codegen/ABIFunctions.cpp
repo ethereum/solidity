@@ -242,7 +242,6 @@ std::string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMem
 				}
 			)");
 			elementTempl("dynamic", decodingTypes[i]->isDynamicallyEncoded());
-			// TODO add test
 			elementTempl("revertString", revertReasonIfDebugFunction("ABI decoding: invalid tuple offset"));
 			elementTempl("load", _fromMemory ? "mload" : "calldataload");
 			elementTempl("values", boost::algorithm::join(valueNamesLocal, ", "));
