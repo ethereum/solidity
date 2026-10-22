@@ -33,29 +33,37 @@ namespace solidity::frontend
 /// Possible lookups for function resolving
 enum class VirtualLookup { Static, Virtual, Super };
 
-// How a function can mutate the EVM state.
-enum class StateMutability { Pure, View, NonPayable, Payable };
-
 /// Visibility ordered from restricted to unrestricted.
 enum class Visibility { Default, Private, Internal, Public, External };
 
 enum class Arithmetic { Checked, Wrapping };
 
+// How a function can mutate the EVM state.
+enum class StateMutability { Pure, View, NonPayable, Payable };
+
+/// Map from `StateMutability` enum values to their ABI JSON output representations.
+inline std::map<StateMutability, std::string> const stateMutabilites = {
+	{StateMutability::Pure, "pure"},
+	{StateMutability::View, "view"},
+	{StateMutability::NonPayable, "nonpayable"},
+	{StateMutability::Payable, "payable"},
+};
+
+/// @param _stateMutability The state mutability string to convert.
+/// @return The corresponding StateMutability enum value, or std::nullopt for unknown strings.
+inline std::optional<StateMutability> stateMutabilityFromString(std::string const& _stateMutability)
+{
+	for (auto const& [value, name]: stateMutabilites)
+		if (name == _stateMutability)
+			return value;
+	return std::nullopt;
+}
+
+/// @param _stateMutability The state mutability enum value to convert to string.
+/// @return The string representation of the state mutability.
 inline std::string stateMutabilityToString(StateMutability const& _stateMutability)
 {
-	switch (_stateMutability)
-	{
-	case StateMutability::Pure:
-		return "pure";
-	case StateMutability::View:
-		return "view";
-	case StateMutability::NonPayable:
-		return "nonpayable";
-	case StateMutability::Payable:
-		return "payable";
-	default:
-		solAssert(false, "Unknown state mutability.");
-	}
+	return stateMutabilites.at(_stateMutability);
 }
 
 class Type;
