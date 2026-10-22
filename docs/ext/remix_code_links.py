@@ -14,7 +14,7 @@ def insert_node_before(child, new_sibling):
 
     for position, node in enumerate(child.parent.children):
         if node == child:
-            child.parent.insert(position, new_sibling)
+            child.parent.children.insert(position, new_sibling)
             break
 
 
