@@ -3,8 +3,16 @@ FROM alpine AS build
 #Establish working directory as solidity
 WORKDIR /solidity
 
-# Build dependencies
-RUN apk update && apk add boost-dev boost-static build-base cmake git clang
+# Build dependencies 
+RUN apk update && \
+    apk add --no-cache --no-install-recommends \
+        boost-dev \
+        boost-static \
+        build-base \
+        cmake \
+        git \
+        clang && \
+    rm -rf /var/cache/apk/*
 
 #Copy working directory to the image
 COPY . /solidity
