@@ -25,7 +25,7 @@ Build System:
 * Update minimum version requirement of Clang to 19.1.1.
 
 Solc-Js:
- * The wrapper now requires at least nodejs v16.
+* The wrapper now requires at least nodejs v16.
 
 
 ### 0.8.37 (2026-09-10)
