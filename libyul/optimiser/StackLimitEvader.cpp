@@ -224,7 +224,7 @@ void StackLimitEvader::run(
 
 	// Make sure all calls to ``memoryguard`` we found have the same value as argument (otherwise, abort).
 	u256 reservedMemory = literalArgumentValue(*memoryGuardCalls.front());
-	yulAssert(reservedMemory < u256(1) << 32 - 1, "");
+	yulAssert(reservedMemory < (u256(1) << 32) - 1, "");
 
 	for (FunctionCall const* memoryGuardCall: memoryGuardCalls)
 		if (reservedMemory != literalArgumentValue(*memoryGuardCall))
