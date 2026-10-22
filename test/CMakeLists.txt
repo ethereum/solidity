@@ -42,6 +42,7 @@ set(libsolutil_sources
     libsolutil/Keccak256.cpp
     libsolutil/LazyInit.cpp
     libsolutil/LEB128.cpp
+    libsolutil/Logger.cpp
     libsolutil/StringUtils.cpp
     libsolutil/SwarmHash.cpp
     libsolutil/TarjanSCC.cpp

@@ -32,6 +32,7 @@
 #include <liblangutil/EVMVersion.h>
 
 #include <libsolutil/JSON.h>
+#include <libsolutil/Logger.h>
 
 #include <boost/program_options.hpp>
 #include <boost/filesystem/path.hpp>
@@ -42,6 +43,7 @@
 #include <ostream>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace solidity::frontend
@@ -273,6 +275,16 @@ struct CommandLineOptions
 		bool initialize = false;
 		ModelCheckerSettings settings;
 	} modelChecker;
+
+	struct Logging
+	{
+		bool operator==(Logging const&) const noexcept = default;
+		bool operator!=(Logging const&) const noexcept = default;
+
+		std::optional<log::Level> globalLevel;
+		std::vector<std::pair<std::string, log::Level>> categoryLevels;
+		bool toStdout = false;
+	} logging;
 
 	bool experimental = false;
 };

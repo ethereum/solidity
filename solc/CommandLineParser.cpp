@@ -64,6 +64,11 @@ static std::string const g_strLicense = "license";
 static std::string const g_strLibraries = "libraries";
 static std::string const g_strLink = "link";
 static std::string const g_strLSP = "lsp";
+static std::string const g_strLogLevel = "log-level";
+static std::string const g_strLog = "log";
+static std::string const g_strLogOutput = "log-output";
+static std::string const g_strLogOutputStderr = "stderr";
+static std::string const g_strLogOutputStdout = "stdout";
 static std::string const g_strMachine = "machine";
 static std::string const g_strNoCBORMetadata = "no-cbor-metadata";
 static std::string const g_strMetadataHash = "metadata-hash";
@@ -651,6 +656,28 @@ General Information)").c_str(),
 	;
 	desc.add(outputOptions);
 
+	po::options_description loggingOptions("Logging Options");
+	loggingOptions.add_options()
+		(
+			g_strLogLevel.c_str(),
+			po::value<std::string>()->value_name("trace|debug|warn|off"),
+			"Set the global default log level. Loggers default to 'off'."
+		)
+		(
+			g_strLog.c_str(),
+			po::value<std::vector<std::string>>()->value_name("<prefix>=<level>[,...]"),
+			("Per-category log level overrides. The level applies to the given dot-separated category "
+			"prefix and all its descendants; the most specific prefix wins. Can be given multiple "
+			"times and supersedes --" + g_strLogLevel + ".").c_str()
+		)
+		(
+			g_strLogOutput.c_str(),
+			po::value<std::string>()->value_name(g_strLogOutputStderr + "|" + g_strLogOutputStdout)->default_value(g_strLogOutputStderr),
+			"Where log output is written. Default: stderr."
+		)
+	;
+	desc.add(loggingOptions);
+
 	po::options_description alternativeInputModes("Alternative Input Modes");
 	alternativeInputModes.add_options()
 		(
@@ -1167,6 +1194,55 @@ void CommandLineParser::processArgs()
 				"Only \"default\", \"strip\" and \"debug\" are implemented for --" + g_strRevertStrings + " for now."
 			);
 		m_options.output.revertStrings = *revertStrings;
+	}
+
+	if (m_args.count(g_strLogLevel))
+	{
+		std::string const levelString = m_args[g_strLogLevel].as<std::string>();
+		std::optional<log::Level> const level = log::levelFromString(levelString);
+		if (!level)
+			solThrow(CommandLineValidationError, "Invalid option for --" + g_strLogLevel + ": " + levelString);
+		m_options.logging.globalLevel = *level;
+	}
+
+	if (m_args.count(g_strLog))
+	{
+		for (std::string const& specs: m_args[g_strLog].as<std::vector<std::string>>())
+		{
+			std::vector<std::string> splitSpecs;
+			for (std::string const& spec: boost::split(splitSpecs, specs, boost::is_any_of(",")))
+			{
+				if (spec.empty())
+					continue;
+
+				auto const separator = spec.find('=');
+				if (separator == std::string::npos)
+					solThrow(
+						CommandLineValidationError,
+						"Invalid log spec '" + spec + "' for --" + g_strLog + ". Expected <prefix>=<level>."
+					);
+
+				std::string const prefix = spec.substr(0, separator);
+				std::string const levelString = spec.substr(separator + 1);
+				std::optional<log::Level> const level = log::levelFromString(levelString);
+				if (!level)
+					solThrow(
+						CommandLineValidationError,
+						"Invalid log level '" + levelString + "' in --" + g_strLog + " spec '" + spec + "'."
+					);
+				m_options.logging.categoryLevels.emplace_back(prefix, *level);
+			}
+		}
+	}
+
+	{
+		std::string const logOutput = m_args[g_strLogOutput].as<std::string>();
+		if (logOutput == g_strLogOutputStdout)
+			m_options.logging.toStdout = true;
+		else if (logOutput == g_strLogOutputStderr)
+			m_options.logging.toStdout = false;
+		else
+			solThrow(CommandLineValidationError, "Invalid option for --" + g_strLogOutput + ": " + logOutput);
 	}
 
 	if (!m_args[g_strDebugInfo].defaulted())

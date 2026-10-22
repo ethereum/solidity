@@ -83,6 +83,9 @@ public:
 	std::optional<std::string> const& standardJsonInput() const { return m_standardJsonInput; }
 
 private:
+	/// Applies the parsed logging options to the process-wide LoggerRegistry. Called once after
+	/// argument parsing, before any compilation work begins.
+	void applyLoggingOptions();
 	void printVersion();
 	void printLicense();
 	void compile();

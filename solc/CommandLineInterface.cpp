@@ -789,7 +789,25 @@ bool CommandLineInterface::parseArguments(int _argc, char const* const* _argv)
 	}
 	m_options = parser.options();
 
+	applyLoggingOptions();
+
 	return true;
+}
+
+void CommandLineInterface::applyLoggingOptions()
+{
+	auto& registry = log::LoggerRegistry::singleton();
+
+	// Pass false so that merely configuring logging does not mark the CLI as having produced output.
+	registry.setOutput(m_options.logging.toStdout ? sout(false) : serr(false));
+
+	// Apply the global default first, then the per-category overrides in order, so that the
+	// overrides supersede --log-level and later occurrences win.
+	if (m_options.logging.globalLevel)
+		registry.setLevel("", *m_options.logging.globalLevel);
+
+	for (auto const& [prefix, level]: m_options.logging.categoryLevels)
+		registry.setLevel(prefix, level);
 }
 
 void CommandLineInterface::processInput()
