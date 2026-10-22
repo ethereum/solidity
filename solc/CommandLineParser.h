@@ -250,7 +250,7 @@ struct CommandLineOptions
 		bool operator!=(Metadata const&) const noexcept = default;
 
 		CompilerStack::MetadataFormat format = CompilerStack::defaultMetadataFormat();
-		CompilerStack::MetadataHash hash = CompilerStack::MetadataHash::IPFS;
+		MetadataHash hash = MetadataHash::IPFS;
 		bool literalSources = false;
 	} metadata;
 

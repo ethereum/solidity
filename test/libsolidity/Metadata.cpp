@@ -22,6 +22,7 @@
 #include <test/Metadata.h>
 #include <test/Common.h>
 #include <libsolidity/interface/CompilerStack.h>
+#include <libsolidity/interface/MetadataSettings.h>
 #include <libsolidity/interface/Version.h>
 #include <libsolutil/SwarmHash.h>
 #include <libsolutil/IpfsHash.h>
@@ -77,6 +78,29 @@ std::optional<std::string> compileAndCheckLicenseMetadata(std::string const& _co
 
 BOOST_AUTO_TEST_SUITE(Metadata)
 
+BOOST_AUTO_TEST_CASE(metadata_hash_conversions)
+{
+	// All entries of the canonical map must round-trip through both conversion
+	// helpers, and the map must be consistent with the enum's declaration order.
+	BOOST_CHECK_EQUAL(metadataHashes.size(), 3);
+	BOOST_CHECK_EQUAL(metadataHashes.at(MetadataHash::IPFS), "ipfs");
+	BOOST_CHECK_EQUAL(metadataHashes.at(MetadataHash::Bzzr1), "bzzr1");
+	BOOST_CHECK_EQUAL(metadataHashes.at(MetadataHash::None), "none");
+
+	for (auto&& [value, name]: metadataHashes)
+	{
+		BOOST_CHECK_EQUAL(metadataHashToString(value), name);
+		BOOST_CHECK(metadataHashFromString(name) == value);
+	}
+
+	// Unknown strings (wrong case, empty, old CLI alias) must not parse.
+	BOOST_CHECK(!metadataHashFromString("").has_value());
+	BOOST_CHECK(!metadataHashFromString("IPFS").has_value());
+	BOOST_CHECK(!metadataHashFromString("swarm").has_value());
+	BOOST_CHECK(!metadataHashFromString("bzzr0").has_value());
+	BOOST_CHECK(!metadataHashFromString("ipfs ").has_value());
+}
+
 BOOST_AUTO_TEST_CASE(metadata_stamp)
 {
 	// Check that the metadata stamp is at the end of the runtime bytecode.
@@ -92,11 +116,7 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 		CompilerStack::MetadataFormat::WithReleaseVersionTag,
 		CompilerStack::MetadataFormat::WithPrereleaseVersionTag
 	})
-		for (auto metadataHash: std::set<CompilerStack::MetadataHash>{
-			CompilerStack::MetadataHash::IPFS,
-			CompilerStack::MetadataHash::Bzzr1,
-			CompilerStack::MetadataHash::None
-		})
+	for (auto metadataHash: std::views::keys(metadataHashes))
 		{
 			CompilerStack compilerStack;
 			compilerStack.setMetadataFormat(metadataFormat);
@@ -110,13 +130,13 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 			BOOST_CHECK(solidity::test::isValidMetadata(metadata));
 
 			auto const cborMetadata = requireParsedCBORMetadata(bytecode, metadataFormat);
-			if (metadataHash == CompilerStack::MetadataHash::None)
+			if (metadataHash == MetadataHash::None)
 				BOOST_CHECK(cborMetadata.size() == (metadataFormat == CompilerStack::MetadataFormat::NoMetadata ? 0 : 1));
 			else
 			{
 				bytes hash;
 				std::string hashMethod;
-				if (metadataHash == CompilerStack::MetadataHash::IPFS)
+				if (metadataHash == MetadataHash::IPFS)
 				{
 					hash = util::ipfsHash(metadata);
 					BOOST_REQUIRE(hash.size() == 34);
@@ -166,11 +186,7 @@ BOOST_AUTO_TEST_CASE(metadata_stamp_experimental)
 			CompilerStack::MetadataFormat::WithReleaseVersionTag,
 			CompilerStack::MetadataFormat::WithPrereleaseVersionTag
 	})
-		for (auto metadataHash: std::set<CompilerStack::MetadataHash>{
-			CompilerStack::MetadataHash::IPFS,
-			CompilerStack::MetadataHash::Bzzr1,
-			CompilerStack::MetadataHash::None
-		})
+	for (auto metadataHash: std::views::keys(metadataHashes))
 		{
 			CompilerStack compilerStack;
 			compilerStack.setMetadataFormat(metadataFormat);
@@ -185,13 +201,13 @@ BOOST_AUTO_TEST_CASE(metadata_stamp_experimental)
 			BOOST_CHECK(solidity::test::isValidMetadata(metadata));
 
 			auto const cborMetadata = requireParsedCBORMetadata(bytecode, metadataFormat);
-			if (metadataHash == CompilerStack::MetadataHash::None)
+			if (metadataHash == MetadataHash::None)
 				BOOST_CHECK(cborMetadata.size() == (metadataFormat == CompilerStack::MetadataFormat::NoMetadata ? 0 : 2));
 			else
 			{
 				bytes hash;
 				std::string hashMethod;
-				if (metadataHash == CompilerStack::MetadataHash::IPFS)
+				if (metadataHash == MetadataHash::IPFS)
 				{
 					hash = util::ipfsHash(metadata);
 					BOOST_REQUIRE(hash.size() == 34);
