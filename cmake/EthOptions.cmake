@@ -6,7 +6,6 @@ macro(configure_project)
 
 	# features
 	eth_default_option(COVERAGE OFF)
-	eth_default_option(OSSFUZZ OFF)
 
 	# Master switch for the FuzzTest-based property tests. OFF means deps/fuzztest is never
 	# add_subdirectory'd, so none of its transitive FetchContent deps (abseil/re2/gtest/antlr)
@@ -51,7 +50,6 @@ if (SUPPORT_TOOLS)
 	message("-- TOOLS            Build tools                              ${TOOLS}")
 endif()
 	message("------------------------------------------------------------------ flags")
-	message("-- OSSFUZZ                                                   ${OSSFUZZ}")
 	message("-- PROPERTY_BASED_TESTS (FuzzTest)                           ${PROPERTY_BASED_TESTS}")
 	message("-- PROPERTY_BASED_TESTS_MODE                                 ${PROPERTY_BASED_TESTS_MODE}")
 	message("------------------------------------------------------------------------")

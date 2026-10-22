@@ -9,7 +9,6 @@ on:
     branches: [ develop ]
     paths:
       - 'scripts/docker/buildpack-deps/Dockerfile.emscripten'
-      - 'scripts/docker/buildpack-deps/Dockerfile.ubuntu.clang.ossfuzz'
       - 'scripts/docker/buildpack-deps/Dockerfile.ubuntu2404'
       - 'scripts/docker/buildpack-deps/Dockerfile.ubuntu2404.clang'
       - 'scripts/docker/buildpack-deps/Dockerfile.ubuntu2404.arm'
@@ -28,8 +27,6 @@ jobs:
       matrix:
         include:
           - image_variant: emscripten
-            runs-on: ubuntu-latest
-          - image_variant: ubuntu.clang.ossfuzz
             runs-on: ubuntu-latest
           - image_variant: ubuntu2404
             runs-on: ubuntu-latest
