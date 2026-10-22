@@ -258,9 +258,11 @@ Thus, for our ``Foo`` example, if we wanted to call ``bar`` with the argument ``
 
 - ``0xfce353f6``: the Method ID. This is derived from the signature ``bar(bytes3[2])``.
 - ``0x6162630000000000000000000000000000000000000000000000000000000000``: the first part of the first
-  parameter, a ``bytes3`` value ``"abc"`` (left-aligned).
+  parameter, a ``bytes3`` value. The string "abc" is used here for demonstration, which is encoded as the ASCII bytes 0x61, 0x62, 0x63 (left-aligned).
 - ``0x6465660000000000000000000000000000000000000000000000000000000000``: the second part of the first
-  parameter, a ``bytes3`` value ``"def"`` (left-aligned).
+  parameter, a ``bytes3`` value. Similarly, the string "def" is encoded as the ASCII bytes 0x64, 0x65, 0x66 (left-aligned).
+
+Note: In actual code, for a ``bytes3`` type, you should pass the bytes directly, like ``[0x616263, 0x646566]``. The string-to-bytes conversion is shown here only for demonstration purposes.
 
 In total:
 
@@ -295,7 +297,7 @@ pass 292 bytes total, broken down into:
 - ``0x0000000000000000000000000000000000000000000000000000000000000001``: the second parameter: boolean true.
 - ``0x00000000000000000000000000000000000000000000000000000000000000a0``: the location of the data part of the third parameter (dynamic type), measured in bytes. In this case, ``0xa0``.
 - ``0x0000000000000000000000000000000000000000000000000000000000000004``: the data part of the first argument, it starts with the length of the byte array in elements, in this case, 4.
-- ``0x6461766500000000000000000000000000000000000000000000000000000000``: the contents of the first argument: the UTF-8 (equal to ASCII in this case) encoding of ``"dave"``, padded on the right to 32 bytes.
+- ``0x6461766500000000000000000000000000000000000000000000000000000000``: the contents of the first argument: the UTF-8 (equal to ASCII in this case) encoding of ``"dave"``, padded on the right to 32 bytes. Note: The string "dave" is used here for demonstration. In actual code, you would typically pass the bytes directly, like ``0x64617665``.
 - ``0x0000000000000000000000000000000000000000000000000000000000000003``: the data part of the third argument, it starts with the length of the array in elements, in this case, 3.
 - ``0x0000000000000000000000000000000000000000000000000000000000000001``: the first entry of the third parameter.
 - ``0x0000000000000000000000000000000000000000000000000000000000000002``: the second entry of the third parameter.
