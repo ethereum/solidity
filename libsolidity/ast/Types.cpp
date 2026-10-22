@@ -404,7 +404,13 @@ std::set<FunctionDefinition const*, ASTNode::CompareByID> Type::operatorDefiniti
 				*identifierPath->annotation().referencedDeclaration
 			);
 			auto const* functionType = dynamic_cast<FunctionType const*>(functionDefinition.typeWhenAttached());
-			solAssert(functionType && !functionType->parameterTypes().empty());
+			solAssert(functionType);
+			// Zero-parameter functions are rejected by TypeChecker::endVisit(UsingForDirective)
+			// with error 4731, but that fatal fires per-binding and the matching scan below
+			// still revisits sibling bindings. Skip them here so that we do not assert on an
+			// already-reported invalid binding (#16613).
+			if (functionType->parameterTypes().empty())
+				continue;
 
 			size_t parameterCount = functionDefinition.parameterList().parameters().size();
 			if (*this == *functionType->parameterTypes().front() && (_unary ? parameterCount == 1 : parameterCount == 2))
