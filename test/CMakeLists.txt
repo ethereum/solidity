@@ -6,6 +6,7 @@ set(sources
     CommonSyntaxTest.h
     EVMHost.cpp
     EVMHost.h
+    EVMHostTest.cpp
     ExecutionFramework.cpp
     ExecutionFramework.h
     FilesystemUtils.cpp

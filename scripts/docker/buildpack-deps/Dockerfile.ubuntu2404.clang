@@ -22,7 +22,7 @@
 # (c) 2016-2024 solidity contributors.
 #------------------------------------------------------------------------------
 FROM buildpack-deps:noble AS base
-LABEL version="10"
+LABEL version="11"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -101,8 +101,8 @@ ENV CXX clang++
 # EVMONE
 RUN <<-EOF
     set -ex
-    wget -O /usr/src/evmone.tar.gz https://github.com/ipsilon/evmone/releases/download/v0.22.0/evmone-0.22.0-linux-x86_64.tar.gz
-    test "$(sha256sum /usr/src/evmone.tar.gz)" = "ce1ee67f55f3c856aec00d8b0d0b878c47f10ccb6c7cbc74bf8e4829969983b6  /usr/src/evmone.tar.gz"
+    wget -O /usr/src/evmone.tar.gz https://github.com/ipsilon/evmone/releases/download/v0.25.0/evmone-0.25.0-linux-x86_64.tar.gz
+    test "$(sha256sum /usr/src/evmone.tar.gz)" = "ce706e89f14f1afa5e0d87acc20b560d57eb33dd3a96c6b6c8b6a39fc329002c  /usr/src/evmone.tar.gz"
     cd /usr
     tar -xf /usr/src/evmone.tar.gz
     rm -rf /usr/src/evmone.tar.gz

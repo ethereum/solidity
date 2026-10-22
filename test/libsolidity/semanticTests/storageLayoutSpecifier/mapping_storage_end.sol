@@ -11,6 +11,8 @@ contract C layout at 2**256 - 2 {
             require(m[i] == i + 1);
     }
 }
+// ====
+// EVMVersion: <amsterdam
 // ----
 // init() ->
 // gas irOptimized: 22266226

@@ -22,7 +22,7 @@
 # (c) 2016-2025 solidity contributors.
 #------------------------------------------------------------------------------
 FROM --platform=linux/arm64 buildpack-deps:noble AS base
-LABEL version="4"
+LABEL version="5"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -96,7 +96,7 @@ FROM base AS libraries
 # EVMONE (built from source, no arm release available)
 RUN <<-EOF
     set -ex
-    git clone --depth=1 --recurse-submodules --branch v0.22.0 https://github.com/ipsilon/evmone.git /tmp/evmone
+    git clone --depth=1 --recurse-submodules --branch v0.25.0 https://github.com/ipsilon/evmone.git /tmp/evmone
     mkdir -p /tmp/evmone/build
     cd /tmp/evmone/build
     cmake ..

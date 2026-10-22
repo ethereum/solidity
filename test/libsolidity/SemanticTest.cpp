@@ -359,7 +359,7 @@ TestCase::TestResult SemanticTest::runTest(
 	m_gasCostFailure = false;
 	m_isSSACFGRun = _isSSACFGRun;
 
-	selectVM(evmc_capabilities::EVMC_CAPABILITY_EVM1);
+	selectVM();
 
 	reset();
 

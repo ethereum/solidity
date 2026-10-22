@@ -59,16 +59,16 @@ ExecutionFramework::ExecutionFramework(langutil::EVMVersion _evmVersion, std::ve
 {
 	if (solidity::test::CommonOptions::get().optimize)
 		m_optimiserSettings = solidity::frontend::OptimiserSettings::standard();
-	selectVM(evmc_capabilities::EVMC_CAPABILITY_EVM1);
+	selectVM();
 }
 
-void ExecutionFramework::selectVM(evmc_capabilities _cap)
+void ExecutionFramework::selectVM()
 {
 	m_evmcHost.reset();
 	for (auto const& path: m_vmPaths)
 	{
 		evmc::VM& vm = EVMHost::getVM(path.string());
-		if (vm.has_capability(_cap))
+		if (vm)
 		{
 			m_evmcHost = std::make_unique<EVMHost>(m_evmVersion, vm);
 			break;
@@ -82,8 +82,13 @@ void ExecutionFramework::reset()
 {
 	m_evmcHost->reset();
 	for (size_t i = 0; i < 10; i++)
-		m_evmcHost->accounts[EVMHost::convertToEVMC(account(i))].balance =
-			EVMHost::convertToEVMC(u256(1) << 100);
+	{
+		auto& account = m_evmcHost->accounts[EVMHost::convertToEVMC(this->account(i))];
+		account.balance = EVMHost::convertToEVMC(u256(1) << 100);
+		// The first CREATE from a test account must derive its address from nonce 1, matching
+		// what this framework produced when EVMHost pre-incremented before deriving.
+		account.nonce = 1;
+	}
 }
 
 std::pair<bool, std::string> ExecutionFramework::compareAndCreateMessage(
@@ -170,7 +175,9 @@ void ExecutionFramework::sendMessage(bytes const& _bytecode, bytes const& _argum
 	if (_isCreation)
 	{
 		message.kind = EVMC_CREATE;
-		message.recipient = {};
+		message.recipient = EVMHost::convertToEVMC(
+			EVMHost::computeCreateAddress(message.sender, m_evmcHost->get_nonce(message.sender))
+		);
 		message.code_address = {};
 	}
 	else
@@ -186,7 +193,7 @@ void ExecutionFramework::sendMessage(bytes const& _bytecode, bytes const& _argum
 
 	m_output = bytes(result.output_data, result.output_data + result.output_size);
 	if (_isCreation)
-		m_contractAddress = EVMHost::convertFromEVMC(result.create_address);
+		m_contractAddress = EVMHost::convertFromEVMC(message.recipient);
 
 	unsigned const refundRatio = (m_evmVersion >= langutil::EVMVersion::london() ? 5 : 2);
 	auto const totalGasUsed = InitialGas - result.gas_left;

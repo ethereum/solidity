@@ -28,6 +28,8 @@
 
 #include <evmone/evmone.h>
 
+#include <utility>
+
 namespace solidity::test::fuzzer
 {
 struct CompilerOutput
@@ -142,8 +144,9 @@ private:
 		bytes const& _functionHash,
 		evmc_address _deployedAddress
 	);
-	/// @returns the result of deployment of @param _code on @param _hostContext.
-	evmc::Result deployContract(bytes const& _code);
+	/// @returns the result of deployment of @param _code on @param _hostContext, together with
+	/// the address the contract was deployed at (no longer available via evmc::Result in EVMC 18).
+	std::pair<evmc::Result, evmc::address> deployContract(bytes const& _code);
 	/// Deploys and executes EVM byte code in @param _byteCode on
 	/// EVM Host referenced by @param _hostContext. Input passed
 	/// to execution context is @param _hexEncodedInput.

@@ -43,7 +43,7 @@ std::shared_ptr<yul::Object> YulAssembler::object()
 	return m_stack.parserResult();
 }
 
-evmc::Result YulEvmoneUtility::deployCode(bytes const& _input, EVMHost& _host)
+std::pair<evmc::Result, evmc::address> YulEvmoneUtility::deployCode(bytes const& _input, EVMHost& _host)
 {
 	// Zero initialize all message fields
 	evmc_message msg = {};
@@ -72,7 +72,17 @@ evmc::Result YulEvmoneUtility::deployCode(bytes const& _input, EVMHost& _host)
 	msg.input_data = deployCode.data();
 	msg.input_size = deployCode.size();
 	msg.kind = EVMC_CREATE;
-	return _host.call(msg);
+	// NOTE: unlike ExecutionFramework::reset(), _host's sender accounts are not seeded
+	// to nonce 1, so the deploy address here differs from what ExecutionFramework would
+	// derive for the same sender. This is harmless for the differential fuzzers that use
+	// this utility (e.g. StackReuseCodegenFuzzer): they compare an unoptimised run
+	// against an optimised run of the *same* host, resetting it between the two, so both
+	// runs derive the same address and stay mutually consistent with each other even
+	// though neither matches ExecutionFramework's addresses.
+	msg.recipient = EVMHost::convertToEVMC(
+		EVMHost::computeCreateAddress(msg.sender, _host.get_nonce(msg.sender))
+	);
+	return {_host.call(msg), msg.recipient};
 }
 
 evmc_message YulEvmoneUtility::callMessage(evmc_address _address)

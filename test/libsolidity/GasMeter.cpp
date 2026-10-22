@@ -117,7 +117,11 @@ BOOST_AUTO_TEST_CASE(simple_contract)
 	testCreationTimeGas(sourceCode);
 }
 
-BOOST_AUTO_TEST_CASE(store_keccak256)
+// The estimator does not model the Amsterdam state gas (EIP-8037).
+BOOST_AUTO_TEST_CASE(
+	store_keccak256,
+	*boost::unit_test::precondition(maxEVMVersionCheck(EVMVersion::osaka()))
+)
 {
 	char const* sourceCode = R"(
 		// TODO: We should enable v2 again once the yul optimizer is activated.
@@ -133,7 +137,11 @@ BOOST_AUTO_TEST_CASE(store_keccak256)
 	testCreationTimeGas(sourceCode);
 }
 
-BOOST_AUTO_TEST_CASE(updating_store)
+// The estimator does not model the Amsterdam state gas (EIP-8037).
+BOOST_AUTO_TEST_CASE(
+	updating_store,
+	*boost::unit_test::precondition(maxEVMVersionCheck(EVMVersion::osaka()))
+)
 {
 	char const* sourceCode = R"(
 		contract test {
@@ -149,7 +157,11 @@ BOOST_AUTO_TEST_CASE(updating_store)
 	testCreationTimeGas(sourceCode, m_evmVersion < langutil::EVMVersion::constantinople() ? u256(0) : u256(9600));
 }
 
-BOOST_AUTO_TEST_CASE(branches)
+// The estimator does not model the Amsterdam state gas (EIP-8037).
+BOOST_AUTO_TEST_CASE(
+	branches,
+	*boost::unit_test::precondition(maxEVMVersionCheck(EVMVersion::osaka()))
+)
 {
 	char const* sourceCode = R"(
 		contract test {
@@ -167,7 +179,11 @@ BOOST_AUTO_TEST_CASE(branches)
 	testRunTimeGas("f(uint256)", std::vector<bytes>{encodeArgs(2), encodeArgs(8)}, 1);
 }
 
-BOOST_AUTO_TEST_CASE(function_calls)
+// The estimator does not model the Amsterdam state gas (EIP-8037).
+BOOST_AUTO_TEST_CASE(
+	function_calls,
+	*boost::unit_test::precondition(maxEVMVersionCheck(EVMVersion::osaka()))
+)
 {
 	char const* sourceCode = R"(
 		contract test {
@@ -196,7 +212,11 @@ BOOST_AUTO_TEST_CASE(function_calls)
 	);
 }
 
-BOOST_AUTO_TEST_CASE(multiple_external_functions)
+// The estimator does not model the Amsterdam state gas (EIP-8037).
+BOOST_AUTO_TEST_CASE(
+	multiple_external_functions,
+	*boost::unit_test::precondition(maxEVMVersionCheck(EVMVersion::osaka()))
+)
 {
 	char const* sourceCode = R"(
 		// TODO: We should enable v2 again once the yul optimizer is activated.
@@ -254,7 +274,11 @@ BOOST_AUTO_TEST_CASE(exponent_size)
 	testRunTimeGas("h(uint256)", std::vector<bytes>{encodeArgs(2)});
 }
 
-BOOST_AUTO_TEST_CASE(balance_gas)
+// The estimator does not model the Amsterdam state gas (EIP-8037).
+BOOST_AUTO_TEST_CASE(
+	balance_gas,
+	*boost::unit_test::precondition(maxEVMVersionCheck(EVMVersion::osaka()))
+)
 {
 	char const* sourceCode = R"(
 		contract A {
@@ -267,7 +291,11 @@ BOOST_AUTO_TEST_CASE(balance_gas)
 	testRunTimeGas("lookup_balance(address)", std::vector<bytes>{encodeArgs(2), encodeArgs(100)});
 }
 
-BOOST_AUTO_TEST_CASE(extcodesize_gas)
+// The estimator does not model the Amsterdam state gas (EIP-8037).
+BOOST_AUTO_TEST_CASE(
+	extcodesize_gas,
+	*boost::unit_test::precondition(maxEVMVersionCheck(EVMVersion::osaka()))
+)
 {
 	char const* sourceCode = R"(
 		contract A {

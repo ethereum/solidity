@@ -321,6 +321,9 @@ inline const char* to_string(evmc_revision rev) noexcept
 /// Alias for evmc_make_result().
 constexpr auto make_result = evmc_make_result;
 
+/// @copydoc evmc_state_gas
+using StateGas = evmc_state_gas;
+
 /// @copydoc evmc_result
 ///
 /// This is a RAII wrapper for evmc_result and objects of this type
@@ -328,11 +331,11 @@ constexpr auto make_result = evmc_make_result;
 class Result : private evmc_result
 {
 public:
-    using evmc_result::create_address;
     using evmc_result::gas_left;
     using evmc_result::gas_refund;
     using evmc_result::output_data;
     using evmc_result::output_size;
+    using evmc_result::state_gas;
     using evmc_result::status_code;
 
     /// Creates the result from the provided arguments.
@@ -345,39 +348,40 @@ public:
     /// @param _gas_refund   The amount of refunded gas.
     /// @param _output_data  The pointer to the output.
     /// @param _output_size  The output size.
+    /// @param _state_gas    The state-gas fields.
     explicit Result(evmc_status_code _status_code,
                     int64_t _gas_left,
                     int64_t _gas_refund,
                     const uint8_t* _output_data,
-                    size_t _output_size) noexcept
+                    size_t _output_size,
+                    StateGas _state_gas = {}) noexcept
       : evmc_result{make_result(_status_code, _gas_left, _gas_refund, _output_data, _output_size)}
-    {}
+    {
+        state_gas = _state_gas;
+    }
 
     /// Creates the result without output.
     ///
     /// @param _status_code  The status code.
     /// @param _gas_left     The amount of gas left.
     /// @param _gas_refund   The amount of refunded gas.
+    /// @param _state_gas    The state-gas fields.
     explicit Result(evmc_status_code _status_code = EVMC_INTERNAL_ERROR,
                     int64_t _gas_left = 0,
-                    int64_t _gas_refund = 0) noexcept
-      : evmc_result{make_result(_status_code, _gas_left, _gas_refund, nullptr, 0)}
-    {}
-
-    /// Creates the result of contract creation.
-    ///
-    /// @param _status_code     The status code.
-    /// @param _gas_left        The amount of gas left.
-    /// @param _gas_refund      The amount of refunded gas.
-    /// @param _create_address  The address of the possibly created account.
-    explicit Result(evmc_status_code _status_code,
-                    int64_t _gas_left,
-                    int64_t _gas_refund,
-                    const evmc_address& _create_address) noexcept
+                    int64_t _gas_refund = 0,
+                    StateGas _state_gas = {}) noexcept
       : evmc_result{make_result(_status_code, _gas_left, _gas_refund, nullptr, 0)}
     {
-        create_address = _create_address;
+        state_gas = _state_gas;
     }
+
+    /// Creates the result without output and without gas left.
+    ///
+    /// @param _status_code  The status code.
+    /// @param _state_gas    The state-gas fields.
+    explicit Result(evmc_status_code _status_code, StateGas _state_gas) noexcept
+      : Result{_status_code, 0, 0, _state_gas}
+    {}
 
     /// Converting constructor from raw evmc_result.
     ///
@@ -453,6 +457,9 @@ public:
 
     /// @copydoc evmc_host_interface::get_balance
     virtual uint256be get_balance(const address& addr) const noexcept = 0;
+
+    /// @copydoc evmc_host_interface::get_nonce
+    virtual uint64_t get_nonce(const address& addr) const noexcept = 0;
 
     /// @copydoc evmc_host_interface::get_code_size
     virtual size_t get_code_size(const address& addr) const noexcept = 0;
@@ -541,6 +548,11 @@ public:
     uint256be get_balance(const address& address) const noexcept final
     {
         return host->get_balance(context, &address);
+    }
+
+    uint64_t get_nonce(const address& address) const noexcept final
+    {
+        return host->get_nonce(context, &address);
     }
 
     size_t get_code_size(const address& address) const noexcept final
@@ -695,18 +707,6 @@ public:
     /// @copydoc evmc_vm::version
     char const* version() const noexcept { return m_instance->version; }
 
-    /// Checks if the VM has the given capability.
-    bool has_capability(evmc_capabilities capability) const noexcept
-    {
-        return (get_capabilities() & static_cast<evmc_capabilities_flagset>(capability)) != 0;
-    }
-
-    /// @copydoc evmc_vm::get_capabilities
-    evmc_capabilities_flagset get_capabilities() const noexcept
-    {
-        return m_instance->get_capabilities(m_instance);
-    }
-
     /// @copydoc evmc_set_option()
     evmc_set_option_result set_option(const char name[], const char value[]) noexcept
     {
@@ -732,23 +732,6 @@ public:
                    size_t code_size) noexcept
     {
         return execute(Host::get_interface(), host.to_context(), rev, msg, code, code_size);
-    }
-
-    /// Executes code without the Host context.
-    ///
-    /// The same as
-    /// execute(const evmc_host_interface&, evmc_host_context*, evmc_revision,
-    ///         const evmc_message&, const uint8_t*, size_t),
-    /// but without providing the Host context and interface.
-    /// This method is for experimental precompiles support where execution is
-    /// guaranteed not to require any Host access.
-    Result execute(evmc_revision rev,
-                   const evmc_message& msg,
-                   const uint8_t* code,
-                   size_t code_size) noexcept
-    {
-        return Result{
-            m_instance->execute(m_instance, nullptr, nullptr, rev, &msg, code, code_size)};
     }
 
     /// Returns the pointer to C EVMC struct representing the VM.
@@ -797,6 +780,11 @@ inline evmc_storage_status set_storage(evmc_host_context* h,
 inline evmc_uint256be get_balance(evmc_host_context* h, const evmc_address* addr) noexcept
 {
     return Host::from_context(h)->get_balance(*addr);
+}
+
+inline uint64_t get_nonce(evmc_host_context* h, const evmc_address* addr) noexcept
+{
+    return Host::from_context(h)->get_nonce(*addr);
 }
 
 inline size_t get_code_size(evmc_host_context* h, const evmc_address* addr) noexcept
@@ -886,6 +874,7 @@ inline const evmc_host_interface& Host::get_interface() noexcept
         ::evmc::internal::get_storage,
         ::evmc::internal::set_storage,
         ::evmc::internal::get_balance,
+        ::evmc::internal::get_nonce,
         ::evmc::internal::get_code_size,
         ::evmc::internal::get_code_hash,
         ::evmc::internal::copy_code,
