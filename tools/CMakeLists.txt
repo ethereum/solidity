@@ -35,3 +35,5 @@ add_executable(yul-phaser yulPhaser/main.cpp)
 target_link_libraries(yul-phaser PRIVATE phaser)
 
 install(TARGETS yul-phaser DESTINATION "${CMAKE_INSTALL_BINDIR}")
+
+add_subdirectory(yuldiff)
