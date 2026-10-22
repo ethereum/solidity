@@ -47,9 +47,6 @@ bytes SolidityExecutionFramework::multiSourceCompileContract(
 	std::map<std::string, Address> const& _libraryAddresses
 )
 {
-	if (_mainSourceName.has_value())
-		solAssert(_sourceCode.find(_mainSourceName.value()) != _sourceCode.end(), "");
-
 	m_compiler.reset();
 	m_compiler.setSources(withPreamble(
 		_sourceCode,
@@ -80,7 +77,21 @@ bytes SolidityExecutionFramework::multiSourceCompileContract(
 			.printErrorInformation(m_compiler.errors());
 		BOOST_ERROR("Compiling contract failed");
 	}
-	std::string contractName(_contractName.empty() ? m_compiler.lastContractName(_mainSourceName) : _contractName);
+	// When _mainSourceName is set but does not correspond to any key in _sourceCode
+	// (e.g. during isoltest interactive update re-run, where mainSourceFile holds the
+	// path of the .sol file on disk while the actual source keys are the symbolic names
+	// declared with "==== Source: ... ====" headers), fall back to scanning all sources.
+	std::string contractName;
+	if (!_contractName.empty())
+		contractName = _contractName;
+	else if (_mainSourceName.has_value() && _sourceCode.count(_mainSourceName.value()) > 0)
+	{
+		contractName = m_compiler.lastContractName(_mainSourceName);
+		if (contractName.empty())
+			contractName = m_compiler.lastContractName(std::nullopt);
+	}
+	else
+		contractName = m_compiler.lastContractName(std::nullopt);
 	evmasm::LinkerObject obj = m_compiler.object(contractName);
 	BOOST_REQUIRE(obj.linkReferences.empty());
 	if (m_showMetadata)
