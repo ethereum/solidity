@@ -79,6 +79,8 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 		eth_add_cxx_compiler_flag_if_supported(-Wduplicate-enum)
 		eth_add_cxx_compiler_flag_if_supported(-Wlogical-op)
 		eth_add_cxx_compiler_flag_if_supported(-Wno-unknown-attributes)
+		# Clang 22 flags __COUNTER__ (used by Boost.Test macros) as a C2y extension under -pedantic.
+		eth_add_cxx_compiler_flag_if_supported(-Wno-c2y-extensions)
 	endif()
 
 	# Configuration-specific compiler settings.

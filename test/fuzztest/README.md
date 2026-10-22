@@ -25,3 +25,12 @@ cmake -S . -B build-prop -G Ninja -DPROPERTY_BASED_TESTS=ON
 # fuzzing mode (Clang required)
 CC=clang CXX=clang++ cmake -S . -B build-fuzz -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/fuzztest.cmake
 ```
+
+## evmone
+
+`solidity_fuzztest` compiles and runs contracts, so it needs `libevmone.so` to be loadable. It is picked up from the
+default library search path, or from `$ETH_EVMONE` if that is set:
+
+```sh
+LD_LIBRARY_PATH=/path/to/evmone/lib build/test/fuzztest/solidity_fuzztest
+```
