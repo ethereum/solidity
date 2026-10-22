@@ -25,14 +25,9 @@
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
-#include <range/v3/view/transform.hpp>
-#include <range/v3/view/zip.hpp>
-
-#include <array>
 #include <fstream>
-#include <iostream>
 #include <memory>
-#include <stdexcept>
+#include <ranges>
 #include <string>
 #include <utility>
 
@@ -66,8 +61,8 @@ void SMTLib2Interface::reset()
 			tupleSort.name,
 			tupleSort.members,
 			tupleSort.components
-				| ranges::views::transform([&](SortPointer const& sort){ return m_context.toSmtLibSort(sort); })
-				| ranges::to<std::vector>()
+				| std::views::transform([&](SortPointer const& sort){ return m_context.toSmtLibSort(sort); })
+				| std::ranges::to<std::vector>()
 		);
 	});
 }
@@ -292,9 +287,8 @@ void SMTLib2Commands::declareTuple(
 	auto quotedName = '|' + _name + '|';
 	std::stringstream ss;
 	ss << "(declare-datatypes ((" << quotedName << " 0)) (((" << quotedName;
-	for (auto && [memberName, memberSort]: ranges::views::zip(_memberNames, _memberSorts))
+	for (auto && [memberName, memberSort]: std::views::zip(_memberNames, _memberSorts))
 		ss << " (|" << memberName << "| " << memberSort << ")";
 	ss << "))))";
-	auto declaration = ss.str();
 	m_commands.push_back(ss.str());
 }

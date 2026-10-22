@@ -29,6 +29,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/throw_exception.hpp>
 
+#include <range/v3/algorithm/all_of.hpp>
 #include <range/v3/algorithm/find_if.hpp>
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/split.hpp>

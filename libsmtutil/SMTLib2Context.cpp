@@ -20,8 +20,6 @@
 
 #include <boost/functional/hash.hpp>
 
-#include <range/v3/algorithm/find_if.hpp>
-
 namespace solidity::smtutil
 {
 
@@ -99,13 +97,13 @@ SortPointer SMTLib2Context::unresolve(SortId _sortId) const
 		return SortProvider::boolSort;
 	case Kind::BitVector:
 	{
-		auto it = ranges::find_if(m_bitVectorSorts, [&](auto const& entry) { return entry.second == _sortId; });
+		auto it = std::ranges::find_if(m_bitVectorSorts, [&](auto const& entry) { return entry.second == _sortId; });
 		smtAssert(it != m_bitVectorSorts.end());
 		return std::make_shared<BitVectorSort>(it->first);
 	}
 	case Kind::Array:
 	{
-		auto it = ranges::find_if(m_arraySorts, [&](auto const& entry) { return entry.second == _sortId; });
+		auto it = std::ranges::find_if(m_arraySorts, [&](auto const& entry) { return entry.second == _sortId; });
 		smtAssert(it != m_arraySorts.end());
 		return std::make_shared<ArraySort>(unresolve(it->first.first), unresolve(it->first.second));
 	}

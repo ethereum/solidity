@@ -703,7 +703,7 @@ std::map<std::string, SortPointer> transactionMemberSorts()
 	};
 	auto types = transactionMemberTypes();
 	return types
-	| ranges::views::transform([&](auto const& entry) { return std::make_pair(entry.first, toSort(entry)); })
-	| ranges::to<std::map<std::string, SortPointer>>();
+	| std::views::transform([&](auto const& entry) { return std::make_pair(entry.first, toSort(entry)); })
+	| std::ranges::to<std::map<std::string, SortPointer>>();
 }
 }

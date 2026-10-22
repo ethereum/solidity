@@ -21,18 +21,13 @@
 #include <libsmtutil/Exceptions.h>
 #include <libsmtutil/Sorts.h>
 
-#include <libsolutil/Common.h>
 #include <libsolutil/Numeric.h>
 #include <libsolutil/CommonData.h>
 
-#include <range/v3/algorithm/all_of.hpp>
-#include <range/v3/range/conversion.hpp>
-#include <range/v3/view/split.hpp>
-
-#include <cstdio>
 #include <map>
 #include <memory>
 #include <optional>
+#include <ranges>
 #include <set>
 #include <string>
 #include <vector>
@@ -57,7 +52,7 @@ struct SMTSolverChoice
 	static std::optional<SMTSolverChoice> fromString(std::string const& _solvers)
 	{
 		SMTSolverChoice solvers;
-		for (auto&& s: _solvers | ranges::views::split(',') | ranges::to<std::vector<std::string>>())
+		for (auto&& s: _solvers | std::views::split(',') | std::ranges::to<std::vector<std::string>>())
 			if (!solvers.setSolver(s))
 				return {};
 
@@ -313,7 +308,7 @@ public:
 			return true;
 
 		auto sort = _args.front().sort;
-		return ranges::all_of(
+		return std::ranges::all_of(
 			_args,
 			[&](auto const& _expr){ return _expr.sort->kind == sort->kind; }
 		);

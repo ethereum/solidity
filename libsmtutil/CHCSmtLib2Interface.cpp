@@ -24,18 +24,10 @@
 #include <libsolutil/StringUtils.h>
 #include <libsolutil/Visitor.h>
 
-#include <boost/algorithm/string/join.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-
-#include <range/v3/algorithm/all_of.hpp>
-#include <range/v3/algorithm/sort.hpp>
-#include <range/v3/view.hpp>
-
-#include <array>
+#include <algorithm>
 #include <fstream>
-#include <iostream>
 #include <memory>
-#include <stdexcept>
+#include <ranges>
 
 using namespace solidity;
 using namespace solidity::util;
@@ -65,8 +57,8 @@ void CHCSmtLib2Interface::reset()
 			_tupleSort.name,
 			_tupleSort.members,
 			_tupleSort.components
-				| ranges::views::transform([&](SortPointer const& _sort){ return m_context.toSmtLibSort(_sort); })
-				| ranges::to<std::vector>()
+				| std::views::transform([&](SortPointer const& _sort){ return m_context.toSmtLibSort(_sort); })
+				| std::ranges::to<std::vector>()
 		);
 	});
 }
@@ -101,11 +93,11 @@ CHCSolverInterface::QueryResult CHCSmtLib2Interface::query(Expression const& _bl
 		// NOTE: Our internal semantics is UNSAT -> SAFE and SAT -> UNSAFE, which corresponds to usual SMT-based model checking
 		// However, with CHC solvers, the meaning is flipped, UNSAT -> UNSAFE and SAT -> SAFE.
 		// So we have to flip the answer.
-		if (boost::starts_with(response, "sat"))
+		if (response.starts_with("sat"))
 			return {CheckResult::UNSATISFIABLE, invariantsFromSolverResponse(response), {}};
-		if (boost::starts_with(response, "unsat"))
+		if (response.starts_with("unsat"))
 			result = CheckResult::SATISFIABLE;
-		else if (boost::starts_with(response, "unknown"))
+		else if (response.starts_with("unknown"))
 			result = CheckResult::UNKNOWN;
 		else
 			result = CheckResult::ERROR;
@@ -204,7 +196,7 @@ namespace
 {
 bool isNumber(std::string const& _expr)
 {
-	return ranges::all_of(_expr, [](char c) { return isDigit(c) || c == '.'; });
+	return std::ranges::all_of(_expr, [](char c) { return isDigit(c) || c == '.'; });
 }
 
 bool isBitVectorHexConstant(std::string const& _string)
@@ -469,7 +461,7 @@ CHCSmtLib2Interface::Invariants CHCSmtLib2Interface::invariantsFromSolverRespons
 
 		// Hack to make invariants more stable across operating systems
 		if (parsedInterpretation.name == "and" || parsedInterpretation.name == "or")
-			ranges::sort(parsedInterpretation.arguments, [](Expression const& first, Expression const& second) {
+			std::ranges::sort(parsedInterpretation.arguments, [](Expression const& first, Expression const& second) {
 				return first.name < second.name;
 			});
 

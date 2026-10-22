@@ -129,7 +129,7 @@ SMTCheckerTest::SMTCheckerTest(std::string const& _filename):
 		m_expectations = removeInv(std::move(m_expectations));
 
 	auto const& ignoreOSSetting = m_reader.stringSetting("SMTIgnoreOS", "none");
-	for (std::string const& os: ignoreOSSetting | ranges::views::split(',') | ranges::to<std::vector<std::string>>())
+	for (std::string const& os: ignoreOSSetting | std::views::split(',') | ranges::to<std::vector<std::string>>())
 	{
 #ifdef __APPLE__
 		if (os == "macos")

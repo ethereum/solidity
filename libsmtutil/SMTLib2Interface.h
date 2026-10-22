@@ -24,12 +24,9 @@
 
 #include <libsolidity/interface/ReadFile.h>
 
-#include <libsolutil/Common.h>
 #include <libsolutil/FixedHash.h>
 
-#include <cstdio>
 #include <map>
-#include <set>
 #include <string>
 #include <vector>
 
