@@ -54,7 +54,12 @@ bool isConstantVariableRecursive(VariableDeclaration const& _varDecl)
 
 	auto visitor = [](VariableDeclaration const& _variable, util::CycleDetector<VariableDeclaration>& _cycleDetector, size_t _depth)
 	{
-		solAssert(_depth < 256, "Recursion depth limit reached");
+		if (_depth >= 256)
+		{
+			// Signal as cyclic so callers report a proper error instead of an ICE.
+			_cycleDetector.run(_variable);
+			return;
+		}
 		if (!_variable.value())
 			// This should result in an error later on.
 			return;
