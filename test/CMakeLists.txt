@@ -33,7 +33,6 @@ set(libsolutil_sources
     libsolutil/CommonData.cpp
     libsolutil/CommonIO.cpp
     libsolutil/DisjointSet.cpp
-    libsolutil/DominatorFinderTest.cpp
     libsolutil/FixedHash.cpp
     libsolutil/FunctionSelector.cpp
     libsolutil/IpfsHash.cpp

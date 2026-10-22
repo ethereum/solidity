@@ -9,7 +9,6 @@ set(sources
 	CommonIO.h
 	DisjointSet.cpp
 	DisjointSet.h
-	DominatorFinder.h
 	Exceptions.cpp
 	Exceptions.h
 	ErrorCodes.h
