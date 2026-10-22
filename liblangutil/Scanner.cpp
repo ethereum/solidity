@@ -562,18 +562,16 @@ void Scanner::scanToken()
 				token = Token::LessThan;
 			break;
 		case '>':
-			// > >= >> >>= >>> >>>=
+			// > >= >> >>= 
 			advance();
 			if (m_char == '=')
 				token = selectToken(Token::GreaterThanOrEqual);
 			else if (m_char == '>')
 			{
-				// >> >>= >>> >>>=
+				// >> >>=
 				advance();
 				if (m_char == '=')
 					token = selectToken(Token::AssignSar);
-				else if (m_char == '>')
-					token = selectToken('=', Token::AssignShr, Token::SHR);
 				else
 					token = Token::SAR;
 			}

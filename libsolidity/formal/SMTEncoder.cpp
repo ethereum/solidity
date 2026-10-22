@@ -1948,7 +1948,6 @@ smtutil::Expression SMTEncoder::bitwiseOperation(
 		Token::BitOr,
 		Token::BitXor,
 		Token::SHL,
-		Token::SHR,
 		Token::SAR
 	};
 	solAssert(validOperators.count(_op), "");
@@ -1973,9 +1972,6 @@ smtutil::Expression SMTEncoder::bitwiseOperation(
 			break;
 		case Token::SHL:
 			result = bvLeft << bvRight;
-			break;
-		case Token::SHR:
-			result = bvLeft >> bvRight;
 			break;
 		case Token::SAR:
 			result = isSigned ?
@@ -2240,7 +2236,6 @@ smtutil::Expression SMTEncoder::compoundAssignment(Assignment const& _assignment
 		{Token::AssignBitOr, Token::BitOr},
 		{Token::AssignBitXor, Token::BitXor},
 		{Token::AssignShl, Token::SHL},
-		{Token::AssignShr, Token::SHR},
 		{Token::AssignSar, Token::SAR}
 	};
 	Token op = _assignment.assignmentOperator();

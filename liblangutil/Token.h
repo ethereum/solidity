@@ -93,7 +93,6 @@ namespace solidity::langutil
 	T(AssignBitAnd, "&=", 2)                                          \
 	T(AssignShl, "<<=", 2)                                            \
 	T(AssignSar, ">>=", 2)                                            \
-	T(AssignShr, ">>>=", 2)                                           \
 	T(AssignAdd, "+=", 2)                                             \
 	T(AssignSub, "-=", 2)                                             \
 	T(AssignMul, "*=", 2)                                             \
@@ -111,7 +110,6 @@ namespace solidity::langutil
 	T(BitAnd, "&", 10)                                                 \
 	T(SHL, "<<", 11)                                                   \
 	T(SAR, ">>", 11)                                                   \
-	T(SHR, ">>>", 11)                                                  \
 	T(Add, "+", 12)                                                    \
 	T(Sub, "-", 12)                                                    \
 	T(Mul, "*", 13)                                                    \
@@ -303,7 +301,7 @@ namespace TokenTraits
 	constexpr bool isBooleanOp(Token op) { return (Token::Or <= op && op <= Token::And) || op == Token::Not; }
 	constexpr bool isUnaryOp(Token op) { return (Token::Not <= op && op <= Token::Delete) || op == Token::Sub; }
 	constexpr bool isCountOp(Token op) { return op == Token::Inc || op == Token::Dec; }
-	constexpr bool isShiftOp(Token op) { return (Token::SHL <= op) && (op <= Token::SHR); }
+	constexpr bool isShiftOp(Token op) { return op == Token::SHL; }
 	constexpr bool isVariableVisibilitySpecifier(Token op) { return op == Token::Public || op == Token::Private || op == Token::Internal; }
 	constexpr bool isVisibilitySpecifier(Token op) { return isVariableVisibilitySpecifier(op) || op == Token::External; }
 	constexpr bool isLocationSpecifier(Token op) { return op == Token::Memory || op == Token::Storage || op == Token::CallData; }

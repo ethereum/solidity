@@ -415,7 +415,7 @@ expression:
 ;
 
 //@doc:inline
-assignOp: Assign | AssignBitOr | AssignBitXor | AssignBitAnd | AssignShl | AssignSar | AssignShr | AssignAdd | AssignSub | AssignMul | AssignDiv | AssignMod;
+assignOp: Assign | AssignBitOr | AssignBitXor | AssignBitAnd | AssignShl | AssignSar | AssignAdd | AssignSub | AssignMul | AssignDiv | AssignMod;
 tupleExpression: LParen (expression? ( Comma expression?)* ) RParen;
 /**
  * An inline array expression denotes a statically sized array of the common type of the contained expressions.
