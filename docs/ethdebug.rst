@@ -73,7 +73,7 @@ When that name is not unique within the compilation, it may be disambiguated wit
 
 The table contains a document for the types of the state variables of every contract and of the parameters and return variables of every function and modifier compiled into it, including the ones inherited from base contracts, free functions and the internal functions of libraries.
 Every type such a type is composed of has a document as well.
-Types that only exist at compile time, such as literals, type names or the ``msg`` and ``abi`` objects, have no document.
+Unnameable types, such as literals, type names or the ``msg`` and ``abi`` objects, have no document.
 
 Composite types reference their components by identifier, so that the table is closed:
 an array, a mapping or a user-defined value type refers to its element, key, value or underlying type as ``{"type": {"id": "t_uint256"}}`` and a struct lists its members with their ``name`` and such a reference.

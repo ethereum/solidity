@@ -14,7 +14,7 @@ It describes how the compiler derives the :ref:`ethdebug output <ethdebug>` from
 
 The documents are modelled as data structures in ``libevmasm/EthdebugSchema.h``, one per schema, and serialized to JSON from there.
 The constructors of the parts assert the constraints of the schemas, so that the compiler cannot assemble a document that does not serialize.
-The frontend side, ``libsolidity/interface/Ethdebug.cpp``, builds the type documents and the pointer templates of a contract from its AST and types.
+On the frontend side, ``TypeRegistry`` in ``libsolidity/interface/EthdebugTypeRegistry.h`` builds the type documents and ``PointerTemplateRegistry`` in ``libsolidity/interface/EthdebugPointerTemplateRegistry.h`` the pointer templates, which ``ethdebug::resources()`` in ``libsolidity/interface/Ethdebug.cpp`` collects for a contract.
 
 Type Documents
 ==============
@@ -32,8 +32,7 @@ The resources of a compilation are the union of the resources of its contracts.
 Types are keyed by ``Type::identifier()`` of the type as documented, so a type shared between contracts has one document.
 A reference type is documented as its variant in storage, ``TypeProvider::withLocationIfReference(DataLocation::Storage, ...)``, and an array slice as the array it views, so that every data location of a type shares one document; the location is the pointer's to describe.
 
-A type that only exists at compile time has no document, and neither has a type composed of one.
-This concerns literals, type names, modifiers, magic types, modules, inaccessible dynamic types and function types other than internal and external ones.
+Unnameable types, such as literals, type names, modifiers, magic types, modules, inaccessible dynamic types and function types other than internal and external ones, have no runtime representation and cannot be the type of a variable, so they never reach the type registry, which asserts that.
 To terminate on recursive types, a placeholder is registered before the components of a type are visited and replaced by the document afterwards.
 
 The Mapping
