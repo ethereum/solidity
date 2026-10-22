@@ -380,7 +380,7 @@ private:
 	/// An index of low-level function labels by name.
 	std::map<std::string, evmasm::AssemblyItem> m_lowLevelFunctions;
 	/// Collector for yul functions.
-	MultiUseYulFunctionCollector m_yulFunctionCollector;
+	MultiUseYulFunctionCollector m_yulFunctionCollector{m_evmVersion, m_revertStrings};
 	/// Set of externally used yul functions.
 	std::set<std::string> m_externallyUsedYulFunctions;
 	/// Generated Yul code used as utility. Source references from the bytecode can point here.

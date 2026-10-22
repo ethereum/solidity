@@ -427,29 +427,29 @@ std::string YulUtilFunctions::leftAlignFunction(Type const& _type)
 	});
 }
 
-std::string YulUtilFunctions::shiftLeftFunction(size_t _numBits)
+std::string YulUtilFunctions::shiftLeftFunction(size_t _numBits) const
 {
-	solAssert(_numBits < 256, "");
-
-	std::string functionName = "shift_left_" + std::to_string(_numBits);
-	return m_functionCollector.createFunction(functionName, [&]() {
-		return
-			Whiskers(R"(
-			function <functionName>(value) -> newValue {
-				newValue :=
-				<?hasShifts>
-					shl(<numBits>, value)
-				<!hasShifts>
-					mul(value, <multiplier>)
-				</hasShifts>
-			}
-			)")
-			("functionName", functionName)
-			("numBits", std::to_string(_numBits))
-			("hasShifts", m_evmVersion.hasBitwiseShifting())
-			("multiplier", toCompactHexWithPrefix(u256(1) << _numBits))
-			.render();
-	});
+	solAssert(_numBits < 256);
+	static yulcache::FunctionKind<size_t> constexpr shiftLeftKind{
+		.name = [](size_t const& _numBits) { return "shift_left_" + std::to_string(_numBits); },
+		.define = [](yulcache::FunctionEnv const& _env, size_t const& _numBits) {
+			return
+				Whiskers(R"(
+				function <functionName>(value) -> newValue {
+					newValue :=
+					<?hasShifts>
+						shl(<numBits>, value)
+					<!hasShifts>
+						mul(value, <multiplier>)
+					</hasShifts>
+				}
+				)")
+				("numBits", std::to_string(_numBits))
+				("hasShifts", _env.evmVersion().hasBitwiseShifting())
+				("multiplier", toCompactHexWithPrefix(u256(1) << _numBits));
+		},
+	};
+	return m_functionCollector.request<shiftLeftKind>(_numBits);
 }
 
 std::string YulUtilFunctions::shiftLeftFunctionDynamic()
@@ -2942,7 +2942,7 @@ std::string YulUtilFunctions::updateStorageValueFunction(
 	Type const& _toType,
 	VariableDeclaration::Location _location,
 	std::optional<unsigned> const& _offset
-)
+) const
 {
 	solAssert(
 		_location == VariableDeclaration::Location::Transient ||
@@ -2950,115 +2950,136 @@ std::string YulUtilFunctions::updateStorageValueFunction(
 		"Variable location can only be transient or plain storage"
 	);
 
-	std::string const functionName =
-		"update_" +
-		(_location == VariableDeclaration::Location::Transient ? "transient_"s : "") +
-		"storage_value_" +
-		(_offset.has_value() ? ("offset_" + std::to_string(*_offset)) + "_" : "") +
-		_fromType.identifier() +
-		"_to_" +
-		_toType.identifier();
+	static yulcache::FunctionKind<
+		Type,
+		Type,
+		VariableDeclaration::Location,
+		std::optional<unsigned>
+	> constexpr updateStorageValueKind{
+		.name = [](
+			Type const& _fromType,
+			Type const& _toType,
+			VariableDeclaration::Location const& _location,
+			std::optional<unsigned> const& _offset
+		) {
+			return
+				"update_" +
+				(_location == VariableDeclaration::Location::Transient ? "transient_"s : "") +
+				"storage_value_" +
+				(_offset.has_value() ? ("offset_" + std::to_string(*_offset)) + "_" : "") +
+				_fromType.identifier() +
+				"_to_" +
+				_toType.identifier();
+		},
+		.define = [](
+			yulcache::FunctionEnv const& _env,
+			Type const& _fromType,
+			Type const& _toType,
+			VariableDeclaration::Location const& _location,
+			std::optional<unsigned> const& _offset
+		) {
+			YulUtilFunctions utils = _env.utils();
+			if (_toType.isValueType())
+			{
+				solAssert(_fromType.isImplicitlyConvertibleTo(_toType), "");
+				solAssert(_toType.storageBytes() <= 32, "Invalid storage bytes size.");
+				solAssert(_toType.storageBytes() > 0, "Invalid storage bytes size.");
 
-	return m_functionCollector.createFunction(functionName, [&] {
-		if (_toType.isValueType())
-		{
-			solAssert(_fromType.isImplicitlyConvertibleTo(_toType), "");
-			solAssert(_toType.storageBytes() <= 32, "Invalid storage bytes size.");
-			solAssert(_toType.storageBytes() > 0, "Invalid storage bytes size.");
+				return Whiskers(R"(
+					function <functionName>(slot, <offset><fromValues>) {
+						let <toValues> := <convert>(<fromValues>)
+						<storeOpcode>(slot, <update>(<loadOpcode>(slot), <offset><prepare>(<toValues>)))
+					}
 
-			return Whiskers(R"(
-				function <functionName>(slot, <offset><fromValues>) {
-					let <toValues> := <convert>(<fromValues>)
-					<storeOpcode>(slot, <update>(<loadOpcode>(slot), <offset><prepare>(<toValues>)))
-				}
-
-			)")
-			("functionName", functionName)
-			("update",
-				_offset.has_value() ?
-					updateByteSliceFunction(_toType.storageBytes(), *_offset) :
-					updateByteSliceFunctionDynamic(_toType.storageBytes())
-			)
-			("offset", _offset.has_value() ? "" : "offset, ")
-			("convert", conversionFunction(_fromType, _toType))
-			("fromValues", suffixedVariableNameList("value_", 0, _fromType.sizeOnStack()))
-			("toValues", suffixedVariableNameList("convertedValue_", 0, _toType.sizeOnStack()))
-			("storeOpcode", _location == VariableDeclaration::Location::Transient ? "tstore" : "sstore")
-			("loadOpcode", _location == VariableDeclaration::Location::Transient ? "tload" : "sload")
-			("prepare", prepareStoreFunction(_toType))
-			.render();
-		}
-
-		solAssert(_location != VariableDeclaration::Location::Transient);
-		auto const* toReferenceType = dynamic_cast<ReferenceType const*>(&_toType);
-		auto const* fromReferenceType = dynamic_cast<ReferenceType const*>(&_fromType);
-		solAssert(toReferenceType, "");
-
-		if (!fromReferenceType)
-		{
-			solAssert(_fromType.category() == Type::Category::StringLiteral, "");
-			solAssert(toReferenceType->category() == Type::Category::Array, "");
-			auto const& toArrayType = dynamic_cast<ArrayType const&>(*toReferenceType);
-			solAssert(toArrayType.isByteArrayOrString(), "");
-
-			return Whiskers(R"(
-				function <functionName>(slot<?dynamicOffset>, offset</dynamicOffset>) {
-					<?dynamicOffset>if offset { <panic>() }</dynamicOffset>
-					<copyToStorage>(slot)
-				}
-			)")
-			("functionName", functionName)
-			("dynamicOffset", !_offset.has_value())
-			("panic", panicFunction(PanicCode::Generic))
-			("copyToStorage", copyLiteralToStorageFunction(dynamic_cast<StringLiteralType const&>(_fromType).value()))
-			.render();
-		}
-
-		solAssert((*toReferenceType->copyForLocation(
-			fromReferenceType->location(),
-			fromReferenceType->isPointer()
-		).get()).equals(*fromReferenceType), "");
-
-		if (fromReferenceType->category() == Type::Category::ArraySlice)
-			solAssert(toReferenceType->category() == Type::Category::Array, "");
-		else
-			solAssert(toReferenceType->category() == fromReferenceType->category(), "");
-		solAssert(_offset.value_or(0) == 0, "");
-
-		Whiskers templ(R"(
-			function <functionName>(slot, <?dynamicOffset>offset, </dynamicOffset><value>) {
-				<?dynamicOffset>if offset { <panic>() }</dynamicOffset>
-				<copyToStorage>(slot, <value>)
+				)")
+				("update",
+					_offset.has_value() ?
+						utils.updateByteSliceFunction(_toType.storageBytes(), *_offset) :
+						utils.updateByteSliceFunctionDynamic(_toType.storageBytes())
+				)
+				("offset", _offset.has_value() ? "" : "offset, ")
+				("convert", utils.conversionFunction(_fromType, _toType))
+				("fromValues", suffixedVariableNameList("value_", 0, _fromType.sizeOnStack()))
+				("toValues", suffixedVariableNameList("convertedValue_", 0, _toType.sizeOnStack()))
+				("storeOpcode", _location == VariableDeclaration::Location::Transient ? "tstore" : "sstore")
+				("loadOpcode", _location == VariableDeclaration::Location::Transient ? "tload" : "sload")
+				("prepare", utils.prepareStoreFunction(_toType));
 			}
-		)");
-		templ("functionName", functionName);
-		templ("dynamicOffset", !_offset.has_value());
-		templ("panic", panicFunction(PanicCode::Generic));
-		templ("value", suffixedVariableNameList("value_", 0, _fromType.sizeOnStack()));
-		if (_fromType.category() == Type::Category::Array)
-			templ("copyToStorage", copyArrayToStorageFunction(
-				dynamic_cast<ArrayType const&>(_fromType),
-				dynamic_cast<ArrayType const&>(_toType)
-			));
-		else if (_fromType.category() == Type::Category::ArraySlice)
-		{
-			solAssert(
-				_fromType.dataStoredIn(DataLocation::CallData),
-				"Currently only calldata array slices are supported!"
-			);
-			templ("copyToStorage", copyArrayToStorageFunction(
-				dynamic_cast<ArraySliceType const&>(_fromType).arrayType(),
-				dynamic_cast<ArrayType const&>(_toType)
-			));
-		}
-		else
-			templ("copyToStorage", copyStructToStorageFunction(
-				dynamic_cast<StructType const&>(_fromType),
-				dynamic_cast<StructType const&>(_toType)
-			));
 
-		return templ.render();
-	});
+			solAssert(_location != VariableDeclaration::Location::Transient);
+			auto const* toReferenceType = dynamic_cast<ReferenceType const*>(&_toType);
+			auto const* fromReferenceType = dynamic_cast<ReferenceType const*>(&_fromType);
+			solAssert(toReferenceType, "");
+
+			if (!fromReferenceType)
+			{
+				solAssert(_fromType.category() == Type::Category::StringLiteral, "");
+				solAssert(toReferenceType->category() == Type::Category::Array, "");
+				auto const& toArrayType = dynamic_cast<ArrayType const&>(*toReferenceType);
+				solAssert(toArrayType.isByteArrayOrString(), "");
+
+				return Whiskers(R"(
+					function <functionName>(slot<?dynamicOffset>, offset</dynamicOffset>) {
+						<?dynamicOffset>if offset { <panic>() }</dynamicOffset>
+						<copyToStorage>(slot)
+					}
+				)")
+				("dynamicOffset", !_offset.has_value())
+				("panic", utils.panicFunction(PanicCode::Generic))
+				("copyToStorage", utils.copyLiteralToStorageFunction(dynamic_cast<StringLiteralType const&>(_fromType).value()));
+			}
+
+			solAssert((*toReferenceType->copyForLocation(
+				fromReferenceType->location(),
+				fromReferenceType->isPointer()
+			).get()).equals(*fromReferenceType), "");
+
+			if (fromReferenceType->category() == Type::Category::ArraySlice)
+				solAssert(toReferenceType->category() == Type::Category::Array, "");
+			else
+				solAssert(toReferenceType->category() == fromReferenceType->category(), "");
+			solAssert(_offset.value_or(0) == 0, "");
+
+			Whiskers templ(R"(
+				function <functionName>(slot, <?dynamicOffset>offset, </dynamicOffset><value>) {
+					<?dynamicOffset>if offset { <panic>() }</dynamicOffset>
+					<copyToStorage>(slot, <value>)
+				}
+			)");
+			templ("dynamicOffset", !_offset.has_value());
+			templ("panic", utils.panicFunction(PanicCode::Generic));
+			templ("value", suffixedVariableNameList("value_", 0, _fromType.sizeOnStack()));
+			if (_fromType.category() == Type::Category::Array)
+				templ("copyToStorage", utils.copyArrayToStorageFunction(
+					dynamic_cast<ArrayType const&>(_fromType),
+					dynamic_cast<ArrayType const&>(_toType)
+				));
+			else if (_fromType.category() == Type::Category::ArraySlice)
+			{
+				solAssert(
+					_fromType.dataStoredIn(DataLocation::CallData),
+					"Currently only calldata array slices are supported!"
+				);
+				templ("copyToStorage", utils.copyArrayToStorageFunction(
+					dynamic_cast<ArraySliceType const&>(_fromType).arrayType(),
+					dynamic_cast<ArrayType const&>(_toType)
+				));
+			}
+			else
+				templ("copyToStorage", utils.copyStructToStorageFunction(
+					dynamic_cast<StructType const&>(_fromType),
+					dynamic_cast<StructType const&>(_toType)
+				));
+
+			return templ;
+		},
+	};
+	return m_functionCollector.request<updateStorageValueKind>(
+		_fromType,
+		_toType,
+		_location,
+		_offset
+	);
 }
 
 std::string YulUtilFunctions::writeToMemoryFunction(Type const& _type)
@@ -4372,7 +4393,10 @@ std::string YulUtilFunctions::zeroValueFunction(Type const& _type, bool _splitFu
 	});
 }
 
-std::string YulUtilFunctions::storageSetToZeroFunction(Type const& _type, VariableDeclaration::Location _location)
+std::string YulUtilFunctions::storageSetToZeroFunction(
+	Type const& _type,
+	VariableDeclaration::Location _location
+) const
 {
 	solAssert(
 		_location == VariableDeclaration::Location::Transient ||
@@ -4386,49 +4410,55 @@ std::string YulUtilFunctions::storageSetToZeroFunction(Type const& _type, Variab
 			_type.dataStoredIn(DataLocation::Storage)
 		);
 
-	std::string const functionName =
-		(_location == VariableDeclaration::Location::Transient ? "transient_"s : "") +
-		"storage_set_to_zero_" +
-		_type.identifier();
-
-	return m_functionCollector.createFunction(functionName, [&]() {
-		if (_type.isValueType())
-			return Whiskers(R"(
-				function <functionName>(slot, offset) {
-					let <values> := <zeroValue>()
-					<store>(slot, offset, <values>)
-				}
-			)")
-			("functionName", functionName)
-			("store", updateStorageValueFunction(_type, _type, _location))
-			("values", suffixedVariableNameList("zero_", 0, _type.sizeOnStack()))
-			("zeroValue", zeroValueFunction(_type))
-			.render();
-		else if (_type.category() == Type::Category::Array)
-			return Whiskers(R"(
-				function <functionName>(slot, offset) {
-					if iszero(eq(offset, 0)) { <panic>() }
-					<clearArray>(slot)
-				}
-			)")
-			("functionName", functionName)
-			("clearArray", clearStorageArrayFunction(dynamic_cast<ArrayType const&>(_type)))
-			("panic", panicFunction(PanicCode::Generic))
-			.render();
-		else if (_type.category() == Type::Category::Struct)
-			return Whiskers(R"(
-				function <functionName>(slot, offset) {
-					if iszero(eq(offset, 0)) { <panic>() }
-					<clearStruct>(slot)
-				}
-			)")
-			("functionName", functionName)
-			("clearStruct", clearStorageStructFunction(dynamic_cast<StructType const&>(_type)))
-			("panic", panicFunction(PanicCode::Generic))
-			.render();
-		else
-			solUnimplemented("setToZero for type " + _type.identifier() + " not yet implemented!");
-	});
+	static yulcache::FunctionKind<
+		Type,
+		VariableDeclaration::Location
+	> constexpr storageSetToZeroKind{
+		.name = [](Type const& _type, VariableDeclaration::Location const& _location) {
+			return
+				(_location == VariableDeclaration::Location::Transient ? "transient_"s : "") +
+				"storage_set_to_zero_" +
+				_type.identifier();
+		},
+		.define = [](
+			yulcache::FunctionEnv const& _env,
+			Type const& _type,
+			VariableDeclaration::Location const& _location
+		) {
+			YulUtilFunctions utils = _env.utils();
+			if (_type.isValueType())
+				return Whiskers(R"(
+					function <functionName>(slot, offset) {
+						let <values> := <zeroValue>()
+						<store>(slot, offset, <values>)
+					}
+				)")
+				("store", utils.updateStorageValueFunction(_type, _type, _location))
+				("values", suffixedVariableNameList("zero_", 0, _type.sizeOnStack()))
+				("zeroValue", utils.zeroValueFunction(_type));
+			else if (_type.category() == Type::Category::Array)
+				return Whiskers(R"(
+					function <functionName>(slot, offset) {
+						if iszero(eq(offset, 0)) { <panic>() }
+						<clearArray>(slot)
+					}
+				)")
+				("clearArray", utils.clearStorageArrayFunction(dynamic_cast<ArrayType const&>(_type)))
+				("panic", utils.panicFunction(PanicCode::Generic));
+			else if (_type.category() == Type::Category::Struct)
+				return Whiskers(R"(
+					function <functionName>(slot, offset) {
+						if iszero(eq(offset, 0)) { <panic>() }
+						<clearStruct>(slot)
+					}
+				)")
+				("clearStruct", utils.clearStorageStructFunction(dynamic_cast<StructType const&>(_type)))
+				("panic", utils.panicFunction(PanicCode::Generic));
+			else
+				solUnimplemented("setToZero for type " + _type.identifier() + " not yet implemented!");
+		},
+	};
+	return m_functionCollector.request<storageSetToZeroKind>(_type, _location);
 }
 
 std::string YulUtilFunctions::conversionFunctionSpecial(Type const& _from, Type const& _to)

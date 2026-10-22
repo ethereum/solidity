@@ -174,7 +174,7 @@ private:
 	std::optional<size_t> m_reservedMemory = {0};
 	/// Storage offsets of state variables
 	std::map<VariableDeclaration const*, std::pair<u256, unsigned>> m_stateVariables;
-	MultiUseYulFunctionCollector m_functions;
+	MultiUseYulFunctionCollector m_functions{m_evmVersion, m_revertStrings};
 	size_t m_varCounter = 0;
 
 	/// Flag indicating whether any memory-unsafe inline assembly block was seen.
