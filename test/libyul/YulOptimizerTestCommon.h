@@ -58,6 +58,9 @@ public:
 private:
 	Block disambiguate();
 	void updateContext(Block const& _block);
+	/// Runs only @a Step, after the ForLoopInitRewriter, which all steps using it require.
+	template<typename Step>
+	std::function<Block()> soloStep();
 
 	std::string m_optimizerStep;
 

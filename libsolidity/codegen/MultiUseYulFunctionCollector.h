@@ -30,6 +30,7 @@
 #include <string>
 #include <string_view>
 #include <typeindex>
+#include <vector>
 
 namespace solidity::frontend
 {

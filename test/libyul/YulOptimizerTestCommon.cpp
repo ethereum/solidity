@@ -77,6 +77,18 @@ using namespace solidity::yul;
 using namespace solidity::yul::test;
 using namespace solidity::frontend;
 
+template<typename Step>
+std::function<Block()> YulOptimizerTestCommon::soloStep()
+{
+	return [this]() {
+		auto block = disambiguate();
+		updateContext(block);
+		ForLoopInitRewriter::run(*m_context, block);
+		Step::run(*m_context, block);
+		return block;
+	};
+}
+
 YulOptimizerTestCommon::YulOptimizerTestCommon(std::shared_ptr<Object const> _obj):
 	m_object(_obj),
 	m_optimizedObject(std::make_shared<Object>(*_obj))
@@ -345,14 +357,12 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(std::shared_ptr<Object const> _ob
 			ExpressionJoiner::run(*m_context, block);
 			return block;
 		}},
-		{"loadResolverSolo", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
-			ForLoopInitRewriter::run(*m_context, block);
-
-			LoadResolver::run(*m_context, block);
-			return block;
-		}},
+		{"loadResolverSolo", soloStep<LoadResolver>()},
+		{"commonSubexpressionEliminatorSolo", soloStep<CommonSubexpressionEliminator>()},
+		{"equalStoreEliminatorSolo", soloStep<EqualStoreEliminator>()},
+		{"rematerialiserSolo", soloStep<Rematerialiser>()},
+		{"literalRematerialiserSolo", soloStep<LiteralRematerialiser>()},
+		{"expressionSimplifierSolo", soloStep<ExpressionSimplifier>()},
 		{"loopInvariantCodeMotion", [&]() {
 			auto block = disambiguate();
 			updateContext(block);
