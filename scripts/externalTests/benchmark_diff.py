@@ -350,7 +350,7 @@ def process_commandline() -> CommandLineOptions:
         choices=[m.value for m in DiffMode],
         help=(
             "Diff mode: "
-            f"'{DiffMode.IN_PLACE.value}' preserves input JSON structure and replace values with differences; "
+            f"'{DiffMode.IN_PLACE.value}' preserves input JSON structure and replaces values with differences; "
             f"'{DiffMode.TABLE.value}' creates a table assuming 3-level project/preset/attribute structure."
         )
     )
