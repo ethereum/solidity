@@ -151,6 +151,9 @@ ErrorList const& ErrorReporter::errors() const
 void ErrorReporter::clear()
 {
 	m_errorList.clear();
+	m_errorCount = 0;
+	m_warningCount = 0;
+	m_infoCount = 0;
 }
 
 void ErrorReporter::declarationError(ErrorId _error, SourceLocation const& _location, SecondarySourceLocation const& _secondaryLocation, std::string const& _description)

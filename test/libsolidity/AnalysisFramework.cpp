@@ -229,3 +229,14 @@ FunctionTypePointer AnalysisFramework::retrieveFunctionBySignature(
 {
 	return _contract.interfaceFunctions()[util::selectorFromSignatureH32(_signature)];
 }
+
+std::ostream& solidity::frontend::test::operator<<(std::ostream& _out, PipelineStage _value)
+{
+	switch (_value)
+	{
+	case PipelineStage::Parsing: return _out << "parsing";
+	case PipelineStage::Analysis: return _out << "analysis";
+	case PipelineStage::Compilation: return _out << "compilation";
+	default: soltestAssert(false);
+	}
+}

@@ -6,4 +6,5 @@ contract test {
 }
 // ====
 // EVMVersion: =homestead
+// compileViaYul: false
 // ----

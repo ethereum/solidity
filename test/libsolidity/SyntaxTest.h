@@ -28,6 +28,8 @@
 
 #include <libsolutil/AnsiColorized.h>
 
+#include <iosfwd>
+#include <ostream>
 #include <string>
 
 namespace solidity::frontend::test
@@ -37,13 +39,53 @@ using solidity::test::CompilerInput;
 using solidity::test::SyntaxTestError;
 
 /**
+ * Reflects `compileViaYul` setting, with possible values: `true`, `false` and `also` (default).
+ */
+enum class CompileViaYul
+{
+	True,
+	False,
+	Also
+};
+
+std::ostream& operator<<(std::ostream& _out, CompileViaYul _value);
+
+/**
+ * Reflects `compileViaSSACFG` setting, with possible values: `true`, `false` and `also` (default).
+ */
+enum class CompileViaSSACFG
+{
+	True,
+	False,
+	Also
+};
+
+std::ostream& operator<<(std::ostream& _out, CompileViaSSACFG _value);
+
+/**
+ * Identifies the test passes.
+ */
+enum class TestPass
+{
+	Legacy,
+	ViaYul,
+	ViaYulWithSSACFG,
+};
+
+/**
  * Settings that reflect what is configured in each test file.
  *
  * Available settings:
  *
  * - stopAfter: `parsing`, `analysis`, or `compilation` (default: `compilation`).
  * - experimental: `true` or `false`. When not set, experimental mode is enabled
- *   automatically when needed.
+ *   automatically when compiling via SSA CFG and disabled otherwise.
+ * - compileViaYul: `true`, `false`, or `also` (default: `also`).
+ *   `true` runs the Yul pipeline only, `false` runs the legacy pipeline only,
+ *   `also` runs both.
+ * - compileViaSSACFG: `true`, `false`, or `also` (default: `also`).
+ *   `true` runs the Yul + SSA CFG pipeline only (requires experimental mode),
+ *   `false` skips the SSA CFG pass, `also` runs both Yul-only and Yul + SSA CFG passes.
  * - optimize-yul: `true` or `false` (default: `true`).
  */
 struct SyntaxTestSettings
@@ -52,9 +94,10 @@ struct SyntaxTestSettings
 	static SyntaxTestSettings fromReader(TestCaseReader& _reader);
 
 	PipelineStage stopAfter = PipelineStage::Compilation;
-	bool experimental = false;
+	std::optional<bool> experimental = std::nullopt;
 
-	std::string compileViaYul = "false";
+	CompileViaYul compileViaYul = CompileViaYul::False;
+	CompileViaSSACFG compileViaSSACFG = CompileViaSSACFG::False;
 	bool optimizeYul = false;
 };
 
@@ -79,7 +122,25 @@ public:
 protected:
 	void setupCompiler(CompilerStack& _compiler) override;
 	void parseAndAnalyze() override;
+
+	TestCase::TestResult run(
+		std::ostream& _stream,
+		std::string const& _linePrefix,
+		bool _formatted
+	) override;
+
+	/// Filters out all errors with a severity below `m_minSeverity`.
 	virtual void filterObtainedErrors();
+
+	/// Throws if an internal compiler error was encountered during code generation.
+	void reportUnexpectedErrors();
+
+	/// Prints global options and local settings for debugging purposes.
+	void printOptionsAndSettings(
+		std::ostream& _stream,
+		std::string const& _linePrefix,
+		TestPass const& _pass
+	);
 
 	langutil::Error::Severity m_minSeverity{};
 	SyntaxTestSettings m_settings;

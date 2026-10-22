@@ -23,9 +23,10 @@
 
 #include <test/libsolidity/ErrorCheck.h>
 
+
 #include <libsolidity/interface/CompilerStack.h>
 
-#include <functional>
+#include <ostream>
 #include <string>
 #include <memory>
 
@@ -44,6 +45,8 @@ enum class PipelineStage {
 	Analysis,
 	Compilation,
 };
+
+std::ostream& operator<<(std::ostream& _out, PipelineStage _value);
 
 class AnalysisFramework
 {

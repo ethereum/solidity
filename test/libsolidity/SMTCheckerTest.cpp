@@ -149,6 +149,11 @@ SMTCheckerTest::SMTCheckerTest(std::string const& _filename):
 
 	auto const& bmcLoopIterations = m_reader.sizetSetting("BMCLoopIterations", 1);
 	m_compilerInput.modelCheckerSettings.bmcLoopIterations = std::optional<unsigned>{bmcLoopIterations};
+
+	// The SMTChecker only runs during the analysis phase and does not need the Yul pipeline.
+	// Override the default to only run the legacy pipeline, unless the test file explicitly sets compileViaYul.
+	if (m_reader.settings().count("compileViaYul") == 0)
+		m_settings.compileViaYul = CompileViaYul::False;
 }
 
 void SMTCheckerTest::setupCompiler(CompilerStack& _compiler)
