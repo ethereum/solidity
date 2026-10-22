@@ -9,7 +9,13 @@
 # that refer to the same person (diacritics vs no diacritics, name vs nickname, etc.).
 #
 # Usage:
-#    <script name>.sh <revision>
+#    <script name>.sh [--yes] <revision> [<target-ref>]
+#
+# Arguments:
+#    --yes, -y     - Skip confirmation prompt
+#    <revision>    - Starting revision (e.g., v0.8.32)
+#    <target-ref>  - Target ref to compare against (default: develop)
+#                    Examples: develop, origin/develop, upstream/develop
 #
 # ------------------------------------------------------------------------------
 # This file is part of solidity.
@@ -36,13 +42,44 @@ script_dir=$(dirname "$0")
 # shellcheck source=scripts/common.sh
 source "${script_dir}/common.sh"
 
-(( $# == 1)) || fail "Wrong number of arguments. Usage: $0 <revision>."
+skip_confirm=false
+args=()
+while [[ $# -gt 0 ]]
+do
+    case "$1" in
+        --yes|-y)
+            skip_confirm=true
+            ;;
+        -*)
+            fail "Unknown option: $1. Usage: $0 [--yes] <revision> [<target-ref>]."
+            ;;
+        *)
+            args+=("$1")
+            ;;
+    esac
+    shift
+done
 
-revision="$1"
+(( ${#args[@]} >= 1 && ${#args[@]} <= 2 )) || fail "Wrong number of arguments. Usage: $0 [--yes] <revision> [<target-ref>]."
+
+revision="${args[0]}"
+# Default to local develop and its configured tracking branch
+target_ref="${args[1]:-develop}"
+
+git rev-parse --verify "$revision" > /dev/null 2>&1 || fail "Invalid revision: $revision"
+git rev-parse --verify "$target_ref" > /dev/null 2>&1 || fail "Invalid target ref: $target_ref"
+
+upstream=$(git rev-parse --abbrev-ref "${target_ref}@{upstream}" 2>/dev/null || true)
+printWarning "Listing contributors from ${revision} to ${target_ref}${upstream:+ (tracking: $upstream)}..."
+
+if [[ "$skip_confirm" != true ]]; then
+    read -r -p "Continue? [y/N] " response
+    [[ "$response" =~ ^[Yy]$ ]] || exit 0
+fi
 
 # NOTE: Commas are removed from any names containing them. It would look confusing otherwise, given
 # that the list is delimited by commas. Hopefully no contributor uses a comma as their nickname.
-git shortlog --summary "${revision}..origin/develop" |
+git shortlog --summary "${revision}..${target_ref}" |
     cut --field 2 |
     tr --delete , |
     sort |
