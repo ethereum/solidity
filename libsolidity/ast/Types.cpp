@@ -1755,6 +1755,10 @@ BoolResult ArrayType::validForLocation(DataLocation _loc) const
 		}
 		case DataLocation::CallData:
 		{
+			// A type without an ABI encoding, e.g. a struct with an internal function member,
+			// has no calldata size to check.
+			if (!interfaceType(false).get())
+				break;
 			if (unlimitedStaticCalldataSize(true) >= std::numeric_limits<unsigned>::max())
 				return BoolResult::err("Type too large for calldata.");
 			break;
