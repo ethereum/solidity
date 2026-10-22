@@ -8,8 +8,8 @@ Contracts can be created "from outside" via Ethereum transactions or from within
 
 IDEs, such as `Remix <https://remix.ethereum.org/>`_, make the creation process seamless using UI elements.
 
-One way to create contracts programmatically on Ethereum is via the JavaScript API `web3.js <https://github.com/web3/web3.js>`_.
-It has a function called `web3.eth.Contract <https://web3js.readthedocs.io/en/1.0/web3-eth-contract.html#new-contract>`_
+One way to create contracts programmatically on Ethereum is via the JavaScript API `ethers.js <https://github.com/ethers-io/ethers.js>`_.
+It has a function called `ethers.Contract <https://docs.ethers.org/v6/api/contract/#Contract>`_
 to facilitate contract creation.
 
 When a contract is created, its :ref:`constructor <constructor>` (a function declared with
@@ -26,7 +26,7 @@ include the constructor code or internal functions only called from the construc
 .. index:: constructor;arguments
 
 Internally, constructor arguments are passed :ref:`ABI encoded <ABI>` after the code of
-the contract itself, but you do not have to care about this if you use ``web3.js``.
+the contract itself, but you do not have to care about this if you use ``ethers.js``.
 
 If a contract wants to create another contract, the source code
 (and the binary) of the created contract has to be known to the creator.
