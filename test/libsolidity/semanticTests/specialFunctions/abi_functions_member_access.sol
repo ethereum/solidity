@@ -2,6 +2,7 @@ contract C {
     function f() public pure {
         abi.encode;
         abi.encodePacked;
+        abi.encodeCall;
         abi.encodeWithSelector;
         abi.encodeWithSignature;
         abi.decode;
