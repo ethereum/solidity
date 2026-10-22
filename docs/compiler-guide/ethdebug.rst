@@ -25,7 +25,7 @@ Which Types Get a Document
 The resources of a contract contain a document for
 
 - the types of its state variables in storage and transient storage,
-- the types of the parameters and return variables of every function and modifier compiled into the contract: the ones it defines, the ones it inherits, the free functions of the source units it references and the internal functions of the libraries in those source units,
+- the types of the parameters and return variables of every function and modifier compiled into the contract, which are the ones its creation and deployed call graphs (``ContractDefinitionAnnotation::creationCallGraph`` and ``deployedCallGraph``) reach: its own and inherited ones, free functions and internal library functions,
 - and, transitively, every type these types are composed of.
 
 The resources of a compilation are the union of the resources of its contracts.

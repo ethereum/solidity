@@ -19,11 +19,13 @@
 #include <libsolidity/interface/Ethdebug.h>
 
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/CallGraph.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/interface/EthdebugPointerTemplateRegistry.h>
 #include <libsolidity/interface/EthdebugTypeRegistry.h>
 
 #include <set>
+#include <variant>
 
 using namespace solidity;
 using namespace solidity::frontend;
@@ -61,31 +63,23 @@ ethdebug::Resources ethdebug::resources(ContractDefinition const& _contract, std
 	addStateVariables(DataLocation::Storage);
 	addStateVariables(DataLocation::Transient);
 
-	// Inherited functions and modifiers are compiled into the most derived
-	// contract, so every linearized base contract contributes its types.
-	for (ContractDefinition const* contract: _contract.annotation().linearizedBaseContracts)
-	{
-		for (FunctionDefinition const* function: contract->definedFunctions())
-			types.registerCallableTypes(*function);
-		for (ModifierDefinition const* modifier: contract->functionModifiers())
-			types.registerCallableTypes(*modifier);
-	}
-
-	// Free functions and internal library functions reachable through imports
-	// are compiled into the contract as well.
-	SourceUnit const& sourceUnit = _contract.sourceUnit();
-	std::set<SourceUnit const*> sourceUnits = sourceUnit.referencedSourceUnits(true);
-	sourceUnits.insert(&sourceUnit);
-	for (SourceUnit const* unit: sourceUnits)
-		for (ASTPointer<ASTNode> const& node: unit->nodes())
+	// The functions and modifiers compiled into the contract are the ones its
+	// call graphs reach, inherited, free and internal library ones included.
+	std::set<CallableDeclaration const*, ASTNode::CompareByID> callables;
+	for (CallGraph const* callGraph: {
+		_contract.annotation().creationCallGraph->get(),
+		_contract.annotation().deployedCallGraph->get()
+	})
+		for (auto const& [caller, callees]: callGraph->edges)
 		{
-			if (auto const* freeFunction = dynamic_cast<FunctionDefinition const*>(node.get()))
-				types.registerCallableTypes(*freeFunction);
-			else if (auto const* library = dynamic_cast<ContractDefinition const*>(node.get()); library && library->isLibrary())
-				for (FunctionDefinition const* function: library->definedFunctions())
-					if (function->visibility() <= Visibility::Internal)
-						types.registerCallableTypes(*function);
+			if (auto const* callable = std::get_if<CallableDeclaration const*>(&caller))
+				callables.insert(*callable);
+			for (CallGraph::Node const& callee: callees)
+				if (auto const* callable = std::get_if<CallableDeclaration const*>(&callee))
+					callables.insert(*callable);
 		}
+	for (CallableDeclaration const* callable: callables)
+		types.registerCallableTypes(*callable);
 
 	return Resources{
 		.types = types.takeDocuments(),

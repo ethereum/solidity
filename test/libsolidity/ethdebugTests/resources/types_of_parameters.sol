@@ -18,6 +18,13 @@ contract C is Base {
     function f(S calldata s, string memory t) external pure returns (uint32[] memory) {
         return new uint32[](s.a + bytes(t).length);
     }
+    function g(address who, S memory s, uint8[] calldata xs) external pure m(who) returns (bytes memory) {
+        if (base(L.internalFn(1) > 0))
+            return free(s, xs);
+        return "";
+    }
+    // Not called, so not compiled into the contract.
+    function unused(int128 v) internal pure returns (int128) { return v; }
 }
 // ----
 // .resources.types | keys: ["t_address","t_array$_t_uint256_$2_storage","t_array$_t_uint32_$dyn_storage","t_array$_t_uint8_$dyn_storage","t_bool","t_bytes_storage","t_int64","t_string_storage","t_struct$_S_$4_storage","t_uint256","t_uint32","t_uint8"]

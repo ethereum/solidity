@@ -51,8 +51,8 @@ struct Resources
 
 /// The resources of @a _contract: the types of its state variables and of the
 /// parameters and return variables of every function and modifier compiled
-/// into it, and the pointer templates of the storage types of its state
-/// variables. @a _sourceIndices maps source unit names to the source IDs of
+/// into it, i.e. reached by its call graphs, and the pointer templates of the
+/// storage types of its state variables. @a _sourceIndices maps source unit names to the source IDs of
 /// the ethdebug compilation record, which definition locations refer to.
 Resources resources(ContractDefinition const& _contract, std::map<std::string, unsigned> const& _sourceIndices);
 
