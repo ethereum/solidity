@@ -27,6 +27,7 @@
 #include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/CircularReferencesPruner.h>
+#include <libyul/optimiser/ConditionalBranchFlattener.h>
 #include <libyul/optimiser/ConditionalUnsimplifier.h>
 #include <libyul/optimiser/ConditionalSimplifier.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
@@ -140,6 +141,12 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(std::shared_ptr<Object const> _ob
 			ForLoopInitRewriter::run(*m_context, block);
 			FunctionHoister::run(*m_context, block);
 			CommonSubexpressionEliminator::run(*m_context, block);
+			return block;
+		}},
+		{"conditionalBranchFlattener", [&]() {
+			auto block = disambiguate();
+			updateContext(block);
+			ConditionalBranchFlattener::run(*m_context, block);
 			return block;
 		}},
 		{"conditionalUnsimplifier", [&]() {

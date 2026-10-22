@@ -26,6 +26,7 @@
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/CircularReferencesPruner.h>
+#include <libyul/optimiser/ConditionalBranchFlattener.h>
 #include <libyul/optimiser/ControlFlowSimplifier.h>
 #include <libyul/optimiser/ConditionalSimplifier.h>
 #include <libyul/optimiser/ConditionalUnsimplifier.h>
@@ -237,6 +238,7 @@ std::map<std::string, std::unique_ptr<OptimiserStep>> const& OptimiserSuite::all
 			BlockFlattener,
 			CircularReferencesPruner,
 			CommonSubexpressionEliminator,
+			ConditionalBranchFlattener,
 			ConditionalSimplifier,
 			ConditionalUnsimplifier,
 			ControlFlowSimplifier,
@@ -278,6 +280,7 @@ std::map<std::string, char> const& OptimiserSuite::stepNameToAbbreviationMap()
 		{BlockFlattener::name,                'f'},
 		{CircularReferencesPruner::name,      'l'},
 		{CommonSubexpressionEliminator::name, 'c'},
+		{ConditionalBranchFlattener::name,    'B'},
 		{ConditionalSimplifier::name,         'C'},
 		{ConditionalUnsimplifier::name,       'U'},
 		{ControlFlowSimplifier::name,         'n'},

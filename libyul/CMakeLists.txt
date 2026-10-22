@@ -160,6 +160,8 @@ add_library(yul
 	optimiser/CircularReferencesPruner.h
 	optimiser/CommonSubexpressionEliminator.cpp
 	optimiser/CommonSubexpressionEliminator.h
+	optimiser/ConditionalBranchFlattener.cpp
+	optimiser/ConditionalBranchFlattener.h
 	optimiser/ConditionalSimplifier.cpp
 	optimiser/ConditionalSimplifier.h
 	optimiser/ConditionalUnsimplifier.cpp
