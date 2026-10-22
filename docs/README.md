@@ -1,23 +1,88 @@
+
+
 # Solidity Language Docs
 
 ## Local environment setup
 
-1. Install python https://www.python.org/downloads/
-1. Install sphinx (the tool used to generate the docs) https://www.sphinx-doc.org/en/master/usage/installation.html
+### **Windows (PowerShell)**
 
-Go to `/docs` and run `./docs.sh` to install dependencies and build the project:
+1. Install Python: [https://www.python.org/downloads/](https://www.python.org/downloads/)
+   (Check **"Add Python to PATH"** during installation)
+2. Open PowerShell in the `/docs` folder:
 
-```sh
-cd docs
-./docs.sh
-```
+   ```powershell
+   cd docs
+   ```
+3. Create and activate a virtual environment:
 
-That will output the generated htmls under _build/
+   ```powershell
+   py -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+   ```
+4. Install dependencies:
+
+   ```powershell
+   python -m pip install --upgrade pip
+   if (Test-Path .\requirements.txt) { pip install -r .\requirements.txt } else { pip install sphinx pygments-lexer-solidity sphinx-rtd-theme }
+   ```
+5. Build the documentation:
+
+   ```powershell
+   python -m sphinx -b html . _build\html
+   ```
+
+---
+
+### **macOS / Linux (bash)**
+
+1. Install Python: [https://www.python.org/downloads/](https://www.python.org/downloads/)
+2. Open a terminal in the `/docs` folder:
+
+   ```bash
+   cd /docs
+   ```
+3. Create and activate a virtual environment:
+
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   ```
+4. Install dependencies:
+
+   ```bash
+   python -m pip install --upgrade pip
+   if [ -f requirements.txt ]; then pip install -r requirements.txt; else pip install sphinx pygments-lexer-solidity sphinx-rtd-theme; fi
+   ```
+5. Build the documentation:
+
+   ```bash
+   python -m sphinx -b html . _build/html
+   ```
+
+   *(Alternatively, you can run the provided script if available)*:
+
+   ```bash
+   chmod +x docs.sh
+   ./docs.sh
+   ```
+
+---
 
 ## Serve environment
 
-```py
+### **Windows (PowerShell)**
+
+```powershell
+python -m http.server 8080 --directory _build\html
+```
+
+### **macOS / Linux (bash)**
+
+```bash
 python3 -m http.server -d _build/html --cgi 8080
 ```
 
-Visit dev server at http://localhost:8080
+Visit the dev server at:
+[http://localhost:8080](http://localhost:8080)
+
+---
