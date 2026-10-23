@@ -20,6 +20,8 @@ contract C {
         return 1 + c;
     }
 }
+// ====
+// targetContract: C
 // ----
 // constructor(), 1 ether ->
 // gas irOptimized: 88861

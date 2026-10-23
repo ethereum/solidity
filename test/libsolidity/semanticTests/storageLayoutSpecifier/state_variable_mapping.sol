@@ -23,6 +23,8 @@ contract C layout at 42 is A {
         return rooms[x];
     }
 }
+// ====
+// targetContract: C
 // ----
 // setup() ->
 // gas irOptimized: 159079

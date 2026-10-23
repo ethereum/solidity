@@ -29,5 +29,7 @@ contract Test {
         return s.v;
     }
 }
+// ====
+// targetContract: Test
 // ----
 // f() -> 0x202

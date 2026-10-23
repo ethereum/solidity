@@ -12,6 +12,8 @@ contract C is A layout at 7 {
     function wSlotOffset() public returns(uint s, uint o) { assembly { s := w.slot o := w.offset } }
     function zSlotOffset() public returns(uint s, uint o) { assembly { s := z.slot o := z.offset } }
 }
+// ====
+// targetContract: C
 // ----
 // xSlotOffset() -> 7, 0
 // ySlotOffset() -> 8, 0

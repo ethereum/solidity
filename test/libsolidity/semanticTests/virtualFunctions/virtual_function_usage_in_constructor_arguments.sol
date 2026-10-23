@@ -27,5 +27,7 @@ contract Derived is Base {
         return 2;
     }
 }
+// ====
+// targetContract: Derived
 // ----
 // getA() -> 2

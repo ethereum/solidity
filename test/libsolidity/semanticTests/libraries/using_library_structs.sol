@@ -17,6 +17,8 @@ contract Test {
         b = data["abc"].b[19];
     }
 }
+// ====
+// targetContract: Test
 // ----
 // library: Lib
 // f() -> 7, 8

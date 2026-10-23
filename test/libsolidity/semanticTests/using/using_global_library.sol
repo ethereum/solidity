@@ -20,6 +20,8 @@ contract C {
 
 import {T} from "A";
 
+// ====
+// targetContract: C
 // ----
 // library: "A":L
 // f() -> 2, 1

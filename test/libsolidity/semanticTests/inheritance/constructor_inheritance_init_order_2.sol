@@ -7,6 +7,8 @@ contract A {
 contract B is A {
     uint public y = f();
 }
+// ====
+// targetContract: B
 // ----
 // constructor() ->
 // gas irOptimized: 99420

@@ -36,6 +36,7 @@ contract C {
 }
 // ====
 // EVMVersion: >=byzantium
+// targetContract: C
 // ----
 // library: L
 // addr() -> false

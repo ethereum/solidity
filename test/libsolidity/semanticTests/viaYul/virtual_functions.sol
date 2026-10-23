@@ -23,6 +23,8 @@ contract C is X {
         x = 3;
     }
 }
+// ====
+// targetContract: C
 // ----
 // f() -> 3
 // f1() -> 3

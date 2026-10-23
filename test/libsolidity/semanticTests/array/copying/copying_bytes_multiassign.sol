@@ -16,6 +16,8 @@ contract sender {
     bytes savedData1;
     bytes savedData2;
 }
+// ====
+// targetContract: sender
 // ----
 // (): 7 ->
 // gas irOptimized: 110732

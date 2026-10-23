@@ -11,5 +11,7 @@ contract C {
         return (E.selector, L.E.selector);
     }
 }
+// ====
+// targetContract: C
 // ----
 // main() -> 0x92bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028, 0x92bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028

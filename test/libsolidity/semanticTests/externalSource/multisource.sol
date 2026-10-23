@@ -7,6 +7,8 @@ contract S1 {
 import {S1} from "s1.sol";
 contract C {
 }
+// ====
+// targetContract: C
 // ----
 // constructor()
 

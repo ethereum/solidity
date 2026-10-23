@@ -12,5 +12,7 @@ contract B is A {
         z = x;
     }
 }
+// ====
+// targetContract: B
 // ----
 // z() -> 1

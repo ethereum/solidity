@@ -27,6 +27,7 @@ contract Test {
 // ====
 // EVMVersion: <=homestead
 // compileViaYul: true
+// targetContract: Test
 // ----
 // test() -> 0x0500
 // gas legacy: 131966

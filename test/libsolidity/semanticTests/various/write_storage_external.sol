@@ -33,6 +33,8 @@ contract D {
         return c.x();
     }
 }
+// ====
+// targetContract: D
 // ----
 // f() -> 3
 // g() -> 8

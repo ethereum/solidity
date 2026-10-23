@@ -46,6 +46,8 @@ contract test {
         assert(z1 == z2);
     }
 }
+// ====
+// targetContract: test
 // ----
 // constructor()
 // gas irOptimized: 170574

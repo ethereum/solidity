@@ -11,6 +11,7 @@ contract Test is C {
 }
 // ====
 // compileViaYul: also
+// targetContract: Test
 // ----
 // f() ->
 // ~ emit E()

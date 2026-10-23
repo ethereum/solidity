@@ -20,6 +20,7 @@ contract C {
 // ====
 // EVMVersion: >=byzantium
 // revertStrings: debug
+// targetContract: C
 // ----
 // (), 10 wei ->
 // g() -> 10

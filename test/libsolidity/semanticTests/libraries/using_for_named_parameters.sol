@@ -16,6 +16,8 @@ contract C {
         return value.multiply({y: 7, x: 2});
     }
 }
+// ====
+// targetContract: C
 // ----
 // ordered() -> 2, 7
 // unordered() -> 2, 7

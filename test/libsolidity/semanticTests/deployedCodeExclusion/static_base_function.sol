@@ -32,5 +32,6 @@ contract C is S {
     }
 }
 // ====
+// targetContract: C
 // ----
 // test() -> true

@@ -25,6 +25,7 @@
 #pragma once
 
 #include <libsolidity/analysis/FunctionCallGraph.h>
+#include <libsolidity/interface/MetadataSettings.h>
 #include <libsolidity/interface/ReadFile.h>
 #include <libsolidity/interface/ImportRemapper.h>
 #include <libsolidity/interface/OptimiserSettings.h>
@@ -119,12 +120,6 @@ public:
 		WithReleaseVersionTag,
 		WithPrereleaseVersionTag,
 		NoMetadata
-	};
-
-	enum class MetadataHash {
-		IPFS,
-		Bzzr1,
-		None
 	};
 
 	enum class CompilationSourceType {

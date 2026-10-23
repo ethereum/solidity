@@ -20,6 +20,7 @@ contract test {
 }
 // ====
 // EVMVersion: >=byzantium
+// targetContract: test
 // ----
 // library: L
 // get(uint8): 0 -> 0

@@ -16,6 +16,8 @@ contract C {
     return fu();
   }
 }
+// ====
+// targetContract: C
 // ----
 // library: L
 // f() -> 7, 8

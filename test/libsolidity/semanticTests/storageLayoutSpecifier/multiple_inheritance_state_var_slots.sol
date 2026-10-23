@@ -17,6 +17,8 @@ contract D is A, B, C layout at 2 {
     function wSlotOffset() public view returns (uint s, uint o) { assembly { s := w.slot o := w.offset } }
     function zSlotOffset() public view returns (uint s, uint o) { assembly { s := z.slot o := z.offset } }
 }
+// ====
+// targetContract: D
 // ----
 // xSlotOffset() -> 2, 0
 // ySlotOffset() -> 3, 0

@@ -16,6 +16,8 @@ contract C {
         assembly { slot := ptr.slot }
     }
 }
+// ====
+// targetContract: C
 // ----
 // library: Lib
 // f() -> 123

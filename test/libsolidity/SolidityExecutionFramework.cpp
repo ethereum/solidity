@@ -21,6 +21,7 @@
  * Framework for executing Solidity contracts and testing them against C++ implementation.
  */
 
+#include <stdexcept>
 #include <test/libsolidity/SolidityExecutionFramework.h>
 #include <test/libsolidity/util/Common.h>
 
@@ -80,7 +81,14 @@ bytes SolidityExecutionFramework::multiSourceCompileContract(
 			.printErrorInformation(m_compiler.errors());
 		BOOST_ERROR("Compiling contract failed");
 	}
-	std::string contractName(_contractName.empty() ? m_compiler.lastContractName(_mainSourceName) : _contractName);
+
+	if (_contractName.empty() && m_compiler.contractNames().size() > 1)
+		throw std::runtime_error(
+			"Tests that define more than one contract must specify the target for function calls by "
+			"naming the desired contract in the `targetContract` setting."
+		);
+
+	std::string contractName(_contractName.empty() ? m_compiler.contractNames().back() : _contractName);
 	evmasm::LinkerObject obj = m_compiler.object(contractName);
 	BOOST_REQUIRE(obj.linkReferences.empty());
 	if (m_showMetadata)

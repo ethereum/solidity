@@ -16,6 +16,8 @@ contract test {
         L.set(table, k, v);
     }
 }
+// ====
+// targetContract: test
 // ----
 // library: L
 // get(address): 0 -> 0

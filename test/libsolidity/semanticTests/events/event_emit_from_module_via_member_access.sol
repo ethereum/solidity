@@ -19,6 +19,8 @@ contract CContract {
     }
 }
 
+// ====
+// targetContract: CContract
 // ----
 // returnAddress() ->
 // ~ emit Transfer(address,address,uint256): #0x0b, #0x0c, 0x0d

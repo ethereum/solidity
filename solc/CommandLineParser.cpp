@@ -1376,11 +1376,11 @@ void CommandLineParser::processArgs()
 	{
 		std::string hashStr = m_args[g_strMetadataHash].as<std::string>();
 		if (hashStr == g_strIPFS)
-			m_options.metadata.hash = CompilerStack::MetadataHash::IPFS;
+			m_options.metadata.hash = MetadataHash::IPFS;
 		else if (hashStr == g_strSwarm)
-			m_options.metadata.hash = CompilerStack::MetadataHash::Bzzr1;
+			m_options.metadata.hash = MetadataHash::Bzzr1;
 		else if (hashStr == g_strNone)
-			m_options.metadata.hash = CompilerStack::MetadataHash::None;
+			m_options.metadata.hash = MetadataHash::None;
 		else
 			solThrow(CommandLineValidationError, "Invalid option for --" + g_strMetadataHash + ": " + hashStr);
 	}
@@ -1389,7 +1389,7 @@ void CommandLineParser::processArgs()
 	{
 		if (
 			m_args.count(g_strMetadataHash) &&
-			m_options.metadata.hash != CompilerStack::MetadataHash::None
+			m_options.metadata.hash != MetadataHash::None
 		)
 			solThrow(
 				CommandLineValidationError,

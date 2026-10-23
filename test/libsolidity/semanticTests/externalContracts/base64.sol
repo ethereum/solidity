@@ -31,6 +31,7 @@ contract test {
 //
 // ====
 // EVMVersion: >=constantinople
+// targetContract: test
 // ----
 // constructor()
 // gas irOptimized: 79072

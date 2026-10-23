@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			true, true, true, true, true,
 			true, true, true,
 		};
-		expectedOptions.metadata.hash = CompilerStack::MetadataHash::Bzzr1;
+		expectedOptions.metadata.hash = MetadataHash::Bzzr1;
 		expectedOptions.metadata.literalSources = true;
 		expectedOptions.optimizer.optimizeEvmasm = true;
 		expectedOptions.optimizer.optimizeYul = true;

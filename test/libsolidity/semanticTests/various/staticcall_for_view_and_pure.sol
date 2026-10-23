@@ -33,6 +33,7 @@ contract D {
 }
 // ====
 // EVMVersion: >=byzantium
+// targetContract: D
 // ----
 // f() -> 0x1 # This should work, next should throw #
 // gas legacy: 76495

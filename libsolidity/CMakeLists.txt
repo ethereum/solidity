@@ -152,12 +152,19 @@ set(sources
 	interface/GasEstimator.h
 	interface/Natspec.cpp
 	interface/Natspec.h
+	interface/MetadataSettings.h
 	interface/OptimiserSettings.h
 	interface/ReadFile.h
 	interface/SMTSolverCommand.cpp
 	interface/SMTSolverCommand.h
 	interface/StandardCompiler.cpp
 	interface/StandardCompiler.h
+	interface/input/Input.h
+	interface/input/JSONSerialization.cpp
+	interface/input/JSONSerialization.h
+	interface/output/Output.h
+	interface/output/JSONDeserialization.cpp
+	interface/output/JSONDeserialization.h
 	interface/StorageLayout.cpp
 	interface/StorageLayout.h
 	interface/UniversalCallback.h

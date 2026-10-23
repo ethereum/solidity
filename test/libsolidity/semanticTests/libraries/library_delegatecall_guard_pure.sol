@@ -25,6 +25,7 @@ contract C {
 }
 // ====
 // EVMVersion: >homestead
+// targetContract: C
 // ----
 // library: L
 // f() -> 23

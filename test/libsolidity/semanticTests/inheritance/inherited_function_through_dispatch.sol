@@ -15,5 +15,7 @@ contract B is A {
         return ptr();
     }
 }
+// ====
+// targetContract: B
 // ----
 // g() -> 1

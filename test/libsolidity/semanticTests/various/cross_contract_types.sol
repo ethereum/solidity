@@ -12,5 +12,7 @@ contract Test {
         r = x.b;
     }
 }
+// ====
+// targetContract: Test
 // ----
 // f() -> 3

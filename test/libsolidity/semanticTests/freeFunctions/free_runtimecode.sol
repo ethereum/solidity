@@ -12,5 +12,6 @@ contract D {
   }
 }
 // ====
+// targetContract: D
 // ----
 // f() -> true

@@ -21,6 +21,8 @@ contract B is A {
         return f({c: 3, b: 1, a: 2});
     }
 }
+// ====
+// targetContract: B
 // ----
 // baseOrdered() -> 14
 // baseUnordered() -> 14

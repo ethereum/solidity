@@ -79,7 +79,7 @@ void SyntaxTest::setupCompiler(CompilerStack& _compiler)
 	_compiler.setViaIR(m_compileViaYul == "true");
 	_compiler.setExperimental(m_experimental);
 	_compiler.setMetadataFormat(CompilerStack::MetadataFormat::NoMetadata);
-	_compiler.setMetadataHash(CompilerStack::MetadataHash::None);
+	_compiler.setMetadataHash(MetadataHash::None);
 }
 
 void SyntaxTest::parseAndAnalyze()

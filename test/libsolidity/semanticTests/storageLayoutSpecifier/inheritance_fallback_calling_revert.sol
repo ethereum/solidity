@@ -23,6 +23,7 @@ contract F {
 }
 // ====
 // EVMVersion: >homestead
+// targetContract: F
 // ----
 // withSpecifier() -> 0x20, 1, "C"
 // withoutSpecifier() -> 0x20, 1, "C"

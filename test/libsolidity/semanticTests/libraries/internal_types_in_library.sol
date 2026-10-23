@@ -19,6 +19,8 @@ contract Test {
         b = Lib.find(data["abc"], 3);
     }
 }
+// ====
+// targetContract: Test
 // ----
 // library: Lib
 // f() -> 4, 0x11

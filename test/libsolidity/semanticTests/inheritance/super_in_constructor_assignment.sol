@@ -33,5 +33,7 @@ contract D is B, C {
         return data;
     }
 }
+// ====
+// targetContract: D
 // ----
 // f() -> 15

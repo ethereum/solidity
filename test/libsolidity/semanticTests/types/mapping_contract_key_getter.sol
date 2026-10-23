@@ -8,6 +8,8 @@ contract test {
         return this.table(k);
     }
 }
+// ====
+// targetContract: test
 // ----
 // table(address): 0 -> 0
 // table(address): 0x01 -> 0

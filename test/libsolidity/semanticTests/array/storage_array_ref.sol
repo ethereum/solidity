@@ -38,6 +38,8 @@ contract Store is BinarySearch {
         return find(data, v);
     }
 }
+// ====
+// targetContract: Store
 // ----
 // find(uint256): 7 -> -1
 // add(uint256): 7 ->

@@ -14,5 +14,7 @@ contract C {
         return e.foo();
     }
 }
+// ====
+// targetContract: C
 // ----
 // test() -> 42

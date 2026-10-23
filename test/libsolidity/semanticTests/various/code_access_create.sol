@@ -22,6 +22,7 @@ contract C {
     }
 }
 // ====
+// targetContract: C
 // ----
 // test() -> 7
 // gas legacy: 76647

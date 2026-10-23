@@ -38,5 +38,6 @@ contract C {
     }
 }
 // ====
+// targetContract: C
 // ----
 // test() -> true

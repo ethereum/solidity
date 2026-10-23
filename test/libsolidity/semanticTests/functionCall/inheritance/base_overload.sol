@@ -18,6 +18,8 @@ contract Child is Base {
 		Base.init(c, d);
 	}
 }
+// ====
+// targetContract: Child
 // ----
 // x() -> 0
 // y() -> 0

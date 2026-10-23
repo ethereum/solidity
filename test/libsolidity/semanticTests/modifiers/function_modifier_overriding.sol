@@ -14,5 +14,7 @@ contract C is A {
         if (false) _;
     }
 }
+// ====
+// targetContract: C
 // ----
 // f() -> false

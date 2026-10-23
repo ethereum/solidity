@@ -14,6 +14,7 @@ contract sender {
 }
 // ====
 // allowNonExistingFunctions: true
+// targetContract: sender
 // ----
 // recv(uint256): 7 ->
 // val() -> 0

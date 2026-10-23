@@ -12,5 +12,7 @@ contract Tsra {
         return 1;
     }
 }
+// ====
+// targetContract: Tsra
 // ----
 // f() -> 1

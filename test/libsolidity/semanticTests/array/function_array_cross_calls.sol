@@ -40,6 +40,8 @@ contract C {
         return this.e;
     }
 }
+// ====
+// targetContract: C
 // ----
 // test() -> 5, 6, 7
 // gas irOptimized: 86460

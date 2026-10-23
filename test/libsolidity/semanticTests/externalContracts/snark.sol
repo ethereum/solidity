@@ -287,6 +287,7 @@ contract Test {
 //
 // ====
 // EVMVersion: >=constantinople
+// targetContract: Test
 // ----
 // library: Pairing
 // f() -> true

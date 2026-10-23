@@ -12,5 +12,6 @@ contract C is Base
 }
 // ====
 // revertStrings: strip
+// targetContract: C
 // ----
 // f() -> FAILURE, hex"11a1077e", 1, 0x60, 3, 3, "two"

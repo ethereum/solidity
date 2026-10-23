@@ -13,6 +13,7 @@ contract B is A {
 }
 // ====
 // compileViaYul: also
+// targetContract: B
 // ----
 // f(uint256[]): 0x20, 2, 9, 8 -> 0x20, 2, 9, 8
 // g(uint256[]): 0x20, 2, 9, 8 -> 0x20, 2, 9, 8

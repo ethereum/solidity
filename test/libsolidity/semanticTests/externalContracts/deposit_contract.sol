@@ -174,6 +174,8 @@ contract DepositContract is IDepositContract, ERC165 {
         ret[7] = bytesValue[0];
     }
 }
+// ====
+// targetContract: DepositContract
 // ----
 // constructor()
 // gas irOptimized: 809554

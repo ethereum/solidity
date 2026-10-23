@@ -23,6 +23,7 @@ contract C {
 // ====
 // EVMVersion: >=byzantium
 // revertStrings: debug
+// targetContract: C
 // ----
 // constructor(), 1 ether ->
 // gas irOptimized: 98682

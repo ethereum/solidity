@@ -19,5 +19,7 @@ contract C is A {
     function mutableWithPureOverride() public pure override {}
     function viewWithPureOverride() public pure override {}
 }
+// ====
+// targetContract: C
 // ----
 // run() ->

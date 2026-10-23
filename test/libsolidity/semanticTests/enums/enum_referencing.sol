@@ -27,6 +27,8 @@ contract C is I {
         return L.g();
     }
 }
+// ====
+// targetContract: C
 // ----
 // library: L
 // f() -> 3

@@ -14,6 +14,8 @@ contract Test {
         return (m[0][0], m[0][1], m[0][2], m[1][0], m[1][1], m[1][2]);
     }
 }
+// ====
+// targetContract: Test
 // ----
 // library: Lib
 // f() -> 1, 0, 0x2a, 0x17, 0, 0x63

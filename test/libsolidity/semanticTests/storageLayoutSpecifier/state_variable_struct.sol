@@ -32,6 +32,7 @@ contract C is A layout at 42 {
 }
 // ====
 // EVMVersion: >=cancun
+// targetContract: C
 // ----
 // initS1() -> 7, 0x0abc, 1
 // initS2() -> 8, 0x0def, 0

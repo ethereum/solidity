@@ -21,5 +21,7 @@ contract C {
     return (s.f(), h(s));
   }
 }
+// ====
+// targetContract: C
 // ----
 // g() -> 7, 7

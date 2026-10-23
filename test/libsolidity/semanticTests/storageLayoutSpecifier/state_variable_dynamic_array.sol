@@ -32,6 +32,8 @@ contract C is A layout at 42 {
         return arrayC.length;
     }
 }
+// ====
+// targetContract: C
 // ----
 // initA() -> 1, 2, 3
 // gas irOptimized: 111983

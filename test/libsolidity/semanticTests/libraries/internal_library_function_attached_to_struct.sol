@@ -21,5 +21,7 @@ contract C {
         return x.data[3];
     }
 }
+// ====
+// targetContract: C
 // ----
 // f() -> 2

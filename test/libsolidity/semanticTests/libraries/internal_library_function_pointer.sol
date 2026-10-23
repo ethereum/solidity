@@ -11,5 +11,7 @@ contract C {
         return ptr();
     }
 }
+// ====
+// targetContract: C
 // ----
 // g() -> 66

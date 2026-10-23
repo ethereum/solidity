@@ -16,6 +16,8 @@ contract C is B layout at 7 {
     }
 
 }
+// ====
+// targetContract: C
 // ----
 // constructor(): 1, 2, 3
 // gas irOptimized: 104162

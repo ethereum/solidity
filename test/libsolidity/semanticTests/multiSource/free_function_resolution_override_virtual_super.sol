@@ -12,5 +12,7 @@ contract D is C {
     return super.g();
   }
 }
+// ====
+// targetContract: D
 // ----
 // g() -> 1337

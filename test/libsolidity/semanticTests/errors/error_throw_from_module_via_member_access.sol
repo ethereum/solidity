@@ -25,6 +25,8 @@ contract CContract {
     }
 }
 
+// ====
+// targetContract: CContract
 // ----
 // error1() -> FAILURE, hex"a5f9ec67", 0x20, 7, "B error"
 // error2() -> FAILURE, hex"a5f9ec67", 0x20, 17, "B.BContract error"

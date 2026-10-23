@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(single_callvaluecheck)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
+	compileAndRun(sourceCode, 0, "Payable");
 	size_t bytecodeSizeNonpayable = m_compiler.object("Nonpayable").bytecode.size();
 	size_t bytecodeSizePayable = m_compiler.object("Payable").bytecode.size();
 

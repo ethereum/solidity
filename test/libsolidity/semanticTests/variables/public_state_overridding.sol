@@ -11,6 +11,8 @@ contract X is A
 
 	function set() public { test = 2; }
 }
+// ====
+// targetContract: X
 // ----
 // test() -> 0
 // set() ->

@@ -20,6 +20,7 @@ contract C is Base {
 
 // ====
 // EVMVersion: >=cancun
+// targetContract: C
 // ----
 // setAndClear() ->
 // x() -> 0

@@ -32,5 +32,7 @@ contract C {
 
 import {E, S, T} from "A";
 
+// ====
+// targetContract: C
 // ----
 // f() -> 1, 7, 9

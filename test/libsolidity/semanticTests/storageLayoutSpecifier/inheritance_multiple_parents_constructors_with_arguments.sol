@@ -10,6 +10,8 @@ contract F {
         new C2(4);
     }
 }
+// ====
+// targetContract: F
 // ----
 // withSpecifier() ->
 // withoutSpecifier() ->

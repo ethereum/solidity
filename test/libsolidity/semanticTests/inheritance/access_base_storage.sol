@@ -21,6 +21,8 @@ contract Derived is Base {
         derived = dataDerived;
     }
 }
+// ====
+// targetContract: Derived
 // ----
 // setData(uint256,uint256): 1, 2 -> true
 // getViaBase() -> 1
