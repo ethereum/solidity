@@ -1,4 +1,4 @@
-pragma abicoder v1;
+pragma abicoder v2;
 
 contract test {
     function f() public pure returns (string memory ret) {
@@ -7,7 +7,6 @@ contract test {
     }
 }
 // ====
-// EVMVersion: >=shanghai
+// EVMVersion: >=cancun,<amsterdam
 // ----
-// Warning 9511: (0-19): ABI coder v1 is deprecated and scheduled for removal. Use ABI coder v2 instead.
-// Warning 5574: (21-27154): Contract code size is 27205 bytes and exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on Mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+// Warning 5574: (21-27154): Contract code size is 27164 bytes and exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on Mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
