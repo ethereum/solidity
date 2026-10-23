@@ -385,10 +385,7 @@ BOOST_AUTO_TEST_CASE(dynamic_return_types_not_possible)
 			}
 		}
 	)";
-	if (solidity::test::CommonOptions::get().evmVersion() < EVMVersion::byzantium())
-		CHECK_ERROR(sourceCode, TypeError, "Type inaccessible dynamic type is not implicitly convertible to expected type string memory.");
-	else
-		CHECK_SUCCESS_NO_WARNINGS(sourceCode);
+	CHECK_SUCCESS_NO_WARNINGS(sourceCode);
 }
 
 BOOST_AUTO_TEST_CASE(warn_nonpresent_pragma)
@@ -434,25 +431,19 @@ BOOST_AUTO_TEST_CASE(address_staticcall)
 		}
 	)";
 
-	if (solidity::test::CommonOptions::get().evmVersion().hasStaticCall())
-		CHECK_SUCCESS_NO_WARNINGS(sourceCode);
-	else
-		CHECK_ERROR(sourceCode, TypeError, "\"staticcall\" is not supported by the VM version.");
+	CHECK_SUCCESS_NO_WARNINGS(sourceCode);
 }
 
 BOOST_AUTO_TEST_CASE(address_staticcall_value)
 {
-	if (solidity::test::CommonOptions::get().evmVersion().hasStaticCall())
-	{
-		char const* sourceCode = R"(
-			contract C {
-				function f() public view {
-					address(0x4242).staticcall.value;
-				}
+	char const* sourceCode = R"(
+		contract C {
+			function f() public view {
+				address(0x4242).staticcall.value;
 			}
-		)";
-		CHECK_ERROR(sourceCode, TypeError, "Member \"value\" is only available for payable functions.");
-	}
+		}
+	)";
+	CHECK_ERROR(sourceCode, TypeError, "Member \"value\" is only available for payable functions.");
 }
 
 BOOST_AUTO_TEST_CASE(address_call_full_return_type)
@@ -466,10 +457,7 @@ BOOST_AUTO_TEST_CASE(address_call_full_return_type)
 		}
 	)";
 
-	if (solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
-		CHECK_SUCCESS_NO_WARNINGS(sourceCode);
-	else
-		CHECK_ERROR(sourceCode, TypeError, "Type inaccessible dynamic type is not implicitly convertible to expected type bytes memory.");
+	CHECK_SUCCESS_NO_WARNINGS(sourceCode);
 }
 
 BOOST_AUTO_TEST_CASE(address_delegatecall_full_return_type)
@@ -483,28 +471,22 @@ BOOST_AUTO_TEST_CASE(address_delegatecall_full_return_type)
 		}
 	)";
 
-	if (solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
-		CHECK_SUCCESS_NO_WARNINGS(sourceCode);
-	else
-		CHECK_ERROR(sourceCode, TypeError, "Type inaccessible dynamic type is not implicitly convertible to expected type bytes memory.");
+	CHECK_SUCCESS_NO_WARNINGS(sourceCode);
 }
 
 
 BOOST_AUTO_TEST_CASE(address_staticcall_full_return_type)
 {
-	if (solidity::test::CommonOptions::get().evmVersion().hasStaticCall())
-	{
-		char const* sourceCode = R"(
-			contract C {
-				function f() public view {
-					(bool success, bytes memory m) = address(0x4242).staticcall("");
-					success; m;
-				}
+	char const* sourceCode = R"(
+		contract C {
+			function f() public view {
+				(bool success, bytes memory m) = address(0x4242).staticcall("");
+				success; m;
 			}
-		)";
+		}
+	)";
 
-		CHECK_SUCCESS_NO_WARNINGS(sourceCode);
-	}
+	CHECK_SUCCESS_NO_WARNINGS(sourceCode);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -3,8 +3,6 @@
     let a := and(shl(x, 248), shl(x, 12))
     sstore(10, a)
 }
-// ====
-// EVMVersion: >byzantium
 // ----
 // step: expressionSimplifier
 //

@@ -3,7 +3,6 @@
     f(calldataload(0), calldataload(0), calldataload(0), calldataload(0), calldataload(0), calldataload(0), calldataload(0), calldataload(0), calldataload(0), calldataload(0), calldataload(0), calldataload(0), calldataload(0), calldataload(0), calldataload(0), calldataload(0), calldataload(0))
 }
 // ====
-// EVMVersion: >=tangerineWhistle
 // stackOptimization: true
 // viaSSACFG: true
 // ----

@@ -58,10 +58,7 @@ object \"C_11\" {
             revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
 
             function shift_right_224_unsigned(value) -> newValue {
-                newValue :=
-
-                shr(224, value)
-
+                newValue := shr(224, value)
             }
 
             function allocate_unbounded() -> memPtr {
@@ -120,10 +117,7 @@ object \"C_11\" {
             }
 
             function shift_left_224(value) -> newValue {
-                newValue :=
-
-                shl(224, value)
-
+                newValue := shl(224, value)
             }
 
             function convert_t_rational_1633837924_by_1_to_t_bytes4(value) -> converted {

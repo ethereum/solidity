@@ -6,6 +6,4 @@ contract C {
 		this.f{gas: 42}();
 	}
 }
-// ====
-// EVMVersion: >=byzantium
 // ----

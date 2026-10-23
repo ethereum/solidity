@@ -29,7 +29,5 @@ contract C {
         return true;
     }
 }
-// ====
-// EVMVersion: >=byzantium
 // ----
 // g() -> true

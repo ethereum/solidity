@@ -28,8 +28,6 @@ contract C {
 		require(a, message);
 	}
 }
-// ====
-// EVMVersion: >=byzantium
 // ----
 // f(bool): true -> true
 // f(bool): false -> FAILURE

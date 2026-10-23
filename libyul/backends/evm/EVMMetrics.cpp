@@ -115,7 +115,7 @@ bigint GasMeterVisitor::singleByteDataGas() const
 void GasMeterVisitor::instructionCostsInternal(evmasm::Instruction _instruction)
 {
 	if (_instruction == evmasm::Instruction::EXP)
-		m_runGas += evmasm::GasCosts::expGas + evmasm::GasCosts::expByteGas(m_dialect.evmVersion());
+		m_runGas += evmasm::GasCosts::expGas + evmasm::GasCosts::expByteGas;
 	else if (_instruction == evmasm::Instruction::KECCAK256)
 		// Assumes that Keccak-256 is computed on a single word (rounded up).
 		m_runGas += evmasm::GasCosts::keccak256Gas + evmasm::GasCosts::keccak256WordGas;

@@ -11,8 +11,6 @@ contract C {
         }
     }
 }
-// ====
-// EVMVersion: >=byzantium
 // ----
 // f(bool): true -> 13
 // f(bool): false -> 9

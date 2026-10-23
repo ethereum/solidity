@@ -108,13 +108,7 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 		solRequire(false, Exception, "");
 	}
 
-	if (_evmVersion == langutil::EVMVersion::tangerineWhistle())
-		m_evmRevision = EVMC_TANGERINE_WHISTLE;
-	else if (_evmVersion == langutil::EVMVersion::spuriousDragon())
-		m_evmRevision = EVMC_SPURIOUS_DRAGON;
-	else if (_evmVersion == langutil::EVMVersion::byzantium())
-		m_evmRevision = EVMC_BYZANTIUM;
-	else if (_evmVersion == langutil::EVMVersion::constantinople())
+	if (_evmVersion == langutil::EVMVersion::constantinople())
 		m_evmRevision = EVMC_CONSTANTINOPLE;
 	else if (_evmVersion == langutil::EVMVersion::petersburg())
 		m_evmRevision = EVMC_PETERSBURG;
@@ -196,8 +190,7 @@ void EVMHost::reset()
 		// 1wei
 		accounts[address].balance = evmc::uint256be{1};
 		// Set according to EIP-1052.
-		if (precompiledAddress < 5 || m_evmVersion >= langutil::EVMVersion::byzantium())
-			accounts[address].codehash = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470_bytes32;
+		accounts[address].codehash = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470_bytes32;
 	}
 }
 
@@ -267,23 +260,23 @@ evmc::Result EVMHost::call(evmc_message const& _message) noexcept
 		return precompileRipeMD160(_message);
 	else if (_message.recipient == 0x0000000000000000000000000000000000000004_address)
 		return precompileIdentity(_message);
-	else if (_message.recipient == 0x0000000000000000000000000000000000000005_address && m_evmVersion >= langutil::EVMVersion::byzantium())
+	else if (_message.recipient == 0x0000000000000000000000000000000000000005_address)
 		return precompileModExp(_message);
-	else if (_message.recipient == 0x0000000000000000000000000000000000000006_address && m_evmVersion >= langutil::EVMVersion::byzantium())
+	else if (_message.recipient == 0x0000000000000000000000000000000000000006_address)
 	{
 		if (m_evmVersion <= langutil::EVMVersion::istanbul())
 			return precompileALTBN128G1Add<EVMC_ISTANBUL>(_message);
 		else
 			return precompileALTBN128G1Add<EVMC_LONDON>(_message);
 	}
-	else if (_message.recipient == 0x0000000000000000000000000000000000000007_address && m_evmVersion >= langutil::EVMVersion::byzantium())
+	else if (_message.recipient == 0x0000000000000000000000000000000000000007_address)
 	{
 		if (m_evmVersion <= langutil::EVMVersion::istanbul())
 			return precompileALTBN128G1Mul<EVMC_ISTANBUL>(_message);
 		else
 			return precompileALTBN128G1Mul<EVMC_LONDON>(_message);
 	}
-	else if (_message.recipient == 0x0000000000000000000000000000000000000008_address && m_evmVersion >= langutil::EVMVersion::byzantium())
+	else if (_message.recipient == 0x0000000000000000000000000000000000000008_address)
 	{
 		if (m_evmVersion <= langutil::EVMVersion::istanbul())
 			return precompileALTBN128PairingProduct<EVMC_ISTANBUL>(_message);

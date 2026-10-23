@@ -34,8 +34,6 @@ contract C {
         return abi.decode(result, (uint256));
     }
 }
-// ====
-// EVMVersion: >=byzantium
 // ----
 // library: L
 // addr() -> false

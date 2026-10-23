@@ -22,8 +22,6 @@ contract C {
         return garbled != garbled;
     }
 }
-// ====
-// EVMVersion: >=byzantium
 // ----
 // test_eq_ok() -> 1
 // test_eq() -> FAILURE, hex"4e487b71", 33 # both should throw #

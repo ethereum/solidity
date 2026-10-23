@@ -45,8 +45,6 @@ contract C {
         }
     }
 }
-// ====
-// EVMVersion: >=byzantium
 // ----
 // a() -> 0x00
 // b() -> 0x00

@@ -762,28 +762,25 @@ std::vector<SimplificationRule<Pattern>> evmRuleList(
 		Builtins::EXP(1, X),
 		[=]() -> Pattern { return Word(1); }
 	);
-	if (_evmVersion.hasBitwiseShifting())
-	{
-		rules.emplace_back(
-			Builtins::EXP(2, X),
-			[=]() -> Pattern { return Builtins::SHL(X, 1); }
-		);
-		rules.emplace_back(
-			Builtins::MUL(A, X),
-			[=]() -> Pattern { return Builtins::SHL(u256(*binaryLogarithm(A.d())), X); },
-			[=] { return binaryLogarithm(A.d()).has_value(); }
-		);
-		rules.emplace_back(
-			Builtins::MUL(X, A),
-			[=]() -> Pattern { return Builtins::SHL(u256(*binaryLogarithm(A.d())), X); },
-			[=] { return binaryLogarithm(A.d()).has_value(); }
-		);
-		rules.emplace_back(
-			Builtins::DIV(X, A),
-			[=]() -> Pattern { return Builtins::SHR(u256(*binaryLogarithm(A.d())), X); },
-			[=] { return binaryLogarithm(A.d()).has_value(); }
-		);
-	}
+	rules.emplace_back(
+		Builtins::EXP(2, X),
+		[=]() -> Pattern { return Builtins::SHL(X, 1); }
+	);
+	rules.emplace_back(
+		Builtins::MUL(A, X),
+		[=]() -> Pattern { return Builtins::SHL(u256(*binaryLogarithm(A.d())), X); },
+		[=] { return binaryLogarithm(A.d()).has_value(); }
+	);
+	rules.emplace_back(
+		Builtins::MUL(X, A),
+		[=]() -> Pattern { return Builtins::SHL(u256(*binaryLogarithm(A.d())), X); },
+		[=] { return binaryLogarithm(A.d()).has_value(); }
+	);
+	rules.emplace_back(
+		Builtins::DIV(X, A),
+		[=]() -> Pattern { return Builtins::SHR(u256(*binaryLogarithm(A.d())), X); },
+		[=] { return binaryLogarithm(A.d()).has_value(); }
+	);
 	rules.emplace_back(
 		Builtins::EXP(Word(-1), X),
 		[=]() -> Pattern

@@ -1046,8 +1046,6 @@ void ContractCompiler::handleCatch(std::vector<ASTPointer<TryCatchClause>> const
 			*error->parameters()->parameters().front()->annotation().type == *TypeProvider::stringMemory(),
 			""
 		);
-		solAssert(m_context.evmVersion().supportsReturndata(), "");
-
 		// stack: <selector>
 		m_context << Instruction::DUP1 << util::selectorFromSignatureU32("Error(string)") << Instruction::EQ;
 		m_context << Instruction::ISZERO;
@@ -1078,8 +1076,6 @@ void ContractCompiler::handleCatch(std::vector<ASTPointer<TryCatchClause>> const
 			*panic->parameters()->parameters().front()->annotation().type == *TypeProvider::uint256(),
 			""
 		);
-		solAssert(m_context.evmVersion().supportsReturndata(), "");
-
 		// stack: <selector>
 		m_context << util::selectorFromSignatureU32("Panic(uint256)") << Instruction::EQ;
 		m_context << Instruction::ISZERO;
@@ -1105,7 +1101,6 @@ void ContractCompiler::handleCatch(std::vector<ASTPointer<TryCatchClause>> const
 	{
 		if (fallback->parameters())
 		{
-			solAssert(m_context.evmVersion().supportsReturndata(), "");
 			solAssert(
 				fallback->parameters()->parameters().size() == 1 &&
 				fallback->parameters()->parameters().front() &&
@@ -1120,14 +1115,10 @@ void ContractCompiler::handleCatch(std::vector<ASTPointer<TryCatchClause>> const
 	else
 	{
 		// re-throw
-		if (m_context.evmVersion().supportsReturndata())
-			m_context.appendInlineAssembly(R"({
-				returndatacopy(0, 0, returndatasize())
-				revert(0, returndatasize())
-			})");
-		else
-			// Since both returndata and revert are >=byzantium, this should be unreachable.
-			solAssert(false, "");
+		m_context.appendInlineAssembly(R"({
+			returndatacopy(0, 0, returndatasize())
+			revert(0, returndatasize())
+		})");
 	}
 	m_context << endTag;
 }

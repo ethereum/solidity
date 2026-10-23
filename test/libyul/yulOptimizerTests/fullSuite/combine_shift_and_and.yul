@@ -4,8 +4,6 @@
     let b := shr(12, shl(8, and(x, 0xf0f0)))
     sstore(a, b)
 }
-// ====
-// EVMVersion: >byzantium
 // ----
 // step: fullSuite
 //

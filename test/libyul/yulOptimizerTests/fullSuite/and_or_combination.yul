@@ -13,8 +13,6 @@
     x := or(and(x, not(mask)), shl(0xc2, 0x2b67))
     sstore(a, x)
 }
-// ====
-// EVMVersion: >byzantium
 // ----
 // step: fullSuite
 //

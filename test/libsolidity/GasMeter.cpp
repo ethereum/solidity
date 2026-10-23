@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(updating_store)
 			}
 		}
 	)";
-	testCreationTimeGas(sourceCode, m_evmVersion < langutil::EVMVersion::constantinople() ? u256(0) : u256(9600));
+	testCreationTimeGas(sourceCode, u256(9600));
 }
 
 BOOST_AUTO_TEST_CASE(branches)

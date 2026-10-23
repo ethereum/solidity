@@ -4,7 +4,5 @@ contract C {
         success;
     }
 }
-// ====
-// EVMVersion: <byzantium
 // ----
-// TypeError 5052: (66-100): "staticcall" is not supported by the VM version.
+// Warning 2018: (17-124): Function state mutability can be restricted to view

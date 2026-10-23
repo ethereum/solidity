@@ -10,7 +10,6 @@ contract test {
     }
 }
 // ====
-// EVMVersion: >=byzantium
 // ABIEncoderV1Only: true
 // compileViaYul: false
 // ----

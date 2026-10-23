@@ -2674,42 +2674,10 @@ void ExpressionCompiler::appendShiftOperatorCode(Token _operator, Type const& _v
 	switch (_operator)
 	{
 	case Token::SHL:
-		if (m_context.evmVersion().hasBitwiseShifting())
-			m_context << Instruction::SHL;
-		else
-			m_context << u256(2) << Instruction::EXP << Instruction::MUL;
+		m_context << Instruction::SHL;
 		break;
 	case Token::SAR:
-		if (m_context.evmVersion().hasBitwiseShifting())
-			m_context << (c_valueSigned ? Instruction::SAR : Instruction::SHR);
-		else
-		{
-			if (c_valueSigned)
-				// In the following assembly snippet, xor_mask will be zero, if value_to_shift is positive.
-				// Therefore xor'ing with xor_mask is the identity and the computation reduces to
-				// div(value_to_shift, exp(2, shift_amount)), which is correct, since for positive values
-				// arithmetic right shift is dividing by a power of two (which, as a bitwise operation, results
-				// in discarding bits on the right and filling with zeros from the left).
-				// For negative values arithmetic right shift, viewed as a bitwise operation, discards bits to the
-				// right and fills in ones from the left. This is achieved as follows:
-				// If value_to_shift is negative, then xor_mask will have all bits set, so xor'ing with xor_mask
-				// will flip all bits. First all bits in value_to_shift are flipped. As for the positive case,
-				// dividing by a power of two using integer arithmetic results in discarding bits to the right
-				// and filling with zeros from the left. Flipping all bits in the result again, turns all zeros
-				// on the left to ones and restores the non-discarded, shifted bits to their original value (they
-				// have now been flipped twice). In summary we now have discarded bits to the right and filled with
-				// ones from the left, i.e. we have performed an arithmetic right shift.
-				m_context.appendInlineAssembly(R"({
-					let xor_mask := sub(0, slt(value_to_shift, 0))
-					value_to_shift := xor(div(xor(value_to_shift, xor_mask), exp(2, shift_amount)), xor_mask)
-				})", {"value_to_shift", "shift_amount"});
-			else
-				m_context.appendInlineAssembly(R"({
-					value_to_shift := div(value_to_shift, exp(2, shift_amount))
-				})", {"value_to_shift", "shift_amount"});
-			m_context << Instruction::POP;
-
-		}
+		m_context << (c_valueSigned ? Instruction::SAR : Instruction::SHR);
 		break;
 	case Token::SHR:
 	default:
@@ -2763,13 +2731,11 @@ void ExpressionCompiler::appendExternalFunctionCall(
 
 	auto funKind = _functionType.kind();
 
-	solAssert(funKind != FunctionType::Kind::BareStaticCall || m_context.evmVersion().hasStaticCall(), "");
-
 	solAssert(funKind != FunctionType::Kind::BareCallCode, "Callcode has been removed.");
 
 	bool returnSuccessConditionAndReturndata = funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareDelegateCall || funKind == FunctionType::Kind::BareStaticCall;
 	bool isDelegateCall = funKind == FunctionType::Kind::BareDelegateCall || funKind == FunctionType::Kind::DelegateCall;
-	bool useStaticCall = funKind == FunctionType::Kind::BareStaticCall || (_functionType.stateMutability() <= StateMutability::View && m_context.evmVersion().hasStaticCall());
+	bool useStaticCall = funKind == FunctionType::Kind::BareStaticCall || _functionType.stateMutability() <= StateMutability::View;
 
 	if (_tryCall)
 	{
@@ -2777,8 +2743,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		solAssert(!_functionType.isBareCall(), "");
 	}
 
-	ReturnInfo const returnInfo{m_context.evmVersion(), _functionType};
-	bool const haveReturndatacopy = m_context.evmVersion().supportsReturndata();
+	ReturnInfo const returnInfo{_functionType};
 	unsigned const retSize = returnInfo.estimatedReturnSize;
 	bool const dynamicReturnSize = returnInfo.dynamicReturnSize;
 	TypePointers const& returnTypes = returnInfo.returnTypes;
@@ -2884,7 +2849,6 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		// code, the call will return empty data and the ABI decoder will revert.
 		if (
 			encodedHeadSize == 0 ||
-			!haveReturndatacopy ||
 			m_context.revertStrings() >= RevertStrings::Debug
 		)
 		{
@@ -2976,14 +2940,13 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		// Stack: return_data_start
 		if (dynamicReturnSize)
 		{
-			solAssert(haveReturndatacopy, "");
 			m_context.appendInlineAssembly("{ returndatacopy(return_data_start, 0, returndatasize()) }", {"return_data_start"});
 		}
 		else
 			solAssert(retSize > 0, "");
 		// Always use the actual return length, and not our calculated expected length, if returndatacopy is supported.
 		// This ensures it can catch badly formatted input from external calls.
-		m_context << (haveReturndatacopy ? evmasm::AssemblyItem(Instruction::RETURNDATASIZE) : u256(retSize));
+		m_context << evmasm::AssemblyItem(Instruction::RETURNDATASIZE);
 		// Stack: return_data_start return_data_size
 		if (needToUpdateFreeMemoryPtr)
 			m_context.appendInlineAssembly(R"({

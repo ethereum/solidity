@@ -11,7 +11,5 @@ contract C {
         catch { return true; }
     }
 }
-// ====
-// EVMVersion: >=tangerineWhistle
 // ----
 // f() -> true

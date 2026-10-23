@@ -9,7 +9,6 @@ contract C {
 }
 // ====
 // ABIEncoderV1Only: true
-// EVMVersion: >=byzantium
 // revertStrings: debug
 // compileViaYul: false
 // ----

@@ -396,9 +396,9 @@ message Data {
 message Program {
   enum Version {
     reserved 0;
-    TANGERINE = 1;
-    SPURIOUS = 2;
-    BYZANTIUM = 3;
+    reserved 1;
+    reserved 2;
+    reserved 3;
     CONSTANTINOPLE = 4;
     PETERSBURG = 5;
     ISTANBUL = 6;

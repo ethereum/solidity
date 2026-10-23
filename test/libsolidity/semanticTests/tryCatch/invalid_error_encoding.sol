@@ -147,8 +147,6 @@ contract C {
         }
     }
 }
-// ====
-// EVMVersion: >=byzantium
 // ----
 // f1() -> 2
 // f1a() -> 2

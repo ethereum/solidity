@@ -319,32 +319,26 @@ BOOST_AUTO_TEST_CASE(cse_associativity2)
 
 BOOST_AUTO_TEST_CASE(cse_double_shift_right_overflow)
 {
-	if (solidity::test::CommonOptions::get().evmVersion().hasBitwiseShifting())
-	{
-		AssemblyItems input{
-			Instruction::CALLVALUE,
-			u256(2),
-			Instruction::SHR,
-			u256(-1),
-			Instruction::SHR
-		};
-		checkCSE(input, {u256(0)});
-	}
+	AssemblyItems input{
+		Instruction::CALLVALUE,
+		u256(2),
+		Instruction::SHR,
+		u256(-1),
+		Instruction::SHR
+	};
+	checkCSE(input, {u256(0)});
 }
 
 BOOST_AUTO_TEST_CASE(cse_double_shift_left_overflow)
 {
-	if (solidity::test::CommonOptions::get().evmVersion().hasBitwiseShifting())
-	{
-		AssemblyItems input{
-			Instruction::DUP1,
-			u256(2),
-			Instruction::SHL,
-			u256(-1),
-			Instruction::SHL
-		};
-		checkCSE(input, {u256(0)});
-	}
+	AssemblyItems input{
+		Instruction::DUP1,
+		u256(2),
+		Instruction::SHL,
+		u256(-1),
+		Instruction::SHL
+	};
+	checkCSE(input, {u256(0)});
 }
 
 BOOST_AUTO_TEST_CASE(cse_byte_ordering_bug)
@@ -1549,9 +1543,6 @@ BOOST_AUTO_TEST_CASE(verbatim_knownstate)
 
 BOOST_AUTO_TEST_CASE(cse_remove_redundant_shift_masking)
 {
-	if (!solidity::test::CommonOptions::get().evmVersion().hasBitwiseShifting())
-		return;
-
 	for (unsigned i = 1; i < 256; i++)
 	{
 		checkCSE({
@@ -1697,9 +1688,6 @@ BOOST_AUTO_TEST_CASE(cse_remove_unwanted_masking_of_address)
 
 BOOST_AUTO_TEST_CASE(cse_replace_too_large_shift)
 {
-	if (!solidity::test::CommonOptions::get().evmVersion().hasBitwiseShifting())
-		return;
-
 	checkCSE({
 		Instruction::CALLVALUE,
 		u256(299),

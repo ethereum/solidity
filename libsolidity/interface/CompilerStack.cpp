@@ -1437,10 +1437,7 @@ void CompilerStack::assembleYul(
 	// Throw a warning if EIP-170 limits are exceeded:
 	//   If contract creation returns data with length greater than 0x6000 (2^14 + 2^13) bytes,
 	//   contract creation fails with an out of gas error.
-	if (
-		m_evmVersion >= langutil::EVMVersion::spuriousDragon() &&
-		compiledContract.runtimeObject.bytecode.size() > 0x6000
-	)
+	if (compiledContract.runtimeObject.bytecode.size() > 0x6000)
 		m_errorReporter.warning(
 			5574_error,
 			_contract.location(),

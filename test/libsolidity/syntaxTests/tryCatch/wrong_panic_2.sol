@@ -5,7 +5,5 @@ contract C {
         }
     }
 }
-// ====
-// EVMVersion: >=byzantium
 // ----
 // TypeError 1271: (72-109): Expected `catch Panic(uint ...) { ... }`.

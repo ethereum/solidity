@@ -55,10 +55,7 @@ namespace GasCosts
 	static unsigned const tier5Gas = 10;                      // GAS_HIGH
 	static unsigned const tier6Gas = 20;                      // GAS_BLOCK_HASH
 	static unsigned const expGas = 10;                        // GAS_EXPONENTIATION
-	inline unsigned expByteGas(langutil::EVMVersion _evmVersion)
-	{
-		return _evmVersion >= langutil::EVMVersion::spuriousDragon() ? 50 : 10; // GAS_EXPONENTIATION_PER_BYTE
-	}
+	static unsigned const expByteGas = 50;                    // GAS_EXPONENTIATION_PER_BYTE
 	static unsigned const keccak256Gas = 30;                  // GAS_KECCAK256
 	static unsigned const keccak256WordGas = 6;               // GAS_KECCAK256_WORD
 	/// Corresponds to ACCESS_LIST_ADDRESS_COST from EIP-2930

@@ -16,7 +16,5 @@ contract C {
         return sum;
     }
 }
-// ====
-// EVMVersion: >=byzantium
 // ----
 // dt(uint256): 4 -> 6

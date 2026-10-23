@@ -9,8 +9,6 @@
     // Main test objective: replace this sload.
     mstore(0, sload(a))
 }
-// ====
-// EVMVersion: >=byzantium
 // ----
 // step: loadResolver
 //
