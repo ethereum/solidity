@@ -25,5 +25,5 @@ contract test {
     }
 }
 // ====
-// EVMVersion: =paris
+// EVMVersion: >=constantinople,<shanghai
 // ----
