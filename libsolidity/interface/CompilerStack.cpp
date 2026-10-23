@@ -78,6 +78,7 @@
 #include <libsolutil/Algorithms.h>
 #include <libsolutil/FunctionSelector.h>
 
+#include <libevmasm/CodeSizeLimits.h>
 #include <libevmasm/Ethdebug.h>
 
 #include <boost/algorithm/string/replace.hpp>
@@ -1435,41 +1436,14 @@ void CompilerStack::assembleYul(
 		solAssert(false, "Assembly exception for deployed bytecode"s + error.what());
 	}
 
-	// Throw a warning if EIP-170 limits are exceeded:
-	//   If contract creation returns data with length greater than 0x6000 (2^14 + 2^13) bytes,
-	//   contract creation fails with an out of gas error.
-	if (
-		m_evmVersion >= langutil::EVMVersion::spuriousDragon() &&
-		compiledContract.runtimeObject.bytecode.size() > 0x6000
-	)
-		m_errorReporter.warning(
-			5574_error,
-			_contract.location(),
-			"Contract code size is "s +
-			std::to_string(compiledContract.runtimeObject.bytecode.size()) +
-			" bytes and exceeds 24576 bytes (a limit introduced in Spurious Dragon). "
-			"This contract may not be deployable on Mainnet. "
-			"Consider enabling the optimizer (with a low \"runs\" value!), "
-			"turning off revert strings, or using libraries."
-		);
-
-	// Throw a warning if EIP-3860 limits are exceeded:
-	//   If initcode is larger than 0xC000 bytes (twice the runtime code limit),
-	//   then contract creation fails with an out of gas error.
-	if (
-		m_evmVersion >= langutil::EVMVersion::shanghai() &&
-		compiledContract.object.bytecode.size() > 0xC000
-	)
-		m_errorReporter.warning(
-			3860_error,
-			_contract.location(),
-			"Contract initcode size is "s +
-			std::to_string(compiledContract.object.bytecode.size()) +
-			" bytes and exceeds 49152 bytes (a limit introduced in Shanghai). "
-			"This contract may not be deployable on Mainnet. "
-			"Consider enabling the optimizer (with a low \"runs\" value!), "
-			"turning off revert strings, or using libraries."
-		);
+	evmasm::checkCodeSizeLimits(
+		m_errorReporter,
+		m_evmVersion,
+		_contract.location(),
+		"Contract",
+		compiledContract.object.bytecode.size(),
+		compiledContract.runtimeObject.bytecode.size()
+	);
 }
 
 void CompilerStack::compileContract(

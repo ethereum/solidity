@@ -4,6 +4,8 @@ set(sources
 	Assembly.h
 	AssemblyItem.cpp
 	AssemblyItem.h
+	CodeSizeLimits.cpp
+	CodeSizeLimits.h
 	Ethdebug.cpp
 	Ethdebug.h
 	EthdebugSchema.cpp
