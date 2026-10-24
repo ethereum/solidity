@@ -16,8 +16,6 @@
     extcodecopy(value, add(memPtr, 32), _1, length)
     sstore(_1, mload(memPtr))
 }
-// ====
-// EVMVersion: >byzantium
 // ----
 // step: fullSuite
 //

@@ -6,7 +6,5 @@ contract CalldataTest {
         return this.test(x)[2];
     }
 }
-// ====
-// EVMVersion: >=byzantium
 // ----
 // tester(bytes): 0x20, 0x08, "abcdefgh" -> "c"

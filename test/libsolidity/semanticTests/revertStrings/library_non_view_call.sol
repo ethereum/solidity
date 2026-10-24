@@ -9,7 +9,6 @@ contract C {
     }
 }
 // ====
-// EVMVersion: >=byzantium
 // revertStrings: debug
 // ----
 // library: L

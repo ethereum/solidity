@@ -49,8 +49,6 @@ contract C {
         }
     }
 }
-// ====
-// EVMVersion: >=byzantium
 // ----
 // a() -> FAILURE, hex"4e487b"
 // b() -> FAILURE, hex"4e487b710000"

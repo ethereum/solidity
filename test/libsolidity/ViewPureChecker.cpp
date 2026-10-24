@@ -51,9 +51,8 @@ BOOST_AUTO_TEST_CASE(environment_access)
 		"tx.gasprice",
 		"this",
 		"address(1).balance",
+		"address(0x4242).staticcall(\"\")",
 	};
-	if (solidity::test::CommonOptions::get().evmVersion().hasStaticCall())
-		view.emplace_back("address(0x4242).staticcall(\"\")");
 	if (solidity::test::CommonOptions::get().evmVersion().hasBlobHash())
 		view.emplace_back("blobhash(7)");
 	if (solidity::test::CommonOptions::get().evmVersion().hasSlotNum())
@@ -145,10 +144,7 @@ BOOST_AUTO_TEST_CASE(address_staticcall)
 			}
 		}
 	)";
-	if (!solidity::test::CommonOptions::get().evmVersion().hasStaticCall())
-		CHECK_ERROR(text, TypeError, "\"staticcall\" is not supported by the VM version.");
-	else
-		CHECK_SUCCESS_NO_WARNINGS(text);
+	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
 
@@ -161,8 +157,7 @@ BOOST_AUTO_TEST_CASE(assembly_staticcall)
 			}
 		}
 	)";
-	if (solidity::test::CommonOptions::get().evmVersion().hasStaticCall())
-		CHECK_SUCCESS_NO_WARNINGS(text);
+	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

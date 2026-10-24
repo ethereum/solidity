@@ -11,7 +11,6 @@ contract test {
 }
 // ====
 // ABIEncoderV1Only: true
-// EVMVersion: >=byzantium
 // compileViaYul: false
 // ----
 // table(uint8): 0 -> 0

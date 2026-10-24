@@ -18,8 +18,6 @@
     sstore(15, f)
     sstore(16, g)
 }
-// ====
-// EVMVersion: >byzantium
 // ----
 // step: expressionSimplifier
 //

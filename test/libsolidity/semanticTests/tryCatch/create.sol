@@ -25,8 +25,6 @@ contract C {
         }
     }
 }
-// ====
-// EVMVersion: >=byzantium
 // ----
 // f() -> false, 0x40, 13, "test message."
 // g() -> true, 0x40, 7, "success"

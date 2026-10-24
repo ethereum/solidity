@@ -9,8 +9,6 @@
     }
     sstore(a, b)
 }
-// ====
-// EVMVersion: >=byzantium
 // ----
 // step: equalStoreEliminator
 //

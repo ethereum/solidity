@@ -3,7 +3,5 @@ contract C {
         (success, data) = target.call({data: ""});
     }
 }
-// ====
-// EVMVersion: >=byzantium
 // ----
 // TypeError 4974: (121-144): Named argument "data" does not match function declaration.

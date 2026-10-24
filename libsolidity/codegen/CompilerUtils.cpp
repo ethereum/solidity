@@ -121,22 +121,17 @@ void CompilerUtils::revertWithError(
 
 void CompilerUtils::returnDataToArray()
 {
-	if (m_context.evmVersion().supportsReturndata())
-	{
-		m_context << Instruction::RETURNDATASIZE;
-		m_context.appendInlineAssembly(R"({
-			switch v case 0 {
-				v := 0x60
-			} default {
-				v := mload(0x40)
-				mstore(0x40, add(v, and(add(returndatasize(), 0x3f), not(0x1f))))
-				mstore(v, returndatasize())
-				returndatacopy(add(v, 0x20), 0, returndatasize())
-			}
-		})", {"v"});
-	}
-	else
-		pushZeroPointer();
+	m_context << Instruction::RETURNDATASIZE;
+	m_context.appendInlineAssembly(R"({
+		switch v case 0 {
+			v := 0x60
+		} default {
+			v := mload(0x40)
+			mstore(0x40, add(v, and(add(returndatasize(), 0x3f), not(0x1f))))
+			mstore(v, returndatasize())
+			returndatacopy(add(v, 0x20), 0, returndatasize())
+		}
+	})", {"v"});
 }
 
 void CompilerUtils::accessCalldataTail(Type const& _type)
@@ -1615,20 +1610,14 @@ void CompilerUtils::cleanHigherOrderBits(IntegerType const& _typeOnStack)
 void CompilerUtils::leftShiftNumberOnStack(unsigned _bits)
 {
 	solAssert(_bits < 256);
-	if (m_context.evmVersion().hasBitwiseShifting())
-		m_context << _bits << Instruction::SHL;
-	else
-		m_context << (u256(1) << _bits) << Instruction::MUL;
+	m_context << _bits << Instruction::SHL;
 }
 
 void CompilerUtils::rightShiftNumberOnStack(unsigned _bits)
 {
 	solAssert(_bits < 256);
 	// NOTE: If we add signed right shift, SAR rounds differently than SDIV
-	if (m_context.evmVersion().hasBitwiseShifting())
-		m_context << _bits << Instruction::SHR;
-	else
-		m_context << (u256(1) << _bits) << Instruction::SWAP1 << Instruction::DIV;
+	m_context << _bits << Instruction::SHR;
 }
 
 unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWords, bool _cleanup)

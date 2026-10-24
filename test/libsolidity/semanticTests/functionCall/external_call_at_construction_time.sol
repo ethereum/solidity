@@ -16,8 +16,6 @@ contract C {
         return 1 + c;
     }
 }
-// ====
-// EVMVersion: >=byzantium
 // ----
 // f(uint256): 0 -> FAILURE
 // f(uint256): 1 -> FAILURE

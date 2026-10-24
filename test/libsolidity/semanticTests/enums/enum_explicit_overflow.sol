@@ -20,8 +20,6 @@ contract test {
 
     ActionChoices choice;
 }
-// ====
-// EVMVersion: >=byzantium
 // ----
 // getChoiceExp(uint256): 2 -> 2
 // getChoiceExp(uint256): 3 -> FAILURE, hex"4e487b71", 0x21 # These should throw #

@@ -95,12 +95,6 @@ EVMVersion ProtoConverter::evmVersionMapping(Program_Version const& _ver)
 {
 	switch (_ver)
 	{
-	case Program::TANGERINE:
-		return EVMVersion::tangerineWhistle();
-	case Program::SPURIOUS:
-		return EVMVersion::spuriousDragon();
-	case Program::BYZANTIUM:
-		return EVMVersion::byzantium();
 	case Program::CONSTANTINOPLE:
 		return EVMVersion::constantinople();
 	case Program::PETERSBURG:
@@ -278,13 +272,6 @@ void ProtoConverter::visit(BinaryOp const& _x)
 {
 	BinaryOp_BOp op = _x.op();
 
-	if ((op == BinaryOp::SHL || op == BinaryOp::SHR || op == BinaryOp::SAR) &&
-		!m_evmVersion.hasBitwiseShifting())
-	{
-		m_output << dictionaryToken();
-		return;
-	}
-
 	switch (op)
 	{
 	case BinaryOp::ADD:
@@ -321,15 +308,12 @@ void ProtoConverter::visit(BinaryOp const& _x)
 		m_output << "gt";
 		break;
 	case BinaryOp::SHR:
-		yulAssert(m_evmVersion.hasBitwiseShifting(), "Proto fuzzer: Invalid evm version");
 		m_output << "shr";
 		break;
 	case BinaryOp::SHL:
-		yulAssert(m_evmVersion.hasBitwiseShifting(), "Proto fuzzer: Invalid evm version");
 		m_output << "shl";
 		break;
 	case BinaryOp::SAR:
-		yulAssert(m_evmVersion.hasBitwiseShifting(), "Proto fuzzer: Invalid evm version");
 		m_output << "sar";
 		break;
 	case BinaryOp::SDIV:
@@ -588,14 +572,6 @@ void ProtoConverter::visit(UnaryOp const& _x)
 {
 	UnaryOp_UOp op = _x.op();
 
-	// Replace calls to extcodehash on unsupported EVMs with a dictionary
-	// token.
-	if (op == UnaryOp::EXTCODEHASH && !m_evmVersion.hasExtCodeHash())
-	{
-		m_output << dictionaryToken();
-		return;
-	}
-
 	if (op == UnaryOp::TLOAD && !m_evmVersion.supportsTransientStorage())
 	{
 		m_output << dictionaryToken();
@@ -728,12 +704,7 @@ void ProtoConverter::visit(NullaryOp const& _x)
 		m_output << "codesize()";
 		break;
 	case NullaryOp::RETURNDATASIZE:
-		// If evm supports returndatasize, we generate it. Otherwise,
-		// we output a dictionary token.
-		if (m_evmVersion.supportsReturndata())
-			m_output << "returndatasize()";
-		else
-			m_output << dictionaryToken();
+		m_output << "returndatasize()";
 		break;
 	case NullaryOp::ADDRESS:
 		m_output << "address()";
@@ -820,11 +791,6 @@ void ProtoConverter::visit(CopyFunc const& _x)
 	if (type == CopyFunc::DATA && !m_isObject)
 		return;
 
-	// We don't generate code if the copy function is returndatacopy
-	// and the underlying evm does not support it.
-	if (type == CopyFunc::RETURNDATA && !m_evmVersion.supportsReturndata())
-		return;
-
 	// Bail out if MCOPY is not supported for fuzzed EVM version
 	if (type == CopyFunc::MEMORY && !m_evmVersion.hasMcopy())
 		return;
@@ -843,7 +809,6 @@ void ProtoConverter::visit(CopyFunc const& _x)
 		m_output << "codecopy";
 		break;
 	case CopyFunc::RETURNDATA:
-		yulAssert(m_evmVersion.supportsReturndata(), "Proto fuzzer: Invalid evm version");
 		m_output << "returndatacopy";
 		break;
 	case CopyFunc::DATA:
@@ -1071,15 +1036,6 @@ void ProtoConverter::visit(LowLevelCall const& _x)
 {
 	LowLevelCall_Type type = _x.callty();
 
-	// Generate staticcall if it is supported by the underlying evm
-	if (type == LowLevelCall::STATICCALL && !m_evmVersion.hasStaticCall())
-	{
-		// Since staticcall is supposed to return 0 on success and 1 on
-		// failure, we can use counter value to emulate it
-		m_output << ((counter() % 2) ? "0" : "1");
-		return;
-	}
-
 	switch (type)
 	{
 	case LowLevelCall::CALL:
@@ -1092,7 +1048,6 @@ void ProtoConverter::visit(LowLevelCall const& _x)
 		m_output << "delegatecall(";
 		break;
 	case LowLevelCall::STATICCALL:
-		yulAssert(m_evmVersion.hasStaticCall(), "Proto fuzzer: Invalid evm version");
 		m_output << "staticcall(";
 		break;
 	}
@@ -1126,14 +1081,6 @@ void ProtoConverter::visit(LowLevelCall const& _x)
 void ProtoConverter::visit(Create const& _x)
 {
 	Create_Type type = _x.createty();
-
-	// Replace a call to create2 on unsupported EVMs with a dictionary
-	// token.
-	if (type == Create::CREATE2 && !m_evmVersion.hasCreate2())
-	{
-		m_output << dictionaryToken();
-		return;
-	}
 
 	switch (type)
 	{

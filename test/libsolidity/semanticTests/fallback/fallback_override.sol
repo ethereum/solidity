@@ -12,7 +12,5 @@ contract B is A {
         return (success, retval);
     }
 }
-// ====
-// EVMVersion: >=byzantium
 // ----
 // f() -> 0x01, 0x40, 0x03, 0x78797a0000000000000000000000000000000000000000000000000000000000

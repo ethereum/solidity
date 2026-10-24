@@ -24,10 +24,9 @@
 using namespace solidity::frontend;
 using namespace solidity::langutil;
 
-ReturnInfo::ReturnInfo(EVMVersion const& _evmVersion, FunctionType const& _functionType)
+ReturnInfo::ReturnInfo(FunctionType const& _functionType)
 {
 	FunctionType::Kind const funKind = _functionType.kind();
-	bool const haveReturndatacopy = _evmVersion.supportsReturndata();
 	bool const returnSuccessConditionAndReturndata =
 		funKind == FunctionType::Kind::BareCall ||
 		funKind == FunctionType::Kind::BareDelegateCall ||
@@ -35,17 +34,13 @@ ReturnInfo::ReturnInfo(EVMVersion const& _evmVersion, FunctionType const& _funct
 
 	if (!returnSuccessConditionAndReturndata)
 	{
-		if (haveReturndatacopy)
-			returnTypes = _functionType.returnParameterTypes();
-		else
-			returnTypes = _functionType.returnParameterTypesWithoutDynamicTypes();
+		returnTypes = _functionType.returnParameterTypes();
 
 		for (auto const& retType: returnTypes)
 		{
 			solAssert(retType->decodingType(), "");
 			if (retType->decodingType()->isDynamicallyEncoded())
 			{
-				solAssert(haveReturndatacopy, "");
 				dynamicReturnSize = true;
 				estimatedReturnSize = 0;
 				break;

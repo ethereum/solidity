@@ -310,48 +310,29 @@ BOOST_AUTO_TEST_CASE(keccak256)
 
 BOOST_AUTO_TEST_CASE(returndatasize)
 {
-	if (!solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
-		return;
 	BOOST_CHECK(successAssemble("{ let r := returndatasize() }"));
 }
 
 BOOST_AUTO_TEST_CASE(returndatacopy)
 {
-	if (!solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
-		return;
 	BOOST_CHECK(successAssemble("{ returndatacopy(0, 32, 64) }"));
 }
 
 BOOST_AUTO_TEST_CASE(staticcall)
 {
-	if (!solidity::test::CommonOptions::get().evmVersion().hasStaticCall())
-		return;
 	BOOST_CHECK(successAssemble("{ pop(staticcall(10000, 0x123, 64, 0x10, 128, 0x10)) }"));
 }
 
 BOOST_AUTO_TEST_CASE(create2)
 {
-	if (!solidity::test::CommonOptions::get().evmVersion().hasCreate2())
-		return;
 	BOOST_CHECK(successAssemble("{ pop(create2(10, 0x123, 32, 64)) }"));
 }
 
 BOOST_AUTO_TEST_CASE(shift)
 {
-	if (!solidity::test::CommonOptions::get().evmVersion().hasBitwiseShifting())
-		return;
 	BOOST_CHECK(successAssemble("{ pop(shl(10, 32)) }"));
 	BOOST_CHECK(successAssemble("{ pop(shr(10, 32)) }"));
 	BOOST_CHECK(successAssemble("{ pop(sar(10, 32)) }"));
-}
-
-BOOST_AUTO_TEST_CASE(shift_constantinople_warning)
-{
-	if (solidity::test::CommonOptions::get().evmVersion().hasBitwiseShifting())
-		return;
-	CHECK_PARSE_WARNING("{ shl(10, 32) }", TypeError, "The \"shl\" instruction is only available for Constantinople-compatible VMs");
-	CHECK_PARSE_WARNING("{ shr(10, 32) }", TypeError, "The \"shr\" instruction is only available for Constantinople-compatible VMs");
-	CHECK_PARSE_WARNING("{ sar(10, 32) }", TypeError, "The \"sar\" instruction is only available for Constantinople-compatible VMs");
 }
 
 BOOST_AUTO_TEST_SUITE_END() // }}}

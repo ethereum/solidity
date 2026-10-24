@@ -1342,16 +1342,10 @@ jobs:
       - run_soltest_all:
           # We test most EVM versions on every PR. The ones below are the exceptions.
           #
-          # We do not test these at all. We were never doing that and no point starting now since
-          # they are deprecated anyway:
-          # - tangerineWhistle
-          # - spuriousDragon
-          #
           # These have a low chance of breaking so we only run them in nightly to save credits:
-          # - byzantium: deprecated, if it breaks, homestead likely will as well
           # - petersburg: no changes compared to constantinople
           # - prague: no changes compared to cancun
-          evm_versions: byzantium petersburg prague
+          evm_versions: petersburg prague
       - store_test_results:
           path: test_results/
       - store_artifacts_test_results

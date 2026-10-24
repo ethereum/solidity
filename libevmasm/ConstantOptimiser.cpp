@@ -282,17 +282,9 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 			AssemblyItems newRoutine;
 			if (lowerPart != 0)
 				newRoutine += findRepresentation(u256(abs(lowerPart)));
-			if (m_params.evmVersion.hasBitwiseShifting())
-			{
-				newRoutine += findRepresentation(upperPart);
-				newRoutine += AssemblyItems{u256(bits), Instruction::SHL};
-			}
-			else
-			{
-				newRoutine += AssemblyItems{u256(bits), u256(2), Instruction::EXP};
-				if (upperPart != 1)
-					newRoutine += findRepresentation(upperPart) + AssemblyItems{Instruction::MUL};
-			}
+
+			newRoutine += findRepresentation(upperPart);
+			newRoutine += AssemblyItems{u256(bits), Instruction::SHL};
 			if (lowerPart > 0)
 				newRoutine += AssemblyItems{Instruction::ADD};
 			else if (lowerPart < 0)
@@ -344,20 +336,10 @@ bool ComputeMethod::checkRepresentation(u256 const& _value, AssemblyItems const&
 				sp[0] = ~sp[0];
 				break;
 			case Instruction::SHL:
-				assertThrow(
-					m_params.evmVersion.hasBitwiseShifting(),
-					OptimizerException,
-					"Shift generated for invalid EVM version."
-				);
 				assertThrow(sp[0] <= u256(255), OptimizerException, "Invalid shift generated.");
 				sp[-1] = u256(bigint(sp[-1]) << unsigned(sp[0]));
 				break;
 			case Instruction::SHR:
-				assertThrow(
-					m_params.evmVersion.hasBitwiseShifting(),
-					OptimizerException,
-					"Shift generated for invalid EVM version."
-				);
 				assertThrow(sp[0] <= u256(255), OptimizerException, "Invalid shift generated.");
 				sp[-1] = sp[-1] >> unsigned(sp[0]);
 				break;
@@ -381,7 +363,7 @@ bigint ComputeMethod::gasNeeded(AssemblyItems const& _routine) const
 {
 	auto numExps = static_cast<size_t>(count(_routine.begin(), _routine.end(), Instruction::EXP));
 	return combineGas(
-		simpleRunGas(_routine, m_params.evmVersion) + numExps * (GasCosts::expGas + GasCosts::expByteGas(m_params.evmVersion)),
+		simpleRunGas(_routine, m_params.evmVersion) + numExps * (GasCosts::expGas + GasCosts::expByteGas),
 		// Data gas for routine: Some bytes are zero, but we ignore them.
 		bytesRequired(_routine, m_params.evmVersion) * (m_params.isCreation ? GasCosts::txDataNonZeroGas(m_params.evmVersion) : GasCosts::createDataGas),
 		0

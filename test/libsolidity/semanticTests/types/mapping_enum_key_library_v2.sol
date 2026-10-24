@@ -18,8 +18,6 @@ contract test {
         L.set(table, k, v);
     }
 }
-// ====
-// EVMVersion: >=byzantium
 // ----
 // library: L
 // get(uint8): 0 -> 0

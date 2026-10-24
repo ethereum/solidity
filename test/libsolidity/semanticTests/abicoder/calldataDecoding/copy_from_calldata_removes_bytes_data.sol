@@ -5,8 +5,6 @@ contract c {
     fallback() external { data = msg.data; }
     bytes data;
 }
-// ====
-// EVMVersion: >=byzantium
 // ----
 // (): 1, 2, 3, 4, 5 ->
 // gas irOptimized: 155119

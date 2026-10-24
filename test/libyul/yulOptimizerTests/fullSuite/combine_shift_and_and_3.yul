@@ -12,8 +12,6 @@
     sstore(19, d)
     sstore(20, e)
 }
-// ====
-// EVMVersion: >byzantium
 // ----
 // step: fullSuite
 //

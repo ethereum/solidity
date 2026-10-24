@@ -5,7 +5,6 @@ contract C {
 	}
 }
 // ====
-// EVMVersion: >=byzantium
 // SMTEngine: all
 // ----
 // Warning 6321: (43-47): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.

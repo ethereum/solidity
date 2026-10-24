@@ -1178,20 +1178,17 @@ BOOST_AUTO_TEST_CASE(default_fallback_throws)
 	compileAndRun(sourceCode);
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(0));
 
-	if (solidity::test::CommonOptions::get().evmVersion().hasStaticCall())
-	{
-		char const* sourceCode = R"YY(
-			contract A {
-				function f() public returns (bool) {
-					(bool success, bytes memory data) = address(this).staticcall("");
-					assert(data.length == 0);
-					return success;
-				}
+	sourceCode = R"YY(
+		contract A {
+			function f() public returns (bool) {
+				(bool success, bytes memory data) = address(this).staticcall("");
+				assert(data.length == 0);
+				return success;
 			}
-		)YY";
-		compileAndRun(sourceCode);
-		ABI_CHECK(callContractFunction("f()"), encodeArgs(0));
-	}
+		}
+	)YY";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(0));
 }
 
 BOOST_AUTO_TEST_CASE(empty_name_input_parameter_with_named_one)
@@ -1286,45 +1283,42 @@ BOOST_AUTO_TEST_CASE(generic_delegatecall)
 
 BOOST_AUTO_TEST_CASE(generic_staticcall)
 {
-	if (solidity::test::CommonOptions::get().evmVersion().hasStaticCall())
-	{
-		char const* sourceCode = R"**(
-				contract A {
-					uint public x;
-					constructor() { x = 42; }
-					function pureFunction(uint256 p) public pure returns (uint256) { return p; }
-					function viewFunction(uint256 p) public view returns (uint256) { return p + x; }
-					function nonpayableFunction(uint256 p) public returns (uint256) { x = p; return x; }
-					function assertFunction(uint256 p) public view returns (uint256) { assert(x == p); return x; }
+	char const* sourceCode = R"**(
+			contract A {
+				uint public x;
+				constructor() { x = 42; }
+				function pureFunction(uint256 p) public pure returns (uint256) { return p; }
+				function viewFunction(uint256 p) public view returns (uint256) { return p + x; }
+				function nonpayableFunction(uint256 p) public returns (uint256) { x = p; return x; }
+				function assertFunction(uint256 p) public view returns (uint256) { assert(x == p); return x; }
+			}
+			contract C {
+				function f(address a) public view returns (bool, bytes memory)
+				{
+					return a.staticcall(abi.encodeWithSignature("pureFunction(uint256)", 23));
 				}
-				contract C {
-					function f(address a) public view returns (bool, bytes memory)
-					{
-						return a.staticcall(abi.encodeWithSignature("pureFunction(uint256)", 23));
-					}
-					function g(address a) public view returns (bool, bytes memory)
-					{
-						return a.staticcall(abi.encodeWithSignature("viewFunction(uint256)", 23));
-					}
-					function h(address a) public view returns (bool, bytes memory)
-					{
-						return a.staticcall(abi.encodeWithSignature("nonpayableFunction(uint256)", 23));
-					}
-					function i(address a, uint256 v) public view returns (bool, bytes memory)
-					{
-						return a.staticcall(abi.encodeWithSignature("assertFunction(uint256)", v));
-					}
+				function g(address a) public view returns (bool, bytes memory)
+				{
+					return a.staticcall(abi.encodeWithSignature("viewFunction(uint256)", 23));
 				}
-		)**";
-		compileAndRun(sourceCode, 0, "A");
-		h160 const c_addressA = m_contractAddress;
-		compileAndRun(sourceCode, 0, "C");
-		ABI_CHECK(callContractFunction("f(address)", c_addressA), encodeArgs(true, 0x40, 0x20, 23));
-		ABI_CHECK(callContractFunction("g(address)", c_addressA), encodeArgs(true, 0x40, 0x20, 23 + 42));
-		ABI_CHECK(callContractFunction("h(address)", c_addressA), encodeArgs(false, 0x40, 0x00));
-		ABI_CHECK(callContractFunction("i(address,uint256)", c_addressA, 42), encodeArgs(true, 0x40, 0x20, 42));
-		ABI_CHECK(callContractFunction("i(address,uint256)", c_addressA, 23), encodeArgs(false, 0x40, 0x24) + panicData(PanicCode::Assert) + bytes(32 - 4, 0));
-	}
+				function h(address a) public view returns (bool, bytes memory)
+				{
+					return a.staticcall(abi.encodeWithSignature("nonpayableFunction(uint256)", 23));
+				}
+				function i(address a, uint256 v) public view returns (bool, bytes memory)
+				{
+					return a.staticcall(abi.encodeWithSignature("assertFunction(uint256)", v));
+				}
+			}
+	)**";
+	compileAndRun(sourceCode, 0, "A");
+	h160 const c_addressA = m_contractAddress;
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f(address)", c_addressA), encodeArgs(true, 0x40, 0x20, 23));
+	ABI_CHECK(callContractFunction("g(address)", c_addressA), encodeArgs(true, 0x40, 0x20, 23 + 42));
+	ABI_CHECK(callContractFunction("h(address)", c_addressA), encodeArgs(false, 0x40, 0x00));
+	ABI_CHECK(callContractFunction("i(address,uint256)", c_addressA, 42), encodeArgs(true, 0x40, 0x20, 42));
+	ABI_CHECK(callContractFunction("i(address,uint256)", c_addressA, 23), encodeArgs(false, 0x40, 0x24) + panicData(PanicCode::Assert) + bytes(32 - 4, 0));
 }
 
 BOOST_AUTO_TEST_CASE(library_call_protection)
@@ -2874,16 +2868,13 @@ BOOST_AUTO_TEST_CASE(revert_with_cause)
 			}
 		}
 	)";
-	if (solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
-	{
-		compileAndRun(sourceCode, 0, "C");
-		bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
-		ABI_CHECK(callContractFunction("f()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 7, "test123") + bytes(28, 0));
-		ABI_CHECK(callContractFunction("g()"), encodeArgs(0, 0x40, 0x84) + errorSignature + encodeArgs(0x20, 44, "test1234567890123456789012345678901234567890") + bytes(28, 0));
-		ABI_CHECK(callContractFunction("h()"), encodeArgs(0, 0x40, 0x84) + errorSignature + encodeArgs(0x20, 44, "test1234567890123456789012345678901234567890") + bytes(28, 0));
-		ABI_CHECK(callContractFunction("i()"), encodeArgs(0, 0x40, 0x84) + errorSignature + encodeArgs(0x20, 44, "test1234567890123456789012345678901234567890") + bytes(28, 0));
-		ABI_CHECK(callContractFunction("j()"), encodeArgs(0, 0x40, 0x84) + errorSignature + encodeArgs(0x20, 44, "test1234567890123456789012345678901234567890") + bytes(28, 0));
-	}
+	compileAndRun(sourceCode, 0, "C");
+	bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 7, "test123") + bytes(28, 0));
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(0, 0x40, 0x84) + errorSignature + encodeArgs(0x20, 44, "test1234567890123456789012345678901234567890") + bytes(28, 0));
+	ABI_CHECK(callContractFunction("h()"), encodeArgs(0, 0x40, 0x84) + errorSignature + encodeArgs(0x20, 44, "test1234567890123456789012345678901234567890") + bytes(28, 0));
+	ABI_CHECK(callContractFunction("i()"), encodeArgs(0, 0x40, 0x84) + errorSignature + encodeArgs(0x20, 44, "test1234567890123456789012345678901234567890") + bytes(28, 0));
+	ABI_CHECK(callContractFunction("j()"), encodeArgs(0, 0x40, 0x84) + errorSignature + encodeArgs(0x20, 44, "test1234567890123456789012345678901234567890") + bytes(28, 0));
 }
 
 BOOST_AUTO_TEST_CASE(require_with_message)
@@ -2948,18 +2939,15 @@ BOOST_AUTO_TEST_CASE(require_with_message)
 			}
 		}
 	)";
-	if (solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
-	{
-		compileAndRun(sourceCode, 0, "C");
-		bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
-		ABI_CHECK(callContractFunction("f(uint256)", 8), encodeArgs(1, 0x40, 0));
-		ABI_CHECK(callContractFunction("f(uint256)", 5), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 6, "failed") + bytes(28, 0));
-		ABI_CHECK(callContractFunction("g()"), encodeArgs(1, 0x40, 0));
-		ABI_CHECK(callContractFunction("g()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 18, "only on second run") + bytes(28, 0));
-		ABI_CHECK(callContractFunction("h()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 3, "abc") + bytes(28, 0));
-		ABI_CHECK(callContractFunction("i()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 3, "abc") + bytes(28, 0));
-		ABI_CHECK(callContractFunction("j()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 3, "msg") + bytes(28, 0));
-	}
+	compileAndRun(sourceCode, 0, "C");
+	bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
+	ABI_CHECK(callContractFunction("f(uint256)", 8), encodeArgs(1, 0x40, 0));
+	ABI_CHECK(callContractFunction("f(uint256)", 5), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 6, "failed") + bytes(28, 0));
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(1, 0x40, 0));
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 18, "only on second run") + bytes(28, 0));
+	ABI_CHECK(callContractFunction("h()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 3, "abc") + bytes(28, 0));
+	ABI_CHECK(callContractFunction("i()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 3, "abc") + bytes(28, 0));
+	ABI_CHECK(callContractFunction("j()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 3, "msg") + bytes(28, 0));
 }
 
 BOOST_AUTO_TEST_CASE(bubble_up_error_messages)
@@ -2994,13 +2982,10 @@ BOOST_AUTO_TEST_CASE(bubble_up_error_messages)
 			}
 		}
 	)";
-	if (solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
-	{
-		compileAndRun(sourceCode, 0, "C");
-		bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
-		ABI_CHECK(callContractFunction("f()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 7, "message") + bytes(28, 0));
-		ABI_CHECK(callContractFunction("g()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 7, "message") + bytes(28, 0));
-	}
+	compileAndRun(sourceCode, 0, "C");
+	bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 7, "message") + bytes(28, 0));
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 7, "message") + bytes(28, 0));
 }
 
 BOOST_AUTO_TEST_CASE(bubble_up_error_messages_through_transfer)
@@ -3032,12 +3017,9 @@ BOOST_AUTO_TEST_CASE(bubble_up_error_messages_through_transfer)
 			}
 		}
 	)";
-	if (solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
-	{
-		compileAndRun(sourceCode, 0, "C");
-		bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
-		ABI_CHECK(callContractFunction("f()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 7, "message") + bytes(28, 0));
-	}
+	compileAndRun(sourceCode, 0, "C");
+	bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 7, "message") + bytes(28, 0));
 }
 
 BOOST_AUTO_TEST_CASE(bubble_up_error_messages_through_create)
@@ -3071,12 +3053,9 @@ BOOST_AUTO_TEST_CASE(bubble_up_error_messages_through_create)
 			}
 		}
 	)";
-	if (solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
-	{
-		compileAndRun(sourceCode, 0, "C");
-		bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
-		ABI_CHECK(callContractFunction("f()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 7, "message") + bytes(28, 0));
-	}
+	compileAndRun(sourceCode, 0, "C");
+	bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 7, "message") + bytes(28, 0));
 }
 
 BOOST_AUTO_TEST_CASE(interface_contract)
@@ -3133,146 +3112,138 @@ BOOST_AUTO_TEST_CASE(bare_call_invalid_address)
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(1)));
 	ABI_CHECK(callContractFunction("h()"), encodeArgs(u256(1)));
 
-	if (solidity::test::CommonOptions::get().evmVersion().hasStaticCall())
-	{
-		char const* sourceCode = R"YY(
-			contract C {
-				function f() external returns (bool, bytes memory) {
-					return address(0x4242).staticcall("");
-				}
+	sourceCode = R"YY(
+		contract C {
+			function f() external returns (bool, bytes memory) {
+				return address(0x4242).staticcall("");
 			}
-		)YY";
-		compileAndRun(sourceCode, 0, "C");
-		ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(1), 0x40, 0x00));
-	}
+		}
+	)YY";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(1), 0x40, 0x00));
 }
 
 BOOST_AUTO_TEST_CASE(bare_call_return_data)
 {
-	if (solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
+	std::vector<std::string> calltypes = {"call", "delegatecall", "staticcall"};
+	for (std::string const& calltype: calltypes)
 	{
-		std::vector<std::string> calltypes = {"call", "delegatecall"};
-		if (solidity::test::CommonOptions::get().evmVersion().hasStaticCall())
-			calltypes.emplace_back("staticcall");
-		for (std::string const& calltype: calltypes)
-		{
-			std::string sourceCode = R"DELIMITER(
-				contract A {
-					constructor() {
-					}
-					function return_bool() public pure returns(bool) {
-						return true;
-					}
-					function return_int32() public pure returns(int32) {
-						return -32;
-					}
-					function return_uint32() public pure returns(uint32) {
-						return 0x3232;
-					}
-					function return_int256() public pure returns(int256) {
-						return -256;
-					}
-					function return_uint256() public pure returns(uint256) {
-						return 0x256256;
-					}
-					function return_bytes4() public pure returns(bytes4) {
-						return 0xabcd0012;
-					}
-					function return_multi() public pure returns(bool, uint32, bytes4) {
-						return (false, 0x3232, 0xabcd0012);
-					}
-					function return_bytes() public pure returns(bytes memory b) {
-						b = new bytes(2);
-						b[0] = 0x42;
-						b[1] = 0x21;
-					}
+		std::string sourceCode = R"DELIMITER(
+			contract A {
+				constructor() {
 				}
-				contract C {
-					A addr;
-					constructor() {
-						addr = new A();
-					}
-					function f(string memory signature) public returns (bool, bytes memory) {
-						return address(addr).)DELIMITER" + calltype + R"DELIMITER((abi.encodeWithSignature(signature));
-					}
-					function check_bool() external returns (bool) {
-						(bool success, bytes memory data) = f("return_bool()");
-						assert(success);
-						bool a = abi.decode(data, (bool));
-						assert(a);
-						return true;
-					}
-					function check_int32() external returns (bool) {
-						(bool success, bytes memory data) = f("return_int32()");
-						assert(success);
-						int32 a = abi.decode(data, (int32));
-						assert(a == -32);
-						return true;
-					}
-					function check_uint32() external returns (bool) {
-						(bool success, bytes memory data) = f("return_uint32()");
-						assert(success);
-						uint32 a = abi.decode(data, (uint32));
-						assert(a == 0x3232);
-						return true;
-					}
-					function check_int256() external returns (bool) {
-						(bool success, bytes memory data) = f("return_int256()");
-						assert(success);
-						int256 a = abi.decode(data, (int256));
-						assert(a == -256);
-						return true;
-					}
-					function check_uint256() external returns (bool) {
-						(bool success, bytes memory data) = f("return_uint256()");
-						assert(success);
-						uint256 a = abi.decode(data, (uint256));
-						assert(a == 0x256256);
-						return true;
-					}
-					function check_bytes4() external returns (bool) {
-						(bool success, bytes memory data) = f("return_bytes4()");
-						assert(success);
-						bytes4 a = abi.decode(data, (bytes4));
-						assert(a == 0xabcd0012);
-						return true;
-					}
-					function check_multi() external returns (bool) {
-						(bool success, bytes memory data) = f("return_multi()");
-						assert(success);
-						(bool a, uint32 b, bytes4 c) = abi.decode(data, (bool, uint32, bytes4));
-						assert(a == false && b == 0x3232 && c == 0xabcd0012);
-						return true;
-					}
-					function check_bytes() external returns (bool) {
-						(bool success, bytes memory data) = f("return_bytes()");
-						assert(success);
-						(bytes memory d) = abi.decode(data, (bytes));
-						assert(d.length == 2 && d[0] == 0x42 && d[1] == 0x21);
-						return true;
-					}
+				function return_bool() public pure returns(bool) {
+					return true;
 				}
-			)DELIMITER";
-			ALSO_VIA_YUL(
-				compileAndRun(sourceCode, 0, "C");
-				ABI_CHECK(callContractFunction("f(string)", encodeDyn(std::string("return_bool()"))), encodeArgs(true, 0x40, 0x20, true));
-				ABI_CHECK(callContractFunction("f(string)", encodeDyn(std::string("return_int32()"))), encodeArgs(true, 0x40, 0x20, u256(-32)));
-				ABI_CHECK(callContractFunction("f(string)", encodeDyn(std::string("return_uint32()"))), encodeArgs(true, 0x40, 0x20, u256(0x3232)));
-				ABI_CHECK(callContractFunction("f(string)", encodeDyn(std::string("return_int256()"))), encodeArgs(true, 0x40, 0x20, u256(-256)));
-				ABI_CHECK(callContractFunction("f(string)", encodeDyn(std::string("return_uint256()"))), encodeArgs(true, 0x40, 0x20, u256(0x256256)));
-				ABI_CHECK(callContractFunction("f(string)", encodeDyn(std::string("return_bytes4()"))), encodeArgs(true, 0x40, 0x20, u256(0xabcd0012) << (28*8)));
-				ABI_CHECK(callContractFunction("f(string)", encodeDyn(std::string("return_multi()"))), encodeArgs(true, 0x40, 0x60, false, u256(0x3232), u256(0xabcd0012) << (28*8)));
-				ABI_CHECK(callContractFunction("f(string)", encodeDyn(std::string("return_bytes()"))), encodeArgs(true, 0x40, 0x60, 0x20, 0x02, encode(bytes{0x42,0x21}, false)));
-				ABI_CHECK(callContractFunction("check_bool()"), encodeArgs(true));
-				ABI_CHECK(callContractFunction("check_int32()"), encodeArgs(true));
-				ABI_CHECK(callContractFunction("check_uint32()"), encodeArgs(true));
-				ABI_CHECK(callContractFunction("check_int256()"), encodeArgs(true));
-				ABI_CHECK(callContractFunction("check_uint256()"), encodeArgs(true));
-				ABI_CHECK(callContractFunction("check_bytes4()"), encodeArgs(true));
-				ABI_CHECK(callContractFunction("check_multi()"), encodeArgs(true));
-				ABI_CHECK(callContractFunction("check_bytes()"), encodeArgs(true));
-			)
-		}
+				function return_int32() public pure returns(int32) {
+					return -32;
+				}
+				function return_uint32() public pure returns(uint32) {
+					return 0x3232;
+				}
+				function return_int256() public pure returns(int256) {
+					return -256;
+				}
+				function return_uint256() public pure returns(uint256) {
+					return 0x256256;
+				}
+				function return_bytes4() public pure returns(bytes4) {
+					return 0xabcd0012;
+				}
+				function return_multi() public pure returns(bool, uint32, bytes4) {
+					return (false, 0x3232, 0xabcd0012);
+				}
+				function return_bytes() public pure returns(bytes memory b) {
+					b = new bytes(2);
+					b[0] = 0x42;
+					b[1] = 0x21;
+				}
+			}
+			contract C {
+				A addr;
+				constructor() {
+					addr = new A();
+				}
+				function f(string memory signature) public returns (bool, bytes memory) {
+					return address(addr).)DELIMITER" + calltype + R"DELIMITER((abi.encodeWithSignature(signature));
+				}
+				function check_bool() external returns (bool) {
+					(bool success, bytes memory data) = f("return_bool()");
+					assert(success);
+					bool a = abi.decode(data, (bool));
+					assert(a);
+					return true;
+				}
+				function check_int32() external returns (bool) {
+					(bool success, bytes memory data) = f("return_int32()");
+					assert(success);
+					int32 a = abi.decode(data, (int32));
+					assert(a == -32);
+					return true;
+				}
+				function check_uint32() external returns (bool) {
+					(bool success, bytes memory data) = f("return_uint32()");
+					assert(success);
+					uint32 a = abi.decode(data, (uint32));
+					assert(a == 0x3232);
+					return true;
+				}
+				function check_int256() external returns (bool) {
+					(bool success, bytes memory data) = f("return_int256()");
+					assert(success);
+					int256 a = abi.decode(data, (int256));
+					assert(a == -256);
+					return true;
+				}
+				function check_uint256() external returns (bool) {
+					(bool success, bytes memory data) = f("return_uint256()");
+					assert(success);
+					uint256 a = abi.decode(data, (uint256));
+					assert(a == 0x256256);
+					return true;
+				}
+				function check_bytes4() external returns (bool) {
+					(bool success, bytes memory data) = f("return_bytes4()");
+					assert(success);
+					bytes4 a = abi.decode(data, (bytes4));
+					assert(a == 0xabcd0012);
+					return true;
+				}
+				function check_multi() external returns (bool) {
+					(bool success, bytes memory data) = f("return_multi()");
+					assert(success);
+					(bool a, uint32 b, bytes4 c) = abi.decode(data, (bool, uint32, bytes4));
+					assert(a == false && b == 0x3232 && c == 0xabcd0012);
+					return true;
+				}
+				function check_bytes() external returns (bool) {
+					(bool success, bytes memory data) = f("return_bytes()");
+					assert(success);
+					(bytes memory d) = abi.decode(data, (bytes));
+					assert(d.length == 2 && d[0] == 0x42 && d[1] == 0x21);
+					return true;
+				}
+			}
+		)DELIMITER";
+		ALSO_VIA_YUL(
+			compileAndRun(sourceCode, 0, "C");
+			ABI_CHECK(callContractFunction("f(string)", encodeDyn(std::string("return_bool()"))), encodeArgs(true, 0x40, 0x20, true));
+			ABI_CHECK(callContractFunction("f(string)", encodeDyn(std::string("return_int32()"))), encodeArgs(true, 0x40, 0x20, u256(-32)));
+			ABI_CHECK(callContractFunction("f(string)", encodeDyn(std::string("return_uint32()"))), encodeArgs(true, 0x40, 0x20, u256(0x3232)));
+			ABI_CHECK(callContractFunction("f(string)", encodeDyn(std::string("return_int256()"))), encodeArgs(true, 0x40, 0x20, u256(-256)));
+			ABI_CHECK(callContractFunction("f(string)", encodeDyn(std::string("return_uint256()"))), encodeArgs(true, 0x40, 0x20, u256(0x256256)));
+			ABI_CHECK(callContractFunction("f(string)", encodeDyn(std::string("return_bytes4()"))), encodeArgs(true, 0x40, 0x20, u256(0xabcd0012) << (28*8)));
+			ABI_CHECK(callContractFunction("f(string)", encodeDyn(std::string("return_multi()"))), encodeArgs(true, 0x40, 0x60, false, u256(0x3232), u256(0xabcd0012) << (28*8)));
+			ABI_CHECK(callContractFunction("f(string)", encodeDyn(std::string("return_bytes()"))), encodeArgs(true, 0x40, 0x60, 0x20, 0x02, encode(bytes{0x42,0x21}, false)));
+			ABI_CHECK(callContractFunction("check_bool()"), encodeArgs(true));
+			ABI_CHECK(callContractFunction("check_int32()"), encodeArgs(true));
+			ABI_CHECK(callContractFunction("check_uint32()"), encodeArgs(true));
+			ABI_CHECK(callContractFunction("check_int256()"), encodeArgs(true));
+			ABI_CHECK(callContractFunction("check_uint256()"), encodeArgs(true));
+			ABI_CHECK(callContractFunction("check_bytes4()"), encodeArgs(true));
+			ABI_CHECK(callContractFunction("check_multi()"), encodeArgs(true));
+			ABI_CHECK(callContractFunction("check_bytes()"), encodeArgs(true));
+		)
 	}
 }
 

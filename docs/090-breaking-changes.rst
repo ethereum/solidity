@@ -25,7 +25,8 @@ This section lists changes that are unrelated to the language itself, but that h
 the compiler. These may change the way how you use the compiler on the command-line, how you use its programmable
 interface, or how you analyze the output produced by it.
 
-* EVM version ``homestead`` is no longer supported. CLI and JSON interfaces now reject it.
+* EVM versions ``homestead``, ``tangerineWhistle``, ``spuriousDragon`` and ``byzantium`` are no longer supported.
+  CLI and JSON interfaces now reject them.
 
 
 How to update your code

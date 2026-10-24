@@ -33,8 +33,6 @@ contract C {
         r;
     }
 }
-// ====
-// EVMVersion: >=byzantium
 // ----
 // TypeError 3464: (206-207): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
 // TypeError 3464: (343-344): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.

@@ -13,7 +13,7 @@
 			"enabled": true,
 			"runs": 200
 		},
-		"evmVersion": "byzantium",
+		"evmVersion": "prague",
 		"metadata": {
 			"useLiteralContent": "literalContent"
 		}

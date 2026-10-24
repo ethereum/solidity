@@ -1690,12 +1690,10 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			<?isECRecover>
 				mstore(0, 0)
 			</isECRecover>
-				let <success> := <call>(<gas>, <address> <?isCall>, 0</isCall>, <pos>, sub(<end>, <pos>), 0, 32)
+				let <success> := staticcall(gas(), <address>, <pos>, sub(<end>, <pos>), 0, 32)
 			if iszero(<success>) { <forwardingRevert>() }
 			let <retVars> := <shl>(mload(0))
 		)");
-		templ("call", m_context.evmVersion().hasStaticCall() ? "staticcall" : "call");
-		templ("isCall", !m_context.evmVersion().hasStaticCall());
 		templ("shl", m_utils.shiftLeftFunction(offset * 8));
 		templ("allocateUnbounded", m_utils.allocateUnboundedFunction());
 		templ("pos", m_context.newYulVariable());
@@ -1710,8 +1708,6 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		templ("success", m_context.newYulVariable());
 		templ("retVars", IRVariable(_functionCall).commaSeparatedList());
 		templ("forwardingRevert", m_utils.forwardingRevertFunction());
-		// Send all gas (requires tangerine whistle EVM)
-		templ("gas", "gas()");
 
 		appendCode() << templ.render();
 
@@ -2628,9 +2624,9 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	);
 
 	bool const isDelegateCall = funKind == FunctionType::Kind::DelegateCall;
-	bool const useStaticCall = funType.stateMutability() <= StateMutability::View && m_context.evmVersion().hasStaticCall();
+	bool const useStaticCall = funType.stateMutability() <= StateMutability::View;
 
-	ReturnInfo const returnInfo{m_context.evmVersion(), funType};
+	ReturnInfo const returnInfo{funType};
 
 	TypePointers parameterTypes = funType.parameterTypes();
 	TypePointers argumentTypes;
@@ -2670,11 +2666,9 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 				returndatacopy(<pos>, 0, <returnDataSizeVar>)
 			<!isReturndataSizeDynamic>
 				let <returnDataSizeVar> := <staticReturndataSize>
-				<?supportsReturnData>
-					if gt(<returnDataSizeVar>, returndatasize()) {
-						<returnDataSizeVar> := returndatasize()
-					}
-				</supportsReturnData>
+				if gt(<returnDataSizeVar>, returndatasize()) {
+					<returnDataSizeVar> := returndatasize()
+				}
 			</isReturndataSizeDynamic>
 
 			// update freeMemoryPointer according to dynamic return size
@@ -2694,7 +2688,6 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	bool const checkExtcodesize =
 		(
 			encodedHeadSize == 0 ||
-			!m_context.evmVersion().supportsReturndata() ||
 			m_context.revertStrings() >= RevertStrings::Debug
 		);
 	templ("checkExtcodesize", checkExtcodesize);
@@ -2712,11 +2705,8 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	templ("funSel", IRVariable(_functionCall.expression()).part("functionSelector").name());
 	templ("address", IRVariable(_functionCall.expression()).part("address").name());
 
-	if (returnInfo.dynamicReturnSize)
-		solAssert(m_context.evmVersion().supportsReturndata());
 	templ("returnDataSizeVar", m_context.newYulVariable());
 	templ("staticReturndataSize", std::to_string(returnInfo.estimatedReturnSize));
-	templ("supportsReturnData", m_context.evmVersion().supportsReturndata());
 
 	std::string const retVars = IRVariable(_functionCall).commaSeparatedList();
 	templ("retVars", retVars);
@@ -2742,7 +2732,7 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	if (funType.gasSet())
 		templ("gas", IRVariable(_functionCall.expression()).part("gas").name());
 	else
-		// Send all gas (requires tangerine whistle EVM)
+		// Send all gas
 		templ("gas", "gas()");
 	// Order is important here, STATICCALL might overlap with DELEGATECALL.
 	if (isDelegateCall)
@@ -2771,7 +2761,6 @@ void IRGeneratorForStatements::appendBareCall(
 	);
 	FunctionType::Kind const funKind = funType.kind();
 
-	solAssert(funKind != FunctionType::Kind::BareStaticCall || m_context.evmVersion().hasStaticCall());
 	solAssert(funKind != FunctionType::Kind::BareCallCode, "Callcode has been removed.");
 	solAssert(
 		funKind == FunctionType::Kind::BareCall ||
@@ -3430,7 +3419,6 @@ void IRGeneratorForStatements::handleCatchFallback(TryCatchClause const& _fallba
 	setLocation(_fallback);
 	if (_fallback.parameters())
 	{
-		solAssert(m_context.evmVersion().supportsReturndata());
 		solAssert(
 			_fallback.parameters()->parameters().size() == 1 &&
 			_fallback.parameters()->parameters().front() &&

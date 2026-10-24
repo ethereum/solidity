@@ -9,9 +9,6 @@
     mstore(a, inv)
   }
 }
-// ====
-// ====
-// EVMVersion: >=byzantium
 // ----
 // step: loopInvariantCodeMotion
 //

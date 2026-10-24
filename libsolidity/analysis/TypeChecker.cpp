@@ -1000,10 +1000,7 @@ void TypeChecker::endVisit(TryStatement const& _tryStatement)
 	TryCatchClause const& successClause = *_tryStatement.clauses().front();
 	if (successClause.parameters())
 	{
-		TypePointers returnTypes =
-			m_evmVersion.supportsReturndata() ?
-			functionType.returnParameterTypes() :
-			functionType.returnParameterTypesWithoutDynamicTypes();
+		TypePointers returnTypes = functionType.returnParameterTypes();
 		std::vector<ASTPointer<VariableDeclaration>> const& parameters =
 			successClause.parameters()->parameters();
 		if (returnTypes.size() != parameters.size())
@@ -1054,27 +1051,10 @@ void TypeChecker::endVisit(TryStatement const& _tryStatement)
 					*clause.parameters()->parameters().front()->type() != *TypeProvider::bytesMemory()
 				)
 					m_errorReporter.typeError(6231_error, clause.location(), "Expected `catch (bytes memory ...) { ... }` or `catch { ... }`.");
-				if (!m_evmVersion.supportsReturndata())
-					m_errorReporter.typeError(
-						9908_error,
-						clause.location(),
-						"This catch clause type cannot be used on the selected EVM version (" +
-						m_evmVersion.name() +
-						"). You need at least a Byzantium-compatible EVM or use `catch { ... }`."
-					);
 			}
 		}
 		else if (clause.errorName() == "Error" || clause.errorName() == "Panic")
 		{
-			if (!m_evmVersion.supportsReturndata())
-				m_errorReporter.typeError(
-					1812_error,
-					clause.location(),
-					"This catch clause type cannot be used on the selected EVM version (" +
-					m_evmVersion.name() +
-					"). You need at least a Byzantium-compatible EVM or use `catch { ... }`."
-				);
-
 			if (clause.errorName() == "Error")
 			{
 				if (errorClause)
@@ -2002,17 +1982,6 @@ void TypeChecker::typeCheckFunctionCall(
 		return;
 	}
 
-	// Check for unsupported use of bare static call
-	if (
-		_functionType->kind() == FunctionType::Kind::BareStaticCall &&
-		!m_evmVersion.hasStaticCall()
-	)
-		m_errorReporter.typeError(
-			5052_error,
-			_functionCall.location(),
-			"\"staticcall\" is not supported by the VM version."
-		);
-
 	// Perform standard function call type checking
 	typeCheckFunctionGeneralChecks(_functionCall, _functionType);
 }
@@ -2864,9 +2833,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		default:
 		{
 			typeCheckFunctionCall(_functionCall, functionType);
-			returnTypes = m_evmVersion.supportsReturndata() ?
-				functionType->returnParameterTypes() :
-				functionType->returnParameterTypesWithoutDynamicTypes();
+			returnTypes = functionType->returnParameterTypes();
 			break;
 		}
 		}
@@ -3024,13 +2991,6 @@ bool TypeChecker::visit(FunctionCallOptions const& _functionCallOptions)
 				"Unknown call option \"" + name + "\". Valid options are \"salt\", \"value\" and \"gas\"."
 			);
 	}
-
-	if (setSalt && !m_evmVersion.hasCreate2())
-		m_errorReporter.typeError(
-			5189_error,
-			_functionCallOptions.location(),
-			"Unsupported call option \"salt\" (requires Constantinople-compatible VMs)."
-		);
 
 	_functionCallOptions.annotation().type = expressionFunctionType->copyAndSetCallOptions(setGas, setValue, setSalt);
 	return false;
@@ -3524,12 +3484,6 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 		_memberAccess.annotation().isLValue = false;
 		break;
 	case Type::Category::Address:
-		if (memberName == "codehash" && !m_evmVersion.hasExtCodeHash())
-			m_errorReporter.typeError(
-				7598_error,
-				_memberAccess.location(),
-				R"("codehash" is not supported by the VM version.)"
-			);
 		_memberAccess.annotation().isLValue = false;
 		break;
 	case Type::Category::Integer:

@@ -3,8 +3,6 @@
   {
   }
 }
-// ====
-// EVMVersion: >byzantium
 // ----
 // step: expressionSimplifier
 //

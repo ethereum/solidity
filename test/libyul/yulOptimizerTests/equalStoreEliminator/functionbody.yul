@@ -26,8 +26,6 @@
 
 
 }
-// ====
-// EVMVersion: >=byzantium
 // ----
 // step: equalStoreEliminator
 //

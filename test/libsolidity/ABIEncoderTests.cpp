@@ -753,13 +753,10 @@ BOOST_AUTO_TEST_CASE(struct_in_constructor_indirect)
 			}
 		}
 	)";
-	if (solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
-	{
-		NEW_ENCODER(
-			compileAndRun(sourceCode, 0, "D");
-			ABI_CHECK(callContractFunction("f()"), encodeArgs(0x60, 7, 0xa0, 3, "abc", 3, "def"));
-		)
-	}
+	NEW_ENCODER(
+		compileAndRun(sourceCode, 0, "D");
+		ABI_CHECK(callContractFunction("f()"), encodeArgs(0x60, 7, 0xa0, 3, "abc", 3, "def"));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(struct_in_constructor_data_short)

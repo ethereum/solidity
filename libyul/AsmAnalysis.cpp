@@ -698,12 +698,6 @@ bool AsmAnalyzer::validateInstructions(std::string_view _instructionIdentifier, 
 
 bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocation const& _location)
 {
-	// We assume that returndatacopy, returndatasize and staticcall are either all available
-	// or all not available.
-	yulAssert(m_evmVersion.supportsReturndata() == m_evmVersion.hasStaticCall(), "");
-	// Similarly we assume bitwise shifting and create2 go together.
-	yulAssert(m_evmVersion.hasBitwiseShifting() == m_evmVersion.hasCreate2(), "");
-
 	// These instructions are disabled in the dialect.
 	yulAssert(
 		_instr != evmasm::Instruction::JUMP &&
@@ -727,24 +721,8 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 	// The errors below are meant to be issued when processing an undeclared identifier matching a builtin name
 	// present on the default EVM version but not on the currently selected one,
 	// since the other `validateInstructions()` overload uses the default EVM version.
-	if (_instr == evmasm::Instruction::RETURNDATACOPY && !m_evmVersion.supportsReturndata())
-		errorForVM(7756_error, "only available for Byzantium-compatible");
-	else if (_instr == evmasm::Instruction::RETURNDATASIZE && !m_evmVersion.supportsReturndata())
-		errorForVM(4778_error, "only available for Byzantium-compatible");
-	else if (_instr == evmasm::Instruction::STATICCALL && !m_evmVersion.hasStaticCall())
-		errorForVM(1503_error, "only available for Byzantium-compatible");
-	else if (_instr == evmasm::Instruction::SHL && !m_evmVersion.hasBitwiseShifting())
-		errorForVM(6612_error, "only available for Constantinople-compatible");
-	else if (_instr == evmasm::Instruction::SHR && !m_evmVersion.hasBitwiseShifting())
-		errorForVM(7458_error, "only available for Constantinople-compatible");
-	else if (_instr == evmasm::Instruction::SAR && !m_evmVersion.hasBitwiseShifting())
-		errorForVM(2054_error, "only available for Constantinople-compatible");
-	else if (_instr == evmasm::Instruction::CLZ && !m_evmVersion.hasCLZ())
+	if (_instr == evmasm::Instruction::CLZ && !m_evmVersion.hasCLZ())
 		errorForVM(4948_error, "only available for Osaka-compatible");
-	else if (_instr == evmasm::Instruction::CREATE2 && !m_evmVersion.hasCreate2())
-		errorForVM(6166_error, "only available for Constantinople-compatible");
-	else if (_instr == evmasm::Instruction::EXTCODEHASH && !m_evmVersion.hasExtCodeHash())
-		errorForVM(7110_error, "only available for Constantinople-compatible");
 	else if (_instr == evmasm::Instruction::CHAINID && !m_evmVersion.hasChainID())
 		errorForVM(1561_error, "only available for Istanbul-compatible");
 	else if (_instr == evmasm::Instruction::SELFBALANCE && !m_evmVersion.hasSelfBalance())

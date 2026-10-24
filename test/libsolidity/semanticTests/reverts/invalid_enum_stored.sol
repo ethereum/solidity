@@ -16,8 +16,6 @@ contract C {
         return 1;
     }
 }
-// ====
-// EVMVersion: >=byzantium
 // ----
 // test_store_ok() -> 1
 // x() -> 0

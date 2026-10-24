@@ -167,7 +167,6 @@ BOOST_AUTO_TEST_CASE(location_test)
 	)";
 	AssemblyItems items = compileContract(std::make_shared<CharStream>(sourceCode, ""));
 	std::shared_ptr<std::string> sourceName = std::make_shared<std::string>();
-	bool hasShifts = solidity::test::CommonOptions::get().evmVersion().hasBitwiseShifting();
 
 	auto codegenCharStream = std::make_shared<CharStream>("", "--CODEGEN--");
 
@@ -180,7 +179,7 @@ BOOST_AUTO_TEST_CASE(location_test)
 			std::vector<SourceLocation>(15, SourceLocation{41, 100, sourceName});
 	else
 		locations =
-			std::vector<SourceLocation>(hasShifts ? 31 : 32, SourceLocation{23, 103, sourceName}) +
+			std::vector<SourceLocation>(31, SourceLocation{23, 103, sourceName}) +
 			std::vector<SourceLocation>(24, SourceLocation{41, 100, sourceName}) +
 			std::vector<SourceLocation>(1, SourceLocation{70, 79, sourceName}) +
 			std::vector<SourceLocation>(1, SourceLocation{93, 95, sourceName}) +

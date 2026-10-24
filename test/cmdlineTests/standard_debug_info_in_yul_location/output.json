@@ -106,10 +106,7 @@ object \"C_54\" {
         }
 
         function shift_left_0(value) -> newValue {
-            newValue :=
-
-            shl(0, value)
-
+            newValue := shl(0, value)
         }
 
         function update_byte_slice_32_shift_0(value, toInsert) -> result {
@@ -199,10 +196,7 @@ object \"C_54\" {
             revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
 
             function shift_right_224_unsigned(value) -> newValue {
-                newValue :=
-
-                shr(224, value)
-
+                newValue := shr(224, value)
             }
 
             function allocate_unbounded() -> memPtr {
@@ -249,10 +243,7 @@ object \"C_54\" {
             }
 
             function shift_right_unsigned_dynamic(bits, value) -> newValue {
-                newValue :=
-
-                shr(bits, value)
-
+                newValue := shr(bits, value)
             }
 
             function cleanup_from_storage_t_int256(value) -> cleaned {
@@ -392,10 +383,7 @@ object \"C_54\" {
             /// @src 0:79:510  \"contract C...\"
 
             function shift_right_0_unsigned(value) -> newValue {
-                newValue :=
-
-                shr(0, value)
-
+                newValue := shr(0, value)
             }
 
             function extract_from_storage_value_offset_0_t_int256(slot_value) -> value {
@@ -414,10 +402,7 @@ object \"C_54\" {
             }
 
             function shift_left_0(value) -> newValue {
-                newValue :=
-
-                shl(0, value)
-
+                newValue := shl(0, value)
             }
 
             function update_byte_slice_32_shift_0(value, toInsert) -> result {
@@ -494,10 +479,7 @@ object \"C_54\" {
             }
 
             function shift_left_224(value) -> newValue {
-                newValue :=
-
-                shl(224, value)
-
+                newValue := shl(224, value)
             }
 
             function revert_error_c1322bf8034eace5e0b5c7295db60986aa89aae5e0ea0873e4689e076861a5db() {
@@ -563,7 +545,6 @@ object \"C_54\" {
                 if _12 {
 
                     let _13 := 32
-
                     if gt(_13, returndatasize()) {
                         _13 := returndatasize()
                     }
@@ -872,10 +853,7 @@ object \"D_72\" {
         }
 
         function shift_right_0_unsigned(value) -> newValue {
-            newValue :=
-
-            shr(0, value)
-
+            newValue := shr(0, value)
         }
 
         function cleanup_from_storage_t_int256(value) -> cleaned {
@@ -912,10 +890,7 @@ object \"D_72\" {
         }
 
         function shift_left_0(value) -> newValue {
-            newValue :=
-
-            shl(0, value)
-
+            newValue := shl(0, value)
         }
 
         function update_byte_slice_32_shift_0(value, toInsert) -> result {
@@ -1035,10 +1010,7 @@ object \"D_72\" {
             revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
 
             function shift_right_224_unsigned(value) -> newValue {
-                newValue :=
-
-                shr(224, value)
-
+                newValue := shr(224, value)
             }
 
             function allocate_unbounded() -> memPtr {
@@ -1085,10 +1057,7 @@ object \"D_72\" {
             }
 
             function shift_right_unsigned_dynamic(bits, value) -> newValue {
-                newValue :=
-
-                shr(bits, value)
-
+                newValue := shr(bits, value)
             }
 
             function cleanup_from_storage_t_int256(value) -> cleaned {
@@ -1228,10 +1197,7 @@ object \"D_72\" {
             /// @src 1:91:181  \"contract D is C(3)...\"
 
             function shift_right_0_unsigned(value) -> newValue {
-                newValue :=
-
-                shr(0, value)
-
+                newValue := shr(0, value)
             }
 
             function extract_from_storage_value_offset_0_t_int256(slot_value) -> value {
@@ -1250,10 +1216,7 @@ object \"D_72\" {
             }
 
             function shift_left_0(value) -> newValue {
-                newValue :=
-
-                shl(0, value)
-
+                newValue := shl(0, value)
             }
 
             function update_byte_slice_32_shift_0(value, toInsert) -> result {
@@ -1330,10 +1293,7 @@ object \"D_72\" {
             }
 
             function shift_left_224(value) -> newValue {
-                newValue :=
-
-                shl(224, value)
-
+                newValue := shl(224, value)
             }
 
             function revert_error_c1322bf8034eace5e0b5c7295db60986aa89aae5e0ea0873e4689e076861a5db() {
@@ -1399,7 +1359,6 @@ object \"D_72\" {
                 if _12 {
 
                     let _13 := 32
-
                     if gt(_13, returndatasize()) {
                         _13 := returndatasize()
                     }

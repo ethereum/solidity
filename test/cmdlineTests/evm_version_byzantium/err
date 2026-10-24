@@ -1,3 +1,1 @@
-Warning: Support for EVM versions older than london is deprecated and will be removed in the future.
-Warning: Source file does not specify required compiler version!
---> input.sol
+Error: Invalid option for --evm-version: byzantium

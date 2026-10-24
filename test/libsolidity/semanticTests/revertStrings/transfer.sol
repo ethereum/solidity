@@ -18,7 +18,6 @@ contract C {
 	}
 }
 // ====
-// EVMVersion: >=byzantium
 // revertStrings: debug
 // ----
 // (), 10 wei ->

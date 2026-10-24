@@ -38,8 +38,6 @@ contract C {
         return abi.decode(result, (uint256));
     }
 }
-// ====
-// EVMVersion: >=byzantium
 // ----
 // library: "a.sol":L
 // addr() -> false
