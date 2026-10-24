@@ -101,7 +101,6 @@ class BaseRunner(metaclass=ABCMeta):
 
     def setup_environment(self):
         """Configure the project build environment"""
-        print("Configuring Runner building environment...")
         replace_version_pragmas(self.test_dir)
 
     @enter_test_dir
@@ -136,6 +135,7 @@ def run_test(runner: BaseRunner):
     download_project(runner.test_dir, runner.config.repo_url, runner.config.ref)
 
     # Configure run environment
+    print("Configuring Runner building environment...")
     runner.setup_environment()
 
     # Configure TestRunner instance

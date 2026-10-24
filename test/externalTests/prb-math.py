@@ -31,15 +31,15 @@ sys.path.insert(0, f"{PROJECT_ROOT}/scripts/externalTests")
 
 from runners.base import run_test
 from runners.base import TestConfig
+from runners.base import BaseRunner
 from runners.foundry import FoundryRunner
 from test_helpers import SettingsPreset
 
 class PRBMathRunner(FoundryRunner):
-    def configure(self):
+    def setup_environment(self):
         if which("pnpm") is None:
             raise RuntimeError("pnpm not found.")
 
-        self.setup_presets_profiles()
         # Starting from version v4.0.2, the default installation method for PRBMath dependencies
         # has transitioned from Foundry to Node.js.
         subprocess.run(
@@ -47,6 +47,7 @@ class PRBMathRunner(FoundryRunner):
             env=self.env,
             check=True
         )
+        BaseRunner.setup_environment(self)
 
 test_config = TestConfig(
     name="PRBMath",

@@ -44,9 +44,10 @@ class FoundryRunner(BaseRunner):
     FOUNDRY_CONFIG_FILE = "foundry.toml"
 
     def setup_environment(self):
-        super().setup_environment()
         if which("forge") is None:
             raise RuntimeError("Forge not found.")
+        run_forge_command("forge install", self.env)
+        super().setup_environment()
 
     @staticmethod
     def profile_name(preset: SettingsPreset):
@@ -96,7 +97,6 @@ class FoundryRunner(BaseRunner):
     def configure(self):
         """Install project dependencies"""
         self.setup_presets_profiles()
-        run_forge_command("forge install", self.env)
 
     @BaseRunner.enter_test_dir
     def compile(self, preset: SettingsPreset):
