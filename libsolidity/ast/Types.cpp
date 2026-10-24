@@ -3041,28 +3041,6 @@ std::vector<std::string> FunctionType::parameterNames() const
 	return std::vector<std::string>(m_parameterNames.cbegin() + 1, m_parameterNames.cend());
 }
 
-TypePointers FunctionType::returnParameterTypesWithoutDynamicTypes() const
-{
-	TypePointers returnParameterTypes = m_returnParameterTypes;
-
-	if (
-		m_kind == Kind::External ||
-		m_kind == Kind::DelegateCall ||
-		m_kind == Kind::BareCall ||
-		m_kind == Kind::BareCallCode ||
-		m_kind == Kind::BareDelegateCall ||
-		m_kind == Kind::BareStaticCall
-	)
-		for (auto& param: returnParameterTypes)
-		{
-			solAssert(param->decodingType(), "");
-			if (param->decodingType()->isDynamicallyEncoded())
-				param = TypeProvider::inaccessibleDynamic();
-		}
-
-	return returnParameterTypes;
-}
-
 TypePointers FunctionType::parameterTypes() const
 {
 	if (!hasBoundFirstArgument())
